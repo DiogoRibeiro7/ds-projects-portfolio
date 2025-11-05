@@ -1,176 +1,218 @@
-# Data Science Portfolio
+# 📊 Data Science Portfolio
 
-Curated collection of end-to-end data science projects showcasing real-world analysis, modeling, and MLOps practices.
+> **Professional end-to-end data science projects showcasing real-world analysis, experimentation, and statistical rigor.**
 
-## Goals
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org) [![Jupyter](https://img.shields.io/badge/Jupyter-Notebooks-orange.svg)](https://jupyter.org) [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-* Demonstrate solid skills in data exploration, modeling, evaluation, and communication.
-* Show end-to-end thinking: from problem framing to deployment or reporting.
-* Keep projects reproducible and easy to understand for recruiters, collaborators, and students.
+--------------------------------------------------------------------------------
 
-## Repository Structure
+## 🎯 Overview
 
-A suggested structure (you can adapt as you go):
+This repository contains a curated collection of **production-ready** data science projects that demonstrate:
 
-```text
+- **Statistical rigor** with proper experimental design and hypothesis testing
+- **End-to-end thinking** from problem framing to deployment recommendations
+- **Reproducible research** with clear documentation and reusable code
+- **Business impact** through actionable insights and decision frameworks
+
+Perfect for **data scientists**, **analysts**, **researchers**, and **students** looking for industry-standard examples of statistical analysis and experimentation.
+
+## 🚀 Featured Projects
+
+### 🧪 A/B Testing & Experimentation Suite
+
+A comprehensive collection of professional A/B testing notebooks covering modern statistical methods:
+
+Project                                                                       | Description                                                | Methods                                                      | Dataset
+----------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------ | --------------------
+**[Professional A/B Playbook](ab_testing/ab_testing_playbook_pro.ipynb)**     | Complete A/B testing framework with advanced methods       | Z-tests, GLM, CUPED, Bootstrap, Bayesian, Sequential Testing | Udacity + Criteo
+**[E-commerce Conversion](ab_testing/ab_testing_ecommerce_playbook.ipynb)**   | Landing page optimization with business decision framework | Frequentist + Bayesian, Logistic Regression, Revenue Impact  | Udacity Landing Page
+**[Mobile Game Retention](ab_testing/ab_testing_cookie_cats_playbook.ipynb)** | Cookie Cats gate placement analysis                        | Retention Analysis, GLM, CUPED, Power/MDE                    | Cookie Cats
+**[Pricing Optimization](ab_testing/ab_testing_pricing_playbook.ipynb)**      | Price elasticity and revenue impact analysis               | Price Elasticity, Revenue Analysis, CUPED, Causal Inference  | Simulated Pricing
+**[Modern Multi-Method](ab_testing/ab_testing_modern_multi.ipynb)**           | Multiple case studies with uplift modeling                 | Uplift Analysis, T-learner, Qini Curves                      | Multiple Datasets
+
+#### 🛠️ Advanced Methods Covered
+
+- **Variance Reduction**: CUPED (Controlled-experiment Using Pre-Experiment Data)
+- **Sequential Testing**: Pocock, O'Brien-Fleming, Lan-DeMets α-spending
+- **Bayesian Methods**: Beta-Binomial models, posterior distributions
+- **Multiple Testing**: Holm correction, hierarchical testing
+- **Uplift Modeling**: T-learner, DR-learner, Qini evaluation
+- **Causal Inference**: IPW, Doubly-Robust estimation
+- **Business Decision**: Parametrized decision frameworks
+
+## 📁 Repository Structure
+
+```
 .
-├── README.md                # You are here
-├── projects/                # Main projects live here
-│   ├── project-name-1/
-│   │   ├── notebooks/       # Jupyter / Colab notebooks
-│   │   ├── src/             # Reusable Python (or R, etc.) code
-│   │   ├── data/            # Small sample data or data loaders (no sensitive data)
-│   │   ├── reports/         # PDFs, slides, or markdown reports
-│   │   └── README.md        # Project-specific documentation
-│   ├── project-name-2/
-│   └── ...
-├── common/                  # Shared utilities across projects (optional)
-│   ├── python/              # Common Python utilities
-│   └── ...
-├── envs/                    # Environment definitions (optional)
-│   ├── conda-environment.yml
-│   ├── pyproject.toml       # If using Poetry
-│   └── requirements.txt
-└── docs/                    # High-level documentation (optional)
+├── README.md                     # You are here
+├── ab_testing/                   # A/B testing & experimentation
+│   ├── ab_testing_playbook_pro.ipynb    # 🎯 Comprehensive professional playbook
+│   ├── ab_testing_ecommerce_playbook.ipynb
+│   ├── ab_testing_cookie_cats_playbook.ipynb
+│   ├── ab_testing_pricing_playbook.ipynb
+│   └── ab_testing_modern_multi.ipynb
+├── data/                         # Sample datasets and data loaders
+├── src/                          # Reusable Python modules
+├── envs/                         # Environment configurations
+└── docs/                         # Additional documentation
 ```
 
-You can keep this flexible. The key is that each project is self-contained, documented, and reproducible.
+## 🏃‍♂️ Quick Start
 
-## How to Navigate This Portfolio
+### Option 1: Browse Online
 
-* Start with the **projects/** folder.
-* Each project has its own **README.md** explaining:
+Click on any notebook link above to view it directly on GitHub with full formatting and outputs.
 
-  * The problem and context.
-  * The dataset(s) used.
-  * Main methods and models.
-  * Key results and what they mean.
-  * How to run the code.
+### Option 2: Run Locally
 
-If you only have time for a quick scan, read the project READMEs and look at the main notebooks in **notebooks/**.
+1. **Clone the repository**
 
-## Technologies and Stack
+  ```bash
+  git clone https://github.com/diogoribeiro7/data-science-portfolio.git
+  cd data-science-portfolio
+  ```
 
-This portfolio may include a mix of tools, but a typical workflow uses:
+2. **Set up environment**
 
-* **Languages**: Python (and possibly R or SQL where useful).
-* **Data handling**: pandas, polars, SQL.
-* **Modeling**: scikit-learn, statsmodels, lightgbm, xgboost, or deep learning frameworks when needed.
-* **Visualization**: matplotlib, seaborn, plotly.
-* **MLOps / engineering** (for selected projects):
+  ```bash
+  # Using conda
+  conda create -n ds-portfolio python=3.9
+  conda activate ds-portfolio
+  pip install -r requirements.txt
 
-  * Reproducible environments (Poetry, Conda, or `requirements.txt`).
-  * Basic CI (GitHub Actions) for tests or linting.
-  * Simple deployment examples (e.g., FastAPI, Streamlit) where relevant.
+  # Or using pip + venv
+  python -m venv venv
+  source venv/bin/activate  # On Windows: venv\Scripts\activate
+  pip install -r requirements.txt
+  ```
 
-You can tune this list to match your real stack as you add projects.
+3. **Launch Jupyter**
 
-## Project Template
+  ```bash
+  jupyter lab
+  ```
 
-When adding a new project, you can follow this minimal template:
+4. **Start with the main playbook** Open `ab_testing/ab_testing_playbook_pro.ipynb` for a comprehensive overview.
 
-```text
-projects/
-  project-name/
-    README.md
-    notebooks/
-      01-exploration.ipynb
-      02-modeling.ipynb
-      03-evaluation-and-insights.ipynb
-    src/
-      __init__.py
-      data_loading.py
-      features.py
-      models.py
-      evaluation.py
-    data/
-      README.md          # Explain how to obtain data, do not commit raw private data
-    reports/
-      summary.md         # Short business-style summary
-      figures/
-```
+## 📊 Technical Stack
 
-### Example of a Project README
+### Core Libraries
 
-You can copy-paste and adapt this for each project:
+- **Statistical Analysis**: `scipy`, `statsmodels`, `numpy`
+- **Data Manipulation**: `pandas`, `polars`
+- **Visualization**: `matplotlib`, `seaborn`, `plotly`
+- **Machine Learning**: `scikit-learn`
+- **Bayesian Analysis**: Custom implementations with `numpy`
 
-````markdown
-# Project Title
+### Key Features
 
-Short one-line description of the problem and goal.
+- **Type-safe code** with comprehensive type hints
+- **Modular design** with reusable helper functions
+- **Professional documentation** with clear explanations
+- **Reproducible results** with fixed random seeds
+- **Industry standards** following best practices
 
-## 1. Problem
+## 🎓 Learning Path
 
-Describe the problem in simple terms. What are we trying to predict, classify, segment, or understand? Why does it matter (business, research, or teaching context)?
+### For Beginners
 
-## 2. Data
+1. Start with **[E-commerce Playbook](ab_testing/ab_testing_ecommerce_playbook.ipynb)** - covers fundamentals
+2. Move to **[Cookie Cats Analysis](ab_testing/ab_testing_cookie_cats_playbook.ipynb)** - adds retention metrics
+3. Explore **[Pricing Optimization](ab_testing/ab_testing_pricing_playbook.ipynb)** - business applications
 
-- Source: where the data comes from.
-- Key variables: main features and target.
-- Basic notes: size, time period, important filters.
+### For Intermediate Users
 
-## 3. Methods
+1. **[Professional Playbook](ab_testing/ab_testing_playbook_pro.ipynb)** - comprehensive methods
+2. **[Modern Multi-Method](ab_testing/ab_testing_modern_multi.ipynb)** - advanced techniques
 
-- Data cleaning and pre-processing.
-- Feature engineering.
-- Models used (baseline and more advanced).
+### For Advanced Practitioners
 
-## 4. Evaluation
+- Deep dive into variance reduction techniques (CUPED)
+- Explore sequential testing and α-spending functions
+- Study uplift modeling and causal inference methods
+- Implement custom Bayesian models
 
-- Metrics used and why (e.g. RMSE, AUC, F1, MAPE).
-- Baseline versus improved models.
-- Any robustness checks or diagnostics.
+## 🏆 Why This Portfolio?
 
-## 5. Results and Insights
+### 🔬 **Statistical Rigor**
 
-- Main quantitative results.
-- Explanation in plain language.
-- Any limitations or caveats.
+- Proper experimental design with SRM checks
+- Multiple testing corrections
+- Power analysis and MDE calculations
+- Confidence intervals and effect sizes
 
-## 6. How to Run
+### 💼 **Business Focus**
 
-```bash
-# Create environment (example)
-poetry install
+- Decision frameworks with clear recommendations
+- Revenue impact analysis
+- Risk assessment and business trade-offs
+- Executive summary templates
 
-# Or using pip
-pip install -r requirements.txt
+### 🛠️ **Production Ready**
 
-# Example commands or notebooks to run
-````
+- Clean, documented code with type hints
+- Modular helper functions
+- Error handling and edge cases
+- Reproducible environments
 
-## 7. Next Steps
+### 📚 **Educational Value**
 
-* Possible improvements (data, models, deployment).
-* Ideas for future work or experiments.
+- Clear explanations before and after code
+- Multiple approaches to the same problem
+- Common pitfalls and how to avoid them
+- Links to academic references
 
-```
+## 🤝 Contributing
 
-## Guidelines for New Projects
+Contributions are welcome! Please see <CONTRIBUTING.md> for guidelines.
 
-- Prefer **fewer, well-documented projects** over many unfinished ones.
-- Aim for at least one **end-to-end project** covering:
-  - Problem framing.
-  - EDA and feature engineering.
-  - Modeling, evaluation, and validation.
-  - Interpretation and communication.
-  - Optional: deployment or a simple demo.
-- Use clear commit messages and meaningful branch names.
+### Ways to Contribute
 
-## Roadmap (Optional)
+- **Add new case studies** with different domains
+- **Improve existing notebooks** with additional methods
+- **Fix bugs** or enhance documentation
+- **Add new statistical methods** or visualizations
+- **Translate notebooks** to other languages
 
-You can keep a simple checklist of planned projects, for example:
+## 📖 Additional Resources
 
-- [ ] Time series forecasting project (e.g., energy, sales, or traffic).
-- [ ] Classification project with imbalanced data.
-- [ ] Recommendation or ranking project.
-- [ ] Causal / experimentation project (A/B testing, uplift, or causal inference).
+### Academic References
 
-Update this as the portfolio grows.
+- Kohavi, R., Tang, D., & Xu, Y. (2020). _Trustworthy Online Controlled Experiments_
+- Deng, A., et al. (2013). _Improving the Sensitivity of Online Controlled Experiments_
+- Athey, S., & Imbens, G. (2017). _The Econometrics of Randomized Experiments_
 
----
+### Online Resources
 
-You can adjust this README as you refine your portfolio. The goal is to make it easy for anyone visiting the repository to understand what you can do and how you think about data science end-to-end.
+- [Exp-Platform.com](https://exp-platform.com/) - Microsoft's experimentation blog
+- [Netflix Tech Blog](https://netflixtechblog.com/) - A/B testing articles
+- [Uber Engineering](https://eng.uber.com/) - Causal inference posts
 
-```
+## 👨‍💼 About the Author
 
+**Diogo Ribeiro** | Lead Data Scientist & Researcher
+
+- 🎓 Master in Mathematics
+- 🏫 Teacher & Researcher at ESMAD - Escola Superior de Média Arte e Design
+- 💼 Lead Data Scientist at Mysense.ai
+- 🔬 ORCID: [0009-0001-2022-7072](https://orcid.org/0009-0001-2022-7072)
+- 📧 Contact: [dfr@esmad.ipp.pt](mailto:dfr@esmad.ipp.pt)
+- 💻 GitHub: [@diogoribeiro7](https://github.com/diogoribeiro7)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the <LICENSE> file for details.
+
+## 🌟 Acknowledgments
+
+- **Udacity** for providing excellent public datasets
+- **Criteo** for the uplift modeling dataset
+- **Open source community** for statistical libraries
+- **Academic researchers** for methodological foundations
+
+--------------------------------------------------------------------------------
+
+<div align="center"><strong>⭐ If you find this portfolio helpful, please consider giving it a star! ⭐</strong>
+
+<a href="https://github.com/diogoribeiro7/data-science-portfolio/issues">Report Bug</a> • <a href="https://github.com/diogoribeiro7/data-science-portfolio/issues">Request Feature</a> • <a href="CONTRIBUTING.md">Contribute</a></div>

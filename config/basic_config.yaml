@@ -1,0 +1,41 @@
+# Basic A/B Testing Configuration
+# This configuration covers standard A/B testing scenarios
+
+data:
+  user_column: user_id
+  group_column: group
+  metric_columns: 
+    - converted
+    - revenue
+  date_column: null  # Optional: set to your date column name
+  required_groups: 
+    - control
+    - treatment
+
+analysis:
+  confidence_level: 0.95  # 95% confidence level
+  power: 0.8              # 80% statistical power target
+  two_sided: true         # Two-sided hypothesis test
+  outlier_method: iqr     # Outlier detection method: iqr, zscore, isolation_forest
+  outlier_threshold: 1.5  # IQR multiplier for outlier detection
+  apply_cuped: false      # Variance reduction technique
+  cuped_covariate: null   # Pre-experiment metric for CUPED
+
+validation:
+  max_missing_rate: 0.05  # Maximum acceptable missing data rate (5%)
+  min_sample_ratio: 0.8   # Minimum ratio between group sizes
+  run_data_quality_check: true
+
+output:
+  include_plots: true
+  plot_format: png        # png, pdf, svg
+  report_format: html     # html, json, csv
+  export_data: true       # Export cleaned data
+  save_dashboard: true    # Save interactive dashboard
+  interactive_plots: false
+
+advanced:
+  multiple_testing_correction: holm  # holm, bonferroni, fdr_bh
+  bootstrap_samples: 5000            # Number of bootstrap samples
+  sequential_testing: false          # Enable sequential testing
+  power_analysis: true               # Include power analysis

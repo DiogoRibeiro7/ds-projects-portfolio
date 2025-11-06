@@ -89,8 +89,7 @@ urllib3>=1.26.0
 httpx>=0.23.0          # Modern HTTP client
 
 # Time Series Analysis (future expansion)
-fbprophet>=0.7.1       # Prophet forecasting
-pystan>=2.19.0         # Bayesian inference
+prophet>=1.1.0
 
 # Modern DataFrame Alternatives (implemented TODOs)
 polars>=0.15.0         # Fast modern dataframes

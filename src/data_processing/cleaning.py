@@ -9,7 +9,7 @@ import json
 import logging
 import warnings
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -62,7 +62,7 @@ def clean_ab_data(
     initial_count = len(df_clean)
 
     # Initialize report
-    report = {
+    report: Dict[str, Any] = {
         "initial_count": initial_count,
         "cleaning_steps": [],
         "final_count": 0,
@@ -166,12 +166,13 @@ def clean_ab_data(
     df_clean = df_clean.dropna(subset=critical_cols)
 
     # Handle missing metric values
-    for col in metric_cols:
-        if col in df_clean.columns:
-            missing_rate = df_clean[col].isnull().mean()
-            if missing_rate > 0.1:  # More than 10% missing
-                warnings.warn(f"High missing rate ({missing_rate:.1%}) in {col}")
-                report["data_quality_score"] -= missing_rate * 20
+    if metric_cols is not None:
+        for col in metric_cols:
+            if col in df_clean.columns:
+                missing_rate = df_clean[col].isnull().mean()
+                if missing_rate > 0.1:  # More than 10% missing
+                    warnings.warn(f"High missing rate ({missing_rate:.1%}) in {col}")
+                    report["data_quality_score"] -= missing_rate * 20
 
     missing_after = df_clean.isnull().sum().sum()
     if missing_before > missing_after:
@@ -228,16 +229,18 @@ def _detect_outliers(
     elif method == "zscore":
         z_scores = np.abs(stats.zscore(series.dropna()))
         outlier_indices = series.dropna().index[z_scores > threshold]
-        return series.index.isin(outlier_indices)
+        return pd.Series(series.index.isin(outlier_indices), index=series.index)
 
     elif method == "isolation_forest":
         try:
             from sklearn.ensemble import IsolationForest
 
             clf = IsolationForest(contamination=0.1, random_state=42)
-            outliers = clf.fit_predict(series.dropna().values.reshape(-1, 1))
+            # Convert to numpy array and reshape
+            values_array = np.array(series.dropna().values).reshape(-1, 1)
+            outliers = clf.fit_predict(values_array)
             outlier_indices = series.dropna().index[outliers == -1]
-            return series.index.isin(outlier_indices)
+            return pd.Series(series.index.isin(outlier_indices), index=series.index)
         except ImportError:
             logger.warning("sklearn not available, falling back to IQR method")
             return _detect_outliers(series, method="iqr", threshold=threshold)
@@ -279,7 +282,7 @@ def validate_experiment_data(
     validation_results : dict
         Comprehensive validation results and recommendations.
     """
-    validation_results = {
+    validation_results: Dict[str, Any] = {
         "is_valid": True,
         "warnings": [],
         "errors": [],
@@ -486,8 +489,8 @@ def apply_cuped(
     if removed_count > 0:
         logger.warning(f"Removed {removed_count} rows with missing values")
 
-    y = df_cuped[metric_col].values
-    x = df_cuped[covariate_col].values
+    y = np.array(df_cuped[metric_col].values, dtype=float)
+    x = np.array(df_cuped[covariate_col].values, dtype=float)
 
     # Check for covariate variation
     if np.var(x) == 0:
@@ -567,7 +570,7 @@ class DataQualityChecker:
         self.thresholds = {**self.default_thresholds, **self.config}
 
         # Initialize ML models for anomaly detection
-        self._anomaly_detectors = {}
+        self._anomaly_detectors: Dict[str, Any] = {}
 
         logger.info("DataQualityChecker initialized with comprehensive monitoring")
 
@@ -588,7 +591,7 @@ class DataQualityChecker:
         quality_report : dict
             Comprehensive quality assessment with scores and recommendations.
         """
-        quality_report = {
+        quality_report: Dict[str, Any] = {
             "overall_score": 100,
             "checks": {},
             "recommendations": [],
@@ -635,7 +638,7 @@ class DataQualityChecker:
 
     def _check_structure(self, df: pd.DataFrame, config: Dict) -> Dict[str, Any]:
         """Check basic data structure requirements."""
-        structure_check = {"status": "passed", "issues": [], "score": 100}
+        structure_check: Dict[str, Any] = {"status": "passed", "issues": [], "score": 100}
 
         # Required columns check
         required_cols = config.get("required_columns", ["user_id", "group"])
@@ -674,7 +677,7 @@ class DataQualityChecker:
 
     def _analyze_missing_patterns(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Analyze missing data patterns with advanced detection."""
-        missing_analysis = {
+        missing_analysis: Dict[str, Any] = {
             "overall_missing_rate": df.isnull().sum().sum()
             / (len(df) * len(df.columns)),
             "column_missing_rates": df.isnull().mean().to_dict(),
@@ -708,9 +711,11 @@ class DataQualityChecker:
                 high_correlations = []
                 for i, col1 in enumerate(correlations.columns):
                     for j, col2 in enumerate(correlations.columns):
-                        if i < j and abs(correlations.iloc[i, j]) > 0.5:
+                        # Cast correlation value to float for type safety
+                        corr_value = cast(float, correlations.iloc[i, j])
+                        if i < j and abs(corr_value) > 0.5:
                             high_correlations.append(
-                                (col1, col2, correlations.iloc[i, j])
+                                (col1, col2, corr_value)
                             )
 
                 if high_correlations:
@@ -736,7 +741,7 @@ class DataQualityChecker:
         if date_col not in df.columns:
             return {"status": "skipped", "reason": "date column not found"}
 
-        temporal_check = {
+        temporal_check: Dict[str, Any] = {
             "status": "passed",
             "issues": [],
             "score": 100,
@@ -787,7 +792,7 @@ class DataQualityChecker:
 
     def _detect_user_anomalies(self, df: pd.DataFrame, config: Dict) -> Dict[str, Any]:
         """Detect anomalous user behavior patterns."""
-        user_analysis = {"status": "passed", "anomalies": [], "score": 100}
+        user_analysis: Dict[str, Any] = {"status": "passed", "anomalies": [], "score": 100}
 
         user_col = config.get("user_col", "user_id")
         group_col = config.get("group_col", "group")
@@ -826,7 +831,7 @@ class DataQualityChecker:
         self, df: pd.DataFrame, metric_cols: List[str]
     ) -> Dict[str, Any]:
         """Analyze metric distributions for anomalies."""
-        metric_analysis = {"distributions": {}, "anomalies": [], "score": 100}
+        metric_analysis: Dict[str, Any] = {"distributions": {}, "anomalies": [], "score": 100}
 
         for col in metric_cols:
             if col not in df.columns:
@@ -875,15 +880,15 @@ class DataQualityChecker:
             "metrics": 0.1,
         }
 
-        weighted_score = 0
-        total_weight = 0
+        weighted_score = 0.0
+        total_weight = 0.0
 
         for check_name, weight in weights.items():
             if check_name in checks and "score" in checks[check_name]:
                 weighted_score += checks[check_name]["score"] * weight
                 total_weight += weight
 
-        return weighted_score / total_weight if total_weight > 0 else 0
+        return weighted_score / total_weight if total_weight > 0 else 0.0
 
     def _generate_recommendations(self, quality_report: Dict) -> List[str]:
         """Generate actionable recommendations based on quality assessment."""
@@ -1019,7 +1024,7 @@ def get_experiment_summary(
             # Statistical test
             if df[metric].nunique() == 2:  # Binary metric
                 # Proportion test
-                from .statistics.core import two_prop_ztest
+                from ..statistics.core import two_prop_ztest
 
                 x1 = int(data1.sum())
                 n1 = len(data1)
@@ -1043,7 +1048,7 @@ def get_experiment_summary(
 
             # Post-hoc power analysis
             if include_power_analysis:
-                from .statistics.core import calculate_power
+                from ..statistics.core import calculate_power
 
                 if df[metric].nunique() == 2:  # Binary metric
                     baseline_rate = data1.mean()

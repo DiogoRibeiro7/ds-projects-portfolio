@@ -21,7 +21,7 @@ from .statistics.core import (
     calculate_sample_size,
     two_prop_ztest,
 )
-from .visualization.plots import (
+from .vizualization.plots import (
     ExperimentDashboard,
     plot_conversion_funnel,
     plot_experiment_results,

@@ -8,7 +8,7 @@ Enhanced with proper error handling, advanced methods, and comprehensive impleme
 import logging
 import math
 import warnings
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -350,7 +350,7 @@ class ExperimentAnalyzer:
         """
         self.alpha = alpha
         self.power = power
-        self.results_cache = {}  # Cache for expensive computations
+        self.results_cache: Dict[str, Any] = {}  # Cache for expensive computations
 
         logger.info(f"ExperimentAnalyzer initialized with alpha={alpha}, power={power}")
 
@@ -358,8 +358,8 @@ class ExperimentAnalyzer:
         self,
         df: pd.DataFrame,
         group_col: str = "group",
-        expected_ratio: Dict[str, float] = None,
-    ) -> Dict[str, Union[float, bool, Dict]]:
+        expected_ratio: Optional[Dict[str, float]] = None,
+    ) -> Dict[str, Any]:
         """Check for Sample Ratio Mismatch with support for custom ratios.
 
         Parameters
@@ -417,7 +417,7 @@ class ExperimentAnalyzer:
         conversion_col: str = "converted",
         group_col: str = "group",
         alpha: Optional[float] = None,
-    ) -> Dict[str, Union[float, bool, Dict]]:
+    ) -> Dict[str, Any]:
         """Comprehensive conversion rate analysis.
 
         Parameters
@@ -523,7 +523,7 @@ class ExperimentAnalyzer:
         metrics: List[str],
         group_col: str = "group",
         date_col: Optional[str] = None,
-    ) -> Dict[str, Dict]:
+    ) -> Dict[str, Any]:
         """Run comprehensive multi-metric analysis.
 
         Parameters
@@ -542,7 +542,11 @@ class ExperimentAnalyzer:
         analysis : dict
             Comprehensive analysis results for all metrics.
         """
-        analysis = {"data_quality": {}, "metrics_analysis": {}, "recommendations": []}
+        analysis: Dict[str, Any] = {
+            "data_quality": {},
+            "metrics_analysis": {},
+            "recommendations": []
+        }
 
         # Data quality checks
         analysis["data_quality"]["srm_check"] = self.check_srm(df, group_col)
@@ -675,12 +679,13 @@ def sequential_testing_boundary(
     boundary : float
         Critical z-value for current analysis.
     """
+    boundary: float
     if method == "obrien_fleming":
         # O'Brien-Fleming boundary
-        boundary = abs(ndtri(alpha / 2)) * math.sqrt(1.0)  # Simplified
+        boundary = float(abs(ndtri(alpha / 2)) * math.sqrt(1.0))  # Simplified
     elif method == "pocock":
         # Pocock boundary
-        boundary = abs(ndtri(alpha / 2)) * 1.2  # Simplified
+        boundary = float(abs(ndtri(alpha / 2)) * 1.2)  # Simplified
     else:
         raise ValueError(f"Unknown boundary method: {method}")
 

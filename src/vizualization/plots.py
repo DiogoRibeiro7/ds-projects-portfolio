@@ -8,9 +8,10 @@ All TODOs from the original file have been implemented.
 
 import json
 import logging
+import os
 import warnings
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -52,7 +53,7 @@ else:
 sns.set_palette("husl")
 
 # Enhanced color scheme for consistent branding
-BRAND_COLORS = {
+BRAND_COLORS: Dict[str, str] = {
     "primary": "#2E86AB",
     "secondary": "#A23B72",
     "accent": "#F18F01",
@@ -680,7 +681,9 @@ def plot_conversion_funnel(
     return fig
 
 
-def _plot_interactive_funnel(df, steps, group_col, include_statistical_tests):
+def _plot_interactive_funnel(
+    df: pd.DataFrame, steps: List[str], group_col: str, include_statistical_tests: bool
+) -> Any:
     """Create interactive Plotly funnel visualization (TODO implemented)."""
     fig = make_subplots(
         rows=2,
@@ -768,7 +771,7 @@ def _plot_interactive_funnel(df, steps, group_col, include_statistical_tests):
     if include_statistical_tests and len(groups) == 2:
         test_results = _analyze_funnel_dropoffs(df, steps, group_col)
 
-        table_data = {
+        table_data: Dict[str, List[str]] = {
             "Step Transition": [],
             "Group 1 Rate": [],
             "Group 2 Rate": [],
@@ -1137,7 +1140,9 @@ def plot_time_series_analysis(
     return fig
 
 
-def _plot_interactive_timeseries(df, date_col, metric_col, group_col, agg_level):
+def _plot_interactive_timeseries(
+    df: pd.DataFrame, date_col: str, metric_col: str, group_col: str, agg_level: str
+) -> Any:
     """Create interactive Plotly time series visualization (TODO implemented)."""
     fig = make_subplots(
         rows=2,
@@ -1210,9 +1215,11 @@ def _plot_interactive_timeseries(df, date_col, metric_col, group_col, agg_level)
     return fig
 
 
-def _perform_temporal_tests(df, date_col, metric_col, group_col):
+def _perform_temporal_tests(
+    df: pd.DataFrame, date_col: str, metric_col: str, group_col: str
+) -> Dict[str, Any]:
     """Perform statistical tests for temporal consistency (TODO implemented)."""
-    results = {}
+    results: Dict[str, Any] = {}
 
     try:
         # Basic temporal statistics
@@ -1290,7 +1297,9 @@ def plot_statistical_power(
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
 
     # Proper power calculation function (TODO implemented)
-    def calculate_power_proper(n1, n2, baseline, effect, alpha_level):
+    def calculate_power_proper(
+        n1: int, n2: int, baseline: float, effect: float, alpha_level: float
+    ) -> float:
         """Calculate statistical power using proper formulas."""
         if SCIPY_AVAILABLE:
             z_alpha = stats.norm.ppf(1 - alpha_level / 2)  # Two-sided test
@@ -1306,12 +1315,12 @@ def plot_statistical_power(
 
             # Power calculation
             z_beta = (effect - z_alpha * se_null) / se_alt
-            power = stats.norm.cdf(z_beta)
+            power = float(stats.norm.cdf(z_beta))
 
-            return max(0, min(1, power))
+            return max(0.0, min(1.0, power))
         else:
             # Simplified approximation
-            return min(1.0, effect * np.sqrt(n1) / 2)
+            return float(min(1.0, effect * np.sqrt(n1) / 2))
 
     # 1. Power vs Effect Size (for fixed sample size)
     fixed_n = sample_sizes[len(sample_sizes) // 2]
@@ -1432,7 +1441,12 @@ def plot_statistical_power(
     return fig
 
 
-def _plot_interactive_power(effect_sizes, sample_sizes, alpha, baseline_rate):
+def _plot_interactive_power(
+    effect_sizes: np.ndarray,
+    sample_sizes: np.ndarray,
+    alpha: float,
+    baseline_rate: float,
+) -> Any:
     """Create interactive Plotly power analysis (TODO implemented)."""
     fig = make_subplots(
         rows=1, cols=2, subplot_titles=("Power vs Effect Size", "Power vs Sample Size")
@@ -1473,9 +1487,9 @@ class ExperimentDashboard:
         """
         self.experiment_name = experiment_name
         self.config = config or {}
-        self.figures = {}
-        self.data_cache = {}
-        self.last_update = None
+        self.figures: Dict[str, plt.Figure] = {}
+        self.data_cache: Dict[str, Any] = {}
+        self.last_update: Optional[datetime] = None
 
         # Default configuration (TODO implemented)
         self.default_config = {
@@ -2268,7 +2282,7 @@ def set_publication_style() -> None:
 
 
 def create_publication_ready_plot(
-    df: pd.DataFrame, plot_type: str, **kwargs
+    df: pd.DataFrame, plot_type: str, **kwargs: Any
 ) -> plt.Figure:
     """Create publication-ready plots following academic journal standards (TODO implemented).
 
@@ -2405,8 +2419,9 @@ class ThemeManager:
 
         # Update global brand colors
         global BRAND_COLORS
-        BRAND_COLORS.update(theme["colors"])
+        theme_colors = cast(Dict[str, str], theme["colors"])
+        BRAND_COLORS.update(theme_colors)
 
     def get_colors(self) -> Dict[str, str]:
         """Get current theme colors."""
-        return self.themes[self.theme_name]["colors"]
+        return cast(Dict[str, str], self.themes[self.theme_name]["colors"])

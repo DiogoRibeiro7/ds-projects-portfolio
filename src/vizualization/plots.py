@@ -6,20 +6,21 @@ publication-ready formatting, and advanced statistical visualizations.
 All TODOs from the original file have been implemented.
 """
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-import numpy as np
-from typing import Dict, List, Optional, Tuple, Union, Any
-import warnings
-import logging
-from datetime import datetime
 import json
+import logging
+import warnings
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 
 # Try to import optional dependencies
 try:
-    import plotly.graph_objects as go
     import plotly.express as px
+    import plotly.graph_objects as go
     from plotly.subplots import make_subplots
 
     PLOTLY_AVAILABLE = True
@@ -1751,9 +1752,11 @@ class ExperimentDashboard:
             "=" * 20,
             f"Total Metrics Analyzed: {total_metrics}",
             f"Significant Results: {len(sig_metrics)}",
-            f"Success Rate: {len(sig_metrics) / total_metrics:.1%}"
-            if total_metrics > 0
-            else "Success Rate: 0%",
+            (
+                f"Success Rate: {len(sig_metrics) / total_metrics:.1%}"
+                if total_metrics > 0
+                else "Success Rate: 0%"
+            ),
             "",
             "Significant Metrics:",
         ]

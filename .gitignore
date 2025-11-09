@@ -102,6 +102,7 @@ dmypy.json
 # Data Science specific
 # Large datasets
 *.csv
+*.txt
 *.tsv
 *.json
 *.parquet

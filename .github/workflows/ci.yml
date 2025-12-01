@@ -14,7 +14,7 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v6
@@ -59,7 +59,7 @@ jobs:
   notebook-tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     
     - name: Set up Python
       uses: actions/setup-python@v6
@@ -82,7 +82,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     
     - name: Set up Python
       uses: actions/setup-python@v6
@@ -110,7 +110,7 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     
     - name: Run Bandit Security Scan
       uses: SecureCodeWarrior/github-action-add-sarif-contextual-training@v1

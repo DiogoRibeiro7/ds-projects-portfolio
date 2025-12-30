@@ -70,6 +70,35 @@ repos:
         files: \.ipynb$
         args: [--drop-empty-cells]
 
+  # Notebook quality checks
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.7.1
+    hooks:
+      - id: nbqa-black
+        args: [--nbqa-mutate]
+      - id: nbqa-isort
+        args: [--nbqa-mutate]
+      - id: nbqa-flake8
+        args: ['--max-line-length=120', '--extend-ignore=E203,W503,E402']
+
+  # Custom notebook validation
+  - repo: local
+    hooks:
+      - id: notebook-validation
+        name: Validate Jupyter Notebooks
+        entry: python run_notebook_tests.py --validate-only --dirs
+        language: system
+        files: \.ipynb$
+        pass_filenames: false
+        args: [ab_testing, modern-bank-churn]
+
+      - id: check-notebook-size
+        name: Check notebook file size
+        entry: bash -c 'find . -name "*.ipynb" -size +5M -exec echo "Large notebook found {};" \; -exec false \;'
+        language: system
+        files: \.ipynb$
+        pass_filenames: false
+
   # Documentation
   - repo: https://github.com/pycqa/pydocstyle
     rev: 6.3.0

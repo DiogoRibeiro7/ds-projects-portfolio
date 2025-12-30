@@ -1,0 +1,967 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notebook Test Report - 2025-12-30 11:43</title>
+    
+<style>
+    :root {
+        --primary: #2563eb;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --dark: #1f2937;
+        --light: #f9fafb;
+        --border: #e5e7eb;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+    }
+
+    .header {
+        background: var(--dark);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    .header .subtitle {
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        padding: 2rem;
+        background: var(--light);
+    }
+
+    .card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+
+    .card-icon.success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .card-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .card-icon.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .card-icon.info { background: rgba(37, 99, 235, 0.1); color: var(--primary); }
+
+    .card-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .card-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .charts-section {
+        padding: 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--dark);
+    }
+
+    .results-section {
+        padding: 2rem;
+    }
+
+    .results-table {
+        width: 100%;
+        background: white;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        background: var(--light);
+    }
+
+    th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--dark);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    td {
+        padding: 1rem;
+        border-top: 1px solid var(--border);
+    }
+
+    tr:hover {
+        background: rgba(37, 99, 235, 0.02);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .status-badge.passed {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .status-badge.passed_with_warnings {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .status-badge.failed, .status-badge.error {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .progress-bar {
+        height: 8px;
+        background: var(--light);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    .details-section {
+        padding: 2rem;
+    }
+
+    .detail-card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+    }
+
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .detail-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .collapsible {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .collapsible:after {
+        content: '\25BC';
+        float: right;
+        margin-left: 1rem;
+        transition: transform 0.3s;
+    }
+
+    .collapsible.active:after {
+        transform: rotate(-180deg);
+    }
+
+    .content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        background: var(--light);
+        border-radius: 0.5rem;
+    }
+
+    .content.active {
+        max-height: 1000px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .code-block {
+        background: #1f2937;
+        color: #f9fafb;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 0.875rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+    }
+
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .metric-item {
+        background: var(--light);
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+    }
+
+    .metric-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+
+    .metric-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .footer {
+        background: var(--dark);
+        color: white;
+        padding: 1.5rem 2rem;
+        text-align: center;
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+        .summary-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .charts-section {
+            grid-template-columns: 1fr;
+        }
+
+        .container {
+            border-radius: 0;
+        }
+
+        body {
+            padding: 0;
+        }
+    }
+</style>
+
+    
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Toggle collapsible sections
+    document.addEventListener('DOMContentLoaded', function() {
+        const collapsibles = document.getElementsByClassName('collapsible');
+
+        for (let i = 0; i < collapsibles.length; i++) {
+            collapsibles[i].addEventListener('click', function() {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                content.classList.toggle('active');
+            });
+        }
+
+        // Initialize charts
+        initializeCharts();
+    });
+
+    function initializeCharts() {
+        // Status Distribution Chart
+        const statusCtx = document.getElementById('statusChart');
+        if (statusCtx) {
+            const statusChart = new Chart(statusCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: statusChartData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        // Execution Time Chart
+        const timeCtx = document.getElementById('timeChart');
+        if (timeCtx) {
+            const timeChart = new Chart(timeCtx.getContext('2d'), {
+                type: 'bar',
+                data: timeChartData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Execution Time (seconds)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+</script>
+
+</head>
+<body>
+    <div class="container">
+        
+<div class="header">
+    <h1>📊 Notebook Test Report</h1>
+    <div class="subtitle">
+        Generated on December 30, 2025 at 11:43 AM
+    </div>
+</div>
+
+        
+<div class="summary-cards">
+    <div class="card">
+        <div class="card-icon info">📝</div>
+        <div class="card-value">21</div>
+        <div class="card-label">Total Notebooks</div>
+    </div>
+
+    <div class="card">
+        <div class="card-icon success">✅</div>
+        <div class="card-value">7</div>
+        <div class="card-label">Passed</div>
+    </div>
+
+    <div class="card">
+        <div class="card-icon danger">❌</div>
+        <div class="card-value">14</div>
+        <div class="card-label">Failed</div>
+    </div>
+
+    <div class="card">
+        <div class="card-icon info">📊</div>
+        <div class="card-value">33.3%</div>
+        <div class="card-label">Pass Rate</div>
+    </div>
+
+    <div class="card">
+        <div class="card-icon warning">⏱️</div>
+        <div class="card-value">111.3s</div>
+        <div class="card-label">Total Time</div>
+    </div>
+
+    <div class="card">
+        <div class="card-icon info">⚡</div>
+        <div class="card-value">5.3s</div>
+        <div class="card-label">Avg Time per Notebook</div>
+    </div>
+</div>
+
+        
+<div class="charts-section">
+    <div class="chart-container">
+        <div class="chart-title">Test Status Distribution</div>
+        <canvas id="statusChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">Execution Times (Top 10)</div>
+        <canvas id="timeChart"></canvas>
+    </div>
+</div>
+
+<script>
+    const statusChartData = {
+        labels: ["failed", "passed"],
+        datasets: [{
+            data: [14, 7],
+            backgroundColor: ["#ef4444", "#10b981"],
+            borderWidth: 0
+        }]
+    };
+
+    const timeChartData = {
+        labels: ["ab_testing.ipynb", "ab_testing_cookie_ca...", "ab_testing_ecommerce...", "ab_testing_guardrail...", "ab_testing_modern_mu...", "ab_testing_modern_pl...", "ab_testing_offpolicy...", "ab_testing_playbook_...", "ab_testing_pricing_p...", "ab_testing_retention..."],
+        datasets: [{
+            data: [5.041092157363892, 3.9167680740356445, 2.967329740524292, 2.460197925567627, 3.9580047130584717, 3.4478342533111572, 4.325494289398193, 7.141534805297852, 3.3472115993499756, 11.564665079116821],
+            backgroundColor: '#2563eb',
+            borderRadius: 4
+        }]
+    };
+</script>
+
+        
+<div class="results-section">
+    <h2 style="margin-bottom: 1rem;">Test Results</h2>
+    <div class="results-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Notebook</th>
+                    <th>Status</th>
+                    <th>Execution Time</th>
+                    <th>Validation Score</th>
+                    <th>Issues/Warnings</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>ab_testing.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>5.04s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 79.0%; background: #f59e0b;"></div>
+                </div>
+                <small>79/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>ab_testing_cookie_cats_playbook.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>3.92s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 83.0%; background: #10b981;"></div>
+                </div>
+                <small>83/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>ab_testing_ecommerce_playbook.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>2.97s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 79.0%; background: #f59e0b;"></div>
+                </div>
+                <small>79/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>ab_testing_guardrails_multimetric.ipynb</td>
+                <td><span class="status-badge passed">Passed</span></td>
+                <td>2.46s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 93.0%; background: #10b981;"></div>
+                </div>
+                <small>93/100</small>
+            </td>
+                <td>0/1</td>
+            </tr>
+            
+            <tr>
+                <td>ab_testing_modern_multi.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>3.96s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 79.0%; background: #f59e0b;"></div>
+                </div>
+                <small>79/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>ab_testing_modern_playbook.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>3.45s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 93.0%; background: #10b981;"></div>
+                </div>
+                <small>93/100</small>
+            </td>
+                <td>0/1</td>
+            </tr>
+            
+            <tr>
+                <td>ab_testing_offpolicy_policy_switch.ipynb</td>
+                <td><span class="status-badge passed">Passed</span></td>
+                <td>4.33s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 88.0%; background: #10b981;"></div>
+                </div>
+                <small>88/100</small>
+            </td>
+                <td>0/2</td>
+            </tr>
+            
+            <tr>
+                <td>ab_testing_playbook_pro.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>7.14s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 79.0%; background: #f59e0b;"></div>
+                </div>
+                <small>79/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>ab_testing_pricing_playbook.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>3.35s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 81.0%; background: #10b981;"></div>
+                </div>
+                <small>81/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>ab_testing_retention_survival.ipynb</td>
+                <td><span class="status-badge passed">Passed</span></td>
+                <td>11.56s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 93.0%; background: #10b981;"></div>
+                </div>
+                <small>93/100</small>
+            </td>
+                <td>0/1</td>
+            </tr>
+            
+            <tr>
+                <td>ab_testing_sequential_always_valid.ipynb</td>
+                <td><span class="status-badge passed">Passed</span></td>
+                <td>19.86s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 93.0%; background: #10b981;"></div>
+                </div>
+                <small>93/100</small>
+            </td>
+                <td>0/1</td>
+            </tr>
+            
+            <tr>
+                <td>bandits_exploration_exploitation.ipynb</td>
+                <td><span class="status-badge passed">Passed</span></td>
+                <td>9.76s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 93.0%; background: #10b981;"></div>
+                </div>
+                <small>93/100</small>
+            </td>
+                <td>0/1</td>
+            </tr>
+            
+            <tr>
+                <td>experiment_story_templates.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>1.88s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 93.0%; background: #10b981;"></div>
+                </div>
+                <small>93/100</small>
+            </td>
+                <td>0/1</td>
+            </tr>
+            
+            <tr>
+                <td>geo_experiments_playbook.ipynb</td>
+                <td><span class="status-badge passed">Passed</span></td>
+                <td>4.29s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 88.0%; background: #10b981;"></div>
+                </div>
+                <small>88/100</small>
+            </td>
+                <td>0/2</td>
+            </tr>
+            
+            <tr>
+                <td>meta_analysis_experiment_portfolio.ipynb</td>
+                <td><span class="status-badge passed">Passed</span></td>
+                <td>3.16s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 83.0%; background: #10b981;"></div>
+                </div>
+                <small>83/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>01_eda_and_baselines.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>4.45s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 81.0%; background: #10b981;"></div>
+                </div>
+                <small>81/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>02_lightgbm_optuna_shap.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>3.13s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 81.0%; background: #10b981;"></div>
+                </div>
+                <small>81/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>03_segment_insights.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>6.12s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 81.0%; background: #10b981;"></div>
+                </div>
+                <small>81/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>bank_churn_clv_retention.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>3.36s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 81.0%; background: #10b981;"></div>
+                </div>
+                <small>81/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>bank_churn_mlops_api_batch.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>3.43s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 81.0%; background: #10b981;"></div>
+                </div>
+                <small>81/100</small>
+            </td>
+                <td>0/3</td>
+            </tr>
+            
+            <tr>
+                <td>bank_churn_uplift_modelling.ipynb</td>
+                <td><span class="status-badge failed">Failed</span></td>
+                <td>3.32s</td>
+                <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 76.0%; background: #f59e0b;"></div>
+                </div>
+                <small>76/100</small>
+            </td>
+                <td>0/4</td>
+            </tr>
+            
+            </tbody>
+        </table>
+    </div>
+</div>
+
+        
+            <div class="details-section">
+                <h2 style="margin-bottom: 1rem;">Detailed Issues</h2>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">ab_testing.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>'landing_page'</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: sklearn, numpy</li><li>Found 4 potential memory issues</li><li>Found 13 import issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">ab_testing_cookie_cats_playbook.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>Provide cookie_cats.csv locally (data/ or CWD) or set REMOTE_URL.</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: numpy</li><li>Found 1 potential memory issues</li><li>Found 8 import issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">ab_testing_ecommerce_playbook.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>unterminated string literal (detected at line 7) (328455821.py, line 7)</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: numpy</li><li>Found 4 potential memory issues</li><li>Found 2 import issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">ab_testing_modern_multi.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>'landing_page'</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: sklearn, numpy</li><li>Found 4 potential memory issues</li><li>Found 3 import issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">ab_testing_modern_playbook.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>module 'math' has no attribute 'erfcinv'</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: sklearn, numpy</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">ab_testing_playbook_pro.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>'landing_page'</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: sklearn, numpy</li><li>Found 4 potential memory issues</li><li>Found 11 import issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">ab_testing_pricing_playbook.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>pricing_ab.csv not found in the current directory.
+Place your pricing A/B dataset here or update DATA_PATH.</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: sklearn, numpy</li><li>Found 2 potential memory issues</li><li>Found 5 import issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">experiment_story_templates.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>unterminated string literal (detected at line 52) (3942432408.py, line 52)</li></ul>
+                        <h4>Warnings:</h4><ul><li>Found 1 import issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">01_eda_and_baselines.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>Target column 'Exited' not found in DataFrame.</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: sklearn, numpy</li><li>Found 1 plots without show/display</li><li>Found 2 potential memory issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">02_lightgbm_optuna_shap.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>No module named 'lightgbm'</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: sklearn, numpy</li><li>Found 1 plots without show/display</li><li>Found 2 potential memory issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">03_segment_insights.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>No module named 'lightgbm'</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: sklearn, numpy</li><li>Found 1 plots without show/display</li><li>Found 2 potential memory issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">bank_churn_clv_retention.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>Target column 'Exited' not found in DataFrame.</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: sklearn, numpy</li><li>Found 1 plots without show/display</li><li>Found 2 potential memory issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">bank_churn_mlops_api_batch.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>Target column 'Exited' not found in DataFrame.</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: sklearn, numpy</li><li>Found 4 potential memory issues</li><li>Found 2 import issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <div class="detail-title">bank_churn_uplift_modelling.ipynb</div>
+                        <span class="status-badge failed">Failed</span>
+                    </div>
+                    <div class="collapsible">Click to view details</div>
+                    <div class="content">
+                        <h4>Errors:</h4><ul><li>Target column 'Exited' not found in DataFrame.</li></ul>
+                        <h4>Warnings:</h4><ul><li>Missing random seeds for: sklearn, numpy</li><li>Found 1 plots without show/display</li><li>Found 2 potential memory issues</li><li>Found 1 import issues</li></ul>
+                        
+                    </div>
+                </div>
+                
+            </div>
+            
+        
+<div class="footer">
+    <p>Generated by Notebook Test Framework | © 2025 Data Science Portfolio</p>
+</div>
+
+    </div>
+</body>
+</html>

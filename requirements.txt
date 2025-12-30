@@ -1,13 +1,13 @@
 # Core Data Science Stack
-numpy>=1.21.0
-pandas>=1.3.0
-scipy>=1.7.0
-matplotlib>=3.4.0
-seaborn>=0.11.0
+numpy>=2.3.5,<2.4  # Limited by numba compatibility
+pandas>=2.3.3
+scipy>=1.16.3
+matplotlib>=3.10.8
+seaborn>=0.13.2
 
 # Statistical Analysis
 statsmodels>=0.12.0
-scikit-learn>=1.0.0
+scikit-learn>=1.6.1,<1.7  # Limited by scikit-survival compatibility
 
 # Interactive Visualization (implemented TODOs)
 plotly>=5.0.0
@@ -85,7 +85,7 @@ azure-storage-blob>=12.0.0   # Azure blob storage
 
 # API & Web Services (implemented TODOs)
 requests>=2.25.0
-urllib3>=1.26.0
+urllib3>=2.6.2         # Fixed compression vulnerabilities
 httpx>=0.23.0          # Modern HTTP client
 
 # Time Series Analysis (future expansion)
@@ -140,6 +140,22 @@ coverage>=6.0.0        # Code coverage
 sphinx>=4.0.0          # Documentation generator
 sphinx-rtd-theme>=1.0.0  # Read the Docs theme
 nbsphinx>=0.8.0         # Jupyter notebook integration
+
+# Security Fixes Applied (2025-12-29)
+# The following packages were updated to fix security vulnerabilities:
+# - urllib3>=2.6.2 (CVE: compression vulnerabilities)
+# - werkzeug>=3.1.4 (CVE: path traversal)
+# - mlflow>=3.8.1 (CVE: arbitrary code execution)
+# - pymongo>=4.15.5 (security fixes)
+# - peewee>=3.18.3 (security fixes)
+# - sqlparse>=0.5.5 (security fixes)
+# - fastapi>=0.128.0 (for starlette compatibility)
+# - starlette>=0.50.0 (security fixes)
+#
+# Compatibility Constraints:
+# - numpy<2.4 (numba requires <2.4)
+# - scikit-learn<1.7 (scikit-survival requires <1.7)
+# - osqp<1.0.0 (scikit-survival requires <1.0.0, cvxpy removed due to conflict)
 
 # System Dependencies Documentation
 # The following system packages may be required:

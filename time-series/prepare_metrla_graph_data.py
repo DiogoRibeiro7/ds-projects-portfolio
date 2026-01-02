@@ -24,12 +24,12 @@ Assumptions:
 from __future__ import annotations
 
 import argparse
+import pickle
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 import h5py
 import numpy as np
-import pickle
 
 
 def parse_args() -> argparse.Namespace:

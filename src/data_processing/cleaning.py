@@ -15,8 +15,24 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+# Module-level constants
+DEFAULT_OUTLIER_THRESHOLD = 1.5
+DEFAULT_MIN_SAMPLE_RATIO = 0.8
+DEFAULT_MAX_MISSING_RATE = 0.05
+DEFAULT_MIN_USERS_PER_GROUP = 100
+DEFAULT_MAX_DAILY_VARIANCE = 0.3
+DEFAULT_CONFIDENCE_LEVEL = 0.95
+HIGH_MISSING_THRESHOLD = 0.1
+CORRELATION_THRESHOLD = 0.5
+UNIQUE_RATIO_THRESHOLD = 0.5
+VARIANCE_PENALTY_FACTOR = 50
+DATA_QUALITY_BASE_SCORE = 100
+
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +42,7 @@ def clean_ab_data(
     group_col: str = "group",
     metric_cols: Optional[List[str]] = None,
     outlier_method: str = "iqr",
-    outlier_threshold: float = 1.5,
+    outlier_threshold: float = DEFAULT_OUTLIER_THRESHOLD,
     by_group: bool = True,
     generate_report: bool = False,
 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, Dict]]:
@@ -170,7 +186,7 @@ def clean_ab_data(
         for col in metric_cols:
             if col in df_clean.columns:
                 missing_rate = df_clean[col].isnull().mean()
-                if missing_rate > 0.1:  # More than 10% missing
+                if missing_rate > HIGH_MISSING_THRESHOLD:  # More than 10% missing
                     warnings.warn(f"High missing rate ({missing_rate:.1%}) in {col}")
                     report["data_quality_score"] -= missing_rate * 20
 
@@ -255,8 +271,8 @@ def validate_experiment_data(
     group_col: str = "group",
     required_groups: Optional[List[str]] = None,
     date_col: Optional[str] = None,
-    min_sample_ratio: float = 0.8,
-    max_missing_rate: float = 0.05,
+    min_sample_ratio: float = DEFAULT_MIN_SAMPLE_RATIO,
+    max_missing_rate: float = DEFAULT_MAX_MISSING_RATE,
 ) -> Dict[str, Any]:
     """Comprehensive experiment data validation with enhanced checks.
 
@@ -638,7 +654,11 @@ class DataQualityChecker:
 
     def _check_structure(self, df: pd.DataFrame, config: Dict) -> Dict[str, Any]:
         """Check basic data structure requirements."""
-        structure_check: Dict[str, Any] = {"status": "passed", "issues": [], "score": 100}
+        structure_check: Dict[str, Any] = {
+            "status": "passed",
+            "issues": [],
+            "score": 100,
+        }
 
         # Required columns check
         required_cols = config.get("required_columns", ["user_id", "group"])
@@ -713,10 +733,8 @@ class DataQualityChecker:
                     for j, col2 in enumerate(correlations.columns):
                         # Cast correlation value to float for type safety
                         corr_value = cast(float, correlations.iloc[i, j])
-                        if i < j and abs(corr_value) > 0.5:
-                            high_correlations.append(
-                                (col1, col2, corr_value)
-                            )
+                        if i < j and abs(corr_value) > CORRELATION_THRESHOLD:
+                            high_correlations.append((col1, col2, corr_value))
 
                 if high_correlations:
                     missing_analysis["patterns"].append(
@@ -792,7 +810,11 @@ class DataQualityChecker:
 
     def _detect_user_anomalies(self, df: pd.DataFrame, config: Dict) -> Dict[str, Any]:
         """Detect anomalous user behavior patterns."""
-        user_analysis: Dict[str, Any] = {"status": "passed", "anomalies": [], "score": 100}
+        user_analysis: Dict[str, Any] = {
+            "status": "passed",
+            "anomalies": [],
+            "score": 100,
+        }
 
         user_col = config.get("user_col", "user_id")
         group_col = config.get("group_col", "group")
@@ -831,7 +853,11 @@ class DataQualityChecker:
         self, df: pd.DataFrame, metric_cols: List[str]
     ) -> Dict[str, Any]:
         """Analyze metric distributions for anomalies."""
-        metric_analysis: Dict[str, Any] = {"distributions": {}, "anomalies": [], "score": 100}
+        metric_analysis: Dict[str, Any] = {
+            "distributions": {},
+            "anomalies": [],
+            "score": 100,
+        }
 
         for col in metric_cols:
             if col not in df.columns:
@@ -1235,7 +1261,7 @@ def optimize_dataframe_memory(df: pd.DataFrame) -> pd.DataFrame:
     # Convert object columns to category where beneficial
     for col in df_optimized.select_dtypes(include=["object"]):
         if (
-            df_optimized[col].nunique() / len(df_optimized) < 0.5
+            df_optimized[col].nunique() / len(df_optimized) < UNIQUE_RATIO_THRESHOLD
         ):  # Less than 50% unique
             df_optimized[col] = df_optimized[col].astype("category")
 

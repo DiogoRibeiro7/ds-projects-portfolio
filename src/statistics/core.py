@@ -15,8 +15,20 @@ import pandas as pd
 from scipy import stats
 from scipy.special import ndtri
 
+# Module-level constants
+DEFAULT_ALPHA = 0.05
+DEFAULT_POWER = 0.8
+DEFAULT_BOOTSTRAP_SAMPLES = 5000
+DEFAULT_CONFIDENCE_LEVEL = 0.95
+MIN_PROPORTION = 0.0
+MAX_PROPORTION = 1.0
+CHI_SQUARE_SIGNIFICANCE = 0.05
+
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 
@@ -59,7 +71,9 @@ def two_prop_ztest(
         If pooled proportion leads to zero standard error.
     """
     # Input validation
+    logger.debug(f"Running two_prop_ztest with n1={n1}, n2={n2}, x1={x1}, x2={x2}")
     if n1 <= 0 or n2 <= 0:
+        logger.error(f"Invalid sample sizes: n1={n1}, n2={n2}")
         raise ValueError("Sample sizes must be positive")
 
     if x1 < 0 or x2 < 0:
@@ -120,8 +134,8 @@ def bootstrap_ci_diff(
     pB: float,
     nA: int,
     nB: int,
-    B: int = 5000,
-    alpha: float = 0.05,
+    B: int = DEFAULT_BOOTSTRAP_SAMPLES,
+    alpha: float = DEFAULT_ALPHA,
     method: str = "percentile",
     random_state: Optional[int] = None,
 ) -> Tuple[float, float]:
@@ -206,8 +220,8 @@ def bootstrap_ci_diff(
 def calculate_sample_size(
     baseline_rate: float,
     mde: float,
-    alpha: float = 0.05,
-    power: float = 0.8,
+    alpha: float = DEFAULT_ALPHA,
+    power: float = DEFAULT_POWER,
     ratio: float = 1.0,
     alternative: str = "two-sided",
 ) -> int:
@@ -287,7 +301,7 @@ def calculate_power(
     n_treatment: int,
     baseline_rate: float,
     effect_size: float,
-    alpha: float = 0.05,
+    alpha: float = DEFAULT_ALPHA,
     alternative: str = "two-sided",
 ) -> float:
     """Calculate statistical power for given sample sizes and effect.
@@ -338,7 +352,7 @@ def calculate_power(
 class ExperimentAnalyzer:
     """Enhanced A/B test analysis class with comprehensive functionality."""
 
-    def __init__(self, alpha: float = 0.05, power: float = 0.8):
+    def __init__(self, alpha: float = DEFAULT_ALPHA, power: float = DEFAULT_POWER):
         """Initialize the analyzer.
 
         Parameters
@@ -405,7 +419,7 @@ class ExperimentAnalyzer:
         return {
             "chi2_statistic": float(chi2_stat),
             "p_value": float(p_value),
-            "is_srm": p_value < 0.05,
+            "is_srm": p_value < CHI_SQUARE_SIGNIFICANCE,
             "group_counts": group_counts.to_dict(),
             "expected_counts": expected_counts,
             "total_users": n_total,
@@ -545,7 +559,7 @@ class ExperimentAnalyzer:
         analysis: Dict[str, Any] = {
             "data_quality": {},
             "metrics_analysis": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Data quality checks
@@ -661,7 +675,7 @@ def apply_multiple_testing_correction(
 
 
 def sequential_testing_boundary(
-    n: int, alpha: float = 0.05, method: str = "obrien_fleming"
+    n: int, alpha: float = DEFAULT_ALPHA, method: str = "obrien_fleming"
 ) -> float:
     """Calculate sequential testing boundary for interim analysis.
 

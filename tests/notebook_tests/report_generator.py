@@ -2,17 +2,19 @@
 HTML report generator for notebook test results.
 """
 
+import base64
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any
-import base64
+from typing import Any, Dict, List
 
 
 class HTMLReportGenerator:
     """Generates beautiful HTML reports for notebook test results."""
 
-    def __init__(self, results: Dict[str, Any], output_path: str = "notebook_test_report.html"):
+    def __init__(
+        self, results: Dict[str, Any], output_path: str = "notebook_test_report.html"
+    ):
         """
         Initialize the report generator.
 
@@ -22,13 +24,13 @@ class HTMLReportGenerator:
         """
         self.results = results
         self.output_path = Path(output_path)
-        self.summary = results.get('summary', {})
-        self.test_results = results.get('results', [])
+        self.summary = results.get("summary", {})
+        self.test_results = results.get("results", [])
 
     def generate(self):
         """Generate the HTML report."""
         html = self._generate_html()
-        with open(self.output_path, 'w', encoding='utf-8') as f:
+        with open(self.output_path, "w", encoding="utf-8") as f:
             f.write(html)
         print(f"HTML report generated: {self.output_path}")
 
@@ -462,13 +464,15 @@ class HTMLReportGenerator:
 
     def _generate_summary_cards(self) -> str:
         """Generate summary cards."""
-        total = self.summary.get('total_notebooks', 0)
-        passed = self.summary.get('status_counts', {}).get('passed', 0) + \
-                 self.summary.get('status_counts', {}).get('passed_with_warnings', 0)
-        failed = self.summary.get('status_counts', {}).get('failed', 0) + \
-                 self.summary.get('status_counts', {}).get('error', 0)
-        pass_rate = self.summary.get('pass_rate', 0)
-        total_time = self.summary.get('total_time', 0)
+        total = self.summary.get("total_notebooks", 0)
+        passed = self.summary.get("status_counts", {}).get(
+            "passed", 0
+        ) + self.summary.get("status_counts", {}).get("passed_with_warnings", 0)
+        failed = self.summary.get("status_counts", {}).get(
+            "failed", 0
+        ) + self.summary.get("status_counts", {}).get("error", 0)
+        pass_rate = self.summary.get("pass_rate", 0)
+        total_time = self.summary.get("total_time", 0)
 
         return f"""
 <div class="summary-cards">
@@ -513,31 +517,31 @@ class HTMLReportGenerator:
     def _generate_charts(self) -> str:
         """Generate charts section."""
         # Prepare data for charts
-        status_counts = self.summary.get('status_counts', {})
+        status_counts = self.summary.get("status_counts", {})
         status_data = {
-            'labels': list(status_counts.keys()),
-            'data': list(status_counts.values()),
-            'colors': []
+            "labels": list(status_counts.keys()),
+            "data": list(status_counts.values()),
+            "colors": [],
         }
 
         # Map colors for statuses
         color_map = {
-            'passed': '#10b981',
-            'passed_with_warnings': '#f59e0b',
-            'failed': '#ef4444',
-            'error': '#ef4444',
-            'not_run': '#6b7280'
+            "passed": "#10b981",
+            "passed_with_warnings": "#f59e0b",
+            "failed": "#ef4444",
+            "error": "#ef4444",
+            "not_run": "#6b7280",
         }
 
-        for status in status_data['labels']:
-            status_data['colors'].append(color_map.get(status, '#6b7280'))
+        for status in status_data["labels"]:
+            status_data["colors"].append(color_map.get(status, "#6b7280"))
 
         # Get execution times for bar chart
         notebooks = []
         exec_times = []
         for result in self.test_results[:10]:  # Top 10 for readability
-            notebooks.append(result.get('notebook_name', 'Unknown'))
-            exec_times.append(result.get('execution', {}).get('execution_time', 0))
+            notebooks.append(result.get("notebook_name", "Unknown"))
+            exec_times.append(result.get("execution", {}).get("execution_time", 0))
 
         return f"""
 <div class="charts-section">
@@ -577,19 +581,21 @@ class HTMLReportGenerator:
         """Generate the results table."""
         rows = []
         for result in self.test_results:
-            name = result.get('notebook_name', 'Unknown')
-            status = result.get('status', 'not_run')
-            exec_time = result.get('execution', {}).get('execution_time', 0)
-            score = result.get('validation', {}).get('score', 0)
-            issues = len(result.get('validation', {}).get('issues', []))
-            warnings = len(result.get('validation', {}).get('warnings', []))
+            name = result.get("notebook_name", "Unknown")
+            status = result.get("status", "not_run")
+            exec_time = result.get("execution", {}).get("execution_time", 0)
+            score = result.get("validation", {}).get("score", 0)
+            issues = len(result.get("validation", {}).get("issues", []))
+            warnings = len(result.get("validation", {}).get("warnings", []))
 
             # Create status badge
-            status_class = status.replace('_', '_')
-            status_display = status.replace('_', ' ').title()
+            status_class = status.replace("_", "_")
+            status_display = status.replace("_", " ").title()
 
             # Create progress bar for score
-            color = '#10b981' if score >= 80 else '#f59e0b' if score >= 60 else '#ef4444'
+            color = (
+                "#10b981" if score >= 80 else "#f59e0b" if score >= 60 else "#ef4444"
+            )
             progress = f"""
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: {score}%; background: {color};"></div>
@@ -635,20 +641,22 @@ class HTMLReportGenerator:
         details = []
 
         for result in self.test_results:
-            if result.get('status') in ['failed', 'error', 'passed_with_warnings']:
-                name = result.get('notebook_name', 'Unknown')
-                status = result.get('status', 'not_run')
+            if result.get("status") in ["failed", "error", "passed_with_warnings"]:
+                name = result.get("notebook_name", "Unknown")
+                status = result.get("status", "not_run")
 
                 # Get errors
-                errors = result.get('execution', {}).get('errors', [])
-                warnings = result.get('validation', {}).get('warnings', [])
-                issues = result.get('validation', {}).get('issues', [])
+                errors = result.get("execution", {}).get("errors", [])
+                warnings = result.get("validation", {}).get("warnings", [])
+                issues = result.get("validation", {}).get("issues", [])
 
                 error_html = ""
                 if errors:
                     error_list = []
                     for error in errors:
-                        error_list.append(f"<li>{error.get('message', 'Unknown error')}</li>")
+                        error_list.append(
+                            f"<li>{error.get('message', 'Unknown error')}</li>"
+                        )
                     error_html = f"<h4>Errors:</h4><ul>{''.join(error_list)}</ul>"
 
                 warning_html = ""
@@ -699,7 +707,9 @@ class HTMLReportGenerator:
 """
 
 
-def generate_html_report(results: Dict[str, Any], output_path: str = "notebook_test_report.html"):
+def generate_html_report(
+    results: Dict[str, Any], output_path: str = "notebook_test_report.html"
+):
     """
     Convenience function to generate HTML report.
 

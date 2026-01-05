@@ -1,0 +1,70 @@
+# Multi-stage build for ML API service
+FROM python:3.9-slim AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy requirements
+COPY requirements.txt requirements-ml.txt ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-ml.txt
+
+# Production stage
+FROM python:3.9-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libgomp1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Create non-root user
+RUN groupadd -r mlapi && useradd -r -g mlapi mlapi
+
+# Set working directory
+WORKDIR /app
+
+# Copy application code
+COPY --chown=mlapi:mlapi modern_bank_churn/ ./modern_bank_churn/
+COPY --chown=mlapi:mlapi statistical_methods/ ./statistical_methods/
+COPY --chown=mlapi:mlapi src/ ./src/
+COPY --chown=mlapi:mlapi deploy/configs/ml_api_config.yaml ./config.yaml
+
+# Create directories for models and logs
+RUN mkdir -p /app/models /app/logs /app/data && \
+    chown -R mlapi:mlapi /app
+
+# Switch to non-root user
+USER mlapi
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    MODEL_PATH=/app/models \
+    LOG_PATH=/app/logs \
+    DATA_PATH=/app/data
+
+# Run API server
+CMD ["uvicorn", "src.api.ml_api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

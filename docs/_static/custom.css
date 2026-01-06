@@ -1,0 +1,295 @@
+/* Custom CSS for Data Science Portfolio Documentation */
+
+/* Color scheme */
+:root {
+    --primary-color: #2980b9;
+    --secondary-color: #27ae60;
+    --accent-color: #e74c3c;
+    --dark-bg: #2c3e50;
+    --light-bg: #ecf0f1;
+    --text-dark: #34495e;
+    --text-light: #7f8c8d;
+}
+
+/* Typography improvements */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-dark);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+h1 {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.3em;
+}
+
+h2 {
+    color: var(--secondary-color);
+}
+
+/* Code blocks */
+.highlight {
+    background: #f8f9fa !important;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin: 1em 0;
+}
+
+.highlight pre {
+    padding: 1em;
+    overflow-x: auto;
+}
+
+code {
+    background: #f1f3f5;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+/* Navigation improvements */
+.wy-nav-side {
+    background: var(--dark-bg);
+}
+
+.wy-side-nav-search {
+    background: var(--primary-color);
+}
+
+.wy-side-nav-search > a {
+    color: #fff;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.wy-menu-vertical a:hover {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+/* Content area */
+.wy-nav-content {
+    max-width: 1200px;
+}
+
+.rst-content {
+    font-size: 16px;
+}
+
+/* Admonitions (notes, warnings, etc.) */
+.admonition {
+    border-radius: 4px;
+    padding: 1em;
+    margin: 1em 0;
+}
+
+.admonition-title {
+    font-weight: bold;
+    margin-bottom: 0.5em;
+}
+
+.note {
+    background: #d1ecf1;
+    border-left: 4px solid #0c5460;
+}
+
+.warning {
+    background: #fff3cd;
+    border-left: 4px solid #856404;
+}
+
+.tip {
+    background: #d4edda;
+    border-left: 4px solid #155724;
+}
+
+.important {
+    background: #f8d7da;
+    border-left: 4px solid #721c24;
+}
+
+/* Tables */
+.rst-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+.rst-content table th {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5em;
+    text-align: left;
+}
+
+.rst-content table td {
+    padding: 0.5em;
+    border: 1px solid #dee2e6;
+}
+
+.rst-content table tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+/* Panels */
+.panel {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin: 1em 0;
+    padding: 1em;
+}
+
+.panel-header {
+    font-weight: bold;
+    margin-bottom: 0.5em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* API documentation */
+.class {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 1em;
+    margin: 1em 0;
+    background: #f8f9fa;
+}
+
+.method {
+    border-left: 3px solid var(--secondary-color);
+    padding-left: 1em;
+    margin: 1em 0;
+}
+
+.parameter {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+/* Search results */
+.search-results {
+    list-style: none;
+    padding: 0;
+}
+
+.search-results li {
+    margin: 1em 0;
+    padding: 0.5em;
+    border-left: 3px solid var(--primary-color);
+    background: #f8f9fa;
+}
+
+/* Footer */
+.footer {
+    margin-top: 2em;
+    padding-top: 1em;
+    border-top: 1px solid #dee2e6;
+    color: var(--text-light);
+    font-size: 0.9em;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .wy-nav-content {
+        padding: 1em;
+    }
+
+    .rst-content {
+        font-size: 14px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    h2 {
+        font-size: 1.3em;
+    }
+}
+
+/* Print styles */
+@media print {
+    .wy-nav-side,
+    .wy-nav-top,
+    .rst-versions {
+        display: none;
+    }
+
+    .wy-nav-content {
+        margin-left: 0;
+        max-width: 100%;
+    }
+
+    body {
+        font-size: 12pt;
+    }
+
+    h1 {
+        page-break-before: always;
+    }
+
+    pre, blockquote {
+        page-break-inside: avoid;
+    }
+}
+
+/* Syntax highlighting improvements */
+.highlight .k { color: #0000ff; } /* Keyword */
+.highlight .s { color: #008000; } /* String */
+.highlight .c { color: #808080; } /* Comment */
+.highlight .n { color: #000000; } /* Name */
+.highlight .o { color: #666666; } /* Operator */
+
+/* Custom badges */
+.badge {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    font-size: 0.875em;
+    font-weight: bold;
+    border-radius: 0.25em;
+    color: white;
+}
+
+.badge-primary {
+    background: var(--primary-color);
+}
+
+.badge-success {
+    background: var(--secondary-color);
+}
+
+.badge-warning {
+    background: #f39c12;
+}
+
+.badge-danger {
+    background: var(--accent-color);
+}
+
+/* Improve mermaid diagrams */
+.mermaid {
+    text-align: center;
+    margin: 1em 0;
+}
+
+/* Jupyter notebook cells */
+.nbinput, .nboutput {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin: 0.5em 0;
+}
+
+.nbinput {
+    background: #f8f9fa;
+}
+
+.nboutput {
+    background: white;
+}

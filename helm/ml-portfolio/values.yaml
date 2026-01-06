@@ -1,0 +1,369 @@
+# Default values for ml-portfolio
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  environment: production
+  domain: ml-portfolio.example.com
+  storageClass: fast-ssd
+  imagePullSecrets: []
+
+# ML API Configuration
+mlApi:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: your-registry/ds-portfolio-ml-api
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  env:
+    LOG_LEVEL: INFO
+    WORKERS: "4"
+    CACHE_ENABLED: "true"
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 30
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 10
+
+# Dashboard Configuration
+dashboard:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: your-registry/ds-portfolio-dashboard
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8501
+    targetPort: 8501
+
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+  env:
+    STREAMLIT_SERVER_PORT: "8501"
+    STREAMLIT_SERVER_HEADLESS: "true"
+
+# AutoML Configuration
+automl:
+  enabled: true
+  ray:
+    head:
+      replicaCount: 1
+      resources:
+        limits:
+          cpu: 8000m
+          memory: 16Gi
+          nvidia.com/gpu: "1"
+        requests:
+          cpu: 4000m
+          memory: 8Gi
+          nvidia.com/gpu: "1"
+
+    worker:
+      replicaCount: 2
+      resources:
+        limits:
+          cpu: 4000m
+          memory: 8Gi
+          nvidia.com/gpu: "1"
+        requests:
+          cpu: 2000m
+          memory: 4Gi
+          nvidia.com/gpu: "1"
+
+  image:
+    repository: your-registry/ds-portfolio-automl
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: fast-ssd
+
+# Database Configuration
+postgresql:
+  enabled: true
+  auth:
+    username: mluser
+    password: changeme-prod-password
+    database: mldb
+
+  primary:
+    persistence:
+      enabled: true
+      size: 100Gi
+
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+# Redis Configuration
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: changeme-redis-password
+
+  master:
+    persistence:
+      enabled: true
+      size: 10Gi
+
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+# MinIO Object Storage
+minio:
+  enabled: true
+  auth:
+    rootUser: minioadmin
+    rootPassword: changeme-minio-password
+
+  persistence:
+    enabled: true
+    size: 100Gi
+
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+
+  prometheus:
+    enabled: true
+    alertmanager:
+      enabled: true
+
+    serverFiles:
+      alerting_rules.yml:
+        groups:
+          - name: ml_portfolio_alerts
+            rules:
+              - alert: HighErrorRate
+                expr: rate(ml_api_requests_total{status="error"}[5m]) > 0.05
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: High error rate detected
+
+  grafana:
+    enabled: true
+    adminUser: admin
+    adminPassword: changeme-grafana-password
+
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: 'ml-portfolio'
+            orgId: 1
+            folder: ''
+            type: file
+            disableDeletion: false
+            updateIntervalSeconds: 10
+            allowUiUpdates: false
+            options:
+              path: /var/lib/grafana/dashboards/ml-portfolio
+
+    dashboards:
+      ml-portfolio:
+        ml-dashboard:
+          file: dashboards/ml-dashboard.json
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+
+  hosts:
+    - host: api.ml-portfolio.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: ml-api
+
+    - host: dashboard.ml-portfolio.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: dashboard
+
+    - host: ray.ml-portfolio.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: ray-dashboard
+
+  tls:
+    - secretName: ml-portfolio-tls
+      hosts:
+        - api.ml-portfolio.example.com
+        - dashboard.ml-portfolio.example.com
+        - ray.ml-portfolio.example.com
+
+# Service Mesh Configuration (Optional)
+serviceMesh:
+  enabled: false
+  istio:
+    enabled: false
+    virtualService:
+      enabled: true
+    destinationRule:
+      enabled: true
+
+  linkerd:
+    enabled: false
+
+# Backup Configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: 30  # Days
+
+  s3:
+    enabled: false
+    bucket: ml-portfolio-backups
+    region: us-east-1
+
+# Security Configuration
+security:
+  podSecurityPolicy:
+    enabled: true
+
+  networkPolicy:
+    enabled: true
+
+  rbac:
+    create: true
+
+  secrets:
+    create: true
+    external: false  # Use external secret manager
+
+# Cloud Provider Configuration
+cloud:
+  provider: ""  # aws, gcp, azure
+
+  aws:
+    region: us-east-1
+    eksCluster: ""
+    iamRole: ""
+
+  gcp:
+    project: ""
+    region: us-central1
+    gkeCluster: ""
+
+  azure:
+    subscription: ""
+    resourceGroup: ""
+    aksCluster: ""
+
+# Feature Flags
+features:
+  automl:
+    enabled: true
+    frameworks:
+      - autogluon
+      - h2o
+      - flaml
+      - pycaret
+
+  streaming:
+    enabled: true
+    kafka:
+      enabled: false
+      bootstrapServers: ""
+
+    kinesis:
+      enabled: false
+      region: us-east-1
+
+  gpu:
+    enabled: true
+    nodeSelector:
+      accelerator: nvidia-tesla-t4
+
+  distributedComputing:
+    enabled: true
+    framework: ray  # ray, dask, spark
+
+# Development/Testing
+development:
+  enabled: false
+  debug: false
+  mockData: false
+
+  jupyter:
+    enabled: false
+    token: jupyter-token

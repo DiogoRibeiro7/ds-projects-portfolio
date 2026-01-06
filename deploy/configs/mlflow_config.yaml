@@ -1,0 +1,210 @@
+# MLflow Configuration for Model Serving
+mlflow:
+  tracking:
+    uri: "postgresql://mluser:password@postgres-service:5432/mlflow"
+    artifact_location: "s3://ml-portfolio-artifacts/mlflow"
+    default_experiment: "production"
+
+  registry:
+    uri: "postgresql://mluser:password@postgres-service:5432/mlflow"
+    model_stages:
+      - "None"
+      - "Staging"
+      - "Production"
+      - "Archived"
+
+  serving:
+    host: "0.0.0.0"
+    port: 5000
+    workers: 4
+    timeout: 300
+
+  model_deployment:
+    # Model serving strategies
+    strategies:
+      canary:
+        enabled: true
+        initial_traffic_percentage: 10
+        increment_percentage: 10
+        increment_interval_seconds: 300
+        success_threshold:
+          error_rate: 0.01
+          latency_p99_ms: 100
+
+      blue_green:
+        enabled: true
+        switch_strategy: "immediate"  # or "gradual"
+        health_check_interval: 30
+        rollback_on_failure: true
+
+      shadow:
+        enabled: true
+        comparison_metrics:
+          - "prediction_accuracy"
+          - "latency"
+          - "throughput"
+        logging_percentage: 100
+
+    # Model validation
+    validation:
+      data_drift:
+        enabled: true
+        method: "kolmogorov_smirnov"
+        threshold: 0.05
+        check_interval_seconds: 3600
+
+      performance_drift:
+        enabled: true
+        metrics:
+          - name: "accuracy"
+            threshold: 0.02
+          - name: "auc_roc"
+            threshold: 0.03
+          - name: "f1_score"
+            threshold: 0.02
+        check_interval_seconds: 3600
+
+    # A/B testing configuration
+    ab_testing:
+      enabled: true
+      traffic_allocation:
+        method: "weighted"  # or "random"
+        update_interval_seconds: 300
+      metrics_collection:
+        - "prediction_latency"
+        - "model_accuracy"
+        - "user_engagement"
+      significance_level: 0.05
+      min_sample_size: 1000
+
+    # Model monitoring
+    monitoring:
+      metrics:
+        - name: "request_count"
+          type: "counter"
+        - name: "request_duration"
+          type: "histogram"
+          buckets: [0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0]
+        - name: "prediction_value"
+          type: "histogram"
+        - name: "model_version"
+          type: "gauge"
+
+      alerting:
+        rules:
+          - name: "high_error_rate"
+            condition: "error_rate > 0.05"
+            duration: "5m"
+            severity: "critical"
+          - name: "high_latency"
+            condition: "p99_latency > 1000"
+            duration: "5m"
+            severity: "warning"
+          - name: "data_drift_detected"
+            condition: "drift_score > 0.1"
+            duration: "10m"
+            severity: "warning"
+
+    # Model endpoints
+    endpoints:
+      predict:
+        path: "/predict"
+        methods: ["POST"]
+        rate_limit: 1000
+        timeout: 30
+
+      batch_predict:
+        path: "/batch_predict"
+        methods: ["POST"]
+        rate_limit: 100
+        timeout: 300
+        max_batch_size: 10000
+
+      explain:
+        path: "/explain"
+        methods: ["POST"]
+        rate_limit: 100
+        timeout: 60
+        explanation_method: "shap"
+
+      health:
+        path: "/health"
+        methods: ["GET"]
+
+      metrics:
+        path: "/metrics"
+        methods: ["GET"]
+        format: "prometheus"
+
+# Model configurations by type
+model_configs:
+  xgboost:
+    serving_format: "pickle"
+    preprocessing: "standard_scaler"
+    n_threads: 4
+    predictor: "cpu"
+
+  lightgbm:
+    serving_format: "pickle"
+    preprocessing: "robust_scaler"
+    n_threads: 4
+    predictor: "cpu"
+
+  tensorflow:
+    serving_format: "saved_model"
+    preprocessing: "minmax_scaler"
+    batch_size: 32
+    predictor: "gpu"
+
+  pytorch:
+    serving_format: "torchscript"
+    preprocessing: "standard_scaler"
+    batch_size: 32
+    predictor: "gpu"
+
+  sklearn:
+    serving_format: "pickle"
+    preprocessing: "standard_scaler"
+    n_jobs: -1
+    predictor: "cpu"
+
+# Feature store configuration
+feature_store:
+  enabled: true
+  backend: "feast"
+
+  online_store:
+    type: "redis"
+    host: "redis-service"
+    port: 6379
+    ttl_seconds: 86400
+
+  offline_store:
+    type: "postgres"
+    host: "postgres-service"
+    port: 5432
+    database: "feature_store"
+
+  feature_service:
+    cache_enabled: true
+    cache_ttl_seconds: 300
+    batch_size: 1000
+
+  feature_views:
+    - name: "customer_features"
+      entities: ["customer_id"]
+      features:
+        - "age"
+        - "tenure"
+        - "balance"
+        - "num_products"
+        - "credit_score"
+      ttl: 86400
+
+    - name: "transaction_features"
+      entities: ["customer_id", "transaction_id"]
+      features:
+        - "transaction_amount"
+        - "transaction_type"
+        - "merchant_category"
+      ttl: 3600

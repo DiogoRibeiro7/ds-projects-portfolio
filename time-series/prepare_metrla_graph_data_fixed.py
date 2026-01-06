@@ -11,13 +11,12 @@ Assumes:
 
 from __future__ import annotations
 
+import pickle
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 import h5py
 import numpy as np
-import pickle
-
 
 RAW_DIR = Path("/data/METR-LA")
 OUTPUT_PATH = Path("data") / "graph_traffic.npz"
@@ -59,7 +58,9 @@ def load_traffic(h5_path: Path, dataset_name: Optional[str] = None) -> np.ndarra
 
         data = f[dataset_name][:]
         if data.ndim not in (2, 3):
-            raise RuntimeError(f"Unexpected shape for dataset '{dataset_name}': {data.shape}")
+            raise RuntimeError(
+                f"Unexpected shape for dataset '{dataset_name}': {data.shape}"
+            )
 
     traffic = np.array(data, dtype=np.float32)
     if traffic.ndim == 3 and traffic.shape[-1] == 1:
@@ -80,7 +81,9 @@ def load_adjacency(pkl_path: Path) -> np.ndarray:
     if isinstance(obj, (list, tuple)) and len(obj) == 3:
         _, _, adj_mx = obj
     else:
-        raise RuntimeError("Unexpected structure in adj_mx.pkl; expected (ids, map, adj_mx).")
+        raise RuntimeError(
+            "Unexpected structure in adj_mx.pkl; expected (ids, map, adj_mx)."
+        )
 
     adj = np.array(adj_mx, dtype=np.float32)
     if adj.ndim != 2 or adj.shape[0] != adj.shape[1]:
@@ -89,6 +92,7 @@ def load_adjacency(pkl_path: Path) -> np.ndarray:
 
 
 def main() -> None:
+    """Load METR-LA assets and emit the normalized graph archive."""
     h5_path = RAW_DIR / "metr-la.h5"
     adj_path = RAW_DIR / "adj_mx.pkl"
 

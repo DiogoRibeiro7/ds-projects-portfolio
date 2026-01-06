@@ -1,0 +1,241 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: ds-portfolio-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mluser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mlpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-mldb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deploy/scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - ml-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mluser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ds-portfolio-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - ml-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: ds-portfolio-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - ml-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ML API Service
+  ml-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ml-api
+    container_name: ds-portfolio-ml-api
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mluser}:${POSTGRES_PASSWORD:-mlpassword}@postgres:5432/${POSTGRES_DB:-mldb}
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MODEL_BUCKET: models
+      DATA_BUCKET: data
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./logs/ml-api:/app/logs
+    ports:
+      - "8000:8000"
+    networks:
+      - ml-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  # Dashboard Service
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dashboard
+    container_name: ds-portfolio-dashboard
+    environment:
+      API_URL: http://ml-api:8000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mluser}:${POSTGRES_PASSWORD:-mlpassword}@postgres:5432/${POSTGRES_DB:-mldb}
+      REDIS_URL: redis://redis:6379
+      CACHE_TTL: 300
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./logs/dashboard:/app/logs
+      - ./cache:/app/cache
+    ports:
+      - "8501:8501"
+    networks:
+      - ml-network
+    depends_on:
+      - ml-api
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # AutoML Service (with GPU support)
+  automl:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.automl
+    container_name: ds-portfolio-automl
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mluser}:${POSTGRES_PASSWORD:-mlpassword}@postgres:5432/${POSTGRES_DB:-mldb}
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      RAY_HEAD_NODE: automl:6379
+      CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-0}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./logs/automl:/app/logs
+      - ./ray_results:/app/ray_results
+    ports:
+      - "8265:8265"  # Ray Dashboard
+      - "6380:6379"  # Ray head node
+      - "8001:8000"  # AutoML API
+    networks:
+      - ml-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ds-portfolio-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ./deploy/configs/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - ml-network
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ds-portfolio-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - ./deploy/configs/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - ml-network
+    depends_on:
+      - prometheus
+
+  # Jupyter Lab for Development
+  jupyter:
+    image: jupyter/datascience-notebook:latest
+    container_name: ds-portfolio-jupyter
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      JUPYTER_TOKEN: ${JUPYTER_TOKEN:-jupyter}
+    volumes:
+      - ./notebooks:/home/jovyan/notebooks
+      - ./data:/home/jovyan/data
+      - ./models:/home/jovyan/models
+    ports:
+      - "8888:8888"
+    networks:
+      - ml-network
+
+networks:
+  ml-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  prometheus_data:
+  grafana_data:

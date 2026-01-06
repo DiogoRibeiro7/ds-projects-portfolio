@@ -1,7 +1,8 @@
 """Setup configuration for data science portfolio package."""
 
-from setuptools import setup, find_packages
 from pathlib import Path
+
+from setuptools import find_packages, setup
 
 # Read README for long description
 README = Path(__file__).parent / "README.md"
@@ -12,8 +13,8 @@ REQUIREMENTS = Path(__file__).parent / "requirements.txt"
 install_requires = []
 if REQUIREMENTS.exists():
     install_requires = [
-        line.strip() 
-        for line in REQUIREMENTS.read_text().splitlines() 
+        line.strip()
+        for line in REQUIREMENTS.read_text().splitlines()
         if line.strip() and not line.startswith("#")
     ]
 
@@ -75,7 +76,7 @@ setup(
         "data science",
         "statistics",
         "a/b testing",
-        "experimentation", 
+        "experimentation",
         "machine learning",
         "analytics",
         "portfolio",

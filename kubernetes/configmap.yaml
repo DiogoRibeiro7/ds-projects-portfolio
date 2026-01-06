@@ -1,0 +1,130 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ml-portfolio-config
+  namespace: ml-portfolio
+data:
+  # Application Configuration
+  LOG_LEVEL: "INFO"
+  ENVIRONMENT: "production"
+
+  # API Configuration
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+  API_WORKERS: "4"
+  API_TIMEOUT: "300"
+
+  # Database Configuration
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_NAME: "mldb"
+  DB_POOL_SIZE: "20"
+  DB_MAX_OVERFLOW: "40"
+
+  # Redis Configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  CACHE_TTL: "3600"
+
+  # MinIO Configuration
+  MINIO_ENDPOINT: "minio-service:9000"
+  MINIO_USE_SSL: "false"
+  MODEL_BUCKET: "models"
+  DATA_BUCKET: "data"
+  RESULTS_BUCKET: "results"
+
+  # AutoML Configuration
+  AUTOML_MAX_TIME: "3600"
+  AUTOML_MAX_MODELS: "20"
+  AUTOML_METRIC: "auc"
+  AUTOML_CROSS_VALIDATION: "5"
+
+  # Ray Configuration
+  RAY_HEAD_SERVICE: "ray-head-service"
+  RAY_HEAD_PORT: "10001"
+  RAY_DASHBOARD_PORT: "8265"
+  RAY_NUM_CPUS: "8"
+  RAY_NUM_GPUS: "1"
+
+  # Monitoring Configuration
+  PROMETHEUS_PORT: "9090"
+  GRAFANA_PORT: "3000"
+  METRICS_ENABLED: "true"
+  TRACING_ENABLED: "true"
+
+  # ML Pipeline Configuration
+  ml_pipeline.yaml: |
+    pipeline:
+      name: "ML Pipeline"
+      version: "1.0.0"
+      stages:
+        - name: "data_ingestion"
+          enabled: true
+          config:
+            batch_size: 10000
+            validation_split: 0.2
+        - name: "feature_engineering"
+          enabled: true
+          config:
+            scaling_method: "robust"
+            encoding_method: "target"
+            feature_selection: "boruta"
+        - name: "model_training"
+          enabled: true
+          config:
+            algorithms:
+              - "xgboost"
+              - "lightgbm"
+              - "catboost"
+            ensemble_method: "voting"
+            hyperparameter_tuning: true
+        - name: "model_evaluation"
+          enabled: true
+          config:
+            metrics:
+              - "auc_roc"
+              - "precision"
+              - "recall"
+              - "f1_score"
+            threshold_optimization: true
+        - name: "model_deployment"
+          enabled: true
+          config:
+            deployment_type: "canary"
+            traffic_split: 0.1
+            monitoring: true
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ml-portfolio-secrets
+  namespace: ml-portfolio
+type: Opaque
+stringData:
+  # Database Credentials
+  DB_USER: "mluser"
+  DB_PASSWORD: "changeme-prod-password"
+  DATABASE_URL: "postgresql://mluser:changeme-prod-password@postgres-service:5432/mldb"
+
+  # Redis Password
+  REDIS_PASSWORD: "changeme-redis-password"
+
+  # MinIO Credentials
+  MINIO_ACCESS_KEY: "changeme-access-key"
+  MINIO_SECRET_KEY: "changeme-secret-key"
+
+  # API Keys
+  API_KEY: "changeme-api-key"
+  JWT_SECRET: "changeme-jwt-secret"
+
+  # Monitoring Credentials
+  GRAFANA_USER: "admin"
+  GRAFANA_PASSWORD: "changeme-grafana-password"
+
+  # Cloud Provider Credentials (placeholder)
+  AWS_ACCESS_KEY_ID: ""
+  AWS_SECRET_ACCESS_KEY: ""
+  GCP_SERVICE_ACCOUNT_KEY: ""
+  AZURE_CLIENT_ID: ""
+  AZURE_CLIENT_SECRET: ""

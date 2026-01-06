@@ -18,6 +18,20 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
+# Module-level constants
+DEFAULT_ALPHA = 0.05
+DEFAULT_POWER = 0.8
+DEFAULT_BASELINE_RATE = 0.1
+DEFAULT_FIGSIZE = (15, 10)
+DEFAULT_DPI = 300
+DEFAULT_CONFIDENCE_LEVEL = 0.95
+SRM_WARNING_THRESHOLD = 0.8
+SMALL_EFFECT_SIZE = 0.01
+MEDIUM_EFFECT_SIZE = 0.03
+LARGE_EFFECT_SIZE = 0.05
+DEFAULT_CHUNK_SIZE = 10000
+DEFAULT_REFRESH_INTERVAL = 300  # 5 minutes
+
 # Try to import optional dependencies
 try:
     import plotly.express as px
@@ -37,7 +51,10 @@ except ImportError:
     SCIPY_AVAILABLE = False
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 # Global plotting configuration - updated style handling
@@ -70,7 +87,7 @@ def plot_experiment_results(
     df: pd.DataFrame,
     metric_col: str,
     group_col: str = "group",
-    figsize: Tuple[int, int] = (15, 10),
+    figsize: Tuple[int, int] = DEFAULT_FIGSIZE,
     interactive: bool = False,
     include_stats: bool = True,
 ) -> Union[plt.Figure, Any]:
@@ -1258,8 +1275,8 @@ def _perform_temporal_tests(
 def plot_statistical_power(
     effect_sizes: np.ndarray,
     sample_sizes: np.ndarray,
-    alpha: float = 0.05,
-    baseline_rate: float = 0.1,
+    alpha: float = DEFAULT_ALPHA,
+    baseline_rate: float = DEFAULT_BASELINE_RATE,
     figsize: Tuple[int, int] = (15, 6),
     interactive: bool = False,
 ) -> Union[plt.Figure, Any]:
@@ -1824,7 +1841,7 @@ class ExperimentDashboard:
         # Check for SRM
         if len(group_counts) == 2:
             ratio = min(group_counts) / max(group_counts)
-            if ratio < 0.8:
+            if ratio < SRM_WARNING_THRESHOLD:
                 interpretations.append(
                     f"🚨 Sample Ratio Mismatch detected (ratio: {ratio:.3f}). Check randomization."
                 )

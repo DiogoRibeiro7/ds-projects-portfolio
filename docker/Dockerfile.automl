@@ -1,0 +1,81 @@
+# Multi-stage build for AutoML service with GPU support
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 AS base
+
+# Install Python and system dependencies
+RUN apt-get update && apt-get install -y \
+    python3.9 \
+    python3-pip \
+    build-essential \
+    curl \
+    git \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python 3.9 as default
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+
+# Builder stage
+FROM base AS builder
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy requirements
+COPY requirements.txt requirements-automl.txt ./
+
+# Install Python dependencies including AutoML frameworks
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu118 && \
+    pip install --no-cache-dir autogluon h2o flaml pycaret[full] && \
+    pip install --no-cache-dir ray[default,serve,tune] dask[distributed] && \
+    pip install --no-cache-dir nni optuna hyperopt
+
+# Production stage
+FROM base
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Create non-root user
+RUN groupadd -r automl && useradd -r -g automl automl
+
+# Set working directory
+WORKDIR /app
+
+# Copy application code
+COPY --chown=automl:automl src/automl/ ./src/automl/
+COPY --chown=automl:automl modern_bank_churn/ ./modern_bank_churn/
+COPY --chown=automl:automl statistical_methods/ ./statistical_methods/
+COPY --chown=automl:automl src/utils/ ./src/utils/
+COPY --chown=automl:automl deploy/configs/automl_config.yaml ./config.yaml
+
+# Create directories for models, data, and Ray
+RUN mkdir -p /app/models /app/logs /app/data /app/ray_results /tmp/ray && \
+    chown -R automl:automl /app /tmp/ray
+
+# Switch to non-root user
+USER automl
+
+# Health check
+HEALTHCHECK --interval=60s --timeout=30s --start-period=60s --retries=3 \
+    CMD python -c "import ray; ray.init(address='auto', ignore_reinit_error=True); print('Ray cluster healthy')" || exit 1
+
+# Expose ports
+EXPOSE 8265 8000 6379
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    RAY_TMPDIR=/tmp/ray \
+    RAY_ADDRESS=auto \
+    CUDA_VISIBLE_DEVICES=0 \
+    MODEL_PATH=/app/models \
+    LOG_PATH=/app/logs \
+    DATA_PATH=/app/data
+
+# Run AutoML service with Ray head node
+CMD ["ray", "start", "--head", "--port=6379", "--dashboard-port=8265", "--block"]

@@ -92,6 +92,7 @@ def load_adjacency(pkl_path: Path) -> np.ndarray:
 
 
 def main() -> None:
+    """Load METR-LA assets and emit the normalized graph archive."""
     h5_path = RAW_DIR / "metr-la.h5"
     adj_path = RAW_DIR / "adj_mx.pkl"
 

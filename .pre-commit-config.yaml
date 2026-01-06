@@ -34,6 +34,13 @@ repos:
       - id: isort
         args: [--profile=black, --line-length=88]
 
+  # Python linting (fast, includes docstring rules)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.7
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+
   # Python linting
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
@@ -99,12 +106,17 @@ repos:
         files: \.ipynb$
         pass_filenames: false
 
+      - id: docstring-coverage
+        name: Enforce docstring coverage
+        entry: python tools/check_docstring_coverage.py
+        language: system
+        pass_filenames: false
+
   # Documentation
   - repo: https://github.com/pycqa/pydocstyle
     rev: 6.3.0
     hooks:
       - id: pydocstyle
-        args: [--convention=numpy]
 
   # Requirements.txt sorting
   - repo: https://github.com/aio-libs/sort-all

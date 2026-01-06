@@ -57,6 +57,17 @@ class PredictionRequest(BaseModel):
 
     @validator('features')
     def validate_features(cls, v):
+        """Validate that a prediction request contains at least one feature.
+
+        Args:
+            v: Mapping of feature names to scalar inputs.
+
+        Returns:
+            The original feature mapping when it is non-empty.
+
+        Raises:
+            ValueError: If no features were provided.
+        """
         if not v:
             raise ValueError("Features cannot be empty")
         return v
@@ -70,6 +81,18 @@ class BatchPredictionRequest(BaseModel):
 
     @validator('instances')
     def validate_instances(cls, v):
+        """Ensure batch requests contain data but stay within safety limits.
+
+        Args:
+            v: Sequence of JSON-serializable feature dictionaries.
+
+        Returns:
+            The original list when it contains at least one instance and no more
+            than 10,000 rows.
+
+        Raises:
+            ValueError: If the batch is empty or exceeds the hard limit.
+        """
         if not v:
             raise ValueError("Instances cannot be empty")
         if len(v) > 10000:

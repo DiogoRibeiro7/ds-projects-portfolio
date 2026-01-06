@@ -408,7 +408,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 ### Redis Configuration
 
-```conf
+```ini
 # redis.conf
 # Basic configuration
 port 6379
@@ -731,4 +731,4 @@ For deployment issues:
 4. Check resource limits
 5. Review security groups/firewall rules
 
-For more help, see [Troubleshooting Guide](troubleshooting.md).
+For more help, see the troubleshooting section in the repository README.

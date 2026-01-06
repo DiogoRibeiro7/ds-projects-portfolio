@@ -98,6 +98,26 @@ def two_prop_ztest(
     # Implementation here
 ```
 
+### Documentation Standards
+
+1. **Docstrings + inline comments**
+   - Google-style docstrings (`docs/DOCS_STYLE.md`) are mandatory for every
+     public module/class/function. Include Args/Returns/Raises, Side Effects,
+     Complexity notes (when meaningful), and runnable `Examples` for high-usage
+     APIs listed in `docs/DOC_COVERAGE.md`.
+   - Inline comments explain *why* tricky logic exists (business rules, guard
+     rails, statistical adjustments). Avoid narrating obvious code.
+2. **Coverage + reporting**
+   - Update `docs/DOC_COVERAGE.md` whenever you add/modify public modules so the
+     docstring + example coverage table stays accurate.
+   - Run `python tools/check_docstring_coverage.py` and document any temporary
+     skips in both the script and the style guide.
+3. **Workflow**
+   - Follow `docs/CONTRIBUTING_DOCS.md` for a doc-specific checklist covering
+     import discovery, example authoring, inline comments, and docs builds.
+   - Run `pre-commit run --all-files` to execute Ruff (docstring rules),
+     `pydocstyle`, formatting, and coverage checks before submitting a PR.
+
 #### Jupyter Notebooks
 - **Clear structure**: Use markdown headers for organization
 - **Explanations**: Markdown before each code section explaining the approach

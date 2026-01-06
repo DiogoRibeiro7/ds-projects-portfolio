@@ -1,0 +1,1292 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.08.06 -->
+        <title>statistical_methods.advanced_statistical_tests - Data Science Portfolio 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=bd62c62b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=bd62c62b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">Data Science Portfolio 1.0.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/index.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/data_processing.html">Data Processing Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/statistics.html">Statistical Methods API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/visualization.html">Visualization Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/ml_api.html">Machine Learning API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/automl.html">AutoML Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/statistical_methods.html">Statistical Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/ab_testing.html">A/B Testing Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/cloud.html">Cloud Integrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/security.html">Security Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/privacy.html">Privacy Protection Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/compliance.html">Compliance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/observability.html">Observability Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/data_quality.html">Data Quality Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/data_profiling.html">Data Profiling Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/data_preprocessing.html">Data Preprocessing Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/distributed_computing.html">Distributed Computing Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/streaming.html">Streaming Processor Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/dashboards.html">Dashboards &amp; Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/visualization_components.html">Visualization Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/graphql.html">GraphQL API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/utils.html">Utilities Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/caching.html">Caching Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/exceptions.html">Exceptions Module</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Further Reading</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../best_practices.html">🎯 Best Practices Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment.html">🚀 Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DOCS_STYLE.html">Documentation Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING_DOCS.html">Documentation Contribution Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../DOC_COVERAGE.html">Documentation Coverage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">🚀 Quick Start Guide</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for statistical_methods.advanced_statistical_tests</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Advanced statistical helpers used throughout the experimentation toolkit.</span>
+
+<span class="sd">The module consolidates non-parametric tests, multiple testing corrections,</span>
+<span class="sd">bootstrap utilities, power analysis helpers, and effect size calculators that</span>
+<span class="sd">show up across the CLI, dashboards, tutorials, and tests. All functions follow</span>
+<span class="sd">the Google docstring convention defined in `docs/DOCS_STYLE.md` and expose</span>
+<span class="sd">examples that match the usage patterns captured in documentation and notebooks.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.stats.multitest</span><span class="w"> </span><span class="kn">import</span> <span class="n">multipletests</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.stats.power</span><span class="w"> </span><span class="kn">import</span> <span class="n">NormalIndPower</span><span class="p">,</span> <span class="n">TTestPower</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TestResult">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.TestResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for statistical test results.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        statistic: Test statistic reported by the underlying SciPy function.</span>
+<span class="sd">        p_value: P-value for the observed statistic.</span>
+<span class="sd">        confidence_interval: Lower and upper bounds for the primary metric.</span>
+<span class="sd">        effect_size: Scalar effect size (Cohen&#39;s d, rank-biserial, etc.).</span>
+<span class="sd">        power: Optional post-hoc power estimate when available.</span>
+<span class="sd">        method: Human-readable test name.</span>
+<span class="sd">        alternative: Alternative hypothesis label.</span>
+<span class="sd">        n_samples: Number of observations evaluated.</span>
+<span class="sd">        additional_info: Extra metadata (permutation counts, corrections, ...).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">statistic</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">p_value</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">confidence_interval</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="n">effect_size</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">alternative</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;two-sided&quot;</span>
+    <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">additional_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="NonParametricTests">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.NonParametricTests">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NonParametricTests</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Non-parametric statistical routines used by dashboards and docs.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from statistical_methods.advanced_statistical_tests import (</span>
+<span class="sd">        ...     NonParametricTests</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; rng = np.random.default_rng(42)</span>
+<span class="sd">        &gt;&gt;&gt; control = rng.normal(loc=0.0, scale=1.0, size=400)</span>
+<span class="sd">        &gt;&gt;&gt; treatment = rng.normal(loc=0.2, scale=1.1, size=400)</span>
+<span class="sd">        &gt;&gt;&gt; result = NonParametricTests.mann_whitney_u(control, treatment)</span>
+<span class="sd">        &gt;&gt;&gt; round(result.effect_size, 3)</span>
+<span class="sd">        -0.215</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NonParametricTests.mann_whitney_u">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.NonParametricTests.mann_whitney_u">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mann_whitney_u</span><span class="p">(</span>
+        <span class="n">group1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">group2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">alternative</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;two-sided&quot;</span><span class="p">,</span>
+        <span class="n">confidence_level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a Mann-Whitney U (Wilcoxon rank-sum) test on independent samples.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            group1 (np.ndarray): Baseline sample of shape ``(n1,)``.</span>
+<span class="sd">            group2 (np.ndarray): Variant sample of shape ``(n2,)``.</span>
+<span class="sd">            alternative (str): `&#39;two-sided&#39;`, `&#39;greater&#39;`, or `&#39;less&#39;`.</span>
+<span class="sd">            confidence_level (float): Confidence interval coverage in ``(0, 1)``.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TestResult: Rank-biserial effect size, p-value, and bootstrap CI.</span>
+
+<span class="sd">        Side Effects:</span>
+<span class="sd">            Uses NumPy&#39;s global RNG to resample bootstrap replicates. Call</span>
+<span class="sd">            ``np.random.seed`` or use ``np.random.default_rng`` beforehand to</span>
+<span class="sd">            obtain deterministic bounds in tests/docs.</span>
+
+<span class="sd">        Complexity:</span>
+<span class="sd">            O(n_bootstrap × (n1 + n2)) time and O(n_bootstrap) memory for the</span>
+<span class="sd">            bootstrap samples (default 10,000 iterations in this implementation).</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">            &gt;&gt;&gt; from statistical_methods.advanced_statistical_tests import (</span>
+<span class="sd">            ...     NonParametricTests</span>
+<span class="sd">            ... )</span>
+<span class="sd">            &gt;&gt;&gt; rng = np.random.default_rng(7)</span>
+<span class="sd">            &gt;&gt;&gt; baseline = rng.normal(0.0, 1.0, 500)</span>
+<span class="sd">            &gt;&gt;&gt; treatment = rng.normal(0.15, 1.1, 500)</span>
+<span class="sd">            &gt;&gt;&gt; report = NonParametricTests.mann_whitney_u(baseline, treatment)</span>
+<span class="sd">            &gt;&gt;&gt; round(report.statistic, 3), round(report.p_value, 4)</span>
+<span class="sd">            (98224.0, 0.0005)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">statistic</span><span class="p">,</span> <span class="n">p_value</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">mannwhitneyu</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">group2</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="n">alternative</span><span class="p">)</span>
+
+        <span class="c1"># The rank-biserial correlation summarizes stochastic dominance between groups.</span>
+        <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group1</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">group2</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">statistic</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n1</span> <span class="o">*</span> <span class="n">n2</span><span class="p">)</span>
+
+        <span class="c1"># Bootstrap confidence interval for the difference in medians provides</span>
+        <span class="c1"># a more interpretable estimate for stakeholders than the raw U value.</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">median_diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="n">boot_samples</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">):</span>
+            <span class="n">sample1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n1</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">sample2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">group2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n2</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">boot_samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">median_diff</span><span class="p">(</span><span class="n">sample1</span><span class="p">,</span> <span class="n">sample2</span><span class="p">))</span>
+
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">confidence_level</span>
+        <span class="n">ci</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">boot_samples</span><span class="p">,</span> <span class="p">[</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">])</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">TestResult</span><span class="p">(</span>
+            <span class="n">statistic</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">statistic</span><span class="p">),</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">p_value</span><span class="p">),</span>
+            <span class="n">confidence_interval</span><span class="o">=</span><span class="n">ci</span><span class="p">,</span>
+            <span class="n">effect_size</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">),</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Mann-Whitney U&quot;</span><span class="p">,</span>
+            <span class="n">alternative</span><span class="o">=</span><span class="n">alternative</span><span class="p">,</span>
+            <span class="n">n_samples</span><span class="o">=</span><span class="n">n1</span> <span class="o">+</span> <span class="n">n2</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NonParametricTests.wilcoxon_signed_rank">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.NonParametricTests.wilcoxon_signed_rank">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wilcoxon_signed_rank</span><span class="p">(</span>
+        <span class="n">group1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">group2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">alternative</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;two-sided&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a Wilcoxon signed-rank test for paired samples.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            group1 (np.ndarray): First group data (paired).</span>
+<span class="sd">            group2 (np.ndarray): Second group data (paired).</span>
+<span class="sd">            alternative (str): `&#39;two-sided&#39;`, `&#39;greater&#39;`, or `&#39;less&#39;`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TestResult: Signed-rank statistic, effect size, and CI proxy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">differences</span> <span class="o">=</span> <span class="n">group1</span> <span class="o">-</span> <span class="n">group2</span>
+        <span class="n">statistic</span><span class="p">,</span> <span class="n">p_value</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">wilcoxon</span><span class="p">(</span><span class="n">differences</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="n">alternative</span><span class="p">)</span>
+
+        <span class="c1"># Effect size (matched pairs rank-biserial correlation)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">differences</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">statistic</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># CI for median difference</span>
+        <span class="n">sorted_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">differences</span><span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">binom</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">ci_lower</span> <span class="o">=</span> <span class="n">sorted_diff</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span> <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">sorted_diff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ci_upper</span> <span class="o">=</span> <span class="n">sorted_diff</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span> <span class="k">if</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="k">else</span> <span class="n">sorted_diff</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">TestResult</span><span class="p">(</span>
+            <span class="n">statistic</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">statistic</span><span class="p">),</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">p_value</span><span class="p">),</span>
+            <span class="n">confidence_interval</span><span class="o">=</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">ci_lower</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">ci_upper</span><span class="p">)),</span>
+            <span class="n">effect_size</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">),</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Wilcoxon signed-rank&quot;</span><span class="p">,</span>
+            <span class="n">alternative</span><span class="o">=</span><span class="n">alternative</span><span class="p">,</span>
+            <span class="n">n_samples</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NonParametricTests.kruskal_wallis">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.NonParametricTests.kruskal_wallis">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">kruskal_wallis</span><span class="p">(</span><span class="o">*</span><span class="n">groups</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a Kruskal-Wallis H test for at least two groups.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *groups (np.ndarray): Variable number of group arrays.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TestResult: Test statistic, p-value, and epsilon-squared effect size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">statistic</span><span class="p">,</span> <span class="n">p_value</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">kruskal</span><span class="p">(</span><span class="o">*</span><span class="n">groups</span><span class="p">)</span>
+
+        <span class="c1"># Effect size (epsilon-squared)</span>
+        <span class="n">n_total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="n">epsilon_squared</span> <span class="o">=</span> <span class="p">(</span><span class="n">statistic</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_total</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">TestResult</span><span class="p">(</span>
+            <span class="n">statistic</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">statistic</span><span class="p">),</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">p_value</span><span class="p">),</span>
+            <span class="n">confidence_interval</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span>  <span class="c1"># Not applicable</span>
+            <span class="n">effect_size</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">epsilon_squared</span><span class="p">),</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Kruskal-Wallis&quot;</span><span class="p">,</span>
+            <span class="n">n_samples</span><span class="o">=</span><span class="n">n_total</span><span class="p">,</span>
+            <span class="n">additional_info</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;n_groups&quot;</span><span class="p">:</span> <span class="n">k</span><span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NonParametricTests.friedman">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.NonParametricTests.friedman">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">friedman</span><span class="p">(</span><span class="o">*</span><span class="n">groups</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a Friedman test for repeated-measure designs.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *groups (np.ndarray): Equal-length arrays per treatment condition.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TestResult: Chi-square statistic, p-value, and Kendall&#39;s W.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">statistic</span><span class="p">,</span> <span class="n">p_value</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">friedmanchisquare</span><span class="p">(</span><span class="o">*</span><span class="n">groups</span><span class="p">)</span>
+
+        <span class="c1"># Effect size (Kendall&#39;s W)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">statistic</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">TestResult</span><span class="p">(</span>
+            <span class="n">statistic</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">statistic</span><span class="p">),</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">p_value</span><span class="p">),</span>
+            <span class="n">confidence_interval</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span>
+            <span class="n">effect_size</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">W</span><span class="p">),</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Friedman&quot;</span><span class="p">,</span>
+            <span class="n">n_samples</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">additional_info</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;n_groups&quot;</span><span class="p">:</span> <span class="n">k</span><span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NonParametricTests.permutation_test">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.NonParametricTests.permutation_test">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">permutation_test</span><span class="p">(</span>
+        <span class="n">group1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">group2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">statistic_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
+        <span class="n">n_permutations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform a permutation test for an arbitrary scalar statistic.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            group1 (np.ndarray): First group data.</span>
+<span class="sd">            group2 (np.ndarray): Second group data.</span>
+<span class="sd">            statistic_func (Callable[[np.ndarray], float]): Statistic function</span>
+<span class="sd">                applied independently to each group.</span>
+<span class="sd">            n_permutations (int): Number of shuffles to estimate the null.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TestResult: Observed statistic, empirical p-value, and CI.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">observed_diff</span> <span class="o">=</span> <span class="n">statistic_func</span><span class="p">(</span><span class="n">group1</span><span class="p">)</span> <span class="o">-</span> <span class="n">statistic_func</span><span class="p">(</span><span class="n">group2</span><span class="p">)</span>
+        <span class="n">combined</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">group1</span><span class="p">,</span> <span class="n">group2</span><span class="p">])</span>
+        <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group1</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">group2</span><span class="p">)</span>
+
+        <span class="n">perm_diffs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_permutations</span><span class="p">):</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
+            <span class="n">perm_g1</span> <span class="o">=</span> <span class="n">combined</span><span class="p">[:</span><span class="n">n1</span><span class="p">]</span>
+            <span class="n">perm_g2</span> <span class="o">=</span> <span class="n">combined</span><span class="p">[</span><span class="n">n1</span><span class="p">:]</span>
+            <span class="n">perm_diffs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">statistic_func</span><span class="p">(</span><span class="n">perm_g1</span><span class="p">)</span> <span class="o">-</span> <span class="n">statistic_func</span><span class="p">(</span><span class="n">perm_g2</span><span class="p">))</span>
+
+        <span class="n">perm_diffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">perm_diffs</span><span class="p">)</span>
+        <span class="n">p_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">perm_diffs</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">observed_diff</span><span class="p">))</span>
+
+        <span class="c1"># CI from permutation distribution</span>
+        <span class="n">ci</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">perm_diffs</span><span class="p">,</span> <span class="p">[</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">97.5</span><span class="p">]))</span>
+
+        <span class="c1"># Effect size (standardized difference)</span>
+        <span class="n">pooled_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">group1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">group2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">effect_size</span> <span class="o">=</span> <span class="n">observed_diff</span> <span class="o">/</span> <span class="n">pooled_std</span> <span class="k">if</span> <span class="n">pooled_std</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="n">TestResult</span><span class="p">(</span>
+            <span class="n">statistic</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">observed_diff</span><span class="p">),</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">p_value</span><span class="p">),</span>
+            <span class="n">confidence_interval</span><span class="o">=</span><span class="n">ci</span><span class="p">,</span>
+            <span class="n">effect_size</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">effect_size</span><span class="p">),</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Permutation test&quot;</span><span class="p">,</span>
+            <span class="n">n_samples</span><span class="o">=</span><span class="n">n1</span> <span class="o">+</span> <span class="n">n2</span><span class="p">,</span>
+            <span class="n">additional_info</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;n_permutations&quot;</span><span class="p">:</span> <span class="n">n_permutations</span><span class="p">},</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="MultipleTestingCorrections">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.MultipleTestingCorrections">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MultipleTestingCorrections</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Methods for multiple testing corrections used in reporting.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; from statistical_methods.advanced_statistical_tests import (</span>
+<span class="sd">        ...     MultipleTestingCorrections</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; pvals = np.array([0.01, 0.03, 0.2])</span>
+<span class="sd">        &gt;&gt;&gt; summary = MultipleTestingCorrections.apply_corrections(pvals, alpha=0.05)</span>
+<span class="sd">        &gt;&gt;&gt; list(summary.columns)</span>
+<span class="sd">        [&#39;original_pvalue&#39;, &#39;pvalue_bonferroni&#39;, &#39;reject_bonferroni&#39;, ...]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MultipleTestingCorrections.apply_corrections">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.MultipleTestingCorrections.apply_corrections">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_corrections</span><span class="p">(</span>
+        <span class="n">p_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">methods</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply multiple-testing corrections to an array of p-values.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            p_values (np.ndarray): Raw p-values to correct (shape ``(n,)``).</span>
+<span class="sd">            alpha (float): Family-wise error rate or FDR target.</span>
+<span class="sd">            methods (list[str] | None): Iterable of `statsmodels` method names to</span>
+<span class="sd">                evaluate. Defaults to Bonferroni, Holm, Benjamini-Hochberg, and</span>
+<span class="sd">                Benjamini-Yekutieli.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pandas.DataFrame: One column per correction with decision booleans.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">            &gt;&gt;&gt; from statistical_methods.advanced_statistical_tests import (</span>
+<span class="sd">            ...     MultipleTestingCorrections</span>
+<span class="sd">            ... )</span>
+<span class="sd">            &gt;&gt;&gt; pvals = np.array([0.01, 0.04, 0.20])</span>
+<span class="sd">            &gt;&gt;&gt; MultipleTestingCorrections.apply_corrections(pvals, alpha=0.05)[</span>
+<span class="sd">            ...     [&#39;reject_bonferroni&#39;, &#39;reject_fdr_bh&#39;]</span>
+<span class="sd">            ... ].values.tolist()</span>
+<span class="sd">            [[True, True], [False, False], [False, False]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">methods</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;bonferroni&quot;</span><span class="p">,</span> <span class="s2">&quot;holm&quot;</span><span class="p">,</span> <span class="s2">&quot;fdr_bh&quot;</span><span class="p">,</span> <span class="s2">&quot;fdr_by&quot;</span><span class="p">]</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;original_pvalue&quot;</span><span class="p">:</span> <span class="n">p_values</span><span class="p">})</span>
+
+        <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+            <span class="n">reject</span><span class="p">,</span> <span class="n">p_corrected</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">multipletests</span><span class="p">(</span>
+                <span class="n">p_values</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span>
+            <span class="p">)</span>
+            <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;pvalue_</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_corrected</span>
+            <span class="n">results</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;reject_</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reject</span>
+
+        <span class="c1"># Add Šidák correction manually because statsmodels does not expose it by</span>
+        <span class="c1"># default.</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p_values</span><span class="p">)</span>
+        <span class="n">sidak_alpha</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;pvalue_sidak&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p_values</span><span class="p">)</span> <span class="o">**</span> <span class="n">n</span>
+        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;reject_sidak&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_values</span> <span class="o">&lt;</span> <span class="n">sidak_alpha</span>
+
+        <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="MultipleTestingCorrections.false_discovery_rate">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.MultipleTestingCorrections.false_discovery_rate">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">false_discovery_rate</span><span class="p">(</span>
+        <span class="n">p_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply Benjamini-Hochberg false-discovery-rate control.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            p_values (np.ndarray): Array of unadjusted p-values.</span>
+<span class="sd">            alpha (float): Target false-discovery rate.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple[np.ndarray, np.ndarray]: Reject mask and adjusted p-values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reject</span><span class="p">,</span> <span class="n">p_adjusted</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">multipletests</span><span class="p">(</span>
+            <span class="n">p_values</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;fdr_bh&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">reject</span><span class="p">,</span> <span class="n">p_adjusted</span></div>
+
+
+<div class="viewcode-block" id="MultipleTestingCorrections.family_wise_error_rate">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.MultipleTestingCorrections.family_wise_error_rate">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">family_wise_error_rate</span><span class="p">(</span>
+        <span class="n">p_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;holm&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Control the family-wise error rate (FWER).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            p_values (np.ndarray): Array of unadjusted p-values.</span>
+<span class="sd">            alpha (float): FWER level.</span>
+<span class="sd">            method (str): `&#39;bonferroni&#39;`, `&#39;holm&#39;`, or `&#39;holm-sidak&#39;`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple[np.ndarray, np.ndarray]: Reject mask and adjusted p-values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reject</span><span class="p">,</span> <span class="n">p_adjusted</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">multipletests</span><span class="p">(</span>
+            <span class="n">p_values</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">reject</span><span class="p">,</span> <span class="n">p_adjusted</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BootstrapMethods">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.BootstrapMethods">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BootstrapMethods</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bootstrap methods for confidence intervals and hypothesis testing.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; from statistical_methods.advanced_statistical_tests import BootstrapMethods</span>
+<span class="sd">        &gt;&gt;&gt; rng = np.random.default_rng(123)</span>
+<span class="sd">        &gt;&gt;&gt; sample = rng.normal(0.0, 1.0, 1000)</span>
+<span class="sd">        &gt;&gt;&gt; _, interval = BootstrapMethods.bootstrap_ci(sample, np.mean)</span>
+<span class="sd">        &gt;&gt;&gt; len(interval)</span>
+<span class="sd">        2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BootstrapMethods.bootstrap_ci">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.BootstrapMethods.bootstrap_ci">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bootstrap_ci</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">statistic</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
+        <span class="n">confidence_level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
+        <span class="n">n_bootstrap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;percentile&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate a bootstrap confidence interval for a statistic.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data (np.ndarray): Sample to resample with replacement.</span>
+<span class="sd">            statistic (Callable[[np.ndarray], float]): Statistic function.</span>
+<span class="sd">            confidence_level (float): Desired coverage probability.</span>
+<span class="sd">            n_bootstrap (int): Number of bootstrap draws.</span>
+<span class="sd">            method (str): `&#39;percentile&#39;`, `&#39;basic&#39;`, or `&#39;bca&#39;`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple[float, tuple[float, float]]: Point estimate and CI bounds.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If ``method`` is unsupported.</span>
+
+<span class="sd">        Side Effects:</span>
+<span class="sd">            Uses NumPy&#39;s global RNG via ``np.random.choice``; seed before calling</span>
+<span class="sd">            to obtain deterministic documentation examples.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Point estimate</span>
+        <span class="n">point_estimate</span> <span class="o">=</span> <span class="n">statistic</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># Bootstrap samples</span>
+        <span class="n">boot_statistics</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">):</span>
+            <span class="n">boot_sample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">boot_statistics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">statistic</span><span class="p">(</span><span class="n">boot_sample</span><span class="p">))</span>
+
+        <span class="n">boot_statistics</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">boot_statistics</span><span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">confidence_level</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;percentile&quot;</span><span class="p">:</span>
+            <span class="n">percentiles</span> <span class="o">=</span> <span class="p">[</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">]</span>
+            <span class="n">ci</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">boot_statistics</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;basic&quot;</span><span class="p">:</span>
+            <span class="n">lower</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">point_estimate</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
+                <span class="n">boot_statistics</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+            <span class="p">)</span>
+            <span class="n">upper</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">point_estimate</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
+                <span class="n">boot_statistics</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">100</span>
+            <span class="p">)</span>
+            <span class="n">ci</span> <span class="o">=</span> <span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;bca&quot;</span><span class="p">:</span>
+            <span class="c1"># BCa (Bias-Corrected and Accelerated)</span>
+            <span class="n">ci</span> <span class="o">=</span> <span class="n">BootstrapMethods</span><span class="o">.</span><span class="n">_bca_interval</span><span class="p">(</span>
+                <span class="n">data</span><span class="p">,</span> <span class="n">boot_statistics</span><span class="p">,</span> <span class="n">point_estimate</span><span class="p">,</span> <span class="n">statistic</span><span class="p">,</span> <span class="n">confidence_level</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">point_estimate</span><span class="p">),</span> <span class="n">ci</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_bca_interval</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">boot_stats</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">point_estimate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">statistic</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">confidence_level</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate BCa confidence interval.&quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">confidence_level</span>
+
+        <span class="c1"># Bias correction</span>
+        <span class="n">z0</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">boot_stats</span> <span class="o">&lt;</span> <span class="n">point_estimate</span><span class="p">))</span>
+
+        <span class="c1"># Acceleration</span>
+        <span class="n">jackknife_stats</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">jack_sample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">jackknife_stats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">statistic</span><span class="p">(</span><span class="n">jack_sample</span><span class="p">))</span>
+
+        <span class="n">jackknife_stats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">jackknife_stats</span><span class="p">)</span>
+        <span class="n">jack_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">jackknife_stats</span><span class="p">)</span>
+        <span class="n">numerator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">jack_mean</span> <span class="o">-</span> <span class="n">jackknife_stats</span><span class="p">)</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">denominator</span> <span class="o">=</span> <span class="mi">6</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">jack_mean</span> <span class="o">-</span> <span class="n">jackknife_stats</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">1.5</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span> <span class="k">if</span> <span class="n">denominator</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="c1"># Adjusted percentiles</span>
+        <span class="n">z_alpha</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">z_1alpha</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">p_lower</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">z0</span> <span class="o">+</span> <span class="p">(</span><span class="n">z0</span> <span class="o">+</span> <span class="n">z_alpha</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">z0</span> <span class="o">+</span> <span class="n">z_alpha</span><span class="p">)))</span>
+        <span class="n">p_upper</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">z0</span> <span class="o">+</span> <span class="p">(</span><span class="n">z0</span> <span class="o">+</span> <span class="n">z_1alpha</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">z0</span> <span class="o">+</span> <span class="n">z_1alpha</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">boot_stats</span><span class="p">,</span> <span class="p">[</span><span class="n">p_lower</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="n">p_upper</span> <span class="o">*</span> <span class="mi">100</span><span class="p">]))</span>
+
+<div class="viewcode-block" id="BootstrapMethods.bootstrap_hypothesis_test">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.BootstrapMethods.bootstrap_hypothesis_test">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bootstrap_hypothesis_test</span><span class="p">(</span>
+        <span class="n">group1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">group2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">statistic</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
+        <span class="n">n_bootstrap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bootstrap the difference between two groups under the null hypothesis.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            group1 (np.ndarray): First group data.</span>
+<span class="sd">            group2 (np.ndarray): Second group data.</span>
+<span class="sd">            statistic (Callable[[np.ndarray], float]): Statistic function.</span>
+<span class="sd">            n_bootstrap (int): Number of bootstrap samples.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TestResult: Bootstrap statistic, p-value, and confidence interval.</span>
+
+<span class="sd">        Side Effects:</span>
+<span class="sd">            Uses NumPy&#39;s global RNG; seed before calling for deterministic docs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">observed_diff</span> <span class="o">=</span> <span class="n">statistic</span><span class="p">(</span><span class="n">group1</span><span class="p">)</span> <span class="o">-</span> <span class="n">statistic</span><span class="p">(</span><span class="n">group2</span><span class="p">)</span>
+        <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group1</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">group2</span><span class="p">)</span>
+
+        <span class="c1"># Bootstrap under null hypothesis (no difference)</span>
+        <span class="n">combined</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">group1</span><span class="p">,</span> <span class="n">group2</span><span class="p">])</span>
+        <span class="n">combined_mean</span> <span class="o">=</span> <span class="n">statistic</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
+
+        <span class="c1"># Center both groups at combined mean</span>
+        <span class="n">centered_g1</span> <span class="o">=</span> <span class="n">group1</span> <span class="o">-</span> <span class="n">statistic</span><span class="p">(</span><span class="n">group1</span><span class="p">)</span> <span class="o">+</span> <span class="n">combined_mean</span>
+        <span class="n">centered_g2</span> <span class="o">=</span> <span class="n">group2</span> <span class="o">-</span> <span class="n">statistic</span><span class="p">(</span><span class="n">group2</span><span class="p">)</span> <span class="o">+</span> <span class="n">combined_mean</span>
+
+        <span class="n">boot_diffs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">):</span>
+            <span class="n">boot_g1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">centered_g1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n1</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">boot_g2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">centered_g2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n2</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">boot_diffs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">statistic</span><span class="p">(</span><span class="n">boot_g1</span><span class="p">)</span> <span class="o">-</span> <span class="n">statistic</span><span class="p">(</span><span class="n">boot_g2</span><span class="p">))</span>
+
+        <span class="n">boot_diffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">boot_diffs</span><span class="p">)</span>
+        <span class="n">p_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">boot_diffs</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">observed_diff</span><span class="p">))</span>
+
+        <span class="c1"># Confidence interval for difference</span>
+        <span class="n">boot_diffs_ci</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">):</span>
+            <span class="n">boot_g1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n1</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">boot_g2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">group2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n2</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">boot_diffs_ci</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">statistic</span><span class="p">(</span><span class="n">boot_g1</span><span class="p">)</span> <span class="o">-</span> <span class="n">statistic</span><span class="p">(</span><span class="n">boot_g2</span><span class="p">))</span>
+
+        <span class="n">ci</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">boot_diffs_ci</span><span class="p">,</span> <span class="p">[</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">97.5</span><span class="p">]))</span>
+
+        <span class="c1"># Effect size</span>
+        <span class="n">pooled_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">group1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">group2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">effect_size</span> <span class="o">=</span> <span class="n">observed_diff</span> <span class="o">/</span> <span class="n">pooled_std</span> <span class="k">if</span> <span class="n">pooled_std</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="n">TestResult</span><span class="p">(</span>
+            <span class="n">statistic</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">observed_diff</span><span class="p">),</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">p_value</span><span class="p">),</span>
+            <span class="n">confidence_interval</span><span class="o">=</span><span class="n">ci</span><span class="p">,</span>
+            <span class="n">effect_size</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">effect_size</span><span class="p">),</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Bootstrap test&quot;</span><span class="p">,</span>
+            <span class="n">n_samples</span><span class="o">=</span><span class="n">n1</span> <span class="o">+</span> <span class="n">n2</span><span class="p">,</span>
+            <span class="n">additional_info</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;n_bootstrap&quot;</span><span class="p">:</span> <span class="n">n_bootstrap</span><span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BootstrapMethods.bootstrap_correlation">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.BootstrapMethods.bootstrap_correlation">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bootstrap_correlation</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;pearson&quot;</span><span class="p">,</span> <span class="n">n_bootstrap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bootstrap a confidence interval for the correlation coefficient.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x (np.ndarray): First variable.</span>
+<span class="sd">            y (np.ndarray): Second variable.</span>
+<span class="sd">            method (str): `&#39;pearson&#39;`, `&#39;spearman&#39;`, or `&#39;kendall&#39;`.</span>
+<span class="sd">            n_bootstrap (int): Number of bootstrap samples.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple[float, tuple[float, float], float]: Observed correlation,</span>
+<span class="sd">            confidence interval, and two-sided empirical p-value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_pearson_corr</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_spearman_corr</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">spearmanr</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_kendall_corr</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">kendalltau</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;pearson&quot;</span><span class="p">:</span>
+            <span class="n">corr_func</span> <span class="o">=</span> <span class="n">_pearson_corr</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;spearman&quot;</span><span class="p">:</span>
+            <span class="n">corr_func</span> <span class="o">=</span> <span class="n">_spearman_corr</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;kendall&quot;</span><span class="p">:</span>
+            <span class="n">corr_func</span> <span class="o">=</span> <span class="n">_kendall_corr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown correlation method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Observed correlation</span>
+        <span class="n">observed_corr</span> <span class="o">=</span> <span class="n">corr_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># Bootstrap</span>
+        <span class="n">boot_corrs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">boot_corrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">corr_func</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
+
+        <span class="n">boot_corrs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">boot_corrs</span><span class="p">)</span>
+        <span class="n">ci</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">boot_corrs</span><span class="p">,</span> <span class="p">[</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">97.5</span><span class="p">]))</span>
+
+        <span class="c1"># Test for zero correlation</span>
+        <span class="n">p_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">boot_corrs</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">observed_corr</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">observed_corr</span><span class="p">),</span> <span class="n">ci</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">p_value</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PowerAnalysis">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.PowerAnalysis">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PowerAnalysis</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deterministic power-analysis helpers used by notebooks and CLI tools.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from statistical_methods.advanced_statistical_tests import PowerAnalysis</span>
+<span class="sd">        &gt;&gt;&gt; PowerAnalysis.t_test_power(effect_size=0.5, n=200)</span>
+<span class="sd">        0.9999999999999982</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PowerAnalysis.t_test_power">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.PowerAnalysis.t_test_power">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">t_test_power</span><span class="p">(</span>
+        <span class="n">effect_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">alternative</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;two-sided&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate statistical power for a two-sample t-test.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            effect_size (float): Expected Cohen&#39;s d.</span>
+<span class="sd">            n (int): Sample size per group.</span>
+<span class="sd">            alpha (float): Significance level.</span>
+<span class="sd">            alternative (str): `&#39;two-sided&#39;`, `&#39;larger&#39;`, or `&#39;smaller&#39;`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: Probability of correctly rejecting the null hypothesis.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">power_analysis</span> <span class="o">=</span> <span class="n">TTestPower</span><span class="p">()</span>
+        <span class="n">power</span> <span class="o">=</span> <span class="n">power_analysis</span><span class="o">.</span><span class="n">solve_power</span><span class="p">(</span>
+            <span class="n">effect_size</span><span class="o">=</span><span class="n">effect_size</span><span class="p">,</span> <span class="n">nobs1</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="n">alternative</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">power</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PowerAnalysis.t_test_sample_size">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.PowerAnalysis.t_test_sample_size">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">t_test_sample_size</span><span class="p">(</span>
+        <span class="n">effect_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">alternative</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;two-sided&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate per-group sample size for a two-sample t-test.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            effect_size (float): Target Cohen&#39;s d.</span>
+<span class="sd">            power (float): Desired statistical power.</span>
+<span class="sd">            alpha (float): Significance level.</span>
+<span class="sd">            alternative (str): `&#39;two-sided&#39;`, `&#39;larger&#39;`, or `&#39;smaller&#39;`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: Rounded-up sample size per group.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; from statistical_methods.advanced_statistical_tests import PowerAnalysis</span>
+<span class="sd">            &gt;&gt;&gt; PowerAnalysis.t_test_sample_size(effect_size=0.3, power=0.8)</span>
+<span class="sd">            174</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">power_analysis</span> <span class="o">=</span> <span class="n">TTestPower</span><span class="p">()</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">power_analysis</span><span class="o">.</span><span class="n">solve_power</span><span class="p">(</span>
+            <span class="n">effect_size</span><span class="o">=</span><span class="n">effect_size</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="n">power</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="n">alternative</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">n</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="PowerAnalysis.proportion_test_power">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.PowerAnalysis.proportion_test_power">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">proportion_test_power</span><span class="p">(</span>
+        <span class="n">p1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">p2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate power for a two-proportion z-test.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            p1 (float): Control success probability in `[0, 1]`.</span>
+<span class="sd">            p2 (float): Treatment success probability in `[0, 1]`.</span>
+<span class="sd">            n (int): Sample size per group.</span>
+<span class="sd">            alpha (float): Significance level.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: Probability of detecting the specified lift.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">effect_size</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">p2</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">p1</span><span class="p">)))</span>
+        <span class="n">power_analysis</span> <span class="o">=</span> <span class="n">NormalIndPower</span><span class="p">()</span>
+        <span class="n">power</span> <span class="o">=</span> <span class="n">power_analysis</span><span class="o">.</span><span class="n">solve_power</span><span class="p">(</span>
+            <span class="n">effect_size</span><span class="o">=</span><span class="n">effect_size</span><span class="p">,</span> <span class="n">nobs1</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">power</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PowerAnalysis.simulation_power">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.PowerAnalysis.simulation_power">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulation_power</span><span class="p">(</span>
+        <span class="n">test_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">effect_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_simulations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate statistical power through Monte Carlo simulation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            test_func (Callable[[np.ndarray, np.ndarray], float]): Callable that</span>
+<span class="sd">                returns a p-value when given two arrays.</span>
+<span class="sd">            effect_size (float): Difference in means to simulate.</span>
+<span class="sd">            n (int): Sample size per group.</span>
+<span class="sd">            n_simulations (int): Number of Monte Carlo draws.</span>
+<span class="sd">            alpha (float): Significance level.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: Observed proportion of simulations with ``p &lt; alpha``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">significant_results</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_simulations</span><span class="p">):</span>
+            <span class="c1"># Generate data with effect</span>
+            <span class="n">group1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">group2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">effect_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+            <span class="c1"># Perform test</span>
+            <span class="n">p_value</span> <span class="o">=</span> <span class="n">test_func</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">group2</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">p_value</span> <span class="o">&lt;</span> <span class="n">alpha</span><span class="p">:</span>
+                <span class="n">significant_results</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">significant_results</span> <span class="o">/</span> <span class="n">n_simulations</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="EffectSizeCalculations">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.EffectSizeCalculations">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EffectSizeCalculations</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Effect size calculators aligned with documentation and dashboards.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; from statistical_methods.advanced_statistical_tests import (</span>
+<span class="sd">        ...     EffectSizeCalculations</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; control = np.array([0, 1, 1, 0, 1])</span>
+<span class="sd">        &gt;&gt;&gt; variant = np.array([1, 1, 1, 0, 1])</span>
+<span class="sd">        &gt;&gt;&gt; round(EffectSizeCalculations.cohens_d(control, variant), 3)</span>
+<span class="sd">        -0.408</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EffectSizeCalculations.cohens_d">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.EffectSizeCalculations.cohens_d">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cohens_d</span><span class="p">(</span><span class="n">group1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">group2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate Cohen&#39;s d for two independent samples.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            group1 (np.ndarray): Baseline sample.</span>
+<span class="sd">            group2 (np.ndarray): Variant sample.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: Standardized effect size using the pooled standard deviation.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">            &gt;&gt;&gt; from statistical_methods.advanced_statistical_tests import (</span>
+<span class="sd">            ...     EffectSizeCalculations</span>
+<span class="sd">            ... )</span>
+<span class="sd">            &gt;&gt;&gt; control = np.array([0.1, 0.2, 0.3])</span>
+<span class="sd">            &gt;&gt;&gt; variant = np.array([0.2, 0.4, 0.5])</span>
+<span class="sd">            &gt;&gt;&gt; round(EffectSizeCalculations.cohens_d(control, variant), 3)</span>
+<span class="sd">            -1.091</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mean_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">group1</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">group2</span><span class="p">)</span>
+        <span class="n">pooled_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">group2</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">mean_diff</span> <span class="o">/</span> <span class="n">pooled_std</span><span class="p">)</span> <span class="k">if</span> <span class="n">pooled_std</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span></div>
+
+
+<div class="viewcode-block" id="EffectSizeCalculations.glass_delta">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.EffectSizeCalculations.glass_delta">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">glass_delta</span><span class="p">(</span><span class="n">group1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">control_group</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate Glass&#39;s delta (uses control group SD).&quot;&quot;&quot;</span>
+        <span class="n">mean_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">group1</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">control_group</span><span class="p">)</span>
+        <span class="n">control_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">control_group</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">mean_diff</span> <span class="o">/</span> <span class="n">control_std</span><span class="p">)</span> <span class="k">if</span> <span class="n">control_std</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span></div>
+
+
+<div class="viewcode-block" id="EffectSizeCalculations.hedges_g">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.EffectSizeCalculations.hedges_g">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hedges_g</span><span class="p">(</span><span class="n">group1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">group2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate Hedges&#39; g (small-sample correction for Cohen&#39;s d).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            group1 (np.ndarray): Baseline sample.</span>
+<span class="sd">            group2 (np.ndarray): Variant sample.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: Bias-corrected standardized difference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">            &gt;&gt;&gt; from statistical_methods.advanced_statistical_tests import (</span>
+<span class="sd">            ...     EffectSizeCalculations</span>
+<span class="sd">            ... )</span>
+<span class="sd">            &gt;&gt;&gt; control = np.array([0.1, 0.2, 0.3, 0.4])</span>
+<span class="sd">            &gt;&gt;&gt; variant = np.array([0.3, 0.4, 0.5, 0.6])</span>
+<span class="sd">            &gt;&gt;&gt; round(EffectSizeCalculations.hedges_g(control, variant), 3)</span>
+<span class="sd">            -1.265</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group1</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">group2</span><span class="p">)</span>
+        <span class="n">cohens_d</span> <span class="o">=</span> <span class="n">EffectSizeCalculations</span><span class="o">.</span><span class="n">cohens_d</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">group2</span><span class="p">)</span>
+
+        <span class="c1"># Hedges&#39; correction factor</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">n1</span> <span class="o">+</span> <span class="n">n2</span> <span class="o">-</span> <span class="mi">2</span>
+        <span class="n">correction</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">df</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">cohens_d</span> <span class="o">*</span> <span class="n">correction</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EffectSizeCalculations.eta_squared">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.EffectSizeCalculations.eta_squared">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eta_squared</span><span class="p">(</span><span class="n">groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate eta-squared for ANOVA.&quot;&quot;&quot;</span>
+        <span class="n">all_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="n">grand_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">all_data</span><span class="p">)</span>
+
+        <span class="c1"># Between-group sum of squares</span>
+        <span class="n">ss_between</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">-</span> <span class="n">grand_mean</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">)</span>
+
+        <span class="c1"># Total sum of squares</span>
+        <span class="n">ss_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">all_data</span> <span class="o">-</span> <span class="n">grand_mean</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">ss_between</span> <span class="o">/</span> <span class="n">ss_total</span><span class="p">)</span> <span class="k">if</span> <span class="n">ss_total</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span></div>
+
+
+<div class="viewcode-block" id="EffectSizeCalculations.omega_squared">
+<a class="viewcode-back" href="../../api/statistical_methods.html#statistical_methods.advanced_statistical_tests.EffectSizeCalculations.omega_squared">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">omega_squared</span><span class="p">(</span><span class="n">groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate omega-squared (less biased than eta-squared).&quot;&quot;&quot;</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="n">n_total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">)</span>
+
+        <span class="c1"># Perform ANOVA</span>
+        <span class="n">f_stat</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">f_oneway</span><span class="p">(</span><span class="o">*</span><span class="n">groups</span><span class="p">)</span>
+
+        <span class="c1"># Calculate omega-squared</span>
+        <span class="n">df_between</span> <span class="o">=</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">df_within</span> <span class="o">=</span> <span class="n">n_total</span> <span class="o">-</span> <span class="n">k</span>
+        <span class="n">ms_between</span> <span class="o">=</span> <span class="n">f_stat</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">])</span> <span class="o">/</span> <span class="n">df_within</span>
+        <span class="p">)</span>
+
+        <span class="n">omega_sq</span> <span class="o">=</span> <span class="p">(</span><span class="n">df_between</span> <span class="o">*</span> <span class="p">(</span><span class="n">ms_between</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="n">df_between</span> <span class="o">*</span> <span class="n">ms_between</span> <span class="o">+</span> <span class="n">n_total</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">omega_sq</span><span class="p">))</span>  <span class="c1"># Can&#39;t be negative</span></div>
+</div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Example usage</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Advanced Statistical Tests Module&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+
+    <span class="c1"># Generate sample data</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">group1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="n">group2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">105</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+
+    <span class="c1"># Non-parametric test</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Non-parametric Test (Mann-Whitney U):&quot;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">NonParametricTests</span><span class="o">.</span><span class="n">mann_whitney_u</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">group2</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Statistic: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">statistic</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  P-value: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Effect size (r): </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">effect_size</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="s2">&quot;  CI: [&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">confidence_interval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">confidence_interval</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">]&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Bootstrap test</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Bootstrap Test:&quot;</span><span class="p">)</span>
+    <span class="n">boot_result</span> <span class="o">=</span> <span class="n">BootstrapMethods</span><span class="o">.</span><span class="n">bootstrap_hypothesis_test</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span> <span class="n">group2</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Difference: </span><span class="si">{</span><span class="n">boot_result</span><span class="o">.</span><span class="n">statistic</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  P-value: </span><span class="si">{</span><span class="n">boot_result</span><span class="o">.</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="s2">&quot;  CI: [&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">boot_result</span><span class="o">.</span><span class="n">confidence_interval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">boot_result</span><span class="o">.</span><span class="n">confidence_interval</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">]&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Multiple testing correction</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Multiple Testing Corrections:&quot;</span><span class="p">)</span>
+    <span class="n">p_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.04</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.20</span><span class="p">])</span>
+    <span class="n">corrections</span> <span class="o">=</span> <span class="n">MultipleTestingCorrections</span><span class="o">.</span><span class="n">apply_corrections</span><span class="p">(</span><span class="n">p_values</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="n">corrections</span><span class="p">[[</span><span class="s2">&quot;original_pvalue&quot;</span><span class="p">,</span> <span class="s2">&quot;pvalue_bonferroni&quot;</span><span class="p">,</span> <span class="s2">&quot;pvalue_fdr_bh&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Power analysis</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Power Analysis:&quot;</span><span class="p">)</span>
+    <span class="n">power</span> <span class="o">=</span> <span class="n">PowerAnalysis</span><span class="o">.</span><span class="n">t_test_power</span><span class="p">(</span><span class="n">effect_size</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Power for d=0.5, n=50: </span><span class="si">{</span><span class="n">power</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">required_n</span> <span class="o">=</span> <span class="n">PowerAnalysis</span><span class="o">.</span><span class="n">t_test_sample_size</span><span class="p">(</span><span class="n">effect_size</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Required n for d=0.5, power=0.8: </span><span class="si">{</span><span class="n">required_n</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Effect sizes</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Effect Size Calculations:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Cohen&#39;s d: </span><span class="si">{</span><span class="n">EffectSizeCalculations</span><span class="o">.</span><span class="n">cohens_d</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="w"> </span><span class="n">group2</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Hedges&#39; g: </span><span class="si">{</span><span class="n">EffectSizeCalculations</span><span class="o">.</span><span class="n">hedges_g</span><span class="p">(</span><span class="n">group1</span><span class="p">,</span><span class="w"> </span><span class="n">group2</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Data Science Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=4ebf8126"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=dfdbd33d"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    </body>
+</html>

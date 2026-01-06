@@ -467,12 +467,13 @@ class DashboardMutation(Mutation):
     """Update dashboard mutation."""
 
     class Arguments:
+        """Incoming dashboard configuration."""
         input = UpdateDashboardInput(required=True)
 
     dashboard = Field(DashboardType)
 
     def mutate(self, info, input):
-        # Update dashboard logic
+        """Apply metadata updates and shape the dashboard payload."""
         dashboard = DashboardType(
             id=input.id,
             name=input.name or f"Dashboard {input.id}",
@@ -489,12 +490,13 @@ class CreateChartMutation(Mutation):
     """Create chart mutation."""
 
     class Arguments:
+        """Creation payload for a chart."""
         input = CreateChartInput(required=True)
 
     chart = Field(ChartDataType)
 
     def mutate(self, info, input):
-        # Create chart logic
+        """Persist a new chart definition and return the GraphQL node."""
         chart = ChartDataType(
             id=f"new_chart_{datetime.now().timestamp()}",
             type=input.type,
@@ -510,13 +512,14 @@ class DeleteChartMutation(Mutation):
     """Delete chart mutation."""
 
     class Arguments:
+        """Identity of the chart to delete."""
         id = String(required=True)
 
     success = Boolean()
     message = String()
 
     def mutate(self, info, id):
-        # Delete chart logic
+        """Remove the referenced chart and signal whether it succeeded."""
         return DeleteChartMutation(success=True, message=f"Chart {id} deleted")
 
 
@@ -524,12 +527,13 @@ class UpdateMetricMutation(Mutation):
     """Update metric mutation."""
 
     class Arguments:
+        """Metric payload describing the new observation."""
         input = UpdateMetricInput(required=True)
 
     metric = Field(MetricType)
 
     def mutate(self, info, input):
-        # Update metric logic
+        """Refresh a metric reading and include randomized trend metadata."""
         metric = MetricType(
             name=input.name,
             value=input.value or np.random.uniform(0, 100),

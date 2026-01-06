@@ -111,7 +111,7 @@ DIVERGING_PALETTE: Final[str] = "coolwarm"
 # Plot parameters
 DEFAULT_DPI: Final[int] = 100
 HIGH_DPI: Final[int] = 300
-DEFAULT_ALPHA: Final[float] = 0.7
+DEFAULT_PLOT_ALPHA: Final[float] = 0.7
 GRID_ALPHA: Final[float] = 0.3
 
 # ============== Performance Constants ==============

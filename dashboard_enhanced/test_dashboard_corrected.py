@@ -22,6 +22,7 @@ class TestVisualizationEngine(unittest.TestCase):
     """Test the VisualizationEngine component."""
 
     def setUp(self):
+        """Create a visualization engine fixture per test."""
         self.viz = VisualizationEngine()
 
     def test_create_time_series(self):
@@ -77,6 +78,7 @@ class TestDataStreamer(unittest.TestCase):
     """Test the DataStreamer component."""
 
     def setUp(self):
+        """Prepare a DataStreamer without starting background threads."""
         self.streamer = DataStreamer()
 
     def test_initialization(self):
@@ -130,6 +132,7 @@ class TestFlaskApp(unittest.TestCase):
     """Test Flask application endpoints."""
 
     def setUp(self):
+        """Build a Flask test client to exercise HTTP routes."""
         self.app = app
         self.app.config["TESTING"] = True
         self.client = self.app.test_client()
@@ -178,6 +181,7 @@ class TestExportManager(unittest.TestCase):
     """Test the ExportManager component."""
 
     def setUp(self):
+        """Instantiate an export manager for each scenario."""
         self.exporter = ExportManager()
 
     def test_export_to_png(self):

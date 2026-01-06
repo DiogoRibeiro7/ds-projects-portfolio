@@ -78,6 +78,7 @@ class DashboardConfig:
     mobile_breakpoint: int = 768
 
     def __post_init__(self):
+        """Populate default export formats when none are provided."""
         if self.export_formats is None:
             self.export_formats = ["pdf", "png", "pptx"]
 

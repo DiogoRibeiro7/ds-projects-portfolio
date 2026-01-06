@@ -19,6 +19,7 @@ class TestVisualizationEngine(unittest.TestCase):
     """Test the VisualizationEngine component."""
 
     def setUp(self):
+        """Instantiate a fresh visualization engine for each test."""
         self.viz = VisualizationEngine()
 
     def test_create_line_chart(self):
@@ -47,6 +48,7 @@ class TestDataStreamer(unittest.TestCase):
     """Test the DataStreamer component."""
 
     def setUp(self):
+        """Create a DataStreamer instance and reset streaming state."""
         self.streamer = DataStreamer()
 
     def test_create_data_generator(self):
@@ -68,6 +70,7 @@ class TestExportManager(unittest.TestCase):
     """Test the ExportManager component."""
 
     def setUp(self):
+        """Provision an export manager before each export test."""
         self.exporter = ExportManager()
 
     @patch("app.plotly.io.to_image")
@@ -117,6 +120,7 @@ class TestFlaskApp(unittest.TestCase):
     """Test Flask application endpoints."""
 
     def setUp(self):
+        """Initialize a Flask test client for exercising the API."""
         self.app = app
         self.app.config["TESTING"] = True
         self.client = self.app.test_client()

@@ -489,6 +489,7 @@ if __name__ == "__main__":
     # Example: Trace a function
     @obs.trace_function
     def process_data(data: List[float]) -> float:
+        """Example computation used to illustrate tracing behavior."""
         time.sleep(0.1)  # Simulate processing
         return sum(data) / len(data)
 

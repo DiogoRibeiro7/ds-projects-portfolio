@@ -965,6 +965,7 @@ if __name__ == "__main__":
 
     # Register sample data source
     def sample_data_source(filters=None):
+        """Generate a synthetic daily revenue dataset for demo purposes."""
         dates = pd.date_range(start='2024-01-01', end='2024-01-31', freq='D')
         data = pd.DataFrame({
             'date': dates,

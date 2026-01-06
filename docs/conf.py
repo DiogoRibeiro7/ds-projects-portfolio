@@ -1,11 +1,176 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
+Sphinx configuration for the documentation site.
+
+This file exposes the knobs Sphinx reads when building HTML/LaTeX output and
+configures every extension we rely on for notebooks, diagrams, and API docs.
+"""
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+
+REPO_ROOT = os.path.abspath('..')
+sys.path.insert(0, REPO_ROOT)
+
+# Allow direct imports from the legacy hyphenated directories.
+sys.path.insert(0, os.path.join(REPO_ROOT, 'modern-bank-churn'))
+sys.path.insert(0, os.path.join(REPO_ROOT, 'time-series'))
+
+# ---------------------------------------------------------------------------
+# Lightweight stubs for optional third-party frameworks used in the API
+# ---------------------------------------------------------------------------
+
+import asyncio
+import types
+
+
+def _install_stub(name: str, module: types.ModuleType) -> None:
+    """Register a stub module if the real dependency is unavailable."""
+    if name not in sys.modules:
+        sys.modules[name] = module
+
+
+# uvloop stub (Windows runners do not provide uvloop)
+class _UvloopPolicy(asyncio.DefaultEventLoopPolicy):
+    """Dummy uvloop-compatible policy."""
+
+
+uvloop_stub = types.ModuleType("uvloop")
+uvloop_stub.EventLoopPolicy = _UvloopPolicy
+_install_stub("uvloop", uvloop_stub)
+
+
+# Graphene stub
+graphene_stub = types.ModuleType("graphene")
+
+
+class _GrapheneBase:
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+class _GrapheneMutation(_GrapheneBase):
+    @classmethod
+    def Field(cls, *args, **kwargs):
+        return None
+
+
+class _GrapheneObjectType(_GrapheneBase):
+    pass
+
+
+def _graphene_field(*args, **kwargs):
+    return None
+
+
+class _GrapheneSchema:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def execute(self, *args, **kwargs):
+        return None
+
+
+graphene_stub.Mutation = _GrapheneMutation
+graphene_stub.ObjectType = _GrapheneObjectType
+graphene_stub.InputObjectType = _GrapheneBase
+graphene_stub.Field = _graphene_field
+graphene_stub.List = lambda *args, **kwargs: None
+graphene_stub.Boolean = graphene_stub.DateTime = graphene_stub.Float = (
+    graphene_stub.Int
+) = graphene_stub.JSONString = graphene_stub.String = _GrapheneBase
+graphene_stub.Schema = _GrapheneSchema
+_install_stub("graphene", graphene_stub)
+
+
+# Flask + related extensions stubs
+flask_stub = types.ModuleType("flask")
+
+
+class _Flask:
+    def __init__(self, *args, **kwargs):
+        self.config = {}
+
+    def route(self, *args, **kwargs):
+        def decorator(func):
+            return func
+
+        return decorator
+
+    def test_client(self):
+        class _Client:
+            def get(self, *args, **kwargs):
+                return None
+
+        return _Client()
+
+
+def _identity(*args, **kwargs):
+    return None
+
+
+flask_stub.Flask = _Flask
+flask_stub.jsonify = _identity
+flask_stub.render_template = _identity
+flask_stub.request = types.SimpleNamespace()
+flask_stub.send_file = _identity
+flask_stub.session = {}
+_install_stub("flask", flask_stub)
+
+flask_cors_stub = types.ModuleType("flask_cors")
+flask_cors_stub.CORS = lambda *args, **kwargs: None
+_install_stub("flask_cors", flask_cors_stub)
+
+flask_jwt_stub = types.ModuleType("flask_jwt_extended")
+
+
+class _JWTManager:
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+def _jwt_required(fn=None, *args, **kwargs):
+    def decorator(func):
+        return func
+
+    return decorator if fn is None else fn
+
+
+flask_jwt_stub.JWTManager = _JWTManager
+flask_jwt_stub.create_access_token = lambda *args, **kwargs: "token"
+flask_jwt_stub.get_jwt_identity = lambda: "user"
+flask_jwt_stub.jwt_required = _jwt_required
+_install_stub("flask_jwt_extended", flask_jwt_stub)
+
+flask_limiter_stub = types.ModuleType("flask_limiter")
+
+
+class _Limiter:
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+flask_limiter_stub.Limiter = _Limiter
+_install_stub("flask_limiter", flask_limiter_stub)
+
+flask_limiter_util = types.ModuleType("flask_limiter.util")
+flask_limiter_util.get_remote_address = lambda *args, **kwargs: "127.0.0.1"
+sys.modules["flask_limiter.util"] = flask_limiter_util
+
+flask_socketio_stub = types.ModuleType("flask_socketio")
+
+
+class _SocketIO:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def emit(self, *args, **kwargs):
+        pass
+
+
+flask_socketio_stub.SocketIO = _SocketIO
+flask_socketio_stub.emit = lambda *args, **kwargs: None
+_install_stub("flask_socketio", flask_socketio_stub)
+
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -29,11 +194,9 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.ifconfig',
     'sphinx.ext.autosummary',
-    'sphinx_rtd_theme',
     'myst_parser',
     'nbsphinx',
     'sphinx_copybutton',
-    'sphinx_panels',
     'sphinxcontrib.mermaid',
 ]
 
@@ -42,7 +205,13 @@ templates_path = ['_templates']
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = [
+    '_build',
+    'Thumbs.db',
+    '.DS_Store',
+    'api_reference.md',
+    'modules/*',
+]
 
 # The suffix(es) of source filenames.
 source_suffix = {
@@ -56,20 +225,13 @@ master_doc = 'index'
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'furo'
 html_static_path = ['_static']
 
 # Theme options
 html_theme_options = {
-    'navigation_depth': 4,
-    'collapse_navigation': False,
-    'sticky_navigation': True,
-    'includehidden': True,
-    'titles_only': False,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': True,
-    'logo_only': False,
+    'navigation_with_keys': True,
+    'sidebar_hide_name': True,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -111,6 +273,40 @@ autodoc_default_options = {
 # Autosummary settings
 autosummary_generate = True
 
+autodoc_mock_imports = [
+    "fastapi",
+    "uvicorn",
+    "starlette",
+    "aioredis",
+    "redis",
+    "redis.asyncio",
+    "fakeredis",
+    "graphql",
+    "prometheus_client",
+    "mlflow",
+    "shap",
+    "boto3",
+    "botocore",
+    "sagemaker",
+    "google",
+    "google.cloud",
+    "google.oauth2",
+    "azure",
+    "azure.storage.blob",
+    "azure.ai.ml",
+    "azure.identity",
+    "azureml",
+    "azureml.core",
+    "opentelemetry",
+    "opentelemetry.exporter",
+    "opentelemetry.sdk",
+    "opentelemetry.instrumentation",
+    "opentelemetry.sdk.trace",
+    "opentelemetry.sdk.metrics",
+    "opentelemetry.sdk.resources",
+    "xgboost",
+]
+
 # MyST settings for Markdown support
 myst_enable_extensions = [
     "amsmath",
@@ -144,7 +340,7 @@ copybutton_prompt_text = r">>> |\\$ |In \\[\\d*\\]: | {2,5}\\.\\.\\.: | {5,8}: "
 copybutton_prompt_is_regexp = True
 
 # Mermaid settings for diagrams
-mermaid_output_format = 'svg'
+mermaid_output_format = 'raw'
 mermaid_version = 'latest'
 
 # TODO extension settings
@@ -191,4 +387,5 @@ epub_exclude_files = ['search.html']
 # -- Custom setup ------------------------------------------------------------
 
 def setup(app):
+    """Register custom build steps during Sphinx initialization."""
     app.add_css_file('custom.css')

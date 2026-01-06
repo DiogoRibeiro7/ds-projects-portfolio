@@ -88,15 +88,19 @@ class CloudStorageInterface:
     """Base interface for cloud storage"""
 
     def upload_file(self, local_path: str, remote_path: str) -> str:
+        """Upload a local artifact and return the provider-specific URI."""
         raise NotImplementedError
 
     def download_file(self, remote_path: str, local_path: str) -> str:
+        """Download a remote artifact into ``local_path`` and return the path."""
         raise NotImplementedError
 
     def list_files(self, prefix: str = "") -> List[str]:
+        """List available objects matching ``prefix``."""
         raise NotImplementedError
 
     def delete_file(self, remote_path: str) -> bool:
+        """Delete the remote artifact and return ``True`` when successful."""
         raise NotImplementedError
 
 

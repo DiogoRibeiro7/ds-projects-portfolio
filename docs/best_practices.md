@@ -566,6 +566,6 @@ Remember:
 - **Security is not optional**
 
 For more specific guidance, see:
-- [ML Pipeline Documentation](modules/ml_pipeline.md)
-- [Statistical Methods Guide](modules/statistics.md)
-- [Dashboard Best Practices](modules/dashboard.md)
+- [API Reference](api/index.md)
+- [Usage Guide](usage.md)
+- [Development Guide](development.md)

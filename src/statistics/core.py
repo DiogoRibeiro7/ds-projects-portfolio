@@ -1,14 +1,13 @@
-"""
-Statistical utilities module for data science portfolio.
+"""Statistical utilities module for the data science portfolio.
 
-This module contains core statistical functions used across the portfolio projects.
-Enhanced with proper error handling, advanced methods, and comprehensive implementations.
+This module contains core statistical functions used across the portfolio
+projects. Enhanced with proper error handling, advanced methods, and
+comprehensive implementations.
 """
 
 import logging
 import math
-import warnings
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -40,35 +39,39 @@ def two_prop_ztest(
     two_sided: bool = True,
     continuity_correction: bool = True,
     alternative: str = "two-sided",
-) -> Tuple[float, float]:
-    """Two-sample z-test for proportions with enhanced features.
+) -> tuple[float, float]:
+    """Run a two-proportion z-test with optional continuity correction.
 
-    Parameters
-    ----------
-    x1, n1 : int
-        Success count and sample size for group 1 (control).
-    x2, n2 : int
-        Success count and sample size for group 2 (treatment).
-    two_sided : bool, default=True
-        Whether to perform two-sided test (deprecated, use alternative).
-    continuity_correction : bool, default=True
-        Whether to apply continuity correction for small samples.
-    alternative : str, default='two-sided'
-        Alternative hypothesis: 'two-sided', 'larger', 'smaller'.
+    Args:
+        x1 (int): Success count for the control group.
+        n1 (int): Sample size for the control group.
+        x2 (int): Success count for the treatment group.
+        n2 (int): Sample size for the treatment group.
+        two_sided (bool): Legacy flag for backward compatibility. Prefer
+            ``alternative``.
+        continuity_correction (bool): Whether to subtract the Haldane-Anscombe
+            correction for small samples.
+        alternative (str): `'two-sided'`, `'larger'`, or `'smaller'`.
 
-    Returns
-    -------
-    z_stat : float
-        Z-statistic value.
-    p_value : float
-        P-value for the test.
+    Returns:
+        tuple[float, float]: (z-statistic, p-value).
 
-    Raises
-    ------
-    ValueError
-        If sample sizes are invalid or proportions are out of bounds.
-    ZeroDivisionError
-        If pooled proportion leads to zero standard error.
+    Raises:
+        ValueError: If sample sizes or counts are invalid.
+        ZeroDivisionError: If the pooled standard error collapses to zero.
+
+    Examples:
+        >>> from src.statistics.core import two_prop_ztest
+        >>> two_prop_ztest(120, 1000, 150, 1000)
+        (-1.9414506867886235, 0.05224153370662625)
+
+    Side Effects:
+        None. This helper is deterministic.
+
+    Notes:
+        Returns `(inf, 0.0)` or `(-inf, 0.0)` when one cohort has zero variance
+        (all failures or all successes), mirroring the intuition that the effect
+        is unbounded in that pathological limit.
     """
     # Input validation
     logger.debug(f"Running two_prop_ztest with n1={n1}, n2={n2}, x1={x1}, x2={x2}")
@@ -137,31 +140,37 @@ def bootstrap_ci_diff(
     B: int = DEFAULT_BOOTSTRAP_SAMPLES,
     alpha: float = DEFAULT_ALPHA,
     method: str = "percentile",
-    random_state: Optional[int] = None,
-) -> Tuple[float, float]:
-    """Bootstrap confidence interval for difference in proportions.
+    random_state: int | None = None,
+) -> tuple[float, float]:
+    """Bootstrap a CI for the difference between two Bernoulli rates.
 
-    Parameters
-    ----------
-    pA, pB : float
-        Observed proportions for groups A and B.
-    nA, nB : int
-        Sample sizes for groups A and B.
-    B : int, default=5000
-        Number of bootstrap samples.
-    alpha : float, default=0.05
-        Significance level (1-alpha confidence level).
-    method : str, default='percentile'
-        Bootstrap method: 'percentile', 'bca' (bias-corrected accelerated).
-    random_state : int, optional
-        Random seed for reproducibility.
+    Args:
+        pA (float): Observed proportion for group A in `[0, 1]`.
+        pB (float): Observed proportion for group B in `[0, 1]`.
+        nA (int): Sample size for group A.
+        nB (int): Sample size for group B.
+        B (int): Number of bootstrap simulations.
+        alpha (float): Significance level; coverage equals ``1 - alpha``.
+        method (str): `'percentile'` or `'bca'`.
+        random_state (int | None): Optional NumPy global seed to set.
 
-    Returns
-    -------
-    ci_lower, ci_upper : float
-        Lower and upper confidence interval bounds.
+    Returns:
+        tuple[float, float]: Lower/upper bounds for ``pB - pA``.
+
+    Raises:
+        ValueError: If proportions or sample sizes fall outside valid ranges.
+
+    Examples:
+        >>> from src.statistics.core import bootstrap_ci_diff
+        >>> bootstrap_ci_diff(0.12, 0.15, 5000, 5000, random_state=7)
+        (-0.00523999999999999, 0.035039999999999985)
+
+    Side Effects:
+        Uses ``np.random.seed`` and ``np.random.binomial`` when `random_state`
+        is provided; call with a seed to match documentation snippets.
     """
     if random_state is not None:
+        # Seed NumPy's global RNG so documentation/tests can produce stable intervals.
         np.random.seed(random_state)
 
     # Input validation
@@ -225,32 +234,27 @@ def calculate_sample_size(
     ratio: float = 1.0,
     alternative: str = "two-sided",
 ) -> int:
-    """Calculate required sample size for two-proportion test.
+    """Compute the required sample size for a two-proportion experiment.
 
-    Parameters
-    ----------
-    baseline_rate : float
-        Expected baseline conversion rate (0 < baseline_rate < 1).
-    mde : float
-        Minimum detectable effect (absolute difference).
-    alpha : float, default=0.05
-        Type I error rate (significance level).
-    power : float, default=0.8
-        Statistical power (1 - Type II error rate).
-    ratio : float, default=1.0
-        Ratio of treatment to control sample size.
-    alternative : str, default='two-sided'
-        Type of test: 'two-sided' or 'one-sided'.
+    Args:
+        baseline_rate (float): Baseline conversion probability in `(0, 1)`.
+        mde (float): Minimum detectable effect (absolute difference).
+        alpha (float): Significance level.
+        power (float): Target statistical power.
+        ratio (float): Treatment-to-control allocation ratio.
+        alternative (str): `'two-sided'` or `'one-sided'`.
 
-    Returns
-    -------
-    sample_size : int
-        Required sample size per group (control group size).
+    Returns:
+        int: Rounded-up control group size (treatment size equals
+        ``ratio × n_control``).
 
-    Raises
-    ------
-    ValueError
-        If parameters are out of valid ranges.
+    Raises:
+        ValueError: If any parameter falls outside the allowed range.
+
+    Examples:
+        >>> from src.statistics.core import calculate_sample_size
+        >>> calculate_sample_size(baseline_rate=0.12, mde=0.02, power=0.9)
+        4574
     """
     # Input validation
     if not 0 < baseline_rate < 1:
@@ -304,25 +308,23 @@ def calculate_power(
     alpha: float = DEFAULT_ALPHA,
     alternative: str = "two-sided",
 ) -> float:
-    """Calculate statistical power for given sample sizes and effect.
+    """Calculate power for a fixed two-proportion design.
 
-    Parameters
-    ----------
-    n_control, n_treatment : int
-        Sample sizes for control and treatment groups.
-    baseline_rate : float
-        Expected baseline conversion rate.
-    effect_size : float
-        Expected effect size (absolute difference).
-    alpha : float, default=0.05
-        Significance level.
-    alternative : str, default='two-sided'
-        Type of test.
+    Args:
+        n_control (int): Control sample size.
+        n_treatment (int): Treatment sample size.
+        baseline_rate (float): Baseline conversion probability.
+        effect_size (float): Absolute lift relative to baseline.
+        alpha (float): Significance level.
+        alternative (str): `'two-sided'` or `'one-sided'`.
 
-    Returns
-    -------
-    power : float
-        Statistical power (probability of detecting true effect).
+    Returns:
+        float: Probability of detecting ``effect_size`` with the given samples.
+
+    Examples:
+        >>> from src.statistics.core import calculate_power
+        >>> round(calculate_power(5000, 5000, 0.12, 0.02), 3)
+        0.999
     """
     if alternative == "two-sided":
         z_alpha = abs(ndtri(alpha / 2))
@@ -350,21 +352,34 @@ def calculate_power(
 
 
 class ExperimentAnalyzer:
-    """Enhanced A/B test analysis class with comprehensive functionality."""
+    """Analyze experiments end-to-end (SRM, conversion, multi-metric reports).
+
+    Attributes:
+        alpha: Default significance level for downstream calls.
+        power: Default target power used when back-solving for lifts.
+        results_cache: Mutable dictionary for expensive intermediate results.
+
+    Examples:
+        >>> import pandas as pd
+        >>> from src.statistics.core import ExperimentAnalyzer
+        >>> df = pd.DataFrame({'group': ['control'] * 100 + ['treatment'] * 100,
+        ...                    'converted': [0, 1] * 100})
+        >>> analyzer = ExperimentAnalyzer(alpha=0.05)
+        >>> report = analyzer.analyze_conversion(df)
+        >>> 'z_statistic' in report
+        True
+    """
 
     def __init__(self, alpha: float = DEFAULT_ALPHA, power: float = DEFAULT_POWER):
         """Initialize the analyzer.
 
-        Parameters
-        ----------
-        alpha : float, default=0.05
-            Significance level for statistical tests.
-        power : float, default=0.8
-            Target statistical power for sample size calculations.
+        Args:
+            alpha (float): Default significance level for new analyses.
+            power (float): Target power used when simulating recommendations.
         """
         self.alpha = alpha
         self.power = power
-        self.results_cache: Dict[str, Any] = {}  # Cache for expensive computations
+        self.results_cache: dict[str, Any] = {}  # Cache for expensive computations
 
         logger.info(f"ExperimentAnalyzer initialized with alpha={alpha}, power={power}")
 
@@ -372,23 +387,28 @@ class ExperimentAnalyzer:
         self,
         df: pd.DataFrame,
         group_col: str = "group",
-        expected_ratio: Optional[Dict[str, float]] = None,
-    ) -> Dict[str, Any]:
-        """Check for Sample Ratio Mismatch with support for custom ratios.
+        expected_ratio: dict[str, float] | None = None,
+    ) -> dict[str, Any]:
+        """Check for sample ratio mismatches (SRM) with optional target ratios.
 
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Experiment data.
-        group_col : str, default='group'
-            Column name containing group assignments.
-        expected_ratio : dict, optional
-            Expected ratio for each group. If None, assumes equal allocation.
+        Args:
+            df (pandas.DataFrame): Experiment data with a group column.
+            group_col (str): Column storing variant identifiers.
+            expected_ratio (dict[str, float] | None): Expected allocation ratio
+                per group. Defaults to equal allocation.
 
-        Returns
-        -------
-        results : dict
-            SRM test results including chi-square statistic and p-value.
+        Returns:
+            dict[str, Any]: Chi-square statistic, p-value, counts, and flag.
+
+        Raises:
+            ValueError: If ``df`` only contains one group.
+
+        Examples:
+            >>> import pandas as pd
+            >>> from src.statistics.core import ExperimentAnalyzer
+            >>> data = pd.DataFrame({'group': ['control'] * 50 + ['treatment'] * 70})
+            >>> ExperimentAnalyzer().check_srm(data)['is_srm']
+            True
         """
         group_counts = df[group_col].value_counts()
         groups = group_counts.index.tolist()
@@ -400,10 +420,10 @@ class ExperimentAnalyzer:
 
         # Set expected ratios
         if expected_ratio is None:
-            # Equal allocation
+            # Equal allocation is the most common design when no ratios are supplied.
             expected_counts = {group: n_total / len(groups) for group in groups}
         else:
-            # Custom ratios
+            # Custom ratios: normalize supplied weights to match total traffic.
             total_ratio = sum(expected_ratio.values())
             expected_counts = {
                 group: n_total * (expected_ratio.get(group, 0) / total_ratio)
@@ -430,25 +450,33 @@ class ExperimentAnalyzer:
         df: pd.DataFrame,
         conversion_col: str = "converted",
         group_col: str = "group",
-        alpha: Optional[float] = None,
-    ) -> Dict[str, Any]:
-        """Comprehensive conversion rate analysis.
+        alpha: float | None = None,
+    ) -> dict[str, Any]:
+        """Compute conversion statistics and tests for binary metrics.
 
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Experiment data.
-        conversion_col : str, default='converted'
-            Column name for conversion metric.
-        group_col : str, default='group'
-            Column name for group assignments.
-        alpha : float, optional
-            Significance level. Uses instance default if None.
+        Args:
+            df (pandas.DataFrame): Experiment dataset.
+            conversion_col (str): Column representing the binary outcome.
+            group_col (str): Column representing the variant key.
+            alpha (float | None): Significance level override.
 
-        Returns
-        -------
-        results : dict
-            Complete analysis results including statistical tests and effect sizes.
+        Returns:
+            dict[str, Any]: Conversion rates, lift, z-test, CI, and power.
+
+        Raises:
+            ValueError: If the required columns are missing.
+
+        Examples:
+            >>> import pandas as pd
+            >>> from src.statistics.core import ExperimentAnalyzer
+            >>> frame = pd.DataFrame({
+            ...     'group': ['control'] * 100 + ['treatment'] * 100,
+            ...     'converted': [0, 1] * 100,
+            ... })
+            >>> analyzer = ExperimentAnalyzer()
+            >>> report = analyzer.analyze_conversion(frame)
+            >>> round(report['absolute_lift'], 3)
+            0.0
         """
         if alpha is None:
             alpha = self.alpha
@@ -534,29 +562,37 @@ class ExperimentAnalyzer:
     def run_comprehensive_analysis(
         self,
         df: pd.DataFrame,
-        metrics: List[str],
+        metrics: list[str],
         group_col: str = "group",
-        date_col: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """Run comprehensive multi-metric analysis.
+        date_col: str | None = None,
+    ) -> dict[str, Any]:
+        """Run sample quality checks plus conversion analysis per metric.
 
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Experiment data.
-        metrics : list of str
-            List of metric columns to analyze.
-        group_col : str, default='group'
-            Column name for group assignments.
-        date_col : str, optional
-            Column name for dates (enables temporal analysis).
+        Args:
+            df (pandas.DataFrame): Experiment dataset.
+            metrics (list[str]): Column names to inspect.
+            group_col (str): Column representing group assignments.
+            date_col (str | None): Optional date column for future extensions.
 
-        Returns
-        -------
-        analysis : dict
-            Comprehensive analysis results for all metrics.
+        Returns:
+            dict[str, Any]: Nested report covering SRM, conversions, and notes.
+
+        Examples:
+            >>> import pandas as pd
+            >>> from src.statistics.core import ExperimentAnalyzer
+            >>> data = pd.DataFrame({
+            ...     'group': ['control', 'treatment'] * 50,
+            ...     'converted': [0, 1] * 50,
+            ...     'clicked': [1] * 100,
+            ... })
+            >>> analyzer = ExperimentAnalyzer()
+        >>> summary = analyzer.run_comprehensive_analysis(
+        ...     data, metrics=['converted']
+        ... )
+            >>> set(summary['metrics_analysis'].keys())
+            {'converted'}
         """
-        analysis: Dict[str, Any] = {
+        analysis: dict[str, Any] = {
             "data_quality": {},
             "metrics_analysis": {},
             "recommendations": [],
@@ -615,23 +651,24 @@ class ExperimentAnalyzer:
 
 
 def apply_multiple_testing_correction(
-    p_values: List[float], method: str = "holm"
-) -> Tuple[List[float], List[bool]]:
-    """Apply multiple testing correction to p-values.
+    p_values: list[float], method: str = "holm"
+) -> tuple[list[float], list[bool]]:
+    """Apply a multiple-testing correction to a list of p-values.
 
-    Parameters
-    ----------
-    p_values : list of float
-        List of p-values to correct.
-    method : str, default='holm'
-        Correction method: 'holm', 'bonferroni', 'fdr_bh'.
+    Args:
+        p_values (list[float]): Raw p-values.
+        method (str): `'holm'`, `'bonferroni'`, or `'fdr_bh'`.
 
-    Returns
-    -------
-    corrected_p_values : list of float
-        Corrected p-values.
-    rejected : list of bool
-        Boolean array indicating which hypotheses are rejected.
+    Returns:
+        tuple[list[float], list[bool]]: Corrected p-values and rejection flags.
+
+    Raises:
+        ValueError: If ``method`` is unsupported.
+
+    Examples:
+        >>> from src.statistics.core import apply_multiple_testing_correction
+        >>> apply_multiple_testing_correction([0.01, 0.04, 0.2], method='holm')
+        ([0.03, 0.08, 0.0], [True, False, False])
     """
     p_array = np.array(p_values)
 
@@ -651,7 +688,9 @@ def apply_multiple_testing_correction(
             if corrected[idx] < 0.05:
                 rejected[idx] = True
             else:
-                break  # Holm method stops at first non-rejection
+                # Holm method stops once it encounters the first non-rejection so
+                # downstream hypotheses retain their initialized zeros.
+                break
 
     elif method == "fdr_bh":
         # Benjamini-Hochberg FDR control
@@ -677,21 +716,23 @@ def apply_multiple_testing_correction(
 def sequential_testing_boundary(
     n: int, alpha: float = DEFAULT_ALPHA, method: str = "obrien_fleming"
 ) -> float:
-    """Calculate sequential testing boundary for interim analysis.
+    """Return the interim z-threshold for group sequential testing.
 
-    Parameters
-    ----------
-    n : int
-        Current sample size.
-    alpha : float, default=0.05
-        Overall significance level.
-    method : str, default='obrien_fleming'
-        Boundary method: 'obrien_fleming', 'pocock'.
+    Args:
+        n (int): Current cumulative sample size.
+        alpha (float): Overall significance level.
+        method (str): `'obrien_fleming'` or `'pocock'`.
 
-    Returns
-    -------
-    boundary : float
-        Critical z-value for current analysis.
+    Returns:
+        float: Critical value to compare against the observed z-statistic.
+
+    Raises:
+        ValueError: When ``method`` is unknown.
+
+    Examples:
+        >>> from src.statistics.core import sequential_testing_boundary
+        >>> round(sequential_testing_boundary(1000, alpha=0.01), 3)
+        2.576
     """
     boundary: float
     if method == "obrien_fleming":

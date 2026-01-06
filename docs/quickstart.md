@@ -154,7 +154,7 @@ mypy .
 
 Create a `.env` file for configuration:
 
-```env
+```ini
 # API Configuration
 API_KEY=your_api_key_here
 SECRET_KEY=your_secret_key_here
@@ -201,17 +201,17 @@ config = PipelineConfig(
 
 ## Next Steps
 
-1. 📖 Read the [full documentation](index.rst)
-2. 🎓 Try the [tutorials](tutorials/01_getting_started.ipynb)
-3. 🔬 Explore [examples](examples/)
-4. 🤝 [Contribute](contributing.md) to the project
+1. 📖 Read the [home page](index.md)
+2. 🎓 Try the [tutorial notebooks](https://github.com/diogoribeiro7/ds-projects-portfolio/tree/main/tutorials)
+3. 🔬 Explore more [examples](https://github.com/diogoribeiro7/ds-projects-portfolio/tree/main/examples)
+4. 🤝 [Contribute](https://github.com/diogoribeiro7/ds-projects-portfolio/blob/main/CONTRIBUTING.md) to the project
 
 ## Quick Links
 
-- [API Reference](api_reference.md)
-- [ML Pipeline Guide](modules/ml_pipeline.md)
-- [Statistical Methods](modules/statistics.md)
-- [Dashboard Documentation](modules/dashboard.md)
+- [API Reference](api/index.md)
+- [Usage Guide](usage.md)
+- [Installation Guide](installation.md)
+- [Documentation Style Guide](DOCS_STYLE.md)
 
 ## Getting Help
 

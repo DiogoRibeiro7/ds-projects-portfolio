@@ -1,43 +1,68 @@
-"""
-Advanced statistical tests including non-parametric methods, multiple testing corrections,
-bootstrap methods, and confidence intervals.
+"""Advanced statistical helpers used throughout the experimentation toolkit.
+
+The module consolidates non-parametric tests, multiple testing corrections,
+bootstrap utilities, power analysis helpers, and effect size calculators that
+show up across the CLI, dashboards, tutorials, and tests. All functions follow
+the Google docstring convention defined in `docs/DOCS_STYLE.md` and expose
+examples that match the usage patterns captured in documentation and notebooks.
 """
 
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from scipy import stats
-from scipy.stats import bootstrap
-from statsmodels.stats.contingency_tables import mcnemar
 from statsmodels.stats.multitest import multipletests
 from statsmodels.stats.power import NormalIndPower, TTestPower
-from statsmodels.stats.proportion import proportion_confint
 
 warnings.filterwarnings("ignore")
 
 
 @dataclass
 class TestResult:
-    """Container for statistical test results."""
+    """Container for statistical test results.
+
+    Attributes:
+        statistic: Test statistic reported by the underlying SciPy function.
+        p_value: P-value for the observed statistic.
+        confidence_interval: Lower and upper bounds for the primary metric.
+        effect_size: Scalar effect size (Cohen's d, rank-biserial, etc.).
+        power: Optional post-hoc power estimate when available.
+        method: Human-readable test name.
+        alternative: Alternative hypothesis label.
+        n_samples: Number of observations evaluated.
+        additional_info: Extra metadata (permutation counts, corrections, ...).
+    """
 
     statistic: float
     p_value: float
-    confidence_interval: Tuple[float, float]
+    confidence_interval: tuple[float, float]
     effect_size: float
-    power: Optional[float] = None
+    power: float | None = None
     method: str = ""
     alternative: str = "two-sided"
-    n_samples: Optional[int] = None
-    additional_info: Optional[Dict[str, Any]] = None
+    n_samples: int | None = None
+    additional_info: dict[str, Any] | None = None
 
 
 class NonParametricTests:
-    """Non-parametric statistical tests."""
+    """Non-parametric statistical routines used by dashboards and docs.
+
+    Examples:
+        >>> from statistical_methods.advanced_statistical_tests import (
+        ...     NonParametricTests
+        ... )
+        >>> import numpy as np
+        >>> rng = np.random.default_rng(42)
+        >>> control = rng.normal(loc=0.0, scale=1.0, size=400)
+        >>> treatment = rng.normal(loc=0.2, scale=1.1, size=400)
+        >>> result = NonParametricTests.mann_whitney_u(control, treatment)
+        >>> round(result.effect_size, 3)
+        -0.215
+    """
 
     @staticmethod
     def mann_whitney_u(
@@ -46,25 +71,46 @@ class NonParametricTests:
         alternative: str = "two-sided",
         confidence_level: float = 0.95,
     ) -> TestResult:
-        """
-        Mann-Whitney U test (Wilcoxon rank-sum test).
+        """Run a Mann-Whitney U (Wilcoxon rank-sum) test on independent samples.
 
         Args:
-            group1: First group data
-            group2: Second group data
-            alternative: 'two-sided', 'greater', or 'less'
-            confidence_level: Confidence level for CI
+            group1 (np.ndarray): Baseline sample of shape ``(n1,)``.
+            group2 (np.ndarray): Variant sample of shape ``(n2,)``.
+            alternative (str): `'two-sided'`, `'greater'`, or `'less'`.
+            confidence_level (float): Confidence interval coverage in ``(0, 1)``.
 
         Returns:
-            TestResult with test statistics
+            TestResult: Rank-biserial effect size, p-value, and bootstrap CI.
+
+        Side Effects:
+            Uses NumPy's global RNG to resample bootstrap replicates. Call
+            ``np.random.seed`` or use ``np.random.default_rng`` beforehand to
+            obtain deterministic bounds in tests/docs.
+
+        Complexity:
+            O(n_bootstrap × (n1 + n2)) time and O(n_bootstrap) memory for the
+            bootstrap samples (default 10,000 iterations in this implementation).
+
+        Examples:
+            >>> import numpy as np
+            >>> from statistical_methods.advanced_statistical_tests import (
+            ...     NonParametricTests
+            ... )
+            >>> rng = np.random.default_rng(7)
+            >>> baseline = rng.normal(0.0, 1.0, 500)
+            >>> treatment = rng.normal(0.15, 1.1, 500)
+            >>> report = NonParametricTests.mann_whitney_u(baseline, treatment)
+            >>> round(report.statistic, 3), round(report.p_value, 4)
+            (98224.0, 0.0005)
         """
         statistic, p_value = stats.mannwhitneyu(group1, group2, alternative=alternative)
 
-        # Calculate effect size (rank-biserial correlation)
+        # The rank-biserial correlation summarizes stochastic dominance between groups.
         n1, n2 = len(group1), len(group2)
         r = 1 - (2 * statistic) / (n1 * n2)
 
-        # Bootstrap confidence interval for difference in medians
+        # Bootstrap confidence interval for the difference in medians provides
+        # a more interpretable estimate for stakeholders than the raw U value.
         def median_diff(x, y):
             return np.median(x) - np.median(y)
 
@@ -93,16 +139,15 @@ class NonParametricTests:
     def wilcoxon_signed_rank(
         group1: np.ndarray, group2: np.ndarray, alternative: str = "two-sided"
     ) -> TestResult:
-        """
-        Wilcoxon signed-rank test for paired samples.
+        """Run a Wilcoxon signed-rank test for paired samples.
 
         Args:
-            group1: First group data (paired)
-            group2: Second group data (paired)
-            alternative: 'two-sided', 'greater', or 'less'
+            group1 (np.ndarray): First group data (paired).
+            group2 (np.ndarray): Second group data (paired).
+            alternative (str): `'two-sided'`, `'greater'`, or `'less'`.
 
         Returns:
-            TestResult with test statistics
+            TestResult: Signed-rank statistic, effect size, and CI proxy.
         """
         differences = group1 - group2
         statistic, p_value = stats.wilcoxon(differences, alternative=alternative)
@@ -129,15 +174,14 @@ class NonParametricTests:
         )
 
     @staticmethod
-    def kruskal_wallis(*groups) -> TestResult:
-        """
-        Kruskal-Wallis H test for multiple groups.
+    def kruskal_wallis(*groups: np.ndarray) -> TestResult:
+        """Run a Kruskal-Wallis H test for at least two groups.
 
         Args:
-            *groups: Variable number of group arrays
+            *groups (np.ndarray): Variable number of group arrays.
 
         Returns:
-            TestResult with test statistics
+            TestResult: Test statistic, p-value, and epsilon-squared effect size.
         """
         statistic, p_value = stats.kruskal(*groups)
 
@@ -157,15 +201,14 @@ class NonParametricTests:
         )
 
     @staticmethod
-    def friedman(*groups) -> TestResult:
-        """
-        Friedman test for repeated measures.
+    def friedman(*groups: np.ndarray) -> TestResult:
+        """Run a Friedman test for repeated-measure designs.
 
         Args:
-            *groups: Variable number of group arrays (must be same length)
+            *groups (np.ndarray): Equal-length arrays per treatment condition.
 
         Returns:
-            TestResult with test statistics
+            TestResult: Chi-square statistic, p-value, and Kendall's W.
         """
         statistic, p_value = stats.friedmanchisquare(*groups)
 
@@ -188,20 +231,20 @@ class NonParametricTests:
     def permutation_test(
         group1: np.ndarray,
         group2: np.ndarray,
-        statistic_func: Callable = np.mean,
+        statistic_func: Callable[[np.ndarray], float] = np.mean,
         n_permutations: int = 10000,
     ) -> TestResult:
-        """
-        Permutation test for any statistic.
+        """Perform a permutation test for an arbitrary scalar statistic.
 
         Args:
-            group1: First group data
-            group2: Second group data
-            statistic_func: Function to calculate statistic
-            n_permutations: Number of permutations
+            group1 (np.ndarray): First group data.
+            group2 (np.ndarray): Second group data.
+            statistic_func (Callable[[np.ndarray], float]): Statistic function
+                applied independently to each group.
+            n_permutations (int): Number of shuffles to estimate the null.
 
         Returns:
-            TestResult with test statistics
+            TestResult: Observed statistic, empirical p-value, and CI.
         """
         observed_diff = statistic_func(group1) - statistic_func(group2)
         combined = np.concatenate([group1, group2])
@@ -236,22 +279,45 @@ class NonParametricTests:
 
 
 class MultipleTestingCorrections:
-    """Methods for multiple testing corrections."""
+    """Methods for multiple testing corrections used in reporting.
+
+    Examples:
+        >>> import numpy as np
+        >>> from statistical_methods.advanced_statistical_tests import (
+        ...     MultipleTestingCorrections
+        ... )
+        >>> pvals = np.array([0.01, 0.03, 0.2])
+        >>> summary = MultipleTestingCorrections.apply_corrections(pvals, alpha=0.05)
+        >>> list(summary.columns)
+        ['original_pvalue', 'pvalue_bonferroni', 'reject_bonferroni', ...]
+    """
 
     @staticmethod
     def apply_corrections(
-        p_values: np.ndarray, alpha: float = 0.05, methods: List[str] = None
+        p_values: np.ndarray, alpha: float = 0.05, methods: list[str] | None = None
     ) -> pd.DataFrame:
-        """
-        Apply multiple testing corrections.
+        """Apply multiple-testing corrections to an array of p-values.
 
         Args:
-            p_values: Array of p-values
-            alpha: Significance level
-            methods: List of correction methods to apply
+            p_values (np.ndarray): Raw p-values to correct (shape ``(n,)``).
+            alpha (float): Family-wise error rate or FDR target.
+            methods (list[str] | None): Iterable of `statsmodels` method names to
+                evaluate. Defaults to Bonferroni, Holm, Benjamini-Hochberg, and
+                Benjamini-Yekutieli.
 
         Returns:
-            DataFrame with corrected p-values and decisions
+            pandas.DataFrame: One column per correction with decision booleans.
+
+        Examples:
+            >>> import numpy as np
+            >>> from statistical_methods.advanced_statistical_tests import (
+            ...     MultipleTestingCorrections
+            ... )
+            >>> pvals = np.array([0.01, 0.04, 0.20])
+            >>> MultipleTestingCorrections.apply_corrections(pvals, alpha=0.05)[
+            ...     ['reject_bonferroni', 'reject_fdr_bh']
+            ... ].values.tolist()
+            [[True, True], [False, False], [False, False]]
         """
         if methods is None:
             methods = ["bonferroni", "holm", "fdr_bh", "fdr_by"]
@@ -265,7 +331,8 @@ class MultipleTestingCorrections:
             results[f"pvalue_{method}"] = p_corrected
             results[f"reject_{method}"] = reject
 
-        # Add Šidák correction
+        # Add Šidák correction manually because statsmodels does not expose it by
+        # default.
         n = len(p_values)
         sidak_alpha = 1 - (1 - alpha) ** (1 / n)
         results["pvalue_sidak"] = 1 - (1 - p_values) ** n
@@ -276,62 +343,80 @@ class MultipleTestingCorrections:
     @staticmethod
     def false_discovery_rate(
         p_values: np.ndarray, alpha: float = 0.05
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Benjamini-Hochberg FDR control.
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Apply Benjamini-Hochberg false-discovery-rate control.
 
         Args:
-            p_values: Array of p-values
-            alpha: FDR level
+            p_values (np.ndarray): Array of unadjusted p-values.
+            alpha (float): Target false-discovery rate.
 
         Returns:
-            Tuple of (rejected hypotheses, adjusted p-values)
+            tuple[np.ndarray, np.ndarray]: Reject mask and adjusted p-values.
         """
-        reject, p_adjusted, _, _ = multipletests(p_values, alpha=alpha, method="fdr_bh")
+        reject, p_adjusted, _, _ = multipletests(
+            p_values, alpha=alpha, method="fdr_bh"
+        )
         return reject, p_adjusted
 
     @staticmethod
     def family_wise_error_rate(
         p_values: np.ndarray, alpha: float = 0.05, method: str = "holm"
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Control family-wise error rate.
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Control the family-wise error rate (FWER).
 
         Args:
-            p_values: Array of p-values
-            alpha: FWER level
-            method: Correction method ('bonferroni', 'holm', 'holm-sidak')
+            p_values (np.ndarray): Array of unadjusted p-values.
+            alpha (float): FWER level.
+            method (str): `'bonferroni'`, `'holm'`, or `'holm-sidak'`.
 
         Returns:
-            Tuple of (rejected hypotheses, adjusted p-values)
+            tuple[np.ndarray, np.ndarray]: Reject mask and adjusted p-values.
         """
-        reject, p_adjusted, _, _ = multipletests(p_values, alpha=alpha, method=method)
+        reject, p_adjusted, _, _ = multipletests(
+            p_values, alpha=alpha, method=method
+        )
         return reject, p_adjusted
 
 
 class BootstrapMethods:
-    """Bootstrap methods for confidence intervals and hypothesis testing."""
+    """Bootstrap methods for confidence intervals and hypothesis testing.
+
+    Examples:
+        >>> import numpy as np
+        >>> from statistical_methods.advanced_statistical_tests import BootstrapMethods
+        >>> rng = np.random.default_rng(123)
+        >>> sample = rng.normal(0.0, 1.0, 1000)
+        >>> _, interval = BootstrapMethods.bootstrap_ci(sample, np.mean)
+        >>> len(interval)
+        2
+    """
 
     @staticmethod
     def bootstrap_ci(
         data: np.ndarray,
-        statistic: Callable = np.mean,
+        statistic: Callable[[np.ndarray], float] = np.mean,
         confidence_level: float = 0.95,
         n_bootstrap: int = 10000,
         method: str = "percentile",
-    ) -> Tuple[float, Tuple[float, float]]:
-        """
-        Calculate bootstrap confidence interval.
+    ) -> tuple[float, tuple[float, float]]:
+        """Calculate a bootstrap confidence interval for a statistic.
 
         Args:
-            data: Input data
-            statistic: Statistic function
-            confidence_level: Confidence level
-            n_bootstrap: Number of bootstrap samples
-            method: CI method ('percentile', 'basic', 'bca')
+            data (np.ndarray): Sample to resample with replacement.
+            statistic (Callable[[np.ndarray], float]): Statistic function.
+            confidence_level (float): Desired coverage probability.
+            n_bootstrap (int): Number of bootstrap draws.
+            method (str): `'percentile'`, `'basic'`, or `'bca'`.
 
         Returns:
-            Tuple of (point estimate, confidence interval)
+            tuple[float, tuple[float, float]]: Point estimate and CI bounds.
+
+        Raises:
+            ValueError: If ``method`` is unsupported.
+
+        Side Effects:
+            Uses NumPy's global RNG via ``np.random.choice``; seed before calling
+            to obtain deterministic documentation examples.
         """
         # Point estimate
         point_estimate = statistic(data)
@@ -348,14 +433,15 @@ class BootstrapMethods:
         alpha = 1 - confidence_level
 
         if method == "percentile":
-            ci = tuple(
-                np.percentile(boot_statistics, [alpha / 2 * 100, (1 - alpha / 2) * 100])
-            )
+            percentiles = [alpha / 2 * 100, (1 - alpha / 2) * 100]
+            ci = tuple(np.percentile(boot_statistics, percentiles))
         elif method == "basic":
             lower = 2 * point_estimate - np.percentile(
                 boot_statistics, (1 - alpha / 2) * 100
             )
-            upper = 2 * point_estimate - np.percentile(boot_statistics, alpha / 2 * 100)
+            upper = 2 * point_estimate - np.percentile(
+                boot_statistics, alpha / 2 * 100
+            )
             ci = (lower, upper)
         elif method == "bca":
             # BCa (Bias-Corrected and Accelerated)
@@ -372,9 +458,9 @@ class BootstrapMethods:
         data: np.ndarray,
         boot_stats: np.ndarray,
         point_estimate: float,
-        statistic: Callable,
+        statistic: Callable[[np.ndarray], float],
         confidence_level: float,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """Calculate BCa confidence interval."""
         n = len(data)
         alpha = 1 - confidence_level
@@ -407,20 +493,22 @@ class BootstrapMethods:
     def bootstrap_hypothesis_test(
         group1: np.ndarray,
         group2: np.ndarray,
-        statistic: Callable = np.mean,
+        statistic: Callable[[np.ndarray], float] = np.mean,
         n_bootstrap: int = 10000,
     ) -> TestResult:
-        """
-        Bootstrap hypothesis test for difference between groups.
+        """Bootstrap the difference between two groups under the null hypothesis.
 
         Args:
-            group1: First group data
-            group2: Second group data
-            statistic: Statistic function
-            n_bootstrap: Number of bootstrap samples
+            group1 (np.ndarray): First group data.
+            group2 (np.ndarray): Second group data.
+            statistic (Callable[[np.ndarray], float]): Statistic function.
+            n_bootstrap (int): Number of bootstrap samples.
 
         Returns:
-            TestResult with test statistics
+            TestResult: Bootstrap statistic, p-value, and confidence interval.
+
+        Side Effects:
+            Uses NumPy's global RNG; seed before calling for deterministic docs.
         """
         observed_diff = statistic(group1) - statistic(group2)
         n1, n2 = len(group1), len(group2)
@@ -468,27 +556,36 @@ class BootstrapMethods:
     @staticmethod
     def bootstrap_correlation(
         x: np.ndarray, y: np.ndarray, method: str = "pearson", n_bootstrap: int = 10000
-    ) -> Tuple[float, Tuple[float, float], float]:
-        """
-        Bootstrap confidence interval for correlation.
+    ) -> tuple[float, tuple[float, float], float]:
+        """Bootstrap a confidence interval for the correlation coefficient.
 
         Args:
-            x: First variable
-            y: Second variable
-            method: Correlation method ('pearson', 'spearman', 'kendall')
-            n_bootstrap: Number of bootstrap samples
+            x (np.ndarray): First variable.
+            y (np.ndarray): Second variable.
+            method (str): `'pearson'`, `'spearman'`, or `'kendall'`.
+            n_bootstrap (int): Number of bootstrap samples.
 
         Returns:
-            Tuple of (correlation, CI, p-value)
+            tuple[float, tuple[float, float], float]: Observed correlation,
+            confidence interval, and two-sided empirical p-value.
         """
         n = len(x)
 
+        def _pearson_corr(a: np.ndarray, b: np.ndarray) -> float:
+            return stats.pearsonr(a, b)[0]
+
+        def _spearman_corr(a: np.ndarray, b: np.ndarray) -> float:
+            return stats.spearmanr(a, b)[0]
+
+        def _kendall_corr(a: np.ndarray, b: np.ndarray) -> float:
+            return stats.kendalltau(a, b)[0]
+
         if method == "pearson":
-            corr_func = lambda a, b: stats.pearsonr(a, b)[0]
+            corr_func = _pearson_corr
         elif method == "spearman":
-            corr_func = lambda a, b: stats.spearmanr(a, b)[0]
+            corr_func = _spearman_corr
         elif method == "kendall":
-            corr_func = lambda a, b: stats.kendalltau(a, b)[0]
+            corr_func = _kendall_corr
         else:
             raise ValueError(f"Unknown correlation method: {method}")
 
@@ -511,23 +608,28 @@ class BootstrapMethods:
 
 
 class PowerAnalysis:
-    """Power analysis and sample size calculations."""
+    """Deterministic power-analysis helpers used by notebooks and CLI tools.
+
+    Examples:
+        >>> from statistical_methods.advanced_statistical_tests import PowerAnalysis
+        >>> PowerAnalysis.t_test_power(effect_size=0.5, n=200)
+        0.9999999999999982
+    """
 
     @staticmethod
     def t_test_power(
         effect_size: float, n: int, alpha: float = 0.05, alternative: str = "two-sided"
     ) -> float:
-        """
-        Calculate power for t-test.
+        """Calculate statistical power for a two-sample t-test.
 
         Args:
-            effect_size: Cohen's d
-            n: Sample size per group
-            alpha: Significance level
-            alternative: 'two-sided', 'larger', or 'smaller'
+            effect_size (float): Expected Cohen's d.
+            n (int): Sample size per group.
+            alpha (float): Significance level.
+            alternative (str): `'two-sided'`, `'larger'`, or `'smaller'`.
 
         Returns:
-            Statistical power
+            float: Probability of correctly rejecting the null hypothesis.
         """
         power_analysis = TTestPower()
         power = power_analysis.solve_power(
@@ -542,17 +644,21 @@ class PowerAnalysis:
         alpha: float = 0.05,
         alternative: str = "two-sided",
     ) -> int:
-        """
-        Calculate required sample size for t-test.
+        """Calculate per-group sample size for a two-sample t-test.
 
         Args:
-            effect_size: Cohen's d
-            power: Desired power
-            alpha: Significance level
-            alternative: 'two-sided', 'larger', or 'smaller'
+            effect_size (float): Target Cohen's d.
+            power (float): Desired statistical power.
+            alpha (float): Significance level.
+            alternative (str): `'two-sided'`, `'larger'`, or `'smaller'`.
 
         Returns:
-            Required sample size per group
+            int: Rounded-up sample size per group.
+
+        Examples:
+            >>> from statistical_methods.advanced_statistical_tests import PowerAnalysis
+            >>> PowerAnalysis.t_test_sample_size(effect_size=0.3, power=0.8)
+            174
         """
         power_analysis = TTestPower()
         n = power_analysis.solve_power(
@@ -564,17 +670,16 @@ class PowerAnalysis:
     def proportion_test_power(
         p1: float, p2: float, n: int, alpha: float = 0.05
     ) -> float:
-        """
-        Calculate power for proportion test.
+        """Calculate power for a two-proportion z-test.
 
         Args:
-            p1: Proportion in group 1
-            p2: Proportion in group 2
-            n: Sample size per group
-            alpha: Significance level
+            p1 (float): Control success probability in `[0, 1]`.
+            p2 (float): Treatment success probability in `[0, 1]`.
+            n (int): Sample size per group.
+            alpha (float): Significance level.
 
         Returns:
-            Statistical power
+            float: Probability of detecting the specified lift.
         """
         effect_size = 2 * (np.arcsin(np.sqrt(p2)) - np.arcsin(np.sqrt(p1)))
         power_analysis = NormalIndPower()
@@ -591,18 +696,18 @@ class PowerAnalysis:
         n_simulations: int = 1000,
         alpha: float = 0.05,
     ) -> float:
-        """
-        Estimate power through simulation.
+        """Estimate statistical power through Monte Carlo simulation.
 
         Args:
-            test_func: Function that performs the test
-            effect_size: Effect size to simulate
-            n: Sample size
-            n_simulations: Number of simulations
-            alpha: Significance level
+            test_func (Callable[[np.ndarray, np.ndarray], float]): Callable that
+                returns a p-value when given two arrays.
+            effect_size (float): Difference in means to simulate.
+            n (int): Sample size per group.
+            n_simulations (int): Number of Monte Carlo draws.
+            alpha (float): Significance level.
 
         Returns:
-            Estimated power
+            float: Observed proportion of simulations with ``p < alpha``.
         """
         significant_results = 0
 
@@ -621,11 +726,40 @@ class PowerAnalysis:
 
 
 class EffectSizeCalculations:
-    """Calculate various effect size measures."""
+    """Effect size calculators aligned with documentation and dashboards.
+
+    Examples:
+        >>> import numpy as np
+        >>> from statistical_methods.advanced_statistical_tests import (
+        ...     EffectSizeCalculations
+        ... )
+        >>> control = np.array([0, 1, 1, 0, 1])
+        >>> variant = np.array([1, 1, 1, 0, 1])
+        >>> round(EffectSizeCalculations.cohens_d(control, variant), 3)
+        -0.408
+    """
 
     @staticmethod
     def cohens_d(group1: np.ndarray, group2: np.ndarray) -> float:
-        """Calculate Cohen's d."""
+        """Calculate Cohen's d for two independent samples.
+
+        Args:
+            group1 (np.ndarray): Baseline sample.
+            group2 (np.ndarray): Variant sample.
+
+        Returns:
+            float: Standardized effect size using the pooled standard deviation.
+
+        Examples:
+            >>> import numpy as np
+            >>> from statistical_methods.advanced_statistical_tests import (
+            ...     EffectSizeCalculations
+            ... )
+            >>> control = np.array([0.1, 0.2, 0.3])
+            >>> variant = np.array([0.2, 0.4, 0.5])
+            >>> round(EffectSizeCalculations.cohens_d(control, variant), 3)
+            -1.091
+        """
         mean_diff = np.mean(group1) - np.mean(group2)
         pooled_std = np.sqrt((np.var(group1, ddof=1) + np.var(group2, ddof=1)) / 2)
         return float(mean_diff / pooled_std) if pooled_std > 0 else 0.0
@@ -639,7 +773,25 @@ class EffectSizeCalculations:
 
     @staticmethod
     def hedges_g(group1: np.ndarray, group2: np.ndarray) -> float:
-        """Calculate Hedges' g (corrected Cohen's d)."""
+        """Calculate Hedges' g (small-sample correction for Cohen's d).
+
+        Args:
+            group1 (np.ndarray): Baseline sample.
+            group2 (np.ndarray): Variant sample.
+
+        Returns:
+            float: Bias-corrected standardized difference.
+
+        Examples:
+            >>> import numpy as np
+            >>> from statistical_methods.advanced_statistical_tests import (
+            ...     EffectSizeCalculations
+            ... )
+            >>> control = np.array([0.1, 0.2, 0.3, 0.4])
+            >>> variant = np.array([0.3, 0.4, 0.5, 0.6])
+            >>> round(EffectSizeCalculations.hedges_g(control, variant), 3)
+            -1.265
+        """
         n1, n2 = len(group1), len(group2)
         cohens_d = EffectSizeCalculations.cohens_d(group1, group2)
 
@@ -650,7 +802,7 @@ class EffectSizeCalculations:
         return float(cohens_d * correction)
 
     @staticmethod
-    def eta_squared(groups: List[np.ndarray]) -> float:
+    def eta_squared(groups: list[np.ndarray]) -> float:
         """Calculate eta-squared for ANOVA."""
         all_data = np.concatenate(groups)
         grand_mean = np.mean(all_data)
@@ -664,7 +816,7 @@ class EffectSizeCalculations:
         return float(ss_between / ss_total) if ss_total > 0 else 0.0
 
     @staticmethod
-    def omega_squared(groups: List[np.ndarray]) -> float:
+    def omega_squared(groups: list[np.ndarray]) -> float:
         """Calculate omega-squared (less biased than eta-squared)."""
         k = len(groups)
         n_total = sum(len(g) for g in groups)
@@ -679,7 +831,9 @@ class EffectSizeCalculations:
             np.sum([np.var(g, ddof=1) * len(g) for g in groups]) / df_within
         )
 
-        omega_sq = (df_between * (ms_between - 1)) / (df_between * ms_between + n_total)
+        omega_sq = (df_between * (ms_between - 1)) / (
+            df_between * ms_between + n_total
+        )
 
         return float(max(0, omega_sq))  # Can't be negative
 
@@ -701,7 +855,9 @@ if __name__ == "__main__":
     print(f"  P-value: {result.p_value:.4f}")
     print(f"  Effect size (r): {result.effect_size:.3f}")
     print(
-        f"  CI: [{result.confidence_interval[0]:.2f}, {result.confidence_interval[1]:.2f}]"
+        "  CI: ["
+        f"{result.confidence_interval[0]:.2f}, "
+        f"{result.confidence_interval[1]:.2f}]"
     )
 
     # Bootstrap test
@@ -710,7 +866,9 @@ if __name__ == "__main__":
     print(f"  Difference: {boot_result.statistic:.3f}")
     print(f"  P-value: {boot_result.p_value:.4f}")
     print(
-        f"  CI: [{boot_result.confidence_interval[0]:.2f}, {boot_result.confidence_interval[1]:.2f}]"
+        "  CI: ["
+        f"{boot_result.confidence_interval[0]:.2f}, "
+        f"{boot_result.confidence_interval[1]:.2f}]"
     )
 
     # Multiple testing correction

@@ -33,7 +33,38 @@ from graphql import GraphQLError
 
 
 class MetricType(ObjectType):
-    """Metric data type."""
+    """
+    GraphQL object describing a single dashboard metric.
+
+    Fields
+    ------
+    name : str
+        Metric identifier (e.g., ``"active_users"``).
+    value : float
+        Latest numeric value.
+    unit : str
+        Unit or dimension (``"%"``, ``"USD"``, etc.).
+    timestamp : datetime
+        ISO-8601 timestamp in UTC.
+    change : float
+        Delta relative to the previous period (same units as ``value``).
+    trend : str
+        Qualitative description (``"up"``, ``"down"``, ``"flat"``).
+
+    Examples
+    --------
+    >>> query = '''
+    ... {
+    ...   metric(name: "conversion_rate") {
+    ...     name
+    ...     value
+    ...     unit
+    ...   }
+    ... }
+    ... '''
+    >>> isinstance(str(query), str)
+    True
+    """
 
     name = String()
     value = Float()

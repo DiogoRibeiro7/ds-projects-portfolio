@@ -21,7 +21,42 @@ warnings.filterwarnings("ignore")
 
 @dataclass
 class ValidationResult:
-    """Container for validation test results."""
+    """
+    Structured record summarizing a single validator comparison.
+
+    Attributes
+    ----------
+    test_name : str
+        Human-readable label for the scenario (e.g., ``"Proportion test: Large samples"``).
+    our_result : float
+        Metric computed by the in-repo implementation (z-score, CI width, etc.).
+    reference_result : float
+        Corresponding value from the reference library.
+    absolute_error : float
+        Absolute difference ``|our_result - reference_result|`` in native units.
+    relative_error : float
+        Ratio ``absolute_error / reference_result`` for quick tolerance checks.
+    passed : bool
+        ``True`` when the error falls within ``tolerance``.
+    tolerance : float
+        Error threshold used for this comparison.
+    details : Dict[str, Any]
+        Extra context (intermediate z-scores, confidence intervals, metadata).
+
+    Examples
+    --------
+    >>> ValidationResult(
+    ...     test_name="CI width sanity check",
+    ...     our_result=0.12,
+    ...     reference_result=0.119,
+    ...     absolute_error=0.001,
+    ...     relative_error=0.0084,
+    ...     passed=True,
+    ...     tolerance=0.01,
+    ...     details={"method": "wilson"}
+    ... )
+    ValidationResult(test_name='CI width sanity check', our_result=0.12, reference_result=0.119, absolute_error=0.001, relative_error=0.0084, passed=True, tolerance=0.01, details={'method': 'wilson'})
+    """
 
     test_name: str
     our_result: float

@@ -1,0 +1,213 @@
+# Prometheus Alert Rules
+groups:
+  - name: model_server_alerts
+    interval: 30s
+    rules:
+      # High latency alert
+      - alert: HighModelPredictionLatency
+        expr: histogram_quantile(0.95, rate(model_prediction_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: model-server
+        annotations:
+          summary: "High prediction latency detected"
+          description: "95th percentile latency for {{ $labels.model_name }} is {{ $value }}s (threshold: 2s)"
+
+      # Error rate alert
+      - alert: HighModelPredictionErrorRate
+        expr: |
+          sum(rate(model_predictions_total{status="error"}[5m])) by (model_name, version)
+          /
+          sum(rate(model_predictions_total[5m])) by (model_name, version)
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: model-server
+        annotations:
+          summary: "High error rate for model {{ $labels.model_name }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for model {{ $labels.model_name }}:{{ $labels.version }}"
+
+      # Model not responding
+      - alert: ModelServerDown
+        expr: up{job="model-server"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: model-server
+        annotations:
+          summary: "Model server is down"
+          description: "Model server instance {{ $labels.instance }} has been down for more than 2 minutes"
+
+      # Memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          (container_memory_usage_bytes{pod=~"model-server.*"}
+          / container_spec_memory_limit_bytes{pod=~"model-server.*"}) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: model-server
+        annotations:
+          summary: "High memory usage for model server"
+          description: "Memory usage is above 90% for pod {{ $labels.pod }}"
+
+      # CPU usage
+      - alert: HighCPUUsage
+        expr: |
+          rate(container_cpu_usage_seconds_total{pod=~"model-server.*"}[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: model-server
+        annotations:
+          summary: "High CPU usage for model server"
+          description: "CPU usage is above 80% for pod {{ $labels.pod }}"
+
+      # Cache hit rate
+      - alert: LowCacheHitRate
+        expr: |
+          sum(rate(cache_hits_total[5m]))
+          /
+          (sum(rate(cache_hits_total[5m])) + sum(rate(cache_misses_total[5m])))
+          < 0.3
+        for: 10m
+        labels:
+          severity: info
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }}, consider investigating cache configuration"
+
+  - name: infrastructure_alerts
+    interval: 30s
+    rules:
+      # Redis down
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis instance {{ $labels.instance }} has been down for more than 2 minutes"
+
+      # PostgreSQL down
+      - alert: PostgreSQLDown
+        expr: up{job="postgresql"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: postgresql
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL instance {{ $labels.instance }} has been down for more than 2 minutes"
+
+      # Elasticsearch cluster health
+      - alert: ElasticsearchClusterUnhealthy
+        expr: elasticsearch_cluster_health_status{color="red"} == 1
+        for: 5m
+        labels:
+          severity: critical
+          component: elasticsearch
+        annotations:
+          summary: "Elasticsearch cluster is unhealthy"
+          description: "Elasticsearch cluster health is RED"
+
+      # Disk space
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"}
+          / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Low disk space"
+          description: "Less than 10% disk space available on {{ $labels.instance }}"
+
+  - name: mlflow_alerts
+    interval: 30s
+    rules:
+      # MLflow server down
+      - alert: MLflowServerDown
+        expr: up{job="mlflow"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: mlflow
+        annotations:
+          summary: "MLflow server is down"
+          description: "MLflow server has been down for more than 2 minutes"
+
+      # Model registry issues
+      - alert: ModelRegistryUnavailable
+        expr: mlflow_model_registry_requests_total{status="error"} > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: mlflow
+        annotations:
+          summary: "Model registry experiencing errors"
+          description: "MLflow model registry has recorded {{ $value }} errors in the last 5 minutes"
+
+  - name: airflow_alerts
+    interval: 30s
+    rules:
+      # Airflow scheduler down
+      - alert: AirflowSchedulerDown
+        expr: airflow_scheduler_heartbeat_timestamp < (time() - 60)
+        for: 2m
+        labels:
+          severity: critical
+          component: airflow
+        annotations:
+          summary: "Airflow scheduler is not responding"
+          description: "Airflow scheduler has not sent a heartbeat for more than 60 seconds"
+
+      # DAG failures
+      - alert: HighDAGFailureRate
+        expr: |
+          sum(rate(airflow_dag_run_failed_total[1h])) by (dag_id)
+          /
+          sum(rate(airflow_dag_run_total[1h])) by (dag_id)
+          > 0.1
+        for: 15m
+        labels:
+          severity: warning
+          component: airflow
+        annotations:
+          summary: "High failure rate for DAG {{ $labels.dag_id }}"
+          description: "DAG {{ $labels.dag_id }} has a failure rate of {{ $value | humanizePercentage }}"
+
+  - name: data_quality_alerts
+    interval: 30s
+    rules:
+      # Data drift detection
+      - alert: DataDriftDetected
+        expr: model_data_drift_score > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: data-quality
+        annotations:
+          summary: "Data drift detected for model {{ $labels.model_name }}"
+          description: "Data drift score is {{ $value }} for model {{ $labels.model_name }}"
+
+      # Missing data
+      - alert: HighMissingDataRate
+        expr: |
+          sum(rate(data_missing_values_total[5m])) by (feature)
+          /
+          sum(rate(data_processed_total[5m])) by (feature)
+          > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          component: data-quality
+        annotations:
+          summary: "High rate of missing values for feature {{ $labels.feature }}"
+          description: "{{ $value | humanizePercentage }} of values are missing for feature {{ $labels.feature }}"

@@ -18,6 +18,8 @@ from multiprocessing import Pool
 import threading
 import queue
 
+pytestmark = pytest.mark.integration
+
 from modern_bank_churn.ml_pipeline_orchestrator import MLPipelineOrchestrator, PipelineConfig
 from statistical_methods.statistical_analyzer import StatisticalAnalyzer
 from statistical_methods.hypothesis_tester import HypothesisTester

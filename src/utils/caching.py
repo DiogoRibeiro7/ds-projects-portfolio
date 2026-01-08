@@ -46,7 +46,22 @@ logger = logging.getLogger(__name__)
 
 
 class SmartCache:
-    """Intelligent caching system with multiple backends and automatic optimization."""
+    """
+    Intelligent caching system with memory/disk/Redis backends.
+
+    The cache automatically picks the fastest backend available, keeps an
+    in-memory LRU bounded by ``max_memory_size`` bytes, optionally compresses
+    payloads, and exposes decorators for functions that return pandas objects.
+
+    Examples
+    --------
+    >>> cache = SmartCache(use_redis=False, max_memory_size=1_000_000)
+    >>> @cache.cache_dataframe(key_prefix="agg", ttl=60)
+    ... def build_df(limit: int):
+    ...     return pd.DataFrame({"x": range(limit)})
+    >>> len(build_df(3)), len(build_df(3))  # second call hits cache
+    (3, 3)
+    """
 
     def __init__(
         self,

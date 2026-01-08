@@ -61,7 +61,41 @@ warnings.filterwarnings('ignore')
 
 @dataclass
 class PipelineConfig:
-    """Configuration for ML Pipeline"""
+    """
+    Central configuration for the bank churn ML pipeline.
+
+    The dataclass captures sampling ratios, feature engineering toggles,
+    modeling flags, and production settings so experiments remain
+    reproducible. Probabilities such as ``test_size``/``validation_size`` are
+    expressed as fractions (0–1). Paths like ``output_dir`` are interpreted
+    relative to the project root.
+
+    Key Fields
+    ----------
+    target_column : str
+        Name of the binary churn column (default: ``"churn"``).
+    test_size : float
+        Fraction of rows reserved for the held-out test split.
+    validation_size : float
+        Fraction of the training fold used for validation during CV.
+    feature_selection_method : str
+        Strategy applied when ``n_features_to_select`` is set
+        (``"boruta"``, ``"mutual_info"``, ``"rfe"``, or ``"ensemble"``).
+    model_type : str
+        ``"single"``, ``"ensemble"``, or ``"stacking"``.
+    base_models : List[str]
+        Candidate estimators, defaults to ``['xgboost', 'lightgbm', 'catboost']``.
+    n_trials : int
+        Number of hyperparameter trials when tuning is enabled.
+    output_dir : str
+        Directory where reports, artifacts, and MLflow references are written.
+
+    Examples
+    --------
+    >>> cfg = PipelineConfig(test_size=0.25, n_trials=50, setup_ab_testing=True)
+    >>> cfg.base_models
+    ['xgboost', 'lightgbm', 'catboost']
+    """
 
     # Data configuration
     target_column: str = 'churn'
@@ -106,13 +140,32 @@ class PipelineConfig:
 
 class MLPipelineOrchestrator:
     """
-    Orchestrates the complete ML pipeline from data preprocessing to production deployment.
+    Coordinate data prep, modeling, evaluation, and production hand-off.
 
-    This class integrates all enhanced modules to provide:
-    - Automated feature engineering with stability checks
-    - Advanced modeling with hyperparameter optimization
-    - Comprehensive evaluation including business metrics and fairness
-    - Production-ready deployment with monitoring and explainability
+    The orchestrator glues together the enhanced feature engineering,
+    modeling, evaluation, and production modules so a single call to
+    ``run_pipeline`` ingests an ``(N × D)`` churn dataset, performs stratified
+    splits, engineers features, tunes/ensembles models, reports business and
+    fairness metrics, and exports artifacts such as MLflow runs and SHAP
+    explanations.
+
+    Attributes
+    ----------
+    config : PipelineConfig
+        Immutable configuration describing sampling ratios, feature toggles,
+        and deployment preferences.
+    pipeline_state : dict
+        Mutable status dictionary tracking timestamps, completed stages, and
+        aggregate metrics for progress reporting or dashboards.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> data = pd.read_csv("data/churn.csv")
+    >>> orchestrator = MLPipelineOrchestrator(PipelineConfig(test_size=0.3))
+    >>> report = orchestrator.run_pipeline(data, quick_mode=True)
+    >>> sorted(report["training_metrics"].keys())[:2]
+    ['accuracy', 'auc']
     """
 
     def __init__(self, config: Optional[PipelineConfig] = None):

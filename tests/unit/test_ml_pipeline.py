@@ -20,6 +20,8 @@ from modern_bank_churn.feature_engineering import FeatureEngineer
 from modern_bank_churn.evaluation_enhancements import ModelEvaluator
 from modern_bank_churn.production_readiness import ProductionPipeline
 
+pytestmark = pytest.mark.unit
+
 
 class TestPipelineConfig:
     """Test PipelineConfig class."""

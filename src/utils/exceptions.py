@@ -298,7 +298,22 @@ class IOError(PortfolioBaseException):
 
 
 class FileNotFoundError(IOError):
-    """Raised when a required file is not found."""
+    """
+    Raised when a required file is missing from disk or cloud storage.
+
+    Attributes
+    ----------
+    file_path : str
+        Absolute or relative path that failed to resolve. Also exposed via the
+        ``details`` dict on :class:`PortfolioBaseException`.
+
+    Examples
+    --------
+    >>> raise FileNotFoundError("Training data missing", file_path="data/churn.csv")
+    Traceback (most recent call last):
+        ...
+    FileNotFoundError: Training data missing
+    """
 
     def __init__(
         self,
@@ -306,7 +321,7 @@ class FileNotFoundError(IOError):
         file_path: str,
         **kwargs: Any,
     ) -> None:
-        """Initialize with file path."""
+        """Attach the offending ``file_path`` to the exception metadata."""
         details = {"file_path": file_path}
         super().__init__(message, details=details, **kwargs)
 

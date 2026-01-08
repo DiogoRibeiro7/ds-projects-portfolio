@@ -263,7 +263,33 @@ class DataValidator:
 # =============================================================================
 
 class FeatureEngineer:
-    """Feature engineering pipeline"""
+    """
+    Feature engineering pipeline tuned for the churn dataset.
+
+    The pipeline builds balance-derived ratios, interaction terms, label
+    encodings, and standardized numeric columns so the downstream model
+    receives a dense design matrix. It expects the Kaggle-style churn
+    columns (for example `Balance`, `EstimatedSalary`, `Geography`) plus a
+    binary `Churn` column while fitting and will persist the fitted label
+    encoders/`StandardScaler` for later inference.
+
+    Attributes:
+        config: ``DataConfig`` instance that toggles optional generators such
+            as interaction features.
+        feature_names: Ordered list of engineered feature names excluding the
+            `Churn` target. Updated after ``fit_transform``.
+        scaler: ``StandardScaler`` fitted on numeric features during training.
+        label_encoders: Mapping of categorical columns to fitted encoders so
+            ``transform`` can reproduce the same integer mapping online.
+
+    Examples:
+        >>> config = DataConfig(create_interaction_features=True)
+        >>> engineer = FeatureEngineer(config)
+        >>> engineered_train = engineer.fit_transform(train_df)
+        >>> live_scores = engineer.transform(train_df.iloc[:2])
+        >>> set(engineer.feature_names).issubset(engineered_train.columns)
+        True
+    """
 
     def __init__(self, config: DataConfig):
         self.config = config
@@ -1324,7 +1350,60 @@ async def health():
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest):
-    """Single prediction endpoint"""
+    """
+    Score a single churn prediction request via the FastAPI service.
+
+    Parameters
+    ----------
+    request : PredictionRequest
+        JSON payload with the Kaggle churn fields (e.g., ``CreditScore``,
+        ``Geography``, ``Balance``). Field ranges are validated by Pydantic
+        (credit scores 300–850, ages 18–100, etc.).
+
+    Returns
+    -------
+    PredictionResponse
+        Structured response containing ``churn_probability`` (0–1),
+        ``confidence``, a categorical ``risk_level``, and the ISO-8601
+        timestamp when the model server scored the request.
+
+    Raises
+    ------
+    HTTPException
+        Propagates a 500 error if ``ModelServer.predict`` fails (for example,
+        batch size overflows or the feature store/MLflow artifacts are
+        unavailable).
+
+    Notes
+    -----
+    The underlying ``ModelServer`` transparently performs feature engineering,
+    logs Prometheus metrics, and caches the response in Redis (if configured)
+    for ``ServingConfig.cache_ttl`` seconds to keep latency below 100 ms in
+    practice.
+
+    Examples
+    --------
+    >>> from fastapi.testclient import TestClient
+    >>> client = TestClient(app)
+    >>> payload = {
+    ...     "CustomerId": 42,
+    ...     "CreditScore": 720,
+    ...     "Geography": "France",
+    ...     "Gender": "Female",
+    ...     "Age": 32,
+    ...     "Tenure": 3,
+    ...     "Balance": 60000.0,
+    ...     "NumOfProducts": 2,
+    ...     "HasCrCard": 1,
+    ...     "IsActiveMember": 1,
+    ...     "EstimatedSalary": 90000.0,
+    ... }
+    >>> resp = client.post("/predict", json=payload)
+    >>> resp.status_code
+    200
+    >>> sorted(resp.json().keys())[:3]
+    ['churn_prediction', 'churn_probability', 'confidence']
+    """
     try:
         response = model_server.predict(request)
         return response

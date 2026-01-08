@@ -1,0 +1,549 @@
+# Namespace for ML models
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ml-models
+
+---
+# ConfigMap for model configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: model-config
+  namespace: ml-models
+data:
+  MODEL_NAME: "example-model"
+  MODEL_VERSION: "v1"
+  LOG_LEVEL: "INFO"
+  CACHE_ENABLED: "true"
+  CACHE_TTL: "300"
+  MONITORING_ENABLED: "true"
+
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: model-secrets
+  namespace: ml-models
+type: Opaque
+stringData:
+  AWS_ACCESS_KEY_ID: "your-access-key"
+  AWS_SECRET_ACCESS_KEY: "your-secret-key"
+  DATABASE_URL: "postgresql://user:password@postgres:5432/mldb"
+  REDIS_PASSWORD: "redis-password"
+
+---
+# PersistentVolumeClaim for model storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-storage
+  namespace: ml-models
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+# Deployment for model serving
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-server
+  namespace: ml-models
+  labels:
+    app: model-server
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: model-server
+  template:
+    metadata:
+      labels:
+        app: model-server
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: model-container
+        image: registry.example.com/model-server:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        envFrom:
+        - configMapRef:
+            name: model-config
+        - secretRef:
+            name: model-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2"
+        volumeMounts:
+        - name: model-storage
+          mountPath: /app/models
+        - name: cache-volume
+          mountPath: /app/cache
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+      - name: sidecar-proxy
+        image: envoyproxy/envoy:v1.20.0
+        ports:
+        - containerPort: 9901
+          name: admin
+        - containerPort: 8081
+          name: envoy
+        volumeMounts:
+        - name: envoy-config
+          mountPath: /etc/envoy
+        command: ["/usr/local/bin/envoy"]
+        args: ["-c", "/etc/envoy/envoy.yaml", "--service-cluster", "model-server", "--service-node", "$(POD_NAME)"]
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-storage
+      - name: cache-volume
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: envoy-config
+        configMap:
+          name: envoy-config
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - model-server
+              topologyKey: kubernetes.io/hostname
+      tolerations:
+      - key: "ml-workload"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      imagePullSecrets:
+      - name: registry-credentials
+
+---
+# Service for model server
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-server-service
+  namespace: ml-models
+  labels:
+    app: model-server
+spec:
+  type: ClusterIP
+  selector:
+    app: model-server
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+
+---
+# Ingress for external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: model-server-ingress
+  namespace: ml-models
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+spec:
+  tls:
+  - hosts:
+    - model.example.com
+    secretName: model-server-tls
+  rules:
+  - host: model.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: model-server-service
+            port:
+              number: 80
+
+---
+# HorizontalPodAutoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: model-server-hpa
+  namespace: ml-models
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: model-server
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 4
+        periodSeconds: 60
+      selectPolicy: Max
+
+---
+# PodDisruptionBudget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: model-server-pdb
+  namespace: ml-models
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: model-server
+
+---
+# NetworkPolicy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: model-server-network-policy
+  namespace: ml-models
+spec:
+  podSelector:
+    matchLabels:
+      app: model-server
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 9090
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432  # PostgreSQL
+    - protocol: TCP
+      port: 6379  # Redis
+    - protocol: TCP
+      port: 9200  # Elasticsearch
+    - protocol: TCP
+      port: 443   # HTTPS
+    - protocol: TCP
+      port: 53    # DNS
+    - protocol: UDP
+      port: 53    # DNS
+
+---
+# ServiceMonitor for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: model-server-monitor
+  namespace: ml-models
+spec:
+  selector:
+    matchLabels:
+      app: model-server
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+
+---
+# VerticalPodAutoscaler (optional)
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: model-server-vpa
+  namespace: ml-models
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: model-server
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: model-container
+      minAllowed:
+        cpu: 100m
+        memory: 256Mi
+      maxAllowed:
+        cpu: 4
+        memory: 4Gi
+      controlledResources: ["cpu", "memory"]
+
+---
+# Job for model training
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: model-training-job
+  namespace: ml-models
+spec:
+  template:
+    spec:
+      containers:
+      - name: training-container
+        image: registry.example.com/model-training:latest
+        env:
+        - name: MODEL_NAME
+          value: "example-model"
+        - name: TRAINING_DATA_PATH
+          value: "s3://ml-data/training/"
+        envFrom:
+        - secretRef:
+            name: model-secrets
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+            nvidia.com/gpu: "1"  # GPU resource
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: training-data
+          mountPath: /data
+      volumes:
+      - name: training-data
+        persistentVolumeClaim:
+          claimName: training-data-pvc
+      restartPolicy: OnFailure
+      nodeSelector:
+        workload-type: gpu
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+
+---
+# CronJob for periodic retraining
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: model-retraining
+  namespace: ml-models
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: retraining-container
+            image: registry.example.com/model-training:latest
+            env:
+            - name: RETRAINING_MODE
+              value: "incremental"
+            envFrom:
+            - secretRef:
+                name: model-secrets
+            resources:
+              requests:
+                memory: "2Gi"
+                cpu: "1"
+              limits:
+                memory: "4Gi"
+                cpu: "2"
+          restartPolicy: OnFailure
+
+---
+# ConfigMap for Envoy sidecar proxy
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envoy-config
+  namespace: ml-models
+data:
+  envoy.yaml: |
+    admin:
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 9901
+
+    static_resources:
+      listeners:
+      - name: listener_0
+        address:
+          socket_address:
+            address: 0.0.0.0
+            port_value: 8081
+        filter_chains:
+        - filters:
+          - name: envoy.filters.network.http_connection_manager
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+              stat_prefix: ingress_http
+              access_log:
+              - name: envoy.access_loggers.stdout
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+              http_filters:
+              - name: envoy.filters.http.router
+              route_config:
+                name: local_route
+                virtual_hosts:
+                - name: local_service
+                  domains: ["*"]
+                  routes:
+                  - match:
+                      prefix: "/"
+                    route:
+                      cluster: model_service
+                      timeout: 30s
+                      retry_policy:
+                        retry_on: "5xx"
+                        num_retries: 3
+                        per_try_timeout: 10s
+
+      clusters:
+      - name: model_service
+        type: LOGICAL_DNS
+        dns_lookup_family: V4_ONLY
+        lb_policy: ROUND_ROBIN
+        load_assignment:
+          cluster_name: model_service
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: localhost
+                    port_value: 8080
+        health_checks:
+        - timeout: 3s
+          interval: 5s
+          unhealthy_threshold: 2
+          healthy_threshold: 2
+          http_health_check:
+            path: /health
+        circuit_breakers:
+          thresholds:
+          - priority: DEFAULT
+            max_connections: 100
+            max_pending_requests: 100
+            max_requests: 100
+            max_retries: 3

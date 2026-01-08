@@ -443,16 +443,41 @@ def benchmark_function(
     func: Callable, n_runs: int = 10, *args, **kwargs
 ) -> Dict[str, float]:
     """
-    Benchmark a function over multiple runs.
+    Benchmark a synchronous callable several times and summarize latency.
 
-    Args:
-        func: Function to benchmark
-        n_runs: Number of times to run the function
-        *args, **kwargs: Arguments to pass to the function
+    Parameters
+    ----------
+    func : Callable
+        Function to benchmark. It should be side-effect free because its
+        return value is ignored and the callable is executed ``n_runs`` times.
+    n_runs : int, default=10
+        Number of iterations. Must be >= 1; more runs stabilize the
+        ``mean``/``std`` estimates but increase wall-clock time.
+    *args, **kwargs :
+        Positional and keyword arguments forwarded to ``func`` each run.
 
-    Returns:
-        Dictionary with timing statistics
+    Returns
+    -------
+    Dict[str, float]
+        Summary statistics measured in seconds: ``mean``, ``std``, ``min``,
+        ``max``, ``median``, ``total`` plus the integer ``runs`` count.
+
+    Raises
+    ------
+    ValueError
+        If ``n_runs`` is less than 1.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> def slow_dot():
+    ...     return np.dot(np.ones((1000, 1000)), np.ones((1000, 1000)))
+    >>> stats = benchmark_function(slow_dot, n_runs=3)
+    >>> round(stats["mean"], 3) >= 0
+    True
     """
+    if n_runs < 1:
+        raise ValueError("n_runs must be at least 1")
     times = []
 
     for _ in range(n_runs):

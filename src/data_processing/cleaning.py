@@ -105,7 +105,23 @@ def monitor_performance(func):
 
 
 class OptimizedDataProcessor:
-    """High-performance data processing utilities with parallel and distributed computing."""
+    """
+    High-performance data processing utilities with CPU/GPU acceleration.
+
+    The processor exposes vectorized helpers (Numba-accelerated when
+    available) for outlier detection, grouped aggregations, and CUPED-style
+    variance reduction. When ``n_jobs=-1`` it automatically consumes every CPU
+    core; ``use_gpu=True`` attempts to import CuPy and falls back gracefully if
+    no GPU is available.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> processor = OptimizedDataProcessor(n_jobs=4)
+    >>> mask = processor.fast_outlier_detection(np.array([1, 2, 100]))
+    >>> mask.tolist()
+    [False, False, True]
+    """
 
     def __init__(self, n_jobs: int = -1, use_gpu: bool = False):
         """Initialize optimized data processor.

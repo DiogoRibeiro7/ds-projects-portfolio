@@ -23,7 +23,42 @@ warnings.filterwarnings("ignore")
 
 @dataclass
 class CausalEstimate:
-    """Container for causal effect estimates."""
+    """
+    Container for causal effect estimates returned by estimators.
+
+    Attributes
+    ----------
+    effect : float
+        Estimated causal effect in the same units as the outcome variable.
+    standard_error : float
+        Standard error of ``effect`` (often computed via asymptotic formulas).
+    confidence_interval : Tuple[float, float]
+        Two-sided interval (typically 95%) for the effect.
+    p_value : float
+        Hypothesis test p-value.
+    method : str
+        Name of the estimator (e.g., ``"2SLS"`` or ``"DiD"``).
+    n_treated : int
+        Number of treated observations contributing to the estimate.
+    n_control : int
+        Number of control observations.
+    diagnostics : Dict[str, Any] | None
+        Optional metadata such as weak-instrument F-statistics.
+
+    Examples
+    --------
+    >>> CausalEstimate(
+    ...     effect=-0.12,
+    ...     standard_error=0.03,
+    ...     confidence_interval=(-0.18, -0.06),
+    ...     p_value=0.001,
+    ...     method="2SLS",
+    ...     n_treated=500,
+    ...     n_control=520,
+    ...     diagnostics={"f_statistic": 25.3},
+    ... )
+    CausalEstimate(effect=-0.12, standard_error=0.03, confidence_interval=(-0.18, -0.06), p_value=0.001, method='2SLS', n_treated=500, n_control=520, diagnostics={'f_statistic': 25.3})
+    """
 
     effect: float
     standard_error: float

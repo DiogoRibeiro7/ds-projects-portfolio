@@ -97,7 +97,20 @@ class DashboardConfig:
 class EnhancedDashboard:
     """
     Enhanced Dashboard with real-time streaming, interactive filtering,
-    export capabilities, and responsive design.
+    export/export and responsive design baked in.
+
+    The class wires up a Dash application (with Bootstrap styling), the
+    complementary Flask server, caching, optional Redis-backed streaming, and
+    component registries. Supply a custom :class:`DashboardConfig` to override
+    host/port/theme details or feature toggles such as ``enable_realtime``.
+
+    Examples
+    --------
+    >>> dash_app = EnhancedDashboard()
+    >>> dash_app.config.host, dash_app.config.port
+    ('127.0.0.1', 8050)
+    >>> isinstance(dash_app.app.layout, html.Div)
+    True
     """
 
     def __init__(self, config: Optional[DashboardConfig] = None):

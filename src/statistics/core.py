@@ -43,35 +43,38 @@ def two_prop_ztest(
     """Run a two-proportion z-test with optional continuity correction.
 
     Args:
-        x1 (int): Success count for the control group.
-        n1 (int): Sample size for the control group.
-        x2 (int): Success count for the treatment group.
-        n2 (int): Sample size for the treatment group.
-        two_sided (bool): Legacy flag for backward compatibility. Prefer
-            ``alternative``.
-        continuity_correction (bool): Whether to subtract the Haldane-Anscombe
-            correction for small samples.
-        alternative (str): `'two-sided'`, `'larger'`, or `'smaller'`.
+        x1 (int): Number of Bernoulli successes for the control cohort.
+        n1 (int): Total observations for the control cohort (must be > 0).
+        x2 (int): Number of successes for the treatment cohort.
+        n2 (int): Total observations for the treatment cohort.
+        two_sided (bool): Backward-compatible flag; prefer ``alternative``.
+        continuity_correction (bool): Apply ±0.5/n Haldane-Anscombe correction
+            to stabilize small-sample z-scores.
+        alternative (str): `'two-sided'` (default), `'larger'` (treatment lift),
+            or `'smaller'` (treatment drop).
 
     Returns:
-        tuple[float, float]: (z-statistic, p-value).
+        tuple[float, float]: ``(z_statistic, p_value)`` where the statistic is
+        unit-less and the p-value is in ``[0, 1]``.
 
     Raises:
-        ValueError: If sample sizes or counts are invalid.
-        ZeroDivisionError: If the pooled standard error collapses to zero.
+        ValueError: When counts are negative or exceed their sample sizes.
+        ZeroDivisionError: When both cohorts are deterministic so the pooled
+            standard error is zero.
 
     Examples:
         >>> from src.statistics.core import two_prop_ztest
         >>> two_prop_ztest(120, 1000, 150, 1000)
         (-1.9414506867886235, 0.05224153370662625)
-
-    Side Effects:
-        None. This helper is deterministic.
+        >>> # One-sided test when the treatment is expected to be larger
+        >>> round(two_prop_ztest(60, 500, 85, 500, alternative="larger")[1], 4)
+        0.0156
 
     Notes:
-        Returns `(inf, 0.0)` or `(-inf, 0.0)` when one cohort has zero variance
-        (all failures or all successes), mirroring the intuition that the effect
-        is unbounded in that pathological limit.
+        - The helper returns ``(inf, 0.0)`` or ``(-inf, 0.0)`` when one cohort
+          has zero variance (all successes or all failures).
+        - ``two_sided=False`` is preserved for legacy callers and simply maps to
+          ``alternative='larger'`` when no explicit alternative is supplied.
     """
     # Input validation
     logger.debug(f"Running two_prop_ztest with n1={n1}, n2={n2}, x1={x1}, x2={x2}")
@@ -147,15 +150,16 @@ def bootstrap_ci_diff(
     Args:
         pA (float): Observed proportion for group A in `[0, 1]`.
         pB (float): Observed proportion for group B in `[0, 1]`.
-        nA (int): Sample size for group A.
+        nA (int): Sample size for group A (number of trials).
         nB (int): Sample size for group B.
-        B (int): Number of bootstrap simulations.
+        B (int): Number of bootstrap simulations/draws.
         alpha (float): Significance level; coverage equals ``1 - alpha``.
         method (str): `'percentile'` or `'bca'`.
         random_state (int | None): Optional NumPy global seed to set.
 
     Returns:
-        tuple[float, float]: Lower/upper bounds for ``pB - pA``.
+        tuple[float, float]: Lower/upper bounds for ``pB - pA`` measured in
+        absolute probability points.
 
     Raises:
         ValueError: If proportions or sample sizes fall outside valid ranges.
@@ -164,6 +168,11 @@ def bootstrap_ci_diff(
         >>> from src.statistics.core import bootstrap_ci_diff
         >>> bootstrap_ci_diff(0.12, 0.15, 5000, 5000, random_state=7)
         (-0.00523999999999999, 0.035039999999999985)
+        >>> # BCa interval for a smaller sample with higher alpha
+        >>> tuple(round(bound, 3) for bound in bootstrap_ci_diff(
+        ...     0.42, 0.5, 800, 800, B=2000, alpha=0.1, method="bca", random_state=21
+        ... ))
+        (0.038, 0.119)
 
     Side Effects:
         Uses ``np.random.seed`` and ``np.random.binomial`` when `random_state`
@@ -239,14 +248,14 @@ def calculate_sample_size(
     Args:
         baseline_rate (float): Baseline conversion probability in `(0, 1)`.
         mde (float): Minimum detectable effect (absolute difference).
-        alpha (float): Significance level.
-        power (float): Target statistical power.
-        ratio (float): Treatment-to-control allocation ratio.
+        alpha (float): Significance level (Type I error).
+        power (float): Target statistical power (1 - Type II error).
+        ratio (float): Treatment-to-control allocation ratio (e.g., `2` for 2:1).
         alternative (str): `'two-sided'` or `'one-sided'`.
 
     Returns:
-        int: Rounded-up control group size (treatment size equals
-        ``ratio × n_control``).
+        int: Rounded-up control-group sample size. Multiply by ``ratio`` to get
+        the treatment size.
 
     Raises:
         ValueError: If any parameter falls outside the allowed range.
@@ -255,6 +264,9 @@ def calculate_sample_size(
         >>> from src.statistics.core import calculate_sample_size
         >>> calculate_sample_size(baseline_rate=0.12, mde=0.02, power=0.9)
         4574
+        >>> # Unequal traffic split (2 treatment users for every control user)
+        >>> calculate_sample_size(0.2, 0.03, ratio=2.0)
+        2699
     """
     # Input validation
     if not 0 < baseline_rate < 1:
@@ -311,20 +323,21 @@ def calculate_power(
     """Calculate power for a fixed two-proportion design.
 
     Args:
-        n_control (int): Control sample size.
+        n_control (int): Control sample size (users exposed to baseline).
         n_treatment (int): Treatment sample size.
         baseline_rate (float): Baseline conversion probability.
         effect_size (float): Absolute lift relative to baseline.
-        alpha (float): Significance level.
+        alpha (float): Significance level (Type I error).
         alternative (str): `'two-sided'` or `'one-sided'`.
 
     Returns:
-        float: Probability of detecting ``effect_size`` with the given samples.
+        float: Probability of detecting ``effect_size`` with the supplied
+        sample sizes. Always between 0 and 1.
 
     Examples:
         >>> from src.statistics.core import calculate_power
-        >>> round(calculate_power(5000, 5000, 0.12, 0.02), 3)
-        0.999
+        >>> round(calculate_power(3500, 3500, 0.12, 0.02), 3)
+        0.701
     """
     if alternative == "two-sided":
         z_alpha = abs(ndtri(alpha / 2))
@@ -352,7 +365,14 @@ def calculate_power(
 
 
 class ExperimentAnalyzer:
-    """Analyze experiments end-to-end (SRM, conversion, multi-metric reports).
+    """
+    Analyze controlled experiments end-to-end (SRM, conversion, multi-metrics).
+
+    The analyzer expects tidy pandas DataFrames with a categorical ``group``
+    column plus one or more metric columns (binary conversions, continuous
+    KPIs, etc.). Most helpers assume an ``(N × D)`` dataset with at least the
+    binary ``conversion`` column, and they respect the default ``alpha``/``power``
+    supplied at construction time.
 
     Attributes:
         alpha: Default significance level for downstream calls.
@@ -366,7 +386,7 @@ class ExperimentAnalyzer:
         ...                    'converted': [0, 1] * 100})
         >>> analyzer = ExperimentAnalyzer(alpha=0.05)
         >>> report = analyzer.analyze_conversion(df)
-        >>> 'z_statistic' in report
+        >>> ('z_statistic' in report) and ('conversion_rates' in report)
         True
     """
 

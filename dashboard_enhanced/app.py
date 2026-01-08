@@ -69,7 +69,28 @@ memory_cache = {}
 
 @dataclass
 class DashboardConfig:
-    """Dashboard configuration settings."""
+    """
+    User-facing configuration toggles for the Flask dashboard.
+
+    Attributes
+    ----------
+    theme : str
+        Visual theme (`"light"` or `"dark"`). Drives CSS selection.
+    auto_refresh : bool
+        When ``True`` the client requests updated widgets on a timer.
+    refresh_interval : int
+        Polling interval in milliseconds for live widgets (default 5000 ms).
+    export_formats : List[str]
+        Allowed export targets. Defaults to ``['pdf', 'png', 'pptx']``.
+    mobile_breakpoint : int
+        CSS breakpoint in pixels for switching to the mobile layout.
+
+    Examples
+    --------
+    >>> cfg = DashboardConfig(refresh_interval=10000, theme="dark")
+    >>> cfg.export_formats
+    ['pdf', 'png', 'pptx']
+    """
 
     theme: str = "light"
     auto_refresh: bool = True
@@ -405,7 +426,38 @@ def login():
 @jwt_required()
 @limiter.limit("100 per minute")
 def get_data(dataset_name: str):
-    """REST API endpoint for data access."""
+    """
+    Serve cached dashboard data sets via the authenticated REST API.
+
+    Parameters
+    ----------
+    dataset_name : str
+        Logical dataset key such as ``"churn_overview"``. A distinct Redis
+        key (``data:<name>``) is created per dataset.
+
+    Returns
+    -------
+    flask.Response
+        JSON payload containing the dataset plus cache headers. Responses are
+        cached for 300 seconds (Redis when available, otherwise an in-process
+        dictionary).
+
+    Notes
+    -----
+    This endpoint requires a valid JWT (``@jwt_required``) and is rate limited
+    to 100 requests/minute. The fallback ``generate_sample_data`` helper is
+    used when a live data source is not configured.
+
+    Examples
+    --------
+    >>> from flask.testing import FlaskClient
+    >>> client = app.test_client()
+    >>> token = create_access_token(identity="demo")
+    >>> headers = {"Authorization": f"Bearer {token}"}
+    >>> resp = client.get("/api/data/sales", headers=headers)
+    >>> resp.status_code in (200, 401)  # depends on auth setup
+    True
+    """
     # Check cache first
     cache_key = f"data:{dataset_name}"
 

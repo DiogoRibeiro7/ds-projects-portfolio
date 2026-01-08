@@ -32,8 +32,14 @@ import h5py
 import numpy as np
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments for data preparation.
+def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
+    """
+    Parse command-line arguments for data preparation.
+
+    Parameters
+    ----------
+    argv : list[str] | None, default=None
+        Optional argument vector (for testing). ``None`` means use ``sys.argv``.
 
     Returns
     -------
@@ -42,6 +48,16 @@ def parse_args() -> argparse.Namespace:
         - input_dir: directory where METR-LA files live.
         - output_path: where to write graph_traffic.npz.
         - h5_dataset_name: optional name of dataset inside metr-la.h5.
+
+    Examples
+    --------
+    >>> args = parse_args([
+    ...     "--input-dir", "raw_data",
+    ...     "--output-path", "data/graph_traffic.npz",
+    ...     "--h5-dataset-name", "speed",
+    ... ])
+    >>> (args.input_dir, args.output_path, args.h5_dataset_name)
+    ('raw_data', 'data/graph_traffic.npz', 'speed')
     """
     parser = argparse.ArgumentParser(
         description="Prepare METR-LA data into graph_traffic.npz for ST-GCN notebook."
@@ -66,7 +82,7 @@ def parse_args() -> argparse.Namespace:
         help="Optional explicit name of dataset inside metr-la.h5 (e.g. 'speed').",
     )
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def discover_h5_dataset_name(h5_file: h5py.File) -> str:

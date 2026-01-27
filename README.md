@@ -1,5 +1,7 @@
 # Data Science Projects Portfolio
 
+![Fast CI](https://github.com/diogoribeiro7/ds-projects-portfolio/actions/workflows/ci.yml/badge.svg)
+
 ## What & Why
 
 This monorepo hosts the reusable code, notebooks, and APIs that the DS Platform team uses to prototype and productionize experimentation-heavy ML projects. It bundles:
@@ -38,6 +40,14 @@ python examples/run_demo.py
 
 You will see the control/treatment conversion rates, lift, and p-value—handy for smoke testing the stack.
 
+For multimodal regression, check out the Mixture-of-Experts demo:
+
+```bash
+python examples/moe_multimodal_demo.py
+```
+
+Need to handle messy/outlier-heavy experiments? See [docs/ROBUSTNESS.md](docs/ROBUSTNESS.md) for trimming and Huber options built into `ExperimentAnalyzer`.
+
 ## Support Matrix
 
 | Category | Supported | Notes |
@@ -56,6 +66,7 @@ Active. CI runs lint + unit/integration/regression on every PR and a nightly slo
 .
 ├── src/                       # Core Python packages (APIs, utilities, stats)
 ├── tests/                     # Unit, integration, regression, perf, notebooks
+├── projects/                  # Portfolio-ready ML projects
 ├── modern-bank-churn/         # MLOps/orchestration reference project
 ├── statistical_methods/       # Advanced stats utilities
 ├── docs/                      # Architecture notes & guides
@@ -77,6 +88,25 @@ Command | Description
 `make clean` | Remove caches, build artifacts, docs output
 `make check` | Runs `lint`, `typecheck`, and `test` — mirrors CI’s fast checks
 `make test-slow` | Execute the `slow`-tagged tests (nightly/opt-in)
+
+## ML Projects
+
+- [Customer segmentation (K-Means)](projects/machine_learning/customer_segmentation/README.md)
+- [Credit risk modeling (Logistic regression)](projects/machine_learning/credit_risk_modeling/README.md)
+- [Recommendation system (Item-based CF)](projects/machine_learning/recommendation_system/README.md)
+
+## Time Series Projects
+
+- [Sales forecasting (ARIMA + baseline)](projects/time_series/sales_forecasting/README.md)
+
+## Causal Inference Projects
+
+- [Campaign impact (Diff-in-Diff)](projects/causal_inference/campaign_diff_in_diff/README.md)
+
+## Streamlit Dashboards
+
+- `streamlit run streamlit_apps/ab_test_calculator.py`
+- `streamlit run streamlit_apps/sales_forecast_explorer.py`
 
 ## Support / Questions
 

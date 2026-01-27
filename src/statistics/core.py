@@ -471,6 +471,8 @@ class ExperimentAnalyzer:
         conversion_col: str = "converted",
         group_col: str = "group",
         alpha: float | None = None,
+        robust: bool = False,
+        trim_fraction: float = 0.0,
     ) -> dict[str, Any]:
         """Compute conversion statistics and tests for binary metrics.
 
@@ -508,9 +510,16 @@ class ExperimentAnalyzer:
         if group_col not in df.columns:
             raise ValueError(f"Group column '{group_col}' not found")
 
+        data = df[[group_col, conversion_col]].copy()
+
+        if robust and trim_fraction > 0:
+            data = self._trim_by_group(
+                data, group_col, conversion_col, trim_fraction
+            )
+
         # Calculate conversion rates by group
         conv_stats = (
-            df.groupby(group_col)[conversion_col]
+            data.groupby(group_col)[conversion_col]
             .agg(["sum", "count", "mean", "std"])
             .round(6)
         )
@@ -558,6 +567,8 @@ class ExperimentAnalyzer:
                     "statistical_power": observed_power,
                     "control_group": control,
                     "treatment_group": treatment,
+                    "robust": robust,
+                    "trim_fraction": trim_fraction,
                 }
             )
 
@@ -574,10 +585,31 @@ class ExperimentAnalyzer:
                     "degrees_of_freedom": dof,
                     "significant": p_val < alpha,
                     "test_type": "chi_square",
+                    "robust": robust,
+                    "trim_fraction": trim_fraction,
                 }
             )
 
         return results
+
+    def _trim_by_group(
+        self,
+        df: pd.DataFrame,
+        group_col: str,
+        value_col: str,
+        fraction: float,
+    ) -> pd.DataFrame:
+        """Trim extreme values per group."""
+        if not 0 < fraction < 0.5:
+            raise ValueError("trim_fraction must be in (0, 0.5)")
+
+        def _trim(group: pd.DataFrame) -> pd.DataFrame:
+            arr = group[value_col].values
+            low = np.quantile(arr, fraction)
+            high = np.quantile(arr, 1 - fraction)
+            return group[(group[value_col] >= low) & (group[value_col] <= high)]
+
+        return df.groupby(group_col, group_keys=False).apply(_trim)
 
     def run_comprehensive_analysis(
         self,
@@ -585,6 +617,9 @@ class ExperimentAnalyzer:
         metrics: list[str],
         group_col: str = "group",
         date_col: str | None = None,
+        robust: bool = False,
+        trim_fraction: float = 0.0,
+        huber_delta: float = 1.0,
     ) -> dict[str, Any]:
         """Run sample quality checks plus conversion analysis per metric.
 
@@ -632,16 +667,22 @@ class ExperimentAnalyzer:
                     df[metric].dtype in ["bool", "int64", "float64"]
                     and df[metric].nunique() == 2
                 ):
-                    # Binary metric
                     analysis["metrics_analysis"][metric] = self.analyze_conversion(
-                        df, metric, group_col
+                        df,
+                        metric,
+                        group_col,
+                        robust=robust,
+                        trim_fraction=trim_fraction,
                     )
                 else:
-                    # Continuous metric (placeholder for future implementation)
-                    analysis["metrics_analysis"][metric] = {
-                        "type": "continuous",
-                        "status": "not_implemented",
-                    }
+                    analysis["metrics_analysis"][metric] = self._analyze_continuous_metric(
+                        df,
+                        metric,
+                        group_col,
+                        robust=robust,
+                        trim_fraction=trim_fraction,
+                        huber_delta=huber_delta,
+                    )
 
         # Generate recommendations
         if analysis["data_quality"]["srm_check"]["is_srm"]:
@@ -665,6 +706,55 @@ class ExperimentAnalyzer:
             )
 
         return analysis
+
+    def _analyze_continuous_metric(
+        self,
+        df: pd.DataFrame,
+        metric: str,
+        group_col: str,
+        robust: bool,
+        trim_fraction: float,
+        huber_delta: float,
+    ) -> dict[str, Any]:
+        groups = df[group_col].dropna().unique()
+        if len(groups) != 2:
+            return {
+                "type": "continuous",
+                "status": "multi-group_not_supported",
+            }
+
+        processed: dict[str, np.ndarray] = {}
+        for group in groups:
+            values = df.loc[df[group_col] == group, metric].dropna().values
+            if robust:
+                if trim_fraction > 0:
+                    low = np.quantile(values, trim_fraction)
+                    high = np.quantile(values, 1 - trim_fraction)
+                    values = values[(values >= low) & (values <= high)]
+                median = np.median(values)
+                values = huber_smooth(values - median, delta=huber_delta) + median
+            processed[group] = values
+
+        control, treatment = groups
+        t_stat, p_val = stats.ttest_ind(
+            processed[control], processed[treatment], equal_var=False
+        )
+        mean_control = processed[control].mean()
+        mean_treatment = processed[treatment].mean()
+        return {
+            "type": "continuous",
+            "mean_diff": mean_treatment - mean_control,
+            "means": {
+                control: mean_control,
+                treatment: mean_treatment,
+            },
+            "p_value": float(p_val),
+            "statistic": float(t_stat),
+            "robust": robust,
+            "trim_fraction": trim_fraction,
+            "huber_delta": huber_delta,
+            "significant": p_val < self.alpha,
+        }
 
 
 # Utility functions for advanced methods

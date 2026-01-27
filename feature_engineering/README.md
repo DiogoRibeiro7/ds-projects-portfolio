@@ -80,7 +80,7 @@ pip install matplotlib seaborn plotly
 ### Basic Usage
 
 ```python
-from automated_feature_creator import AutomatedFeatureEngineer
+from src.feature_engineering.automated_feature_creator import AutomatedFeatureEngineer
 
 # Initialize engineer
 engineer = AutomatedFeatureEngineer(
@@ -137,7 +137,7 @@ X_engineered = engineer.engineer_features(
 ### 2. Advanced Transformations
 
 ```python
-from feature_transformers import (
+from src.feature_engineering.feature_transformers import (
     OutlierTransformer,
     SkewnessTransformer,
     DimensionalityReducer,
@@ -164,7 +164,7 @@ X_clustered = clusterer.fit_transform(X)
 ### 3. Time Series Features
 
 ```python
-from time_series_features import TimeSeriesFeatureExtractor
+from src.feature_engineering.time_series_features import TimeSeriesFeatureExtractor
 
 # Extract comprehensive time series features
 ts_extractor = TimeSeriesFeatureExtractor(
@@ -196,7 +196,7 @@ features = ts_extractor.extract_features(
 ### 4. Feature Selection
 
 ```python
-from feature_selection import AdvancedFeatureSelector
+from src.feature_engineering.feature_selection import AdvancedFeatureSelector
 
 # Multi-method selection
 selector = AdvancedFeatureSelector(
@@ -226,7 +226,7 @@ X_selected, scores = selector.fit_select(X, y, return_scores=True)
 ### Feature Validation
 
 ```python
-from utils import FeatureValidator
+from src.feature_engineering.utils import FeatureValidator
 
 validator = FeatureValidator()
 report = validator.validate(X_engineered, y)
@@ -241,7 +241,7 @@ print(f"High correlations: {report['checks']['high_correlation']['n_high_corr']}
 ### Feature Profiling
 
 ```python
-from utils import FeatureProfiler
+from src.feature_engineering.utils import FeatureProfiler
 
 profiler = FeatureProfiler()
 profile = profiler.profile(X_engineered)
@@ -253,7 +253,7 @@ print(profile[['feature', 'dtype', 'mean', 'std', 'skew', 'missing_pct']])
 ### Drift Detection
 
 ```python
-from utils import FeatureMonitor
+from src.feature_engineering.utils import FeatureMonitor
 
 monitor = FeatureMonitor()
 monitor.set_reference(X_train)
@@ -266,8 +266,8 @@ print(f"Drifted features: {len(drift_report['drifted_features'])}")
 ### Pipeline Creation
 
 ```python
-from utils import FeatureEngineringPipeline
-from feature_transformers import create_transformation_pipeline
+from src.feature_engineering.utils import FeatureEngineringPipeline
+from src.feature_engineering.feature_transformers import create_transformation_pipeline
 
 # Create pipeline
 pipeline = FeatureEngineringPipeline([
@@ -284,7 +284,7 @@ X_transformed = pipeline.fit_transform(X, y)
 ### Cross-Validation Engineering
 
 ```python
-from utils import CrossValidationFeatureEngineer
+from src.feature_engineering.utils import CrossValidationFeatureEngineer
 
 # Engineer features with CV to prevent overfitting
 cv_engineer = CrossValidationFeatureEngineer(
@@ -373,7 +373,7 @@ print(top_features[['mean', 'std', 'rank']])
 ## 📝 Configuration Management
 
 ```python
-from utils import save_feature_engineering_config, load_feature_engineering_config
+from src.feature_engineering.utils import save_feature_engineering_config, load_feature_engineering_config
 
 # Save configuration
 config = {

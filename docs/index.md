@@ -28,6 +28,8 @@ api/index
 :maxdepth: 1
 :hidden:
 
+methodology/index
+tutorials/index
 best_practices
 deployment
 DOCS_STYLE

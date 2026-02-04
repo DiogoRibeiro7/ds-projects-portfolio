@@ -77,12 +77,12 @@ jobs:
           make test TEST_OPTS="--junitxml=artifacts/junit-${{ matrix.python-version }}.xml --durations=25 --cov=src --cov-report=xml:artifacts/coverage-${{ matrix.python-version }}.xml --cov-report=term-missing:skip-covered"
       - name: Upload test artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pytest-artifacts-${{ matrix.python-version }}
           path: artifacts
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-${{ matrix.python-version }}
           path: artifacts/coverage-${{ matrix.python-version }}.xml
@@ -107,7 +107,7 @@ jobs:
           make docs
       - name: Upload docs build on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: docs-build
           path: docs/_build

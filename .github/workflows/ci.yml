@@ -28,7 +28,13 @@ jobs:
           cache: pip
           cache-dependency-path: ${{ github.workspace }}/requirements-dev.txt
       - name: Install dependencies
-        run: pip install -r "${{ github.workspace }}/requirements-dev.txt"
+        run: |
+          if [ -f "${{ github.workspace }}/requirements-dev.txt" ]; then
+            pip install -r "${{ github.workspace }}/requirements-dev.txt"
+          else
+            echo "requirements-dev.txt not found; falling back to requirements.txt"
+            pip install -r "${{ github.workspace }}/requirements.txt"
+          fi
       - name: Check formatting
         run: ruff format --check .
       - name: Lint
@@ -47,7 +53,13 @@ jobs:
           cache: pip
           cache-dependency-path: ${{ github.workspace }}/requirements-dev.txt
       - name: Install dependencies
-        run: pip install -r "${{ github.workspace }}/requirements-dev.txt"
+        run: |
+          if [ -f "${{ github.workspace }}/requirements-dev.txt" ]; then
+            pip install -r "${{ github.workspace }}/requirements-dev.txt"
+          else
+            echo "requirements-dev.txt not found; falling back to requirements.txt"
+            pip install -r "${{ github.workspace }}/requirements.txt"
+          fi
       - name: Run mypy
         run: make typecheck
 
@@ -68,7 +80,13 @@ jobs:
           cache: pip
           cache-dependency-path: ${{ github.workspace }}/requirements-dev.txt
       - name: Install dependencies
-        run: pip install -r "${{ github.workspace }}/requirements-dev.txt"
+        run: |
+          if [ -f "${{ github.workspace }}/requirements-dev.txt" ]; then
+            pip install -r "${{ github.workspace }}/requirements-dev.txt"
+          else
+            echo "requirements-dev.txt not found; falling back to requirements.txt"
+            pip install -r "${{ github.workspace }}/requirements.txt"
+          fi
       - name: Run tests
         env:
           PYTHONHASHSEED: "0"
@@ -100,7 +118,13 @@ jobs:
           cache: pip
           cache-dependency-path: ${{ github.workspace }}/requirements-dev.txt
       - name: Install dependencies
-        run: pip install -r "${{ github.workspace }}/requirements-dev.txt"
+        run: |
+          if [ -f "${{ github.workspace }}/requirements-dev.txt" ]; then
+            pip install -r "${{ github.workspace }}/requirements-dev.txt"
+          else
+            echo "requirements-dev.txt not found; falling back to requirements.txt"
+            pip install -r "${{ github.workspace }}/requirements.txt"
+          fi
       - name: Build docs
         run: |
           mkdir -p docs/_build

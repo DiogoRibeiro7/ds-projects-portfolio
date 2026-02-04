@@ -7,7 +7,7 @@ seaborn>=0.13.2
 
 # Statistical Analysis
 statsmodels>=0.12.0
-scikit-learn>=1.6.1,<1.7  # Limited by scikit-survival compatibility
+scikit-learn>=1.6.1,<1.8  # Limited by scikit-survival compatibility
 
 # Interactive Visualization (implemented TODOs)
 plotly>=5.0.0

@@ -1,27 +1,22 @@
-"""
-Notebook test runner for executing and testing Jupyter notebooks.
+"""Notebook test runner for executing and testing Jupyter notebooks.
 """
 
 import json
 import os
-import subprocess
 import sys
 import tempfile
 import time
 import traceback
-import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import nbformat
 import pandas as pd
 import papermill as pm
 import psutil
-from memory_profiler import memory_usage
-from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
-from notebook_validator import DataValidator, NotebookValidator
+from notebook_validator import NotebookValidator
 
 
 class NotebookTestRunner:
@@ -29,13 +24,12 @@ class NotebookTestRunner:
 
     def __init__(
         self,
-        notebook_dirs: List[str],
+        notebook_dirs: list[str],
         output_dir: str = "test_results",
         timeout: int = 600,
         parallel: bool = False,
     ):
-        """
-        Initialize the test runner.
+        """Initialize the test runner.
 
         Args:
             notebook_dirs: List of directories containing notebooks
@@ -50,7 +44,7 @@ class NotebookTestRunner:
         self.parallel = parallel
         self.results = []
 
-    def find_notebooks(self) -> List[Path]:
+    def find_notebooks(self) -> list[Path]:
         """Find all notebooks in the specified directories."""
         notebooks = []
         for directory in self.notebook_dirs:
@@ -61,7 +55,7 @@ class NotebookTestRunner:
         notebooks = [nb for nb in notebooks if ".ipynb_checkpoints" not in str(nb)]
         return notebooks
 
-    def run_all_tests(self) -> Dict[str, Any]:
+    def run_all_tests(self) -> dict[str, Any]:
         """Run tests on all notebooks."""
         notebooks = self.find_notebooks()
         print(f"Found {len(notebooks)} notebooks to test")
@@ -83,7 +77,7 @@ class NotebookTestRunner:
 
         return {"results": results, "summary": summary}
 
-    def _run_sequential(self, notebooks: List[Path]) -> List[Dict[str, Any]]:
+    def _run_sequential(self, notebooks: list[Path]) -> list[dict[str, Any]]:
         """Run notebooks sequentially."""
         results = []
         for i, notebook_path in enumerate(notebooks, 1):
@@ -93,7 +87,7 @@ class NotebookTestRunner:
             self._print_result(result)
         return results
 
-    def _run_parallel(self, notebooks: List[Path]) -> List[Dict[str, Any]]:
+    def _run_parallel(self, notebooks: list[Path]) -> list[dict[str, Any]]:
         """Run notebooks in parallel."""
         results = []
         max_workers = min(os.cpu_count() or 1, len(notebooks))
@@ -116,9 +110,8 @@ class NotebookTestRunner:
 
         return results
 
-    def test_notebook(self, notebook_path: Path) -> Dict[str, Any]:
-        """
-        Test a single notebook.
+    def test_notebook(self, notebook_path: Path) -> dict[str, Any]:
+        """Test a single notebook.
 
         Returns:
             Dictionary containing test results
@@ -162,7 +155,7 @@ class NotebookTestRunner:
 
         return result
 
-    def _execute_notebook(self, notebook_path: Path) -> Dict[str, Any]:
+    def _execute_notebook(self, notebook_path: Path) -> dict[str, Any]:
         """Execute a notebook and capture metrics."""
         result = {
             "success": False,
@@ -228,7 +221,7 @@ class NotebookTestRunner:
 
             # Extract cell timings from executed notebook if it exists
             if output_notebook.exists():
-                with open(output_notebook, "r", encoding="utf-8") as f:
+                with open(output_notebook, encoding="utf-8") as f:
                     executed_nb = nbformat.read(f, as_version=4)
                     result["cell_timings"] = self._extract_cell_timings(executed_nb)
 
@@ -252,7 +245,7 @@ class NotebookTestRunner:
 
     def _extract_cell_timings(
         self, notebook: nbformat.NotebookNode
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Extract execution timings from notebook cells."""
         timings = []
 
@@ -283,8 +276,8 @@ class NotebookTestRunner:
         return timings
 
     def _collect_metrics(
-        self, notebook_path: Path, execution_result: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, notebook_path: Path, execution_result: dict[str, Any]
+    ) -> dict[str, Any]:
         """Collect various metrics about the notebook."""
         metrics = {
             "execution_time": execution_result["execution_time"],
@@ -297,7 +290,7 @@ class NotebookTestRunner:
         }
 
         try:
-            with open(notebook_path, "r", encoding="utf-8") as f:
+            with open(notebook_path, encoding="utf-8") as f:
                 notebook = nbformat.read(f, as_version=4)
 
                 metrics["cell_count"] = len(notebook.cells)
@@ -326,7 +319,7 @@ class NotebookTestRunner:
 
         return metrics
 
-    def _print_result(self, result: Dict[str, Any]):
+    def _print_result(self, result: dict[str, Any]):
         """Print a summary of test result."""
         status = result["status"]
         name = result["notebook_name"]
@@ -367,8 +360,8 @@ class NotebookTestRunner:
                 print(f"    Error: {error.get('message', 'Unknown error')}")
 
     def _generate_summary(
-        self, results: List[Dict[str, Any]], total_time: float
-    ) -> Dict[str, Any]:
+        self, results: list[dict[str, Any]], total_time: float
+    ) -> dict[str, Any]:
         """Generate summary statistics from results."""
         summary = {
             "total_notebooks": len(results),
@@ -428,7 +421,7 @@ class NotebookTestRunner:
 
         return summary
 
-    def _save_results(self, results: List[Dict[str, Any]], summary: Dict[str, Any]):
+    def _save_results(self, results: list[dict[str, Any]], summary: dict[str, Any]):
         """Save test results to files."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -447,7 +440,7 @@ class NotebookTestRunner:
         print(f"Summary saved to: {summary_file}")
 
     def _write_markdown_summary(
-        self, filepath: Path, summary: Dict[str, Any], results: List[Dict[str, Any]]
+        self, filepath: Path, summary: dict[str, Any], results: list[dict[str, Any]]
     ):
         """Write a markdown summary of test results."""
         with open(filepath, "w") as f:
@@ -501,7 +494,7 @@ class NotebookTestRunner:
 class NotebookTestConfig:
     """Configuration for notebook tests."""
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         """Load test configuration."""
         self.config = {
             "timeout": 600,
@@ -513,28 +506,27 @@ class NotebookTestConfig:
         }
 
         if config_path and Path(config_path).exists():
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 self.config.update(json.load(f))
 
-    def get_expected_schema(self, data_name: str) -> Optional[Dict[str, str]]:
+    def get_expected_schema(self, data_name: str) -> dict[str, str] | None:
         """Get expected schema for a dataset."""
         return self.config["expected_schemas"].get(data_name)
 
     def get_metric_ranges(
         self, notebook_name: str
-    ) -> Optional[Dict[str, Tuple[float, float]]]:
+    ) -> dict[str, tuple[float, float]] | None:
         """Get expected metric ranges for a notebook."""
         return self.config["metric_ranges"].get(notebook_name)
 
 
 def run_notebook_tests(
-    notebook_dirs: List[str],
+    notebook_dirs: list[str],
     output_dir: str = "test_results",
-    config_path: Optional[str] = None,
+    config_path: str | None = None,
     parallel: bool = False,
-) -> Dict[str, Any]:
-    """
-    Main function to run notebook tests.
+) -> dict[str, Any]:
+    """Main function to run notebook tests.
 
     Args:
         notebook_dirs: List of directories containing notebooks

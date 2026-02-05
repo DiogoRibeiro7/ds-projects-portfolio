@@ -1,21 +1,19 @@
-"""
-Performance benchmarking system for tracking optimization results.
+"""Performance benchmarking system for tracking optimization results.
 """
 
-import functools
 import json
 import time
 import tracemalloc
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import psutil
-import seaborn as sns
 
 
 @dataclass
@@ -29,9 +27,9 @@ class BenchmarkResult:
     cpu_percent: float
     iterations: int
     timestamp: str
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary."""
         return asdict(self)
 
@@ -50,12 +48,11 @@ class PerformanceBenchmark:
         self,
         func: Callable,
         *args,
-        name: Optional[str] = None,
+        name: str | None = None,
         iterations: int = 10,
         **kwargs,
     ) -> BenchmarkResult:
-        """
-        Benchmark a function with multiple metrics.
+        """Benchmark a function with multiple metrics.
 
         Args:
             func: Function to benchmark
@@ -131,10 +128,9 @@ class PerformanceBenchmark:
         return benchmark_result
 
     def set_baseline(
-        self, func: Callable, *args, name: Optional[str] = None, **kwargs
+        self, func: Callable, *args, name: str | None = None, **kwargs
     ) -> BenchmarkResult:
-        """
-        Set baseline performance for comparison.
+        """Set baseline performance for comparison.
 
         Args:
             func: Baseline function
@@ -155,9 +151,8 @@ class PerformanceBenchmark:
 
     def compare_with_baseline(
         self, func: Callable, baseline_name: str, *args, **kwargs
-    ) -> Dict[str, float]:
-        """
-        Compare function performance with baseline.
+    ) -> dict[str, float]:
+        """Compare function performance with baseline.
 
         Args:
             func: Function to compare
@@ -189,10 +184,9 @@ class PerformanceBenchmark:
         return comparison
 
     def create_comparison_matrix(
-        self, functions: Dict[str, Callable], test_data: Any
+        self, functions: dict[str, Callable], test_data: Any
     ) -> pd.DataFrame:
-        """
-        Create comparison matrix for multiple implementations.
+        """Create comparison matrix for multiple implementations.
 
         Args:
             functions: Dictionary of {name: function}
@@ -223,8 +217,7 @@ class PerformanceBenchmark:
         return df.sort_values("execution_time")
 
     def generate_report(self) -> str:
-        """
-        Generate comprehensive benchmark report.
+        """Generate comprehensive benchmark report.
 
         Returns:
             Path to generated report
@@ -329,24 +322,22 @@ class PerformanceBenchmark:
 class RegressionTester:
     """Performance regression testing."""
 
-    def __init__(self, baseline_file: Optional[str] = None):
-        """
-        Initialize regression tester.
+    def __init__(self, baseline_file: str | None = None):
+        """Initialize regression tester.
 
         Args:
             baseline_file: Path to baseline results JSON
         """
         self.baseline = {}
         if baseline_file and Path(baseline_file).exists():
-            with open(baseline_file, "r") as f:
+            with open(baseline_file) as f:
                 baseline_data = json.load(f)
                 self.baseline = {r["name"]: r for r in baseline_data}
 
     def test_regression(
         self, benchmark: BenchmarkResult, tolerance: float = 0.1
     ) -> bool:
-        """
-        Test for performance regression.
+        """Test for performance regression.
 
         Args:
             benchmark: Current benchmark result
@@ -391,8 +382,7 @@ def create_optimization_report(
     test_data: Any,
     report_name: str = "optimization_report",
 ) -> None:
-    """
-    Create detailed optimization report comparing original and optimized versions.
+    """Create detailed optimization report comparing original and optimized versions.
 
     Args:
         original_func: Original implementation

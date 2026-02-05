@@ -1,46 +1,37 @@
-"""
-Compliance Tools - Model governance, fairness testing, and regulatory compliance
+"""Compliance Tools - Model governance, fairness testing, and regulatory compliance
 """
 
-import json
 import hashlib
+import json
 import logging
+import pickle
 import warnings
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Optional, Any, Union
-from dataclasses import dataclass, field, asdict
 from enum import Enum
 from pathlib import Path
-import pickle
-import joblib
-import yaml
+from typing import Any
 
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
 from sklearn.base import BaseEstimator
 from sklearn.metrics import (
-    confusion_matrix,
-    classification_report,
     accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    mean_squared_error,
-    mean_absolute_error,
-    r2_score,
 )
 from sklearn.model_selection import cross_val_score
-import scipy.stats as stats
 
 # Fairness metrics
-from sklearn.preprocessing import LabelEncoder
-from sklearn.utils.validation import check_is_fitted
 
 # For advanced fairness metrics
 try:
     import fairlearn.metrics as fairness_metrics
-    from fairlearn.reductions import ExponentiatedGradient, GridSearch
-    from fairlearn.reductions import DemographicParity, EqualizedOdds
+    from fairlearn.reductions import (
+        DemographicParity,
+        EqualizedOdds,
+        ExponentiatedGradient,
+        GridSearch,
+    )
 
     FAIRLEARN_AVAILABLE = True
 except ImportError:
@@ -48,10 +39,10 @@ except ImportError:
     warnings.warn("Fairlearn not installed. Some fairness features will be limited.")
 
 try:
+    from aif360.algorithms.postprocessing import EqOddsPostprocessing
+    from aif360.algorithms.preprocessing import DisparateImpactRemover, Reweighing
     from aif360.datasets import BinaryLabelDataset
     from aif360.metrics import BinaryLabelDatasetMetric, ClassificationMetric
-    from aif360.algorithms.preprocessing import Reweighing, DisparateImpactRemover
-    from aif360.algorithms.postprocessing import EqOddsPostprocessing
 
     AIF360_AVAILABLE = True
 except ImportError:
@@ -111,26 +102,26 @@ class ModelCard:
     use_case: str
     model_type: str
     algorithm: str
-    training_data: Dict[str, Any]
-    performance_metrics: Dict[str, float]
-    limitations: List[str]
-    ethical_considerations: List[str]
-    fairness_metrics: Dict[str, float] = field(default_factory=dict)
-    regulatory_compliance: List[str] = field(default_factory=list)
-    risk_assessment: Dict[str, Any] = field(default_factory=dict)
+    training_data: dict[str, Any]
+    performance_metrics: dict[str, float]
+    limitations: list[str]
+    ethical_considerations: list[str]
+    fairness_metrics: dict[str, float] = field(default_factory=dict)
+    regulatory_compliance: list[str] = field(default_factory=list)
+    risk_assessment: dict[str, Any] = field(default_factory=dict)
     lifecycle_stage: ModelLifecycleStage = ModelLifecycleStage.DEVELOPMENT
     approval_status: str = "PENDING"
-    approvers: List[Dict[str, Any]] = field(default_factory=list)
-    audit_trail: List[Dict[str, Any]] = field(default_factory=list)
-    dependencies: List[str] = field(default_factory=list)
-    deployment_info: Dict[str, Any] = field(default_factory=dict)
+    approvers: list[dict[str, Any]] = field(default_factory=list)
+    audit_trail: list[dict[str, Any]] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
+    deployment_info: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class ComplianceConfig:
     """Configuration for compliance tools"""
 
-    regulatory_frameworks: List[RegulatoryFramework] = field(
+    regulatory_frameworks: list[RegulatoryFramework] = field(
         default_factory=lambda: [RegulatoryFramework.GDPR, RegulatoryFramework.AI_ACT]
     )
     fairness_threshold: float = 0.8
@@ -140,7 +131,7 @@ class ComplianceConfig:
     audit_retention_days: int = 365
     enable_fairness_monitoring: bool = True
     enable_drift_detection: bool = True
-    protected_attributes: List[str] = field(
+    protected_attributes: list[str] = field(
         default_factory=lambda: ["gender", "race", "age", "ethnicity"]
     )
 
@@ -262,7 +253,7 @@ class ModelGovernanceFramework:
 
         return True
 
-    def get_model_lineage(self, model_id: str) -> Dict[str, Any]:
+    def get_model_lineage(self, model_id: str) -> dict[str, Any]:
         """Get complete lineage of a model"""
         if model_id not in self.model_registry:
             raise ValueError(f"Model {model_id} not found in registry")
@@ -297,7 +288,7 @@ class ModelGovernanceFramework:
         )
         return hashlib.sha256(content.encode()).hexdigest()[:12]
 
-    def _log_event(self, model_id: str, event_type: str, details: Dict = None):
+    def _log_event(self, model_id: str, event_type: str, details: dict = None):
         """Log governance event"""
         event = {
             "timestamp": datetime.now().isoformat(),
@@ -335,7 +326,7 @@ class ModelRiskAssessment:
         X_test: pd.DataFrame,
         y_test: pd.Series,
         model_card: ModelCard = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Comprehensive model risk assessment"""
         risk_scores = {}
 
@@ -613,8 +604,8 @@ class ModelRiskAssessment:
         return min(risk_score, 1.0)
 
     def _generate_recommendations(
-        self, risk_scores: Dict[str, float], risk_level: RiskLevel
-    ) -> List[str]:
+        self, risk_scores: dict[str, float], risk_level: RiskLevel
+    ) -> list[str]:
         """Generate risk mitigation recommendations"""
         recommendations = []
 
@@ -657,8 +648,8 @@ class ModelRiskAssessment:
         return recommendations
 
     def _suggest_mitigations(
-        self, risk_scores: Dict[str, float]
-    ) -> Dict[str, List[str]]:
+        self, risk_scores: dict[str, float]
+    ) -> dict[str, list[str]]:
         """Suggest specific mitigation strategies"""
         mitigations = {}
 
@@ -668,7 +659,7 @@ class ModelRiskAssessment:
 
         return mitigations
 
-    def _get_mitigation_strategies(self, factor: str, score: float) -> List[str]:
+    def _get_mitigation_strategies(self, factor: str, score: float) -> list[str]:
         """Get specific mitigation strategies for each risk factor"""
         strategies = {
             "data_quality": [
@@ -725,7 +716,7 @@ class FairnessTesting:
         y_true: pd.Series,
         sensitive_features: pd.DataFrame = None,
         y_pred: np.ndarray = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Comprehensive fairness testing"""
         if y_pred is None:
             y_pred = model.predict(X)
@@ -775,7 +766,7 @@ class FairnessTesting:
 
     def _test_feature_fairness(
         self, y_true: pd.Series, y_pred: np.ndarray, sensitive_feature: pd.Series
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Test fairness for a single sensitive feature"""
         metrics = {}
 
@@ -817,7 +808,7 @@ class FairnessTesting:
 
     def _compute_advanced_metrics(
         self, y_true: pd.Series, y_pred: np.ndarray, sensitive_features: pd.DataFrame
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Compute advanced fairness metrics using fairlearn"""
         metrics = {}
 
@@ -896,10 +887,10 @@ class ComplianceReporting:
     def generate_compliance_report(
         self,
         model_card: ModelCard,
-        risk_assessment: Dict[str, Any],
-        fairness_results: Dict[str, Any],
+        risk_assessment: dict[str, Any],
+        fairness_results: dict[str, Any],
         regulatory_framework: RegulatoryFramework,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate comprehensive compliance report"""
         report = {
             "report_id": self._generate_report_id(),
@@ -1026,8 +1017,8 @@ class ComplianceReporting:
     def export_compliance_package(
         self,
         model_card: ModelCard,
-        risk_assessment: Dict[str, Any],
-        fairness_results: Dict[str, Any],
+        risk_assessment: dict[str, Any],
+        fairness_results: dict[str, Any],
         output_dir: str = "compliance_reports",
     ) -> str:
         """Export complete compliance documentation package"""
@@ -1074,7 +1065,7 @@ class ComplianceReporting:
         logger.info(f"Compliance package exported to {package_dir}")
         return str(package_dir)
 
-    def _load_templates(self) -> Dict[str, str]:
+    def _load_templates(self) -> dict[str, str]:
         """Load report templates for different regulatory frameworks"""
         templates = {
             RegulatoryFramework.GDPR: "gdpr_template.yaml",
@@ -1093,8 +1084,8 @@ class ComplianceReporting:
     def _assess_compliance_status(
         self,
         model_card: ModelCard,
-        risk_assessment: Dict[str, Any],
-        fairness_results: Dict[str, Any],
+        risk_assessment: dict[str, Any],
+        fairness_results: dict[str, Any],
         regulatory_framework: RegulatoryFramework,
     ) -> str:
         """Assess overall compliance status"""
@@ -1124,7 +1115,7 @@ class ComplianceReporting:
 
     def _generate_requirements_checklist(
         self, model_card: ModelCard, regulatory_framework: RegulatoryFramework
-    ) -> Dict[str, bool]:
+    ) -> dict[str, bool]:
         """Generate requirements checklist for regulatory framework"""
         checklist = {}
 
@@ -1165,7 +1156,7 @@ class ComplianceReporting:
 
     def _identify_compliance_gaps(
         self, model_card: ModelCard, regulatory_framework: RegulatoryFramework
-    ) -> List[str]:
+    ) -> list[str]:
         """Identify compliance gaps"""
         gaps = []
 
@@ -1182,9 +1173,9 @@ class ComplianceReporting:
     def _generate_compliance_recommendations(
         self,
         model_card: ModelCard,
-        risk_assessment: Dict[str, Any],
+        risk_assessment: dict[str, Any],
         regulatory_framework: RegulatoryFramework,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate compliance recommendations"""
         recommendations = []
 
@@ -1206,7 +1197,7 @@ class ComplianceReporting:
 
         return recommendations
 
-    def _generate_attestation(self, model_card: ModelCard) -> Dict[str, Any]:
+    def _generate_attestation(self, model_card: ModelCard) -> dict[str, Any]:
         """Generate compliance attestation"""
         return {
             "date": datetime.now().isoformat(),
@@ -1216,7 +1207,7 @@ class ComplianceReporting:
             "approvers": model_card.approvers,
         }
 
-    def _format_audit_trail(self, audit_trail: List[Dict[str, Any]]) -> str:
+    def _format_audit_trail(self, audit_trail: list[dict[str, Any]]) -> str:
         """Format audit trail for reporting"""
         if not audit_trail:
             return "No audit events"
@@ -1233,8 +1224,8 @@ class ComplianceReporting:
     def _create_compliance_summary(
         self,
         model_card: ModelCard,
-        risk_assessment: Dict[str, Any],
-        fairness_results: Dict[str, Any],
+        risk_assessment: dict[str, Any],
+        fairness_results: dict[str, Any],
     ) -> str:
         """Create executive summary of compliance status"""
         summary = f"""
@@ -1289,7 +1280,7 @@ class RegulatoryTracker:
         self.updates = []
         self.compliance_calendar = {}
 
-    def _initialize_requirements(self) -> Dict[RegulatoryFramework, Dict]:
+    def _initialize_requirements(self) -> dict[RegulatoryFramework, dict]:
         """Initialize regulatory requirements database"""
         return {
             RegulatoryFramework.GDPR: {
@@ -1360,8 +1351,8 @@ class RegulatoryTracker:
         }
 
     def check_requirements(
-        self, model_card: ModelCard, frameworks: List[RegulatoryFramework]
-    ) -> Dict[str, Any]:
+        self, model_card: ModelCard, frameworks: list[RegulatoryFramework]
+    ) -> dict[str, Any]:
         """Check model against regulatory requirements"""
         results = {}
 
@@ -1375,7 +1366,7 @@ class RegulatoryTracker:
 
     def _check_framework_requirements(
         self, model_card: ModelCard, framework: RegulatoryFramework
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Check requirements for specific framework"""
         requirements = self.requirements[framework]
         checks = {}
@@ -1427,7 +1418,7 @@ class RegulatoryTracker:
             )
         return False
 
-    def get_upcoming_deadlines(self) -> List[Dict[str, Any]]:
+    def get_upcoming_deadlines(self) -> list[dict[str, Any]]:
         """Get upcoming regulatory deadlines"""
         deadlines = []
         current_date = datetime.now()
@@ -1451,7 +1442,7 @@ class RegulatoryTracker:
 
         return sorted(deadlines, key=lambda x: x["date"])
 
-    def track_regulatory_updates(self) -> List[Dict[str, Any]]:
+    def track_regulatory_updates(self) -> list[dict[str, Any]]:
         """Track regulatory updates and changes"""
         # In production, this would fetch from regulatory databases/APIs
         updates = [
@@ -1494,7 +1485,7 @@ class ComplianceFramework:
         X_test: pd.DataFrame,
         y_test: pd.Series,
         sensitive_features: pd.DataFrame = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Perform full compliance check on a model"""
         results = {
             "timestamp": datetime.now().isoformat(),
@@ -1550,7 +1541,7 @@ class ComplianceFramework:
         return results
 
     def _determine_overall_status(
-        self, risk_results: Dict, fairness_results: Dict, regulatory_results: Dict
+        self, risk_results: dict, fairness_results: dict, regulatory_results: dict
     ) -> str:
         """Determine overall compliance status"""
         # Check risk level

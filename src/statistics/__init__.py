@@ -1,5 +1,4 @@
-"""
-Statistical utilities for A/B testing and experimental analysis.
+"""Statistical utilities for A/B testing and experimental analysis.
 """
 
 from .core import (

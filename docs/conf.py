@@ -1,5 +1,4 @@
-"""
-Sphinx configuration for the documentation site.
+"""Sphinx configuration for the documentation site.
 
 This file exposes the knobs Sphinx reads when building HTML/LaTeX output and
 configures every extension we rely on for notebooks, diagrams, and API docs.

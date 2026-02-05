@@ -1,5 +1,4 @@
-"""
-Comprehensive Testing Suite for Dashboard
+"""Comprehensive Testing Suite for Dashboard
 
 Unit tests, end-to-end testing, performance testing, visual regression tests,
 and cross-browser compatibility tests.
@@ -8,39 +7,36 @@ Author: Portfolio Team
 Date: 2024
 """
 
-import unittest
-import asyncio
-import time
 import json
 import logging
 import os
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from unittest.mock import Mock, patch, MagicMock
 import tempfile
+import time
+import unittest
+from datetime import datetime
 from pathlib import Path
+from typing import Any
+from unittest.mock import MagicMock, patch
 
-import pytest
-import pandas as pd
-import numpy as np
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from playwright.async_api import async_playwright, Page, Browser
-import requests
-from PIL import Image, ImageChops
 import imagehash
-from locust import HttpUser, task, between
-from flask_testing import TestCase
+import numpy as np
+import pandas as pd
+import pytest
+from api_infrastructure import APIConfig, DashboardAPI
 
 # Import dashboard components
-from dashboard_framework import EnhancedDashboard, DashboardConfig
+from dashboard_framework import DashboardConfig, EnhancedDashboard
+from flask_testing import TestCase
+from locust import HttpUser, between, task
+from PIL import Image, ImageChops
+from playwright.async_api import async_playwright
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from visualization_components import InteractiveVisualizations
-from api_infrastructure import DashboardAPI, APIConfig
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -535,7 +531,7 @@ class VisualRegressionTests:
 
     def compare_images(
         self, baseline: Image, current: Image, threshold: float = 0.01
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Compare two images for visual differences."""
         # Calculate difference
         diff = ImageChops.difference(baseline, current)
@@ -644,7 +640,7 @@ class CrossBrowserTests:
         else:
             raise ValueError(f"Unsupported browser: {browser}")
 
-    def test_browser_compatibility(self, browser: str) -> Dict[str, Any]:
+    def test_browser_compatibility(self, browser: str) -> dict[str, Any]:
         """Test dashboard compatibility with specific browser."""
         results = {"browser": browser, "tests": {}, "passed": 0, "failed": 0}
 
@@ -722,7 +718,7 @@ class CrossBrowserTests:
         )
         return results
 
-    def run_all_browser_tests(self) -> Dict[str, Any]:
+    def run_all_browser_tests(self) -> dict[str, Any]:
         """Run tests on all supported browsers."""
         for browser in self.browsers:
             logger.info(f"Testing {browser}...")
@@ -753,7 +749,7 @@ class DashboardTestSuite:
         """Initialize test suite."""
         self.results = {}
 
-    def run_unit_tests(self) -> Dict[str, Any]:
+    def run_unit_tests(self) -> dict[str, Any]:
         """Run unit tests."""
         logger.info("Running unit tests...")
 
@@ -774,7 +770,7 @@ class DashboardTestSuite:
             "success": result.wasSuccessful(),
         }
 
-    def run_e2e_tests(self) -> Dict[str, Any]:
+    def run_e2e_tests(self) -> dict[str, Any]:
         """Run end-to-end tests."""
         logger.info("Running E2E tests...")
 
@@ -799,7 +795,7 @@ class DashboardTestSuite:
             "playwright": {"success": playwright_success},
         }
 
-    def run_performance_tests(self) -> Dict[str, Any]:
+    def run_performance_tests(self) -> dict[str, Any]:
         """Run performance tests."""
         logger.info("Running performance tests...")
 
@@ -811,7 +807,7 @@ class DashboardTestSuite:
             "command": "locust -f testing_suite.py DashboardUser --headless -u 10 -r 2 -t 30s",
         }
 
-    def run_visual_regression_tests(self) -> Dict[str, Any]:
+    def run_visual_regression_tests(self) -> dict[str, Any]:
         """Run visual regression tests."""
         logger.info("Running visual regression tests...")
 
@@ -832,14 +828,14 @@ class DashboardTestSuite:
             "results": results,
         }
 
-    def run_cross_browser_tests(self) -> Dict[str, Any]:
+    def run_cross_browser_tests(self) -> dict[str, Any]:
         """Run cross-browser compatibility tests."""
         logger.info("Running cross-browser tests...")
 
         cbt = CrossBrowserTests()
         return cbt.run_all_browser_tests()
 
-    def run_all_tests(self) -> Dict[str, Any]:
+    def run_all_tests(self) -> dict[str, Any]:
         """Run complete test suite."""
         logger.info("=" * 60)
         logger.info("RUNNING COMPLETE DASHBOARD TEST SUITE")
@@ -879,4 +875,4 @@ if __name__ == "__main__":
     with open("test_results.json", "w") as f:
         json.dump(results, f, indent=2, default=str)
 
-    logger.info(f"Test results saved to test_results.json")
+    logger.info("Test results saved to test_results.json")

@@ -1,5 +1,4 @@
-"""
-Production Model Server with FastAPI
+"""Production Model Server with FastAPI
 =====================================
 
 A high-performance, production-ready model serving application with:
@@ -13,63 +12,58 @@ A high-performance, production-ready model serving application with:
 - Health checks
 """
 
+import asyncio
+import hashlib
+import json
 import os
 import time
-import json
-import asyncio
-import logging
-import hashlib
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
+from datetime import datetime
 from enum import Enum
 
-import numpy as np
-import pandas as pd
-from fastapi import (
-    FastAPI,
-    HTTPException,
-    Request,
-    Response,
-    status,
-    Depends,
-    BackgroundTasks,
-)
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-from pydantic import BaseModel, Field, validator
-import uvicorn
+import aiocache
 
 # ML Libraries
 import joblib
 import mlflow
 import mlflow.sklearn
-from sklearn.base import BaseEstimator
-
-# Monitoring and tracing
-from prometheus_client import (
-    Counter,
-    Histogram,
-    Gauge,
-    generate_latest,
-    CONTENT_TYPE_LATEST,
-)
-from opentelemetry import trace
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.jaeger import JaegerExporter
+import numpy as np
+import pandas as pd
 
 # Caching
 import redis
-import aiocache
-from aiocache.serializers import JsonSerializer
 
 # Utilities
 import structlog
-from python_json_logger import JsonFormatter
+import uvicorn
+from aiocache.serializers import JsonSerializer
+from fastapi import (
+    BackgroundTasks,
+    FastAPI,
+    HTTPException,
+    Request,
+    Response,
+)
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
+from opentelemetry import trace
+from opentelemetry.exporter.jaeger import JaegerExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+# Monitoring and tracing
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
+from pydantic import BaseModel, Field, validator
+from sklearn.base import BaseEstimator
 
 # Configure structured logging
 structlog.configure(
@@ -123,14 +117,14 @@ trace.get_tracer_provider().add_span_processor(span_processor)
 class PredictionRequest(BaseModel):
     """Model prediction request schema"""
 
-    data: Union[List[List[float]], Dict[str, List[float]]]
+    data: list[list[float]] | dict[str, list[float]]
     model_name: str = Field(..., description="Name of the model to use")
-    model_version: Optional[str] = Field("latest", description="Version of the model")
-    features: Optional[List[str]] = Field(
+    model_version: str | None = Field("latest", description="Version of the model")
+    features: list[str] | None = Field(
         None, description="Feature names if data is list format"
     )
-    request_id: Optional[str] = Field(None, description="Unique request ID for tracing")
-    timeout: Optional[int] = Field(30, description="Request timeout in seconds")
+    request_id: str | None = Field(None, description="Unique request ID for tracing")
+    timeout: int | None = Field(30, description="Request timeout in seconds")
 
     @validator("data")
     def validate_data(cls, v):
@@ -143,14 +137,14 @@ class PredictionRequest(BaseModel):
 class PredictionResponse(BaseModel):
     """Model prediction response schema"""
 
-    predictions: List[Union[float, int, str, Dict]]
+    predictions: list[float | int | str | dict]
     model_name: str
     model_version: str
     request_id: str
     timestamp: str
     latency_ms: float
     cached: bool = False
-    metadata: Optional[Dict] = None
+    metadata: dict | None = None
 
 
 class HealthStatus(str, Enum):
@@ -166,7 +160,7 @@ class ModelInfo(BaseModel):
     version: str
     framework: str
     loaded_at: str
-    metrics: Dict[str, float]
+    metrics: dict[str, float]
     status: str
 
 
@@ -175,8 +169,8 @@ class ModelManager:
     """Manages model loading, caching, and versioning"""
 
     def __init__(self):
-        self.models: Dict[str, Dict[str, BaseEstimator]] = {}
-        self.model_metadata: Dict[str, Dict] = {}
+        self.models: dict[str, dict[str, BaseEstimator]] = {}
+        self.model_metadata: dict[str, dict] = {}
         self.redis_client = None
         self.cache = aiocache.Cache(aiocache.SimpleMemoryCache)
         self.cache.serializer = JsonSerializer()
@@ -269,7 +263,7 @@ class ModelManager:
 
         return predictions
 
-    def get_model_info(self, model_name: str, model_version: str) -> Dict:
+    def get_model_info(self, model_name: str, model_version: str) -> dict:
         """Get information about a loaded model"""
         model_key = f"{model_name}:{model_version}"
         if model_key not in self.model_metadata:
@@ -540,7 +534,7 @@ async def predict(request: PredictionRequest, background_tasks: BackgroundTasks)
 
 
 @app.post("/batch_predict")
-async def batch_predict(requests: List[PredictionRequest]):
+async def batch_predict(requests: list[PredictionRequest]):
     """Batch prediction endpoint"""
     tasks = [predict(req, BackgroundTasks()) for req in requests]
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -555,7 +549,7 @@ async def batch_predict(requests: List[PredictionRequest]):
     return responses
 
 
-@app.get("/models", response_model=List[ModelInfo])
+@app.get("/models", response_model=list[ModelInfo])
 async def list_models():
     """List all loaded models"""
     models_info = []
@@ -607,7 +601,7 @@ async def unload_model(model_name: str, version: str):
 @app.post("/feedback")
 async def submit_feedback(
     request_id: str,
-    actual_value: Union[float, int, str],
+    actual_value: float | int | str,
     model_name: str,
     model_version: str,
 ):

@@ -1,28 +1,27 @@
-"""
-Performance regression tests to ensure system performance doesn't degrade.
+"""Performance regression tests to ensure system performance doesn't degrade.
 """
 
-import pytest
+import asyncio
+import json
 import time
+import tracemalloc
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import psutil
-import tracemalloc
+import pytest
 from memory_profiler import memory_usage
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-import asyncio
-from typing import List, Dict, Any, Callable
-import json
-from pathlib import Path
-
+from modern_bank_churn.feature_engineering import FeatureEngineer
 from modern_bank_churn.ml_pipeline_orchestrator import (
     MLPipelineOrchestrator,
     PipelineConfig,
 )
-from modern_bank_churn.feature_engineering import FeatureEngineer
 from statistical_methods.statistical_analyzer import StatisticalAnalyzer
-from dashboard_enhanced.dashboard_framework import EnhancedDashboard, DashboardConfig
 
+from dashboard_enhanced.dashboard_framework import DashboardConfig, EnhancedDashboard
 
 # ============================================================================
 # Performance Benchmarks
@@ -35,7 +34,7 @@ def performance_baselines():
     baseline_file = Path(__file__).parent / "performance_baselines.json"
 
     if baseline_file.exists():
-        with open(baseline_file, "r") as f:
+        with open(baseline_file) as f:
             return json.load(f)
 
     # Default baselines if no previous data
@@ -581,7 +580,7 @@ class TestPerformanceRegression:
             regression_report = "\n".join(regressions)
             pytest.fail(f"Performance regressions detected:\n{regression_report}")
 
-    def _run_performance_tests(self) -> Dict[str, Dict[str, float]]:
+    def _run_performance_tests(self) -> dict[str, dict[str, float]]:
         """Run quick performance tests."""
         results = {}
 

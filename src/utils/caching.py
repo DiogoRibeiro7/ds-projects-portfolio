@@ -1,20 +1,19 @@
-"""
-Intelligent caching system for expensive computations.
+"""Intelligent caching system for expensive computations.
 
 This module provides a comprehensive caching solution with multiple backends,
 automatic storage selection, and intelligent cache key generation.
 """
 
-import hashlib
-import pickle
 import functools
+import hashlib
 import json
-import time
 import logging
-from pathlib import Path
-from typing import Any, Callable, Optional, Union, Dict, Tuple
-from datetime import datetime, timedelta
+import pickle
+import time
 import warnings
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -49,14 +48,13 @@ logger = logging.getLogger(__name__)
 
 
 class SmartCache:
-    """
-    Intelligent caching system with memory/disk/Redis backends.
+    """Intelligent caching system with memory/disk/Redis backends.
 
     The cache automatically picks the fastest backend available, keeps an
     in-memory LRU bounded by ``max_memory_size`` bytes, optionally compresses
     payloads, and exposes decorators for functions that return pandas objects.
 
-    Examples
+    Examples:
     --------
     >>> cache = SmartCache(use_redis=False, max_memory_size=1_000_000)
     >>> @cache.cache_dataframe(key_prefix="agg", ttl=60)
@@ -206,7 +204,7 @@ class SmartCache:
         force_refresh : bool, default=False
             Whether to force recomputation.
 
-        Returns
+        Returns:
         -------
         decorator : Callable
             Caching decorator.
@@ -267,7 +265,7 @@ class SmartCache:
         serialize_method : str, default='auto'
             Serialization method: 'auto', 'pickle', 'joblib', 'json'.
 
-        Returns
+        Returns:
         -------
         decorator : Callable
             Caching decorator.
@@ -310,7 +308,7 @@ class SmartCache:
         kwargs : dict
             Keyword arguments.
 
-        Returns
+        Returns:
         -------
         key : str
             Unique cache key.
@@ -365,7 +363,7 @@ class SmartCache:
         serialize_method : str, default='auto'
             Deserialization method.
 
-        Returns
+        Returns:
         -------
         value : Any
             Cached value or default.
@@ -491,7 +489,7 @@ class SmartCache:
         method : str
             Serialization method.
 
-        Returns
+        Returns:
         -------
         serialized : bytes
             Serialized object.
@@ -533,7 +531,7 @@ class SmartCache:
         method : str
             Deserialization method.
 
-        Returns
+        Returns:
         -------
         obj : Any
             Deserialized object.
@@ -571,7 +569,7 @@ class SmartCache:
         obj : Any
             Object to measure.
 
-        Returns
+        Returns:
         -------
         size : int
             Size in bytes.
@@ -581,7 +579,7 @@ class SmartCache:
         except:
             return 0
 
-    def clear(self, backend: Optional[str] = None):
+    def clear(self, backend: str | None = None):
         """Clear cache.
 
         Parameters
@@ -610,10 +608,10 @@ class SmartCache:
             except Exception as e:
                 logger.warning(f"Disk clear error: {e}")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics.
 
-        Returns
+        Returns:
         -------
         stats : dict
             Cache statistics.
@@ -653,7 +651,7 @@ class SmartCache:
         print(f"Total Requests: {stats['total_requests']}")
         print(f"Hits: {stats['hits']} | Misses: {stats['misses']}")
         print(f"Hit Rate: {stats['hit_rate']:.1%}")
-        print(f"\nHits by Cache Level:")
+        print("\nHits by Cache Level:")
         print(f"  Memory: {stats['memory_hits']}")
         print(f"  Redis: {stats['redis_hits']}")
         print(f"  Disk: {stats['disk_hits']}")
@@ -685,7 +683,7 @@ class SimpleFileCache:
     def _load_index(self) -> dict:
         """Load cache index."""
         if self.index_file.exists():
-            with open(self.index_file, "r") as f:
+            with open(self.index_file) as f:
                 return json.load(f)
         return {}
 
@@ -752,7 +750,7 @@ def get_cache(
     **kwargs
         Additional arguments for SmartCache.
 
-    Returns
+    Returns:
     -------
     cache : SmartCache
         Cache instance.

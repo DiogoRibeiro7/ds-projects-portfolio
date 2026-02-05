@@ -1,5 +1,4 @@
-"""
-API Infrastructure for Dashboard
+"""API Infrastructure for Dashboard
 
 REST API, GraphQL endpoint, WebSocket support, authentication, and documentation
 for the enhanced dashboard system.
@@ -8,34 +7,30 @@ Author: Portfolio Team
 Date: 2024
 """
 
-import asyncio
 import json
 import logging
-import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
-from functools import wraps
-import hashlib
 import secrets
-import jwt
+import time
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
-from flask import Flask, request, jsonify, Response
-from flask_restful import Api, Resource
+import graphene
+import jwt
+import numpy as np
+import pandas as pd
+import redis
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_graphql import GraphQLView
+from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_swagger_ui import get_swaggerui_blueprint
-from flask_graphql import GraphQLView
+from flask_restful import Api, Resource
 from flask_socketio import SocketIO, emit, join_room, leave_room
-from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
-from werkzeug.security import generate_password_hash, check_password_hash
-import graphene
-from graphene import ObjectType, String, Int, Float, List as GraphList, Field, Schema
-import pandas as pd
-import numpy as np
-from dataclasses import dataclass, asdict
-import redis
-from typing_extensions import TypedDict
+from flask_swagger_ui import get_swaggerui_blueprint
+from graphene import Field, Float, Int, ObjectType, Schema, String
+from graphene import List as GraphList
+from werkzeug.security import check_password_hash, generate_password_hash
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -67,7 +62,7 @@ class APIConfig:
     redis_db: int = 0
 
     # CORS
-    cors_origins: List[str] = None
+    cors_origins: list[str] = None
 
     # API Documentation
     api_title: str = "Dashboard API"
@@ -77,14 +72,12 @@ class APIConfig:
 
 
 class DashboardAPI:
-    """
-    Complete API infrastructure for dashboard with REST, GraphQL,
+    """Complete API infrastructure for dashboard with REST, GraphQL,
     WebSocket, authentication, and documentation.
     """
 
-    def __init__(self, config: Optional[APIConfig] = None):
-        """
-        Initialize API infrastructure.
+    def __init__(self, config: APIConfig | None = None):
+        """Initialize API infrastructure.
 
         Args:
             config: API configuration
@@ -676,7 +669,7 @@ class DashboardAPI:
                 logger.error(f"Error sending real-time data: {e}")
                 break
 
-    def _process_query(self, payload: Dict) -> Dict:
+    def _process_query(self, payload: dict) -> dict:
         """Process WebSocket query."""
         query_type = payload.get("type")
 
@@ -692,7 +685,7 @@ class DashboardAPI:
         else:
             return {"error": "Unknown query type"}
 
-    def _process_update(self, payload: Dict):
+    def _process_update(self, payload: dict):
         """Process WebSocket update."""
         # Store update in Redis if available
         if self.redis_client:
@@ -701,7 +694,6 @@ class DashboardAPI:
 
     def _setup_swagger(self):
         """Setup Swagger documentation."""
-
         # Swagger configuration
         SWAGGER_URL = self.config.swagger_url
         API_URL = self.config.api_url

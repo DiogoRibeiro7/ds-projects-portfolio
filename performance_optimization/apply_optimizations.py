@@ -1,11 +1,9 @@
-"""
-Apply performance optimizations to notebooks and demonstrate improvements.
+"""Apply performance optimizations to notebooks and demonstrate improvements.
 """
 
 import time
 import warnings
 from pathlib import Path
-from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -17,13 +15,12 @@ from data_optimization import (
     CachingOptimizer,
     DataProcessingOptimizer,
     NumbaOptimizations,
-    VectorizedOperations,
 )
-from io_optimization import DataCache, HDF5Storage, IOOptimizer
+from io_optimization import DataCache, IOOptimizer
 
 # Import optimization utilities
-from profiling_utils import MemoryOptimizer, PerformanceProfiler, benchmark_function
-from visualization_optimization import EfficientPlotting, VisualizationOptimizer
+from profiling_utils import MemoryOptimizer, PerformanceProfiler
+from visualization_optimization import VisualizationOptimizer
 
 
 class NotebookOptimizer:
@@ -37,8 +34,7 @@ class NotebookOptimizer:
         self.benchmark = PerformanceBenchmark()
 
     def optimize_dataframe_operations(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Demonstrate DataFrame optimization techniques.
+        """Demonstrate DataFrame optimization techniques.
 
         Args:
             df: Input DataFrame
@@ -66,8 +62,7 @@ class NotebookOptimizer:
         return df_optimized
 
     def demonstrate_vectorization(self, df: pd.DataFrame) -> None:
-        """
-        Demonstrate vectorization improvements.
+        """Demonstrate vectorization improvements.
 
         Args:
             df: Input DataFrame
@@ -108,8 +103,7 @@ class NotebookOptimizer:
         print(comparison)
 
     def demonstrate_chunking(self, large_file_path: str = None) -> None:
-        """
-        Demonstrate chunked processing for large files.
+        """Demonstrate chunked processing for large files.
 
         Args:
             large_file_path: Path to large CSV file
@@ -273,8 +267,7 @@ class NotebookOptimizer:
 
 
 def optimize_bank_churn_notebook():
-    """
-    Apply optimizations to bank churn analysis notebook.
+    """Apply optimizations to bank churn analysis notebook.
     """
     print("\n" + "=" * 60)
     print("OPTIMIZING BANK CHURN ANALYSIS")
@@ -321,8 +314,7 @@ def optimize_bank_churn_notebook():
 
 
 def optimize_ab_testing_notebook():
-    """
-    Apply optimizations to A/B testing notebook.
+    """Apply optimizations to A/B testing notebook.
     """
     print("\n" + "=" * 60)
     print("OPTIMIZING A/B TESTING ANALYSIS")

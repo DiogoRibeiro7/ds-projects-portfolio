@@ -1,17 +1,15 @@
-"""
-Examples demonstrating the usage of optimized data processing operations.
+"""Examples demonstrating the usage of optimized data processing operations.
 
 This module shows how to leverage the high-performance data processing
 utilities for maximum speed and efficiency.
 """
 
-import numpy as np
-import pandas as pd
-from typing import Dict, Any
 import logging
 
+import numpy as np
+import pandas as pd
+
 from .cleaning import OptimizedDataProcessor, get_optimized_processor
-from .benchmark_performance import PerformanceBenchmark
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

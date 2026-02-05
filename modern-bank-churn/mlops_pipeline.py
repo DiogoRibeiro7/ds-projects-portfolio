@@ -1,5 +1,4 @@
-"""
-Complete MLOps Pipeline for Bank Churn Prediction Model
+"""Complete MLOps Pipeline for Bank Churn Prediction Model
 
 This module implements a production-ready MLOps pipeline including:
 - Data ingestion and validation
@@ -11,68 +10,56 @@ This module implements a production-ready MLOps pipeline including:
 - A/B testing capabilities
 """
 
-import os
-import json
 import hashlib
+import json
 import logging
 import pickle
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Optional, Any, Tuple, Protocol, Union
-from pathlib import Path
-from abc import ABC, abstractmethod
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import warnings
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 warnings.filterwarnings("ignore")
 
 # Data processing
-import numpy as np
-import pandas as pd
-from scipy import stats
-
-# ML libraries
-from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
-    confusion_matrix,
-    classification_report,
-    precision_recall_curve,
-    roc_curve,
-)
 import lightgbm as lgb
-import xgboost as xgb
 
 # MLOps libraries
 import mlflow
 import mlflow.sklearn
-from mlflow.tracking import MlflowClient
-from mlflow.models.signature import infer_signature
+import numpy as np
 import optuna
-from optuna.integration import LightGBMPruningCallback
-
-# API and serving
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, validator
-import uvicorn
+import pandas as pd
 import redis
-import joblib
-
-# Monitoring and observability
-from prometheus_client import Counter, Histogram, Gauge, generate_latest
-import psutil
-from dataclasses import dataclass
+import uvicorn
+import xgboost as xgb
 from evidently import ColumnMapping
 from evidently.model_profile import Profile
 from evidently.model_profile.sections import DataDriftProfileSection
+
+# API and serving
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from mlflow.models.signature import infer_signature
+from mlflow.tracking import MlflowClient
+
+# Monitoring and observability
+from prometheus_client import Counter, Gauge, Histogram, generate_latest
+from pydantic import BaseModel, Field
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
+
+# ML libraries
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # Setup logging
 logging.basicConfig(
@@ -181,7 +168,7 @@ class DataValidator:
         self.config = config
         self.validation_results = {}
 
-    def validate(self, df: pd.DataFrame) -> Dict[str, Any]:
+    def validate(self, df: pd.DataFrame) -> dict[str, Any]:
         """Run all validation checks"""
         logger.info("Starting data validation...")
 
@@ -224,7 +211,7 @@ class DataValidator:
         logger.info(f"Validation complete. Valid: {results['is_valid']}")
         return results
 
-    def _check_data_types(self, df: pd.DataFrame) -> Dict[str, str]:
+    def _check_data_types(self, df: pd.DataFrame) -> dict[str, str]:
         """Check if data types are as expected"""
         expected_types = {
             "CustomerId": "int64",
@@ -248,7 +235,7 @@ class DataValidator:
 
         return results
 
-    def _check_value_ranges(self, df: pd.DataFrame) -> Dict[str, Any]:
+    def _check_value_ranges(self, df: pd.DataFrame) -> dict[str, Any]:
         """Check if values are within expected ranges"""
         ranges = {
             "CreditScore": (300, 850),
@@ -272,7 +259,7 @@ class DataValidator:
 
         return results
 
-    def _check_class_balance(self, df: pd.DataFrame) -> Dict[str, float]:
+    def _check_class_balance(self, df: pd.DataFrame) -> dict[str, float]:
         """Check target class balance"""
         class_dist = df["Churn"].value_counts(normalize=True)
 
@@ -289,8 +276,7 @@ class DataValidator:
 
 
 class FeatureEngineer:
-    """
-    Feature engineering pipeline tuned for the churn dataset.
+    """Feature engineering pipeline tuned for the churn dataset.
 
     The pipeline builds balance-derived ratios, interaction terms, label
     encodings, and standardized numeric columns so the downstream model
@@ -463,8 +449,8 @@ class DataPipeline:
         self.feature_store = FeatureStore(config.feature_store_path)
 
     def run(
-        self, df: Optional[pd.DataFrame] = None
-    ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+        self, df: pd.DataFrame | None = None
+    ) -> tuple[pd.DataFrame, dict[str, Any]]:
         """Run complete data pipeline"""
         logger.info("Starting data pipeline...")
 
@@ -559,7 +545,7 @@ class FeatureStore:
         self.metadata_file = self.base_path / "metadata.json"
         self._load_metadata()
 
-    def save_features(self, df: pd.DataFrame, metadata: Dict[str, Any]) -> str:
+    def save_features(self, df: pd.DataFrame, metadata: dict[str, Any]) -> str:
         """Save features with versioning"""
         # Generate feature set ID
         feature_set_id = self._generate_feature_set_id()
@@ -615,7 +601,7 @@ class FeatureStore:
     def _load_metadata(self):
         """Load global metadata"""
         if self.metadata_file.exists():
-            with open(self.metadata_file, "r") as f:
+            with open(self.metadata_file) as f:
                 self.metadata = json.load(f)
         else:
             self.metadata = {}
@@ -644,7 +630,7 @@ class ModelTrainer:
         self.best_params = None
         self.best_metrics = None
 
-    def train(self, X: pd.DataFrame, y: pd.Series) -> Dict[str, Any]:
+    def train(self, X: pd.DataFrame, y: pd.Series) -> dict[str, Any]:
         """Train model with hyperparameter tuning"""
         logger.info("Starting model training...")
 
@@ -815,7 +801,7 @@ class ModelTrainer:
         y_train: pd.Series,
         X_val: pd.DataFrame,
         y_val: pd.Series,
-        params: Dict[str, Any],
+        params: dict[str, Any],
     ) -> lgb.LGBMClassifier:
         """Train LightGBM model"""
         model = lgb.LGBMClassifier(**params, n_estimators=1000, random_state=42)
@@ -838,7 +824,7 @@ class ModelTrainer:
         y_train: pd.Series,
         X_val: pd.DataFrame,
         y_val: pd.Series,
-        params: Dict[str, Any],
+        params: dict[str, Any],
     ) -> xgb.XGBClassifier:
         """Train XGBoost model"""
         model = xgb.XGBClassifier(**params, n_estimators=1000, random_state=42)
@@ -854,7 +840,7 @@ class ModelTrainer:
         return model
 
     def _train_random_forest(
-        self, X_train: pd.DataFrame, y_train: pd.Series, params: Dict[str, Any]
+        self, X_train: pd.DataFrame, y_train: pd.Series, params: dict[str, Any]
     ) -> RandomForestClassifier:
         """Train Random Forest model"""
         model = RandomForestClassifier(**params, random_state=42, n_jobs=-1)
@@ -864,7 +850,7 @@ class ModelTrainer:
 
     def _evaluate_model(
         self, model, X_val: pd.DataFrame, y_val: pd.Series
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Evaluate model performance"""
         y_pred = model.predict(X_val)
         y_pred_proba = model.predict_proba(X_val)[:, 1]
@@ -935,7 +921,7 @@ class TrainingPipeline:
         self.data_pipeline = DataPipeline(data_config)
         self.model_trainer = ModelTrainer(training_config)
 
-    def run(self, df: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
+    def run(self, df: pd.DataFrame | None = None) -> dict[str, Any]:
         """Run complete training pipeline"""
         logger.info("Starting training pipeline...")
 
@@ -964,7 +950,7 @@ class TrainingPipeline:
         logger.info("Training pipeline complete")
         return results
 
-    def _save_pipeline_artifacts(self, results: Dict[str, Any]):
+    def _save_pipeline_artifacts(self, results: dict[str, Any]):
         """Save pipeline artifacts"""
         # Save feature engineer
         with open("feature_engineer.pkl", "wb") as f:
@@ -1139,8 +1125,8 @@ class ModelServer:
             raise
 
     def predict_batch(
-        self, requests: List[PredictionRequest]
-    ) -> List[PredictionResponse]:
+        self, requests: list[PredictionRequest]
+    ) -> list[PredictionResponse]:
         """Make predictions for batch of customers"""
         if len(requests) > self.config.max_batch_size:
             raise ValueError(
@@ -1191,7 +1177,7 @@ class DriftDetector:
 
         self.drift_profile = Profile(sections=[DataDriftProfileSection()])
 
-    def detect_drift(self, current_data: pd.DataFrame) -> Dict[str, Any]:
+    def detect_drift(self, current_data: pd.DataFrame) -> dict[str, Any]:
         """Detect drift in current data"""
         logger.info("Checking for data drift...")
 
@@ -1244,7 +1230,7 @@ class PerformanceMonitor:
 
     def calculate_metrics(
         self, predictions: pd.DataFrame, actuals: pd.DataFrame
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Calculate performance metrics"""
         y_true = actuals["Churn"]
         y_pred = predictions["prediction"]
@@ -1285,8 +1271,8 @@ class ModelMonitor:
         self.alert_manager = AlertManager(config)
 
     def monitor(
-        self, predictions: pd.DataFrame, actuals: Optional[pd.DataFrame] = None
-    ) -> Dict[str, Any]:
+        self, predictions: pd.DataFrame, actuals: pd.DataFrame | None = None
+    ) -> dict[str, Any]:
         """Run complete monitoring"""
         results = {"timestamp": datetime.now().isoformat(), "checks": {}}
 
@@ -1306,7 +1292,7 @@ class ModelMonitor:
 
         return results
 
-    def _check_alerts(self, results: Dict[str, Any]):
+    def _check_alerts(self, results: dict[str, Any]):
         """Check and send alerts"""
         alerts = []
 
@@ -1350,7 +1336,7 @@ class AlertManager:
     def __init__(self, config: MonitoringConfig):
         self.config = config
 
-    def send_alert(self, alert: Dict[str, Any]):
+    def send_alert(self, alert: dict[str, Any]):
         """Send alert through configured channels"""
         logger.warning(f"ALERT: {alert['type']} - {alert['message']}")
 
@@ -1362,12 +1348,12 @@ class AlertManager:
         if self.config.slack_webhook:
             self._send_slack_alert(alert)
 
-    def _send_email_alert(self, alert: Dict[str, Any]):
+    def _send_email_alert(self, alert: dict[str, Any]):
         """Send email alert"""
         # Implementation would use email library
         logger.info(f"Email alert sent to {self.config.alert_email}")
 
-    def _send_slack_alert(self, alert: Dict[str, Any]):
+    def _send_slack_alert(self, alert: dict[str, Any]):
         """Send Slack alert"""
         # Implementation would use requests to post to webhook
         logger.info("Slack alert sent")
@@ -1412,8 +1398,7 @@ async def health():
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest):
-    """
-    Score a single churn prediction request via the FastAPI service.
+    """Score a single churn prediction request via the FastAPI service.
 
     Parameters
     ----------
@@ -1422,28 +1407,28 @@ async def predict(request: PredictionRequest):
         ``Geography``, ``Balance``). Field ranges are validated by Pydantic
         (credit scores 300–850, ages 18–100, etc.).
 
-    Returns
+    Returns:
     -------
     PredictionResponse
         Structured response containing ``churn_probability`` (0–1),
         ``confidence``, a categorical ``risk_level``, and the ISO-8601
         timestamp when the model server scored the request.
 
-    Raises
+    Raises:
     ------
     HTTPException
         Propagates a 500 error if ``ModelServer.predict`` fails (for example,
         batch size overflows or the feature store/MLflow artifacts are
         unavailable).
 
-    Notes
+    Notes:
     -----
     The underlying ``ModelServer`` transparently performs feature engineering,
     logs Prometheus metrics, and caches the response in Redis (if configured)
     for ``ServingConfig.cache_ttl`` seconds to keep latency below 100 ms in
     practice.
 
-    Examples
+    Examples:
     --------
     >>> from fastapi.testclient import TestClient
     >>> client = TestClient(app)
@@ -1474,8 +1459,8 @@ async def predict(request: PredictionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/predict_batch", response_model=List[PredictionResponse])
-async def predict_batch(requests: List[PredictionRequest]):
+@app.post("/predict_batch", response_model=list[PredictionResponse])
+async def predict_batch(requests: list[PredictionRequest]):
     """Batch prediction endpoint"""
     try:
         responses = model_server.predict_batch(requests)

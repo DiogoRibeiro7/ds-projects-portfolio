@@ -1,10 +1,8 @@
-"""
-Comprehensive test suite for statistical methods framework.
+"""Comprehensive test suite for statistical methods framework.
 Tests all implementations and validates against known results.
 """
 
 import warnings
-from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -34,7 +32,6 @@ from multi_armed_bandits import (
     LinUCB,
     ThompsonSampling,
 )
-from scipy import stats
 from statistical_validation_suite import StatisticalValidator
 
 
@@ -229,7 +226,7 @@ class TestStatisticalSuite:
         corrected_p = result["pvalue_bonferroni"].values
         self.validate_test(
             "Bonferroni Correction",
-            condition=(all(c >= p for c, p in zip(corrected_p, p_values))),
+            condition=(all(c >= p for c, p in zip(corrected_p, p_values, strict=False))),
             details=f"Original p[0]={p_values[0]:.3f}, Corrected={corrected_p[0]:.3f}",
         )
 
@@ -239,7 +236,7 @@ class TestStatisticalSuite:
         self.validate_test(
             "FDR (BH) Correction",
             condition=(len(fdr_corrected) == len(p_values)),
-            details=f"Controlled FDR at 0.05",
+            details="Controlled FDR at 0.05",
         )
 
         # Test 3: Bootstrap methods
@@ -595,7 +592,7 @@ def run_demonstration():
         total_conversions += reward
 
     stats = thompson.get_statistics()
-    print(f"   After 1000 visitors:")
+    print("   After 1000 visitors:")
     print(f"   - Control pulls: {stats.iloc[0]['pulls']}")
     print(f"   - Treatment pulls: {stats.iloc[1]['pulls']}")
     print(f"   - Total conversions: {total_conversions} (vs ~85 with pure control)")
@@ -610,7 +607,7 @@ def run_demonstration():
     # Using t-test sample size as approximation
     n_needed = power.t_test_sample_size(effect_size, power=0.8, alpha=0.05)
     print(f"   Sample size needed: ~{n_needed} per group")
-    print(f"   Actual sample size: 5000 per group")
+    print("   Actual sample size: 5000 per group")
     power_achieved = power.proportion_test_power(0.085, 0.102, 5000)
     print(f"   Statistical power achieved: >{power_achieved:.1%}")
 

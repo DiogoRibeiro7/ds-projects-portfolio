@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-Prepare METR-LA traffic data for the GNN notebook.
+"""Prepare METR-LA traffic data for the GNN notebook.
 
 Assumes:
     - Raw files in: /data/METR-LA/
@@ -13,7 +12,6 @@ from __future__ import annotations
 
 import pickle
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 import h5py
 import numpy as np
@@ -24,7 +22,7 @@ OUTPUT_PATH = Path("data") / "graph_traffic.npz"
 
 def discover_h5_dataset_name(h5_file: h5py.File) -> str:
     """Heuristic to pick the dataset inside metr-la.h5."""
-    keys: List[str] = list(h5_file.keys())
+    keys: list[str] = list(h5_file.keys())
     if not keys:
         raise RuntimeError("No datasets found in metr-la.h5")
 
@@ -42,7 +40,7 @@ def discover_h5_dataset_name(h5_file: h5py.File) -> str:
     raise RuntimeError(f"Could not infer dataset; keys: {keys}")
 
 
-def load_traffic(h5_path: Path, dataset_name: Optional[str] = None) -> np.ndarray:
+def load_traffic(h5_path: Path, dataset_name: str | None = None) -> np.ndarray:
     """Load traffic tensor from metr-la.h5."""
     if not h5_path.exists():
         raise FileNotFoundError(f"metr-la.h5 not found at {h5_path}")

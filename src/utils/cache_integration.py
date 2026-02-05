@@ -1,19 +1,19 @@
-"""
-Integration utilities for intelligent caching with data processing operations.
+"""Integration utilities for intelligent caching with data processing operations.
 
 This module provides seamless integration of the caching system with
 expensive data processing and analysis operations.
 """
 
+import functools
+import logging
+import time
+from collections.abc import Callable
+from typing import Any
+
 import numpy as np
 import pandas as pd
-import functools
-import time
-import logging
-from typing import Any, Callable, Dict, List, Optional, Union
-from pathlib import Path
 
-from .caching import SmartCache, get_cache
+from .caching import SmartCache
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -60,8 +60,8 @@ class CachedDataProcessor:
     def cached_groupby_aggregation(
         self,
         df: pd.DataFrame,
-        group_cols: Union[str, List[str]],
-        agg_dict: Dict[str, Union[str, List[str]]],
+        group_cols: str | list[str],
+        agg_dict: dict[str, str | list[str]],
         use_cache: bool = True,
     ) -> pd.DataFrame:
         """Perform cached groupby aggregation.
@@ -77,7 +77,7 @@ class CachedDataProcessor:
         use_cache : bool
             Whether to use caching.
 
-        Returns
+        Returns:
         -------
         result : pd.DataFrame
             Aggregated results.
@@ -87,7 +87,7 @@ class CachedDataProcessor:
 
         @self.cache.cache_dataframe("groupby", ttl=self.cache_ttl)
         def _perform_aggregation(df_hash: str) -> pd.DataFrame:
-            logger.info(f"Computing groupby aggregation...")
+            logger.info("Computing groupby aggregation...")
             return df.groupby(group_cols).agg(agg_dict)
 
         # Use DataFrame hash as cache key component
@@ -97,7 +97,7 @@ class CachedDataProcessor:
     def cached_outlier_detection(
         self,
         df: pd.DataFrame,
-        columns: List[str],
+        columns: list[str],
         method: str = "iqr",
         threshold: float = 1.5,
         use_cache: bool = True,
@@ -117,7 +117,7 @@ class CachedDataProcessor:
         use_cache : bool
             Whether to use caching.
 
-        Returns
+        Returns:
         -------
         df_clean : pd.DataFrame
             DataFrame with outliers removed.
@@ -127,14 +127,14 @@ class CachedDataProcessor:
 
         @self.cache.cache_dataframe("outliers", ttl=self.cache_ttl)
         def _cached_outlier_detection(df_hash: str) -> pd.DataFrame:
-            logger.info(f"Computing outlier detection...")
+            logger.info("Computing outlier detection...")
             return self._detect_outliers(df, columns, method, threshold)
 
         df_hash = self._get_dataframe_hash(df)
         return _cached_outlier_detection(df_hash)
 
     def _detect_outliers(
-        self, df: pd.DataFrame, columns: List[str], method: str, threshold: float
+        self, df: pd.DataFrame, columns: list[str], method: str, threshold: float
     ) -> pd.DataFrame:
         """Perform actual outlier detection."""
         df_clean = df.copy()
@@ -164,7 +164,7 @@ class CachedDataProcessor:
         group_b: np.ndarray,
         test_type: str = "ttest",
         use_cache: bool = True,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Perform cached statistical testing.
 
         Parameters
@@ -178,7 +178,7 @@ class CachedDataProcessor:
         use_cache : bool
             Whether to use caching.
 
-        Returns
+        Returns:
         -------
         results : dict
             Test results.
@@ -187,7 +187,7 @@ class CachedDataProcessor:
             return self._perform_statistical_test(group_a, group_b, test_type)
 
         @self.cache.cache_computation("stats", ttl=self.cache_ttl * 2)
-        def _cached_test(a_hash: str, b_hash: str, test: str) -> Dict[str, float]:
+        def _cached_test(a_hash: str, b_hash: str, test: str) -> dict[str, float]:
             logger.info(f"Computing statistical test: {test}")
             return self._perform_statistical_test(group_a, group_b, test)
 
@@ -199,7 +199,7 @@ class CachedDataProcessor:
 
     def _perform_statistical_test(
         self, group_a: np.ndarray, group_b: np.ndarray, test_type: str
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Perform actual statistical test."""
         from scipy import stats
 
@@ -242,7 +242,7 @@ class CachedModelTrainer:
         )
 
     def cached_feature_engineering(
-        self, df: pd.DataFrame, feature_config: Dict[str, Any], use_cache: bool = True
+        self, df: pd.DataFrame, feature_config: dict[str, Any], use_cache: bool = True
     ) -> pd.DataFrame:
         """Perform cached feature engineering.
 
@@ -255,7 +255,7 @@ class CachedModelTrainer:
         use_cache : bool
             Whether to use caching.
 
-        Returns
+        Returns:
         -------
         df_features : pd.DataFrame
             DataFrame with engineered features.
@@ -306,7 +306,7 @@ class CachedModelTrainer:
         X: pd.DataFrame,
         y: pd.Series,
         model_type: str,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         use_cache: bool = True,
     ) -> Any:
         """Train model with caching.
@@ -324,7 +324,7 @@ class CachedModelTrainer:
         use_cache : bool
             Whether to use caching.
 
-        Returns
+        Returns:
         -------
         model : Any
             Trained model.
@@ -380,7 +380,7 @@ class CachedModelTrainer:
         model,
         cv_folds: int = 5,
         use_cache: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Perform cached cross-validation.
 
         Parameters
@@ -396,7 +396,7 @@ class CachedModelTrainer:
         use_cache : bool
             Whether to use caching.
 
-        Returns
+        Returns:
         -------
         results : dict
             CV results.
@@ -405,7 +405,7 @@ class CachedModelTrainer:
         @self.cache.cache_computation("cv", ttl=7200)
         def _perform_cv(
             X_hash: str, y_hash: str, model_str: str, folds: int
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             logger.info(f"Performing {folds}-fold cross-validation...")
             from sklearn.model_selection import cross_val_score
 
@@ -458,7 +458,7 @@ class CacheManager:
         **kwargs
             Additional cache parameters.
 
-        Returns
+        Returns:
         -------
         cache : SmartCache
             Registered cache instance.
@@ -476,7 +476,7 @@ class CacheManager:
         name : str
             Cache name.
 
-        Returns
+        Returns:
         -------
         cache : SmartCache
             Cache instance.
@@ -491,10 +491,10 @@ class CacheManager:
             cache.clear()
             logger.info(f"Cleared cache: {name}")
 
-    def get_all_stats(self) -> Dict[str, Dict]:
+    def get_all_stats(self) -> dict[str, dict]:
         """Get statistics for all caches.
 
-        Returns
+        Returns:
         -------
         stats : dict
             Statistics for all caches.
@@ -528,7 +528,7 @@ class CacheManager:
             s.get("time_saved_seconds", 0) for s in all_stats.values()
         )
 
-        print(f"\nTOTALS:")
+        print("\nTOTALS:")
         print(f"  Total Hits: {total_hits}")
         print(f"  Total Misses: {total_misses}")
         print(f"  Total Time Saved: {total_time_saved:.2f}s")
@@ -540,7 +540,7 @@ def auto_cache(
     cache: SmartCache,
     prefix: str = "auto",
     ttl: int = 3600,
-    exclude_args: List[int] = None,
+    exclude_args: list[int] = None,
 ):
     """Decorator with automatic cache key generation.
 
@@ -555,7 +555,7 @@ def auto_cache(
     exclude_args : list of int
         Argument indices to exclude from cache key.
 
-    Returns
+    Returns:
     -------
     decorator : Callable
         Caching decorator.

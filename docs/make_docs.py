@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-Comprehensive documentation build script for the Data Science Portfolio.
+"""Comprehensive documentation build script for the Data Science Portfolio.
 
 This script automates the entire documentation generation process including:
 - API reference generation
@@ -9,14 +8,12 @@ This script automates the entire documentation generation process including:
 - HTML and PDF output
 """
 
+import argparse
 import os
-import subprocess
 import shutil
+import subprocess
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
-import json
-import argparse
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent

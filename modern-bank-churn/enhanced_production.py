@@ -1,5 +1,4 @@
-"""
-Enhanced Production Readiness for Bank Churn Prediction.
+"""Enhanced Production Readiness for Bank Churn Prediction.
 Model versioning, monitoring, drift detection, explainability,
 and A/B testing framework.
 """
@@ -11,12 +10,11 @@ import warnings
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import shap
 from scipy import stats
 from sklearn.base import BaseEstimator
@@ -32,12 +30,12 @@ class ModelVersion:
     version_id: str
     model_name: str
     created_at: datetime
-    metrics: Dict[str, float]
-    parameters: Dict[str, Any]
-    feature_names: List[str]
+    metrics: dict[str, float]
+    parameters: dict[str, Any]
+    feature_names: list[str]
     model_hash: str
     training_data_hash: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -47,10 +45,10 @@ class DriftReport:
     feature_drift: pd.DataFrame
     target_drift: float
     concept_drift: float
-    data_quality_issues: List[str]
+    data_quality_issues: list[str]
     drift_detected: bool
     drift_severity: str  # 'none', 'low', 'medium', 'high'
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 @dataclass
@@ -60,21 +58,19 @@ class MonitoringMetrics:
     timestamp: datetime
     prediction_volume: int
     average_prediction: float
-    prediction_distribution: Dict[str, float]
+    prediction_distribution: dict[str, float]
     latency_ms: float
     error_rate: float
     feature_statistics: pd.DataFrame
-    alerts: List[str]
+    alerts: list[str]
 
 
 class ModelVersionControl:
-    """
-    Model versioning and management system.
+    """Model versioning and management system.
     """
 
     def __init__(self, base_path: str = "./model_registry"):
-        """
-        Initialize model version control.
+        """Initialize model version control.
 
         Args:
             base_path: Base directory for model storage
@@ -89,14 +85,13 @@ class ModelVersionControl:
         self,
         model: BaseEstimator,
         model_name: str,
-        metrics: Dict[str, float],
-        parameters: Dict[str, Any],
-        feature_names: List[str],
+        metrics: dict[str, float],
+        parameters: dict[str, Any],
+        feature_names: list[str],
         X_train: pd.DataFrame = None,
-        metadata: Dict[str, Any] = None,
+        metadata: dict[str, Any] = None,
     ) -> str:
-        """
-        Register a new model version.
+        """Register a new model version.
 
         Args:
             model: Trained model
@@ -138,9 +133,8 @@ class ModelVersionControl:
 
         return version_id
 
-    def load_model(self, version_id: str) -> Tuple[BaseEstimator, ModelVersion]:
-        """
-        Load a specific model version.
+    def load_model(self, version_id: str) -> tuple[BaseEstimator, ModelVersion]:
+        """Load a specific model version.
 
         Args:
             version_id: Version ID to load
@@ -160,10 +154,9 @@ class ModelVersionControl:
         return model, version
 
     def compare_versions(
-        self, version_ids: List[str], metrics: List[str] = None
+        self, version_ids: list[str], metrics: list[str] = None
     ) -> pd.DataFrame:
-        """
-        Compare multiple model versions.
+        """Compare multiple model versions.
 
         Args:
             version_ids: List of version IDs to compare
@@ -197,8 +190,7 @@ class ModelVersionControl:
         return pd.DataFrame(comparison_data)
 
     def promote_version(self, version_id: str, stage: str = "production"):
-        """
-        Promote a model version to a specific stage.
+        """Promote a model version to a specific stage.
 
         Args:
             version_id: Version ID to promote
@@ -233,7 +225,7 @@ class ModelVersionControl:
         registry_path = self.base_path / "registry.json"
 
         if registry_path.exists():
-            with open(registry_path, "r") as f:
+            with open(registry_path) as f:
                 registry_data = json.load(f)
 
                 for version_id, version_data in registry_data["versions"].items():
@@ -270,8 +262,7 @@ class ModelVersionControl:
 
 
 class DriftDetector:
-    """
-    Detect data and concept drift in production.
+    """Detect data and concept drift in production.
     """
 
     def __init__(
@@ -281,8 +272,7 @@ class DriftDetector:
         drift_threshold: float = 0.1,
         warning_threshold: float = 0.05,
     ):
-        """
-        Initialize drift detector.
+        """Initialize drift detector.
 
         Args:
             reference_data: Reference (training) data
@@ -300,10 +290,9 @@ class DriftDetector:
         self,
         current_data: pd.DataFrame,
         current_predictions: np.ndarray = None,
-        feature_subset: List[str] = None,
+        feature_subset: list[str] = None,
     ) -> DriftReport:
-        """
-        Detect drift in current data compared to reference.
+        """Detect drift in current data compared to reference.
 
         Args:
             current_data: Current production data
@@ -455,7 +444,7 @@ class DriftDetector:
 
         return confidence_shift
 
-    def _check_data_quality(self, current_data: pd.DataFrame) -> List[str]:
+    def _check_data_quality(self, current_data: pd.DataFrame) -> list[str]:
         """Check for data quality issues."""
         issues = []
 
@@ -496,7 +485,7 @@ class DriftDetector:
 
         return issues
 
-    def _calculate_statistics(self, data: pd.DataFrame) -> Dict[str, Dict[str, float]]:
+    def _calculate_statistics(self, data: pd.DataFrame) -> dict[str, dict[str, float]]:
         """Calculate statistics for all columns."""
         stats_dict = {}
 
@@ -505,7 +494,7 @@ class DriftDetector:
 
         return stats_dict
 
-    def _calculate_column_statistics(self, series: pd.Series) -> Dict[str, float]:
+    def _calculate_column_statistics(self, series: pd.Series) -> dict[str, float]:
         """Calculate statistics for a single column."""
         if series.dtype in ["float64", "int64"]:
             return {
@@ -532,8 +521,8 @@ class DriftDetector:
         feature_drift: pd.DataFrame,
         target_drift: float,
         concept_drift: float,
-        quality_issues: List[str],
-    ) -> List[str]:
+        quality_issues: list[str],
+    ) -> list[str]:
         """Generate recommendations based on drift detection."""
         recommendations = []
 
@@ -572,13 +561,11 @@ class DriftDetector:
 
 
 class ModelExplainer:
-    """
-    Model explainability using SHAP and other methods.
+    """Model explainability using SHAP and other methods.
     """
 
     def __init__(self, model: BaseEstimator, X_background: pd.DataFrame = None):
-        """
-        Initialize model explainer.
+        """Initialize model explainer.
 
         Args:
             model: Model to explain
@@ -605,9 +592,8 @@ class ModelExplainer:
 
     def explain_prediction(
         self, X_instance: pd.DataFrame, plot: bool = True
-    ) -> Dict[str, Any]:
-        """
-        Explain a single prediction.
+    ) -> dict[str, Any]:
+        """Explain a single prediction.
 
         Args:
             X_instance: Single instance to explain
@@ -660,9 +646,8 @@ class ModelExplainer:
 
     def explain_model_global(
         self, X_sample: pd.DataFrame, plot: bool = True
-    ) -> Dict[str, Any]:
-        """
-        Generate global model explanations.
+    ) -> dict[str, Any]:
+        """Generate global model explanations.
 
         Args:
             X_sample: Sample of data for explanation
@@ -759,8 +744,7 @@ class ModelExplainer:
 
 
 class ABTestingFramework:
-    """
-    A/B testing framework for model deployment.
+    """A/B testing framework for model deployment.
     """
 
     def __init__(
@@ -771,8 +755,7 @@ class ABTestingFramework:
         min_sample_size: int = 1000,
         confidence_level: float = 0.95,
     ):
-        """
-        Initialize A/B testing framework.
+        """Initialize A/B testing framework.
 
         Args:
             model_a: Control model
@@ -789,9 +772,8 @@ class ABTestingFramework:
         self.results_a = []
         self.results_b = []
 
-    def assign_variant(self, user_id: Union[str, int]) -> str:
-        """
-        Assign user to variant based on consistent hash.
+    def assign_variant(self, user_id: str | int) -> str:
+        """Assign user to variant based on consistent hash.
 
         Args:
             user_id: User identifier
@@ -806,10 +788,9 @@ class ABTestingFramework:
         return "B" if assignment_prob < self.traffic_split else "A"
 
     def predict(
-        self, X: pd.DataFrame, user_id: Union[str, int]
-    ) -> Tuple[np.ndarray, str]:
-        """
-        Make prediction using assigned model.
+        self, X: pd.DataFrame, user_id: str | int
+    ) -> tuple[np.ndarray, str]:
+        """Make prediction using assigned model.
 
         Args:
             X: Features
@@ -837,10 +818,9 @@ class ABTestingFramework:
         variant: str,
         prediction: float,
         actual: float,
-        metadata: Dict[str, Any] = None,
+        metadata: dict[str, Any] = None,
     ):
-        """
-        Record result for analysis.
+        """Record result for analysis.
 
         Args:
             variant: 'A' or 'B'
@@ -861,9 +841,8 @@ class ABTestingFramework:
         else:
             self.results_b.append(result)
 
-    def analyze_results(self) -> Dict[str, Any]:
-        """
-        Analyze A/B test results.
+    def analyze_results(self) -> dict[str, Any]:
+        """Analyze A/B test results.
 
         Returns:
             Dictionary with test results
@@ -936,7 +915,7 @@ class ABTestingFramework:
             "confidence_level": self.confidence_level,
         }
 
-    def _calculate_metrics(self, results: List[Dict]) -> Dict[str, float]:
+    def _calculate_metrics(self, results: list[dict]) -> dict[str, float]:
         """Calculate metrics for a variant."""
         predictions = np.array([r["prediction"] for r in results])
         actuals = np.array([r["actual"] for r in results])

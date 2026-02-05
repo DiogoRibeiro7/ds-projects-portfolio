@@ -1,5 +1,4 @@
-"""
-Enhanced Dashboard Framework
+"""Enhanced Dashboard Framework
 
 A comprehensive dashboard framework with real-time streaming, interactive filtering,
 export capabilities, and responsive design.
@@ -8,49 +7,40 @@ Author: Portfolio Team
 Date: 2024
 """
 
-import asyncio
+import io
 import json
 import logging
+import webbrowser
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Callable
-from dataclasses import dataclass, field
-import hashlib
+from typing import Any
 
-import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import dash
-from dash import dcc, html, Input, Output, State, callback_context
-from dash.exceptions import PreventUpdate
-import dash_bootstrap_components as dbc
-from dash_extensions import WebSocket
-import redis
 import aioredis
-from flask import Flask, send_file
-from flask_cors import CORS
+import dash
+import dash_bootstrap_components as dbc
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from dash import Input, Output, State, callback_context, dcc, html
+from dash.exceptions import PreventUpdate
+from dash_extensions import WebSocket
 from flask_caching import Cache
-import io
-import base64
+from flask_cors import CORS
+from pptx import Presentation
+from pptx.util import Inches
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import inch
 from reportlab.platypus import (
-    SimpleDocTemplate,
-    Table,
-    TableStyle,
-    Paragraph,
-    Spacer,
     Image,
     PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
 )
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from pptx import Presentation
-from pptx.util import Inches, Pt
-from pptx.enum.text import PP_ALIGN
-import webbrowser
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -88,11 +78,11 @@ class DashboardConfig:
     enable_data_sampling: bool = True
 
     # Export settings
-    export_formats: List[str] = field(
+    export_formats: list[str] = field(
         default_factory=lambda: ["pdf", "pptx", "csv", "excel"]
     )
     pdf_page_size: str = "A4"
-    pptx_template: Optional[str] = None
+    pptx_template: str | None = None
 
     # Redis settings for real-time data
     redis_host: str = "localhost"
@@ -105,8 +95,7 @@ class DashboardConfig:
 
 
 class EnhancedDashboard:
-    """
-    Enhanced Dashboard with real-time streaming, interactive filtering,
+    """Enhanced Dashboard with real-time streaming, interactive filtering,
     export/export and responsive design baked in.
 
     The class wires up a Dash application (with Bootstrap styling), the
@@ -114,7 +103,7 @@ class EnhancedDashboard:
     component registries. Supply a custom :class:`DashboardConfig` to override
     host/port/theme details or feature toggles such as ``enable_realtime``.
 
-    Examples
+    Examples:
     --------
     >>> dash_app = EnhancedDashboard()
     >>> dash_app.config.host, dash_app.config.port
@@ -123,9 +112,8 @@ class EnhancedDashboard:
     True
     """
 
-    def __init__(self, config: Optional[DashboardConfig] = None):
-        """
-        Initialize the enhanced dashboard.
+    def __init__(self, config: DashboardConfig | None = None):
+        """Initialize the enhanced dashboard.
 
         Args:
             config: Dashboard configuration
@@ -188,7 +176,6 @@ class EnhancedDashboard:
 
     def _build_layout(self):
         """Build the dashboard layout with responsive design."""
-
         # Navigation bar
         navbar = dbc.NavbarSimple(
             children=[
@@ -326,8 +313,7 @@ class EnhancedDashboard:
         )
 
     def register_component(self, component_id: str, component_func: Callable):
-        """
-        Register a visualization component.
+        """Register a visualization component.
 
         Args:
             component_id: Unique identifier for the component
@@ -337,8 +323,7 @@ class EnhancedDashboard:
         logger.info(f"Registered component: {component_id}")
 
     def register_data_source(self, source_id: str, source_func: Callable):
-        """
-        Register a data source.
+        """Register a data source.
 
         Args:
             source_id: Unique identifier for the data source
@@ -348,9 +333,8 @@ class EnhancedDashboard:
         logger.info(f"Registered data source: {source_id}")
 
     @cache.memoize(timeout=300)
-    def get_data(self, source_id: str, filters: Optional[Dict] = None) -> pd.DataFrame:
-        """
-        Get data from a registered source with caching.
+    def get_data(self, source_id: str, filters: dict | None = None) -> pd.DataFrame:
+        """Get data from a registered source with caching.
 
         Args:
             source_id: Data source identifier
@@ -373,10 +357,9 @@ class EnhancedDashboard:
         return data
 
     def create_responsive_card(
-        self, title: str, content: Any, card_id: Optional[str] = None
+        self, title: str, content: Any, card_id: str | None = None
     ) -> dbc.Card:
-        """
-        Create a responsive card component.
+        """Create a responsive card component.
 
         Args:
             title: Card title
@@ -401,12 +384,11 @@ class EnhancedDashboard:
     def create_kpi_card(
         self,
         title: str,
-        value: Union[str, float],
-        change: Optional[float] = None,
-        icon: Optional[str] = None,
+        value: str | float,
+        change: float | None = None,
+        icon: str | None = None,
     ) -> dbc.Card:
-        """
-        Create a KPI card with optional change indicator.
+        """Create a KPI card with optional change indicator.
 
         Args:
             title: KPI title
@@ -442,8 +424,7 @@ class EnhancedDashboard:
         )
 
     async def stream_data(self, channel: str) -> AsyncGenerator:
-        """
-        Stream real-time data from Redis.
+        """Stream real-time data from Redis.
 
         Args:
             channel: Redis channel to subscribe to
@@ -462,10 +443,9 @@ class EnhancedDashboard:
                 yield json.loads(message.decode("utf-8"))
 
     def export_to_pdf(
-        self, figures: List[go.Figure], filename: str = "dashboard_report.pdf"
+        self, figures: list[go.Figure], filename: str = "dashboard_report.pdf"
     ) -> str:
-        """
-        Export dashboard to PDF.
+        """Export dashboard to PDF.
 
         Args:
             figures: List of Plotly figures to export
@@ -533,10 +513,9 @@ class EnhancedDashboard:
         return str(output_path)
 
     def export_to_powerpoint(
-        self, figures: List[go.Figure], filename: str = "dashboard_presentation.pptx"
+        self, figures: list[go.Figure], filename: str = "dashboard_presentation.pptx"
     ) -> str:
-        """
-        Export dashboard to PowerPoint.
+        """Export dashboard to PowerPoint.
 
         Args:
             figures: List of Plotly figures to export
@@ -590,7 +569,6 @@ class EnhancedDashboard:
 
     def setup_callbacks(self):
         """Setup dashboard callbacks for interactivity."""
-
         # Dark mode toggle
         if self.config.enable_dark_mode:
 
@@ -836,7 +814,7 @@ class EnhancedDashboard:
             fluid=True,
         )
 
-    def _collect_current_figures(self) -> List[go.Figure]:
+    def _collect_current_figures(self) -> list[go.Figure]:
         """Collect all current figures from the dashboard."""
         # This is a placeholder - in a real implementation,
         # you would collect actual figures from the dashboard
@@ -893,12 +871,11 @@ class EnhancedDashboard:
 def create_time_series_chart(
     df: pd.DataFrame,
     x_col: str,
-    y_cols: List[str],
+    y_cols: list[str],
     title: str = "Time Series",
     animation: bool = False,
 ) -> go.Figure:
-    """
-    Create an interactive time series chart.
+    """Create an interactive time series chart.
 
     Args:
         df: DataFrame with data
@@ -953,8 +930,7 @@ def create_time_series_chart(
 
 
 def create_heatmap(df: pd.DataFrame, title: str = "Heatmap") -> go.Figure:
-    """
-    Create an interactive heatmap.
+    """Create an interactive heatmap.
 
     Args:
         df: DataFrame with data

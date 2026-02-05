@@ -1,14 +1,14 @@
-"""
-Performance benchmark tests for critical components.
+"""Performance benchmark tests for critical components.
 
 This module contains performance benchmarks for data processing,
 statistical computations, and ML operations.
 """
 
+from typing import Any
+
 import numpy as np
 import pandas as pd
 import pytest
-from typing import List, Dict, Any
 
 
 # Data Processing Benchmarks
@@ -245,12 +245,11 @@ class TestAPIBenchmarks:
     def test_request_validation(self, benchmark):
         """Benchmark request validation with pydantic."""
         from pydantic import BaseModel, Field
-        from typing import List
 
         class PredictionRequest(BaseModel):
-            features: List[float] = Field(..., min_items=1, max_items=1000)
+            features: list[float] = Field(..., min_items=1, max_items=1000)
             model_id: str = Field(..., min_length=1, max_length=100)
-            options: Dict[str, Any] = Field(default_factory=dict)
+            options: dict[str, Any] = Field(default_factory=dict)
 
         # Create test data
         test_requests = [
@@ -310,8 +309,8 @@ class TestResourceBenchmarks:
     @pytest.mark.benchmark(group="caching")
     def test_cache_performance(self, benchmark):
         """Benchmark caching performance."""
-        from functools import lru_cache
         import time
+        from functools import lru_cache
 
         # Simulate expensive computation
         def expensive_function(n):
@@ -345,8 +344,8 @@ class TestParallelBenchmarks:
     @pytest.mark.benchmark(group="parallel-processing")
     def test_multiprocessing_performance(self, benchmark):
         """Benchmark multiprocessing vs sequential processing."""
-        from multiprocessing import Pool
         import math
+        from multiprocessing import Pool
 
         def compute_intensive_task(n):
             """Simulate CPU-intensive task."""

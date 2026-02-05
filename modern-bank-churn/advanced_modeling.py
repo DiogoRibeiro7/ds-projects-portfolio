@@ -1,11 +1,9 @@
-"""
-Advanced Modeling Techniques for Bank Churn Prediction.
+"""Advanced Modeling Techniques for Bank Churn Prediction.
 Implements ensemble methods, hyperparameter tuning, calibration, and uncertainty quantification.
 """
 
 import warnings
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
 
 import joblib
 import lightgbm as lgb
@@ -13,7 +11,6 @@ import numpy as np
 import optuna
 import pandas as pd
 import xgboost as xgb
-from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import (
     GradientBoostingClassifier,
@@ -21,7 +18,6 @@ from sklearn.ensemble import (
     StackingClassifier,
     VotingClassifier,
 )
-from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold, cross_val_predict, cross_val_score
 
@@ -47,8 +43,7 @@ class StratifiedCrossValidator:
     """Advanced cross-validation with proper stratification."""
 
     def __init__(self, n_splits: int = 5, random_state: int = 42):
-        """
-        Initialize cross-validator.
+        """Initialize cross-validator.
 
         Args:
             n_splits: Number of CV folds
@@ -63,8 +58,7 @@ class StratifiedCrossValidator:
     def validate_model(
         self, model, X: pd.DataFrame, y: pd.Series, scoring: str = "roc_auc"
     ) -> ModelResult:
-        """
-        Perform stratified cross-validation.
+        """Perform stratified cross-validation.
 
         Args:
             model: Scikit-learn compatible model
@@ -111,13 +105,12 @@ class StratifiedCrossValidator:
     def nested_cv(
         self,
         model,
-        param_grid: Dict,
+        param_grid: dict,
         X: pd.DataFrame,
         y: pd.Series,
         scoring: str = "roc_auc",
-    ) -> Tuple[float, Dict]:
-        """
-        Nested cross-validation for unbiased performance estimation.
+    ) -> tuple[float, dict]:
+        """Nested cross-validation for unbiased performance estimation.
 
         Args:
             model: Base model
@@ -163,10 +156,9 @@ class EnsembleMethods:
     """Advanced ensemble methods including stacking and blending."""
 
     def __init__(
-        self, base_models: List = None, meta_model=None, use_probabilities: bool = True
+        self, base_models: list = None, meta_model=None, use_probabilities: bool = True
     ):
-        """
-        Initialize ensemble methods.
+        """Initialize ensemble methods.
 
         Args:
             base_models: List of base models
@@ -194,8 +186,7 @@ class EnsembleMethods:
         self.blending_weights = None
 
     def create_stacking_ensemble(self) -> StackingClassifier:
-        """
-        Create stacking ensemble.
+        """Create stacking ensemble.
 
         Returns:
             StackingClassifier
@@ -213,8 +204,7 @@ class EnsembleMethods:
         return self.stacking_model
 
     def create_voting_ensemble(self, voting: str = "soft") -> VotingClassifier:
-        """
-        Create voting ensemble.
+        """Create voting ensemble.
 
         Args:
             voting: 'hard' for majority voting, 'soft' for probability averaging
@@ -237,8 +227,7 @@ class EnsembleMethods:
         X_val: pd.DataFrame,
         y_val: pd.Series,
     ) -> np.ndarray:
-        """
-        Blend models using validation set.
+        """Blend models using validation set.
 
         Args:
             X_train: Training features
@@ -291,8 +280,7 @@ class EnsembleMethods:
         return self.blending_weights
 
     def predict_blended(self, X: pd.DataFrame) -> np.ndarray:
-        """
-        Make predictions using blended ensemble.
+        """Make predictions using blended ensemble.
 
         Args:
             X: Feature DataFrame
@@ -323,8 +311,7 @@ class HyperparameterOptimizer:
     def __init__(
         self, model_type: str = "lightgbm", n_trials: int = 100, cv_folds: int = 5
     ):
-        """
-        Initialize optimizer.
+        """Initialize optimizer.
 
         Args:
             model_type: Type of model to optimize
@@ -338,9 +325,8 @@ class HyperparameterOptimizer:
         self.best_params = None
         self.best_model = None
 
-    def optimize(self, X: pd.DataFrame, y: pd.Series, scoring: str = "roc_auc") -> Dict:
-        """
-        Optimize hyperparameters.
+    def optimize(self, X: pd.DataFrame, y: pd.Series, scoring: str = "roc_auc") -> dict:
+        """Optimize hyperparameters.
 
         Args:
             X: Feature DataFrame
@@ -456,8 +442,7 @@ class ModelCalibrator:
     """Model calibration for reliable probability estimates."""
 
     def __init__(self, method: str = "isotonic", cv_folds: int = 3):
-        """
-        Initialize calibrator.
+        """Initialize calibrator.
 
         Args:
             method: Calibration method ('isotonic' or 'sigmoid')
@@ -469,8 +454,7 @@ class ModelCalibrator:
         self.calibration_scores = {}
 
     def calibrate_model(self, model, X: pd.DataFrame, y: pd.Series):
-        """
-        Calibrate model probabilities.
+        """Calibrate model probabilities.
 
         Args:
             model: Base model to calibrate
@@ -489,9 +473,8 @@ class ModelCalibrator:
 
     def evaluate_calibration(
         self, X: pd.DataFrame, y: pd.Series, n_bins: int = 10
-    ) -> Dict:
-        """
-        Evaluate calibration quality.
+    ) -> dict:
+        """Evaluate calibration quality.
 
         Args:
             X: Feature DataFrame
@@ -520,7 +503,7 @@ class ModelCalibrator:
 
         ece = 0
         for bin_lower, bin_upper, frac_pos, pred_prob in zip(
-            bin_lowers, bin_uppers, fraction_pos, mean_pred
+            bin_lowers, bin_uppers, fraction_pos, mean_pred, strict=False
         ):
             # Proportion of samples in bin
             in_bin = np.logical_and(
@@ -552,8 +535,7 @@ class UncertaintyQuantifier:
     """Quantify prediction uncertainty."""
 
     def __init__(self, n_estimators: int = 100, method: str = "bootstrap"):
-        """
-        Initialize uncertainty quantifier.
+        """Initialize uncertainty quantifier.
 
         Args:
             n_estimators: Number of estimators for uncertainty
@@ -565,8 +547,7 @@ class UncertaintyQuantifier:
         self.uncertainty_scores = None
 
     def fit(self, base_model, X: pd.DataFrame, y: pd.Series):
-        """
-        Fit uncertainty estimator.
+        """Fit uncertainty estimator.
 
         Args:
             base_model: Base model to use
@@ -598,9 +579,8 @@ class UncertaintyQuantifier:
 
     def predict_with_uncertainty(
         self, X: pd.DataFrame
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Make predictions with uncertainty estimates.
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Make predictions with uncertainty estimates.
 
         Args:
             X: Feature DataFrame
@@ -644,9 +624,8 @@ class UncertaintyQuantifier:
 
     def get_confidence_intervals(
         self, X: pd.DataFrame, confidence: float = 0.95
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Get confidence intervals for predictions.
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Get confidence intervals for predictions.
 
         Args:
             X: Feature DataFrame
@@ -696,9 +675,8 @@ class AdvancedModelPipeline:
         use_ensemble: bool = True,
         calibrate: bool = True,
         quantify_uncertainty: bool = True,
-    ) -> Dict:
-        """
-        Run complete modeling pipeline.
+    ) -> dict:
+        """Run complete modeling pipeline.
 
         Args:
             X: Feature DataFrame

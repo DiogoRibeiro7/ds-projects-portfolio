@@ -1,5 +1,4 @@
-"""
-Visualization utilities for A/B testing and experimental analysis.
+"""Visualization utilities for A/B testing and experimental analysis.
 """
 
 from .plots import (

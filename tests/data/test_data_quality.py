@@ -1,24 +1,19 @@
-"""
-Data quality testing with Great Expectations and other validation tools.
+"""Data quality testing with Great Expectations and other validation tools.
 """
 
-import pytest
-import pandas as pd
-import numpy as np
-import great_expectations as gx
-from great_expectations.core.batch import RuntimeBatchRequest
-from great_expectations.core import ExpectationSuite, ExpectationConfiguration
-from great_expectations.checkpoint import SimpleCheckpoint
-import pandera as pa
-from pandera import Column, DataFrameSchema, Check
-from typing import Dict, Any, List, Optional
-import json
-from pathlib import Path
-from faker import Faker
-from hypothesis import given, strategies as st, assume
-from hypothesis.extra.pandas import data_frames, column, range_indexes
 import hashlib
-from datetime import datetime, timedelta
+
+import great_expectations as gx
+import numpy as np
+import pandas as pd
+import pandera as pa
+import pytest
+from faker import Faker
+from great_expectations.core import ExpectationConfiguration, ExpectationSuite
+from great_expectations.core.batch import RuntimeBatchRequest
+from hypothesis import given
+from hypothesis import strategies as st
+from pandera import Check, Column, DataFrameSchema
 
 
 class TestGreatExpectations:
@@ -242,7 +237,6 @@ class TestGreatExpectations:
     def test_custom_expectations(self, sample_dataframe):
         """Test custom business logic expectations."""
         from great_expectations.expectations.expectation import ColumnMapExpectation
-        from great_expectations.expectations.metrics import ColumnMapMetricProvider
 
         # Custom expectation: Credit score should correlate with balance
         class ExpectCreditScoreBalanceCorrelation(ColumnMapExpectation):

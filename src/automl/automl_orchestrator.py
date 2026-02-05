@@ -1,23 +1,15 @@
-"""
-AutoML Orchestrator with support for multiple frameworks and automated pipeline generation.
+"""AutoML Orchestrator with support for multiple frameworks and automated pipeline generation.
 """
 
-import os
-import time
 import logging
-from typing import Dict, Any, List, Optional, Union, Tuple
+import os
 from dataclasses import dataclass, field
-import pandas as pd
-import numpy as np
-from pathlib import Path
+from typing import Any
+
 import joblib
-import json
-import optuna
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+import numpy as np
+import pandas as pd
 import ray
-from ray import tune
-from ray.tune.schedulers import ASHAScheduler
-from ray.tune.suggest.optuna import OptunaSearch
 
 # AutoML frameworks
 try:
@@ -61,15 +53,15 @@ try:
 except ImportError:
     NNI_AVAILABLE = False
 
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import accuracy_score, roc_auc_score, mean_squared_error, r2_score
-from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.ensemble import (
-    VotingClassifier,
-    VotingRegressor,
     StackingClassifier,
     StackingRegressor,
+    VotingClassifier,
+    VotingRegressor,
 )
+from sklearn.metrics import accuracy_score, r2_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +71,7 @@ class AutoMLConfig:
     """Configuration for AutoML orchestrator."""
 
     task_type: str = "classification"  # 'classification' or 'regression'
-    frameworks: List[str] = field(default_factory=lambda: ["autogluon", "h2o", "flaml"])
+    frameworks: list[str] = field(default_factory=lambda: ["autogluon", "h2o", "flaml"])
     time_limit: int = 3600  # seconds
     optimization_metric: str = "auto"
     ensemble_strategy: str = "auto"  # 'voting', 'stacking', 'blending', 'auto'
@@ -92,12 +84,12 @@ class AutoMLConfig:
     # Neural architecture search
     enable_nas: bool = False
     nas_time_limit: int = 7200
-    nas_search_space: Optional[Dict] = None
+    nas_search_space: dict | None = None
 
     # Feature engineering
     auto_feature_engineering: bool = True
     feature_selection_method: str = "auto"
-    max_features: Optional[int] = None
+    max_features: int | None = None
 
     # Hyperparameter optimization
     hpo_method: str = "bayesian"  # 'grid', 'random', 'bayesian', 'hyperband'
@@ -105,7 +97,7 @@ class AutoMLConfig:
 
     # Distributed computing
     use_ray: bool = False
-    ray_resources: Optional[Dict] = None
+    ray_resources: dict | None = None
 
     # Model interpretability
     enable_interpretability: bool = True
@@ -113,8 +105,7 @@ class AutoMLConfig:
 
 
 class AutoMLOrchestrator:
-    """
-    Advanced AutoML orchestrator with multiple framework support.
+    """Advanced AutoML orchestrator with multiple framework support.
     """
 
     def __init__(self, config: AutoMLConfig):
@@ -147,11 +138,10 @@ class AutoMLOrchestrator:
         self,
         X: pd.DataFrame,
         y: pd.Series,
-        X_valid: Optional[pd.DataFrame] = None,
-        y_valid: Optional[pd.Series] = None,
+        X_valid: pd.DataFrame | None = None,
+        y_valid: pd.Series | None = None,
     ) -> "AutoMLOrchestrator":
-        """
-        Fit AutoML models using multiple frameworks.
+        """Fit AutoML models using multiple frameworks.
 
         Parameters
         ----------
@@ -164,7 +154,7 @@ class AutoMLOrchestrator:
         y_valid : pd.Series, optional
             Validation labels
 
-        Returns
+        Returns:
         -------
         self
             Fitted orchestrator
@@ -235,7 +225,7 @@ class AutoMLOrchestrator:
 
     def _prepare_data(
         self, X: pd.DataFrame, y: pd.Series
-    ) -> Tuple[pd.DataFrame, pd.Series]:
+    ) -> tuple[pd.DataFrame, pd.Series]:
         """Prepare data for AutoML."""
         X_prepared = X.copy()
         y_prepared = y.copy()
@@ -258,15 +248,11 @@ class AutoMLOrchestrator:
         """Automated feature engineering."""
         import featuretools as ft
         from featuretools.primitives import (
-            Sum,
-            Mean,
             Max,
+            Mean,
             Min,
             Std,
-            Count,
-            PercentTrue,
-            Mode,
-            NumUnique,
+            Sum,
         )
 
         # Create entity set
@@ -295,7 +281,7 @@ class AutoMLOrchestrator:
         y_train: pd.Series,
         X_valid: pd.DataFrame,
         y_valid: pd.Series,
-    ) -> Dict:
+    ) -> dict:
         """Fit AutoGluon model."""
         logger.info("Training AutoGluon model...")
 
@@ -340,7 +326,7 @@ class AutoMLOrchestrator:
         y_train: pd.Series,
         X_valid: pd.DataFrame,
         y_valid: pd.Series,
-    ) -> Dict:
+    ) -> dict:
         """Fit H2O AutoML model."""
         logger.info("Training H2O AutoML model...")
 
@@ -395,7 +381,7 @@ class AutoMLOrchestrator:
         y_train: pd.Series,
         X_valid: pd.DataFrame,
         y_valid: pd.Series,
-    ) -> Dict:
+    ) -> dict:
         """Fit FLAML AutoML model."""
         logger.info("Training FLAML AutoML model...")
 
@@ -435,7 +421,7 @@ class AutoMLOrchestrator:
         y_train: pd.Series,
         X_valid: pd.DataFrame,
         y_valid: pd.Series,
-    ) -> Dict:
+    ) -> dict:
         """Fit PyCaret AutoML model."""
         logger.info("Training PyCaret AutoML model...")
 
@@ -443,9 +429,9 @@ class AutoMLOrchestrator:
         train_data = pd.concat([X_train, y_train], axis=1)
 
         if self.config.task_type == "classification":
-            from pycaret.classification import setup, compare_models, finalize_model
+            from pycaret.classification import compare_models, finalize_model, setup
         else:
-            from pycaret.regression import setup, compare_models, finalize_model
+            from pycaret.regression import compare_models, finalize_model, setup
 
         # Setup
         exp = setup(
@@ -483,7 +469,7 @@ class AutoMLOrchestrator:
         y_train: pd.Series,
         X_valid: pd.DataFrame,
         y_valid: pd.Series,
-    ) -> Dict:
+    ) -> dict:
         """Run Neural Architecture Search."""
         logger.info("Running Neural Architecture Search...")
 
@@ -520,7 +506,7 @@ class AutoMLOrchestrator:
         y_train: pd.Series,
         X_valid: pd.DataFrame,
         y_valid: pd.Series,
-    ) -> Dict:
+    ) -> dict:
         """Distributed training using Ray."""
         logger.info("Running distributed training with Ray...")
 
@@ -556,7 +542,7 @@ class AutoMLOrchestrator:
         return results
 
     def _select_best_model(
-        self, framework_results: Dict, X_valid: pd.DataFrame, y_valid: pd.Series
+        self, framework_results: dict, X_valid: pd.DataFrame, y_valid: pd.Series
     ) -> Any:
         """Select the best model from all frameworks."""
         best_score = -np.inf if self.config.task_type == "classification" else np.inf
@@ -581,7 +567,7 @@ class AutoMLOrchestrator:
         return best_model
 
     def _create_ensemble(
-        self, framework_results: Dict, X_train: pd.DataFrame, y_train: pd.Series
+        self, framework_results: dict, X_train: pd.DataFrame, y_train: pd.Series
     ) -> Any:
         """Create ensemble from multiple models."""
         logger.info(f"Creating ensemble with strategy: {self.config.ensemble_strategy}")
@@ -618,11 +604,11 @@ class AutoMLOrchestrator:
         return ensemble
 
     def _create_blending_ensemble(
-        self, models: List, X_train: pd.DataFrame, y_train: pd.Series
+        self, models: list, X_train: pd.DataFrame, y_train: pd.Series
     ) -> Any:
         """Create blending ensemble."""
-        from sklearn.model_selection import KFold
         from sklearn.linear_model import LogisticRegression, Ridge
+        from sklearn.model_selection import KFold
 
         n_splits = 5
         kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
@@ -654,7 +640,7 @@ class AutoMLOrchestrator:
         return meta_model
 
     def _auto_select_ensemble(
-        self, models: List, X_train: pd.DataFrame, y_train: pd.Series
+        self, models: list, X_train: pd.DataFrame, y_train: pd.Series
     ) -> Any:
         """Automatically select ensemble strategy."""
         # Evaluate model diversity
@@ -766,20 +752,20 @@ class AutoMLOrchestrator:
         report.append("=" * 60)
 
         # Configuration
-        report.append(f"\nConfiguration:")
+        report.append("\nConfiguration:")
         report.append(f"  Task Type: {self.config.task_type}")
         report.append(f"  Frameworks: {', '.join(self.config.frameworks)}")
         report.append(f"  Time Limit: {self.config.time_limit}s")
         report.append(f"  Optimization Metric: {self.config.optimization_metric}")
 
         # Results
-        report.append(f"\nFramework Results:")
+        report.append("\nFramework Results:")
         for framework, result in self.results.items():
             report.append(f"  {framework}: Score = {result.get('score', 'N/A')}")
 
         # Feature Importance
         if self.feature_importance is not None and len(self.feature_importance) > 0:
-            report.append(f"\nTop 10 Important Features:")
+            report.append("\nTop 10 Important Features:")
             for idx, row in self.feature_importance.head(10).iterrows():
                 report.append(f"  {row['feature']}: {row['importance']:.4f}")
 

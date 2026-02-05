@@ -1,5 +1,4 @@
-"""
-Time Series Utilities Module
+"""Time Series Utilities Module
 
 This module provides utility functions for time series analysis, including:
 - Data preprocessing and validation
@@ -9,16 +8,15 @@ This module provides utility functions for time series analysis, including:
 - Model evaluation metrics
 """
 
+import warnings
+from typing import Any
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import Union, List, Tuple, Dict, Optional, Any
-import warnings
 from scipy import stats
-from statsmodels.tsa.stattools import adfuller, kpss, acf, pacf
 from statsmodels.stats.diagnostic import acorr_ljungbox
-import matplotlib.pyplot as plt
-import seaborn as sns
-from datetime import datetime, timedelta
+from statsmodels.tsa.stattools import acf, adfuller, kpss, pacf
 
 warnings.filterwarnings("ignore")
 
@@ -29,10 +27,9 @@ warnings.filterwarnings("ignore")
 
 
 def validate_time_series(
-    data: Union[pd.Series, pd.DataFrame], date_column: Optional[str] = None
+    data: pd.Series | pd.DataFrame, date_column: str | None = None
 ) -> pd.DataFrame:
-    """
-    Validate and prepare time series data.
+    """Validate and prepare time series data.
 
     Parameters:
     -----------
@@ -80,8 +77,7 @@ def validate_time_series(
 def handle_missing_values(
     data: pd.DataFrame, method: str = "interpolate", **kwargs
 ) -> pd.DataFrame:
-    """
-    Handle missing values in time series data.
+    """Handle missing values in time series data.
 
     Parameters:
     -----------
@@ -119,8 +115,7 @@ def handle_missing_values(
 def remove_outliers(
     data: pd.DataFrame, method: str = "iqr", threshold: float = 1.5
 ) -> pd.DataFrame:
-    """
-    Remove outliers from time series data.
+    """Remove outliers from time series data.
 
     Parameters:
     -----------
@@ -163,8 +158,7 @@ def remove_outliers(
 def resample_time_series(
     data: pd.DataFrame, freq: str, agg_func: str = "mean"
 ) -> pd.DataFrame:
-    """
-    Resample time series to a different frequency.
+    """Resample time series to a different frequency.
 
     Parameters:
     -----------
@@ -199,8 +193,7 @@ def resample_time_series(
 
 
 def create_time_features(data: pd.DataFrame) -> pd.DataFrame:
-    """
-    Create time-based features from datetime index.
+    """Create time-based features from datetime index.
 
     Parameters:
     -----------
@@ -241,10 +234,9 @@ def create_time_features(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def create_lag_features(
-    data: pd.DataFrame, target_col: str, lags: List[int]
+    data: pd.DataFrame, target_col: str, lags: list[int]
 ) -> pd.DataFrame:
-    """
-    Create lag features for time series.
+    """Create lag features for time series.
 
     Parameters:
     -----------
@@ -270,11 +262,10 @@ def create_lag_features(
 def create_rolling_features(
     data: pd.DataFrame,
     target_col: str,
-    windows: List[int],
-    functions: List[str] = ["mean", "std"],
+    windows: list[int],
+    functions: list[str] = ["mean", "std"],
 ) -> pd.DataFrame:
-    """
-    Create rolling window features.
+    """Create rolling window features.
 
     Parameters:
     -----------
@@ -320,10 +311,9 @@ def create_rolling_features(
 
 
 def create_expanding_features(
-    data: pd.DataFrame, target_col: str, functions: List[str] = ["mean", "std"]
+    data: pd.DataFrame, target_col: str, functions: list[str] = ["mean", "std"]
 ) -> pd.DataFrame:
-    """
-    Create expanding window features.
+    """Create expanding window features.
 
     Parameters:
     -----------
@@ -362,9 +352,8 @@ def create_expanding_features(
 
 def test_stationarity(
     data: pd.Series, significance_level: float = 0.05
-) -> Dict[str, Any]:
-    """
-    Test for stationarity using multiple tests.
+) -> dict[str, Any]:
+    """Test for stationarity using multiple tests.
 
     Parameters:
     -----------
@@ -409,9 +398,8 @@ def test_stationarity(
     return results
 
 
-def test_white_noise(data: pd.Series, lags: int = 10) -> Dict[str, Any]:
-    """
-    Test if time series is white noise using Ljung-Box test.
+def test_white_noise(data: pd.Series, lags: int = 10) -> dict[str, Any]:
+    """Test if time series is white noise using Ljung-Box test.
 
     Parameters:
     -----------
@@ -436,9 +424,8 @@ def test_white_noise(data: pd.Series, lags: int = 10) -> Dict[str, Any]:
     }
 
 
-def test_normality(data: pd.Series) -> Dict[str, Any]:
-    """
-    Test for normality using multiple tests.
+def test_normality(data: pd.Series) -> dict[str, Any]:
+    """Test for normality using multiple tests.
 
     Parameters:
     -----------
@@ -488,9 +475,8 @@ def test_normality(data: pd.Series) -> Dict[str, Any]:
 # ============================================================================
 
 
-def calculate_metrics(actual: np.ndarray, predicted: np.ndarray) -> Dict[str, float]:
-    """
-    Calculate comprehensive evaluation metrics.
+def calculate_metrics(actual: np.ndarray, predicted: np.ndarray) -> dict[str, float]:
+    """Calculate comprehensive evaluation metrics.
 
     Parameters:
     -----------
@@ -547,9 +533,8 @@ def calculate_metrics(actual: np.ndarray, predicted: np.ndarray) -> Dict[str, fl
     }
 
 
-def calculate_residual_diagnostics(residuals: np.ndarray) -> Dict[str, Any]:
-    """
-    Perform comprehensive residual diagnostics.
+def calculate_residual_diagnostics(residuals: np.ndarray) -> dict[str, Any]:
+    """Perform comprehensive residual diagnostics.
 
     Parameters:
     -----------
@@ -591,10 +576,9 @@ def calculate_residual_diagnostics(residuals: np.ndarray) -> Dict[str, Any]:
 
 
 def plot_time_series_decomposition(
-    data: pd.Series, period: Optional[int] = None, model: str = "additive"
+    data: pd.Series, period: int | None = None, model: str = "additive"
 ):
-    """
-    Plot time series decomposition.
+    """Plot time series decomposition.
 
     Parameters:
     -----------
@@ -633,8 +617,7 @@ def plot_time_series_decomposition(
 
 
 def plot_acf_pacf(data: pd.Series, lags: int = 40):
-    """
-    Plot ACF and PACF.
+    """Plot ACF and PACF.
 
     Parameters:
     -----------
@@ -680,12 +663,11 @@ def plot_acf_pacf(data: pd.Series, lags: int = 40):
 def plot_forecast_with_intervals(
     actual: pd.Series,
     forecast: pd.Series,
-    lower_bound: Optional[pd.Series] = None,
-    upper_bound: Optional[pd.Series] = None,
+    lower_bound: pd.Series | None = None,
+    upper_bound: pd.Series | None = None,
     title: str = "Forecast vs Actual",
 ):
-    """
-    Plot forecast with confidence intervals.
+    """Plot forecast with confidence intervals.
 
     Parameters:
     -----------
@@ -735,10 +717,9 @@ def plot_forecast_with_intervals(
 
 
 def time_series_split(
-    data: pd.DataFrame, n_splits: int = 5, test_size: Optional[int] = None
-) -> List[Tuple[pd.DataFrame, pd.DataFrame]]:
-    """
-    Create time series train/test splits for cross-validation.
+    data: pd.DataFrame, n_splits: int = 5, test_size: int | None = None
+) -> list[tuple[pd.DataFrame, pd.DataFrame]]:
+    """Create time series train/test splits for cross-validation.
 
     Parameters:
     -----------
@@ -776,9 +757,8 @@ def walk_forward_validation(
     initial_train_size: int,
     step_size: int = 1,
     horizon: int = 1,
-) -> Dict[str, Any]:
-    """
-    Perform walk-forward validation.
+) -> dict[str, Any]:
+    """Perform walk-forward validation.
 
     Parameters:
     -----------
@@ -825,9 +805,8 @@ def walk_forward_validation(
 # ============================================================================
 
 
-def box_cox_transform(data: pd.Series) -> Tuple[pd.Series, float]:
-    """
-    Apply Box-Cox transformation.
+def box_cox_transform(data: pd.Series) -> tuple[pd.Series, float]:
+    """Apply Box-Cox transformation.
 
     Parameters:
     -----------
@@ -848,8 +827,7 @@ def box_cox_transform(data: pd.Series) -> Tuple[pd.Series, float]:
 
 
 def inverse_box_cox(data: pd.Series, lambda_val: float) -> pd.Series:
-    """
-    Inverse Box-Cox transformation.
+    """Inverse Box-Cox transformation.
 
     Parameters:
     -----------
@@ -869,8 +847,7 @@ def inverse_box_cox(data: pd.Series, lambda_val: float) -> pd.Series:
 
 
 def difference_series(data: pd.Series, order: int = 1) -> pd.Series:
-    """
-    Difference time series.
+    """Difference time series.
 
     Parameters:
     -----------
@@ -887,8 +864,7 @@ def difference_series(data: pd.Series, order: int = 1) -> pd.Series:
 
 
 def inverse_difference(data: pd.Series, original_value: float) -> pd.Series:
-    """
-    Inverse differencing operation.
+    """Inverse differencing operation.
 
     Parameters:
     -----------
@@ -910,12 +886,11 @@ def inverse_difference(data: pd.Series, original_value: float) -> pd.Series:
 
 
 def combine_forecasts(
-    forecasts: Dict[str, np.ndarray],
-    weights: Optional[Dict[str, float]] = None,
+    forecasts: dict[str, np.ndarray],
+    weights: dict[str, float] | None = None,
     method: str = "average",
 ) -> np.ndarray:
-    """
-    Combine multiple forecasts.
+    """Combine multiple forecasts.
 
     Parameters:
     -----------
@@ -962,9 +937,8 @@ def combine_forecasts(
 
 def calculate_prediction_intervals(
     point_forecast: np.ndarray, residuals: np.ndarray, confidence_level: float = 0.95
-) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Calculate prediction intervals.
+) -> tuple[np.ndarray, np.ndarray]:
+    """Calculate prediction intervals.
 
     Parameters:
     -----------
@@ -1000,9 +974,8 @@ def calculate_prediction_intervals(
 
 def suggest_arima_order(
     data: pd.Series, max_p: int = 5, max_q: int = 5
-) -> Tuple[int, int, int]:
-    """
-    Suggest ARIMA order based on ACF and PACF analysis.
+) -> tuple[int, int, int]:
+    """Suggest ARIMA order based on ACF and PACF analysis.
 
     Parameters:
     -----------
@@ -1051,9 +1024,8 @@ def suggest_arima_order(
     return (p, d, q)
 
 
-def detect_seasonality(data: pd.Series, max_lag: int = 50) -> Dict[str, Any]:
-    """
-    Detect seasonality in time series.
+def detect_seasonality(data: pd.Series, max_lag: int = 50) -> dict[str, Any]:
+    """Detect seasonality in time series.
 
     Parameters:
     -----------

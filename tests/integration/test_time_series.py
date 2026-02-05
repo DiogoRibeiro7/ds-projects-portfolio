@@ -1,18 +1,17 @@
-"""
-Test suite for time series analysis module.
+"""Test suite for time series analysis module.
 """
 
-import pytest
+from unittest.mock import Mock, patch
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
-from statsmodels.tsa.stattools import adfuller
+import pytest
+
 from time_series import (
-    TimeSeriesAnalyzer,
-    ForecastModel,
     AnomalyDetector,
+    ForecastModel,
     SeasonalDecomposer,
+    TimeSeriesAnalyzer,
     TimeSeriesPreprocessor,
 )
 

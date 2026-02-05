@@ -1,19 +1,15 @@
-"""
-Enhanced Bayesian A/B testing with network effects, time-dependent methods,
+"""Enhanced Bayesian A/B testing with network effects, time-dependent methods,
 and advanced capabilities.
 """
 
 import warnings
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from dataclasses import dataclass
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from scipy import stats
-from scipy.optimize import minimize
-from scipy.special import betaln, gammaln, loggamma
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel, WhiteKernel
 
@@ -28,9 +24,9 @@ class NetworkEffectResult:
     indirect_effect: float
     total_effect: float
     spillover_ratio: float
-    confidence_intervals: Dict[str, Tuple[float, float]]
-    network_statistics: Dict[str, Any]
-    p_values: Dict[str, float]
+    confidence_intervals: dict[str, tuple[float, float]]
+    network_statistics: dict[str, Any]
+    p_values: dict[str, float]
 
 
 @dataclass
@@ -39,10 +35,10 @@ class TimeDependentResult:
 
     time_series_effects: pd.DataFrame
     cumulative_effect: float
-    peak_effect: Tuple[float, float]  # (time, effect)
-    decay_rate: Optional[float]
+    peak_effect: tuple[float, float]  # (time, effect)
+    decay_rate: float | None
     seasonality_detected: bool
-    trend_component: Optional[float]
+    trend_component: float | None
     confidence_bands: pd.DataFrame
 
 
@@ -50,8 +46,7 @@ class NetworkEffectBayesianTest:
     """Bayesian A/B testing with network effect corrections."""
 
     def __init__(self, prior_alpha: float = 1, prior_beta: float = 1):
-        """
-        Initialize network effect Bayesian testing.
+        """Initialize network effect Bayesian testing.
 
         Args:
             prior_alpha: Alpha parameter for Beta prior
@@ -66,12 +61,11 @@ class NetworkEffectBayesianTest:
         outcome_col: str,
         treatment_col: str,
         user_col: str,
-        network_adjacency: Optional[np.ndarray] = None,
-        network_edges: Optional[List[Tuple[Any, Any]]] = None,
+        network_adjacency: np.ndarray | None = None,
+        network_edges: list[tuple[Any, Any]] | None = None,
         n_samples: int = 50000,
     ) -> NetworkEffectResult:
-        """
-        Bayesian A/B test accounting for network effects.
+        """Bayesian A/B test accounting for network effects.
 
         Args:
             data: DataFrame with experiment data
@@ -224,7 +218,7 @@ class NetworkEffectBayesianTest:
         )
 
     def _build_adjacency_matrix(
-        self, users: np.ndarray, edges: List[Tuple[Any, Any]]
+        self, users: np.ndarray, edges: list[tuple[Any, Any]]
     ) -> np.ndarray:
         """Build adjacency matrix from edge list."""
         user_to_idx = {user: i for i, user in enumerate(users)}
@@ -253,8 +247,8 @@ class NetworkEffectBayesianTest:
         return 0
 
     def _bootstrap_ci(
-        self, values: List[float], confidence: float = 0.95
-    ) -> Tuple[float, float]:
+        self, values: list[float], confidence: float = 0.95
+    ) -> tuple[float, float]:
         """Calculate bootstrap confidence interval."""
         if not values:
             return (0, 0)
@@ -331,12 +325,11 @@ class TimeDependentBayesianTest:
         outcome_col: str,
         treatment_col: str,
         time_col: str,
-        user_col: Optional[str] = None,
+        user_col: str | None = None,
         granularity: str = "daily",
         n_samples: int = 10000,
     ) -> TimeDependentResult:
-        """
-        Perform time-dependent Bayesian testing.
+        """Perform time-dependent Bayesian testing.
 
         Args:
             data: DataFrame with temporal experiment data
@@ -486,7 +479,7 @@ class TimeDependentBayesianTest:
             confidence_bands=confidence_bands,
         )
 
-    def _estimate_decay_rate(self, effects_df: pd.DataFrame) -> Optional[float]:
+    def _estimate_decay_rate(self, effects_df: pd.DataFrame) -> float | None:
         """Estimate exponential decay rate if present."""
         if len(effects_df) < 5:
             return None
@@ -542,7 +535,7 @@ class TimeDependentBayesianTest:
 
         return False
 
-    def _estimate_trend(self, effects_df: pd.DataFrame) -> Optional[float]:
+    def _estimate_trend(self, effects_df: pd.DataFrame) -> float | None:
         """Estimate linear trend in effects."""
         if len(effects_df) < 3:
             return None
@@ -559,8 +552,7 @@ class TimeDependentBayesianTest:
         return float(model.coef_[0])
 
     def plot_temporal_results(self, result: TimeDependentResult):
-        """
-        Plot temporal testing results.
+        """Plot temporal testing results.
 
         Args:
             result: TimeDependentResult to visualize
@@ -665,12 +657,11 @@ class MetaAnalysisBayesian:
 
     def combine_experiments(
         self,
-        experiments: List[Dict[str, Any]],
+        experiments: list[dict[str, Any]],
         method: str = "fixed_effects",
-        tau_prior: Optional[Tuple[float, float]] = None,
-    ) -> Dict[str, Any]:
-        """
-        Combine multiple Bayesian experiments using meta-analysis.
+        tau_prior: tuple[float, float] | None = None,
+    ) -> dict[str, Any]:
+        """Combine multiple Bayesian experiments using meta-analysis.
 
         Args:
             experiments: List of experiment results, each with:
@@ -766,9 +757,8 @@ class MetaAnalysisBayesian:
             "total_n": sum(exp.get("n", 0) for exp in experiments),
         }
 
-    def create_forest_plot(self, meta_result: Dict[str, Any]):
-        """
-        Create forest plot for meta-analysis results.
+    def create_forest_plot(self, meta_result: dict[str, Any]):
+        """Create forest plot for meta-analysis results.
 
         Args:
             meta_result: Result from combine_experiments

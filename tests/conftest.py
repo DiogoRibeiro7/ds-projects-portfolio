@@ -1,25 +1,23 @@
-"""
-Global pytest fixtures and configuration for all tests.
+"""Global pytest fixtures and configuration for all tests.
 """
 
 import os
 import sys
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator, Dict, Any, List
 from unittest.mock import MagicMock
 
-import pytest
-import pandas as pd
-import numpy as np
-from faker import Faker
-import hypothesis.strategies as st
-from hypothesis import given, settings
 import great_expectations as gx
+import hypothesis.strategies as st
+import numpy as np
+import pandas as pd
+import pytest
+from faker import Faker
+from fakeredis import FakeRedis
+from hypothesis import settings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import redis
-from fakeredis import FakeRedis
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))

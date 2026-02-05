@@ -1,59 +1,43 @@
-"""
-Data Preprocessing Pipelines
+"""Data Preprocessing Pipelines
 Robust outlier detection, imputation strategies, transformations, and augmentation
 """
 
 import logging
-from typing import Dict, List, Any, Optional, Union, Tuple, Callable
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-import warnings
-from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 import pandas as pd
-from scipy import stats
-from scipy.stats import boxcox, yeojohnson
-from scipy.spatial import distance
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.preprocessing import (
-    StandardScaler,
-    MinMaxScaler,
-    RobustScaler,
-    MaxAbsScaler,
-    QuantileTransformer,
-    PowerTransformer,
-    Normalizer,
-    PolynomialFeatures,
-    KBinsDiscretizer,
-)
-from sklearn.impute import SimpleImputer, KNNImputer, IterativeImputer
-from sklearn.experimental import enable_iterative_imputer
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.decomposition import PCA
-from sklearn.ensemble import IsolationForest, RandomForestRegressor
-from sklearn.neighbors import LocalOutlierFactor
-from sklearn.covariance import EllipticEnvelope
-from sklearn.cluster import DBSCAN
-from sklearn.feature_selection import VarianceThreshold
 
 # Advanced imputation
 from fancyimpute import (
     SoftImpute,
-    MatrixFactorization,
-    BiScaler,
-    NuclearNormMinimization,
+)
+from imblearn.combine import SMOTEENN, SMOTETomek
+
+# Data augmentation
+from imblearn.over_sampling import ADASYN, SMOTE, BorderlineSMOTE
+from imblearn.under_sampling import RandomUnderSampler, TomekLinks
+from scipy import stats
+from scipy.stats import boxcox
+from sklearn.cluster import DBSCAN
+from sklearn.covariance import EllipticEnvelope
+from sklearn.decomposition import PCA
+from sklearn.ensemble import IsolationForest, RandomForestRegressor
+from sklearn.impute import IterativeImputer, KNNImputer, SimpleImputer
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.preprocessing import (
+    KBinsDiscretizer,
+    MinMaxScaler,
+    Normalizer,
+    PolynomialFeatures,
+    PowerTransformer,
+    QuantileTransformer,
+    RobustScaler,
+    StandardScaler,
 )
 
 # Time series
-from statsmodels.tsa.seasonal import seasonal_decompose
-from statsmodels.tsa.stattools import adfuller, kpss
-
-# Data augmentation
-from imblearn.over_sampling import SMOTE, ADASYN, BorderlineSMOTE
-from imblearn.under_sampling import RandomUnderSampler, TomekLinks
-from imblearn.combine import SMOTEENN, SMOTETomek
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -70,7 +54,7 @@ class PreprocessingConfig:
     outlier_threshold: float = 0.05
     imputation_strategy: str = "knn"  # mean, median, mode, knn, iterative, matrix
     scaling_method: str = "standard"  # standard, minmax, robust, quantile, power
-    transformation_method: Optional[str] = None  # log, sqrt, boxcox, yeo-johnson
+    transformation_method: str | None = None  # log, sqrt, boxcox, yeo-johnson
     feature_engineering: bool = True
     handle_imbalance: bool = False
     imbalance_strategy: str = "smote"  # smote, adasyn, random_under, tomek
@@ -86,7 +70,7 @@ class OutlierDetector:
         self.detector = None
         self.outlier_indices = []
 
-    def fit_detect(self, X: Union[pd.DataFrame, np.ndarray]) -> np.ndarray:
+    def fit_detect(self, X: pd.DataFrame | np.ndarray) -> np.ndarray:
         """Detect outliers in data"""
         if isinstance(X, pd.DataFrame):
             numeric_cols = X.select_dtypes(include=[np.number]).columns
@@ -508,7 +492,7 @@ class FeatureEngineer:
         return pd.concat([X, X_poly_df.iloc[:, len(numeric_cols) :]], axis=1)
 
     def create_interaction_features(
-        self, X: pd.DataFrame, columns: Optional[List[str]] = None
+        self, X: pd.DataFrame, columns: list[str] | None = None
     ) -> pd.DataFrame:
         """Create interaction features between columns"""
         if columns is None:
@@ -534,7 +518,7 @@ class FeatureEngineer:
     def create_binned_features(
         self,
         X: pd.DataFrame,
-        columns: List[str] = None,
+        columns: list[str] = None,
         n_bins: int = 5,
         strategy: str = "quantile",
     ) -> pd.DataFrame:
@@ -553,7 +537,7 @@ class FeatureEngineer:
         return X_binned
 
     def create_statistical_features(
-        self, X: pd.DataFrame, window_sizes: List[int] = None
+        self, X: pd.DataFrame, window_sizes: list[int] = None
     ) -> pd.DataFrame:
         """Create statistical aggregation features"""
         if window_sizes is None:
@@ -581,7 +565,7 @@ class FeatureEngineer:
         return X_stats
 
     def create_lag_features(
-        self, X: pd.DataFrame, columns: List[str] = None, lags: List[int] = None
+        self, X: pd.DataFrame, columns: list[str] = None, lags: list[int] = None
     ) -> pd.DataFrame:
         """Create lag features for time series"""
         if lags is None:
@@ -669,7 +653,7 @@ class DataAugmenter:
 
     def augment_data(
         self, X: pd.DataFrame, y: pd.Series
-    ) -> Tuple[pd.DataFrame, pd.Series]:
+    ) -> tuple[pd.DataFrame, pd.Series]:
         """Augment data to handle class imbalance"""
         if self.strategy == "smote":
             self.augmenter = SMOTE(random_state=42)
@@ -706,7 +690,7 @@ class DataAugmenter:
 
     def mixup(
         self, X: pd.DataFrame, y: pd.Series, alpha: float = 0.2, n_samples: int = None
-    ) -> Tuple[pd.DataFrame, pd.Series]:
+    ) -> tuple[pd.DataFrame, pd.Series]:
         """Mixup augmentation"""
         if n_samples is None:
             n_samples = len(X)
@@ -751,8 +735,8 @@ class PreprocessingPipeline:
         self.fitted = False
 
     def fit_transform(
-        self, X: pd.DataFrame, y: Optional[pd.Series] = None
-    ) -> Tuple[pd.DataFrame, Optional[pd.Series]]:
+        self, X: pd.DataFrame, y: pd.Series | None = None
+    ) -> tuple[pd.DataFrame, pd.Series | None]:
         """Fit and transform the complete preprocessing pipeline"""
         X_processed = X.copy()
         y_processed = y.copy() if y is not None else None
@@ -833,7 +817,7 @@ class PreprocessingPipeline:
 
         return X_processed
 
-    def get_pipeline_summary(self) -> Dict[str, Any]:
+    def get_pipeline_summary(self) -> dict[str, Any]:
         """Get summary of preprocessing pipeline"""
         return {
             "config": self.config.__dict__,

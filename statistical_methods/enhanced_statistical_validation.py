@@ -1,18 +1,16 @@
-"""
-Enhanced statistical validation suite for comparing implementations
+"""Enhanced statistical validation suite for comparing implementations
 with established libraries and theoretical values.
 """
 
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from scipy import stats
-from statsmodels.stats.contingency_tables import mcnemar
 from statsmodels.stats.power import TTestPower
 from statsmodels.stats.proportion import proportion_confint, proportions_ztest
 
@@ -21,10 +19,9 @@ warnings.filterwarnings("ignore")
 
 @dataclass
 class ValidationResult:
-    """
-    Structured record summarizing a single validator comparison.
+    """Structured record summarizing a single validator comparison.
 
-    Attributes
+    Attributes:
     ----------
     test_name : str
         Human-readable label for the scenario (e.g., ``"Proportion test: Large samples"``).
@@ -43,7 +40,7 @@ class ValidationResult:
     details : Dict[str, Any]
         Extra context (intermediate z-scores, confidence intervals, metadata).
 
-    Examples
+    Examples:
     --------
     >>> ValidationResult(
     ...     test_name="CI width sanity check",
@@ -65,15 +62,14 @@ class ValidationResult:
     relative_error: float
     passed: bool
     tolerance: float
-    details: Dict[str, Any]
+    details: dict[str, Any]
 
 
 class StatisticalValidator:
     """Comprehensive validation suite for statistical methods."""
 
     def __init__(self, tolerance: float = 1e-3):
-        """
-        Initialize validator.
+        """Initialize validator.
 
         Args:
             tolerance: Default tolerance for comparisons
@@ -81,7 +77,7 @@ class StatisticalValidator:
         self.tolerance = tolerance
         self.validation_results = []
 
-    def validate_proportion_test(self) -> List[ValidationResult]:
+    def validate_proportion_test(self) -> list[ValidationResult]:
         """Validate proportion tests against statsmodels."""
         results = []
 
@@ -126,7 +122,7 @@ class StatisticalValidator:
 
         return results
 
-    def validate_confidence_intervals(self) -> List[ValidationResult]:
+    def validate_confidence_intervals(self) -> list[ValidationResult]:
         """Validate confidence interval calculations."""
         results = []
 
@@ -188,7 +184,7 @@ class StatisticalValidator:
 
         return results
 
-    def validate_power_calculations(self) -> List[ValidationResult]:
+    def validate_power_calculations(self) -> list[ValidationResult]:
         """Validate power calculations against statsmodels."""
         results = []
 
@@ -232,7 +228,7 @@ class StatisticalValidator:
 
         return results
 
-    def validate_statistical_distributions(self) -> List[ValidationResult]:
+    def validate_statistical_distributions(self) -> list[ValidationResult]:
         """Validate distribution calculations."""
         results = []
 
@@ -285,7 +281,7 @@ class StatisticalValidator:
 
     def validate_monte_carlo_simulations(
         self, n_simulations: int = 10000
-    ) -> List[ValidationResult]:
+    ) -> list[ValidationResult]:
         """Validate Monte Carlo simulation accuracy."""
         results = []
 
@@ -344,7 +340,7 @@ class StatisticalValidator:
 
         return results
 
-    def validate_bayesian_methods(self) -> List[ValidationResult]:
+    def validate_bayesian_methods(self) -> list[ValidationResult]:
         """Validate Bayesian calculations."""
         results = []
 
@@ -403,7 +399,7 @@ class StatisticalValidator:
 
         return results
 
-    def validate_multiple_testing_corrections(self) -> List[ValidationResult]:
+    def validate_multiple_testing_corrections(self) -> list[ValidationResult]:
         """Validate multiple testing correction methods."""
         results = []
 
@@ -483,7 +479,7 @@ class StatisticalValidator:
 
         return results
 
-    def validate_known_test_cases(self) -> List[ValidationResult]:
+    def validate_known_test_cases(self) -> list[ValidationResult]:
         """Validate against known theoretical test cases."""
         results = []
 
@@ -491,7 +487,7 @@ class StatisticalValidator:
         quantiles = [0.5, 0.84134, 0.97725, 0.99865]
         z_values = [0, 1, 2, 3]
 
-        for q, z in zip(quantiles, z_values):
+        for q, z in zip(quantiles, z_values, strict=False):
             calculated = stats.norm.ppf(q)
             error = abs(calculated - z)
 
@@ -601,7 +597,7 @@ class StatisticalValidator:
         ax.set_title("Validation Pass Rates by Category")
         ax.set_xlim(0, 1)
 
-        for i, (rate, count) in enumerate(zip(pass_rates, category_stats["count"])):
+        for i, (rate, count) in enumerate(zip(pass_rates, category_stats["count"], strict=False)):
             ax.text(
                 rate + 0.01,
                 i,
@@ -692,9 +688,8 @@ class TheoreticalValidator:
         true_param: float,
         data_generator: Callable,
         n_simulations: int = 1000,
-    ) -> Dict[str, Any]:
-        """
-        Validate if an estimator is unbiased.
+    ) -> dict[str, Any]:
+        """Validate if an estimator is unbiased.
 
         Args:
             estimator: Function that computes estimate from data
@@ -737,11 +732,10 @@ class TheoreticalValidator:
         self,
         estimator: Callable,
         true_param: float,
-        sample_sizes: List[int],
+        sample_sizes: list[int],
         n_simulations: int = 100,
     ) -> pd.DataFrame:
-        """
-        Validate if an estimator is consistent.
+        """Validate if an estimator is consistent.
 
         Args:
             estimator: Estimator function
@@ -823,7 +817,7 @@ if __name__ == "__main__":
         mean_estimator, 5.0, data_generator, n_simulations=1000
     )
 
-    print(f"  Mean estimator unbiasedness test:")
+    print("  Mean estimator unbiasedness test:")
     print(f"    Bias: {unbiased_result['bias']:.6f}")
     print(f"    Is unbiased: {unbiased_result['is_unbiased']}")
     print(f"    P-value: {unbiased_result['p_value']:.4f}")

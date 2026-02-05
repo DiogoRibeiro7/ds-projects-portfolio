@@ -1,5 +1,4 @@
-"""
-Enhanced visualization utilities for A/B testing and experimental analysis.
+"""Enhanced visualization utilities for A/B testing and experimental analysis.
 
 This module provides comprehensive plotting functions with interactive capabilities,
 publication-ready formatting, and advanced statistical visualizations.
@@ -11,7 +10,7 @@ import logging
 import os
 import warnings
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -69,7 +68,7 @@ else:
 sns.set_palette("husl")
 
 # Enhanced color scheme for consistent branding
-BRAND_COLORS: Dict[str, str] = {
+BRAND_COLORS: dict[str, str] = {
     "primary": "#2E86AB",
     "secondary": "#A23B72",
     "accent": "#F18F01",
@@ -86,10 +85,10 @@ def plot_experiment_results(
     df: pd.DataFrame,
     metric_col: str,
     group_col: str = "group",
-    figsize: Tuple[int, int] = DEFAULT_FIGSIZE,
+    figsize: tuple[int, int] = DEFAULT_FIGSIZE,
     interactive: bool = False,
     include_stats: bool = True,
-) -> Union[plt.Figure, Any]:
+) -> plt.Figure | Any:
     """Create comprehensive visualization of A/B test results with statistical summaries.
 
     All TODOs implemented:
@@ -113,7 +112,7 @@ def plot_experiment_results(
     include_stats : bool, default=True
         Whether to include statistical summary subplot.
 
-    Returns
+    Returns:
     -------
     fig : matplotlib.Figure or plotly.Figure
         The created figure object.
@@ -154,7 +153,7 @@ def plot_experiment_results(
         axes[ax_idx].set_ylabel("Conversion Rate", fontsize=12)
 
         # Add value labels on bars
-        for bar, rate in zip(bars, conv_rates.values):
+        for bar, rate in zip(bars, conv_rates.values, strict=False):
             axes[ax_idx].text(
                 bar.get_x() + bar.get_width() / 2,
                 bar.get_height() + 0.01,
@@ -218,7 +217,7 @@ def plot_experiment_results(
         flierprops={"marker": "o", "alpha": 0.5},
     )
 
-    for patch, color in zip(box_plot["boxes"], colors):
+    for patch, color in zip(box_plot["boxes"], colors, strict=False):
         patch.set_facecolor(color)
         patch.set_alpha(0.7)
 
@@ -238,7 +237,7 @@ def plot_experiment_results(
     axes[ax_idx].set_ylabel("Count", fontsize=12)
 
     # Add sample size labels
-    for bar, count in zip(bars, group_counts.values):
+    for bar, count in zip(bars, group_counts.values, strict=False):
         axes[ax_idx].text(
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + max(group_counts) * 0.01,
@@ -460,12 +459,12 @@ def _generate_summary_table(
 
 def plot_conversion_funnel(
     df: pd.DataFrame,
-    steps: List[str],
+    steps: list[str],
     group_col: str = "group",
-    figsize: Tuple[int, int] = (15, 8),
+    figsize: tuple[int, int] = (15, 8),
     interactive: bool = False,
     include_statistical_tests: bool = True,
-) -> Union[plt.Figure, Any]:
+) -> plt.Figure | Any:
     """Plot conversion funnel analysis with statistical tests for drop-off rates.
 
     All TODOs implemented:
@@ -489,12 +488,12 @@ def plot_conversion_funnel(
     include_statistical_tests : bool, default=True
         Whether to include statistical tests for funnel differences.
 
-    Returns
+    Returns:
     -------
     fig : matplotlib.Figure or plotly.Figure
         The created figure object.
 
-    Raises
+    Raises:
     ------
     ValueError
         If required funnel step columns are missing.
@@ -588,10 +587,10 @@ def plot_conversion_funnel(
 
         # Add confidence intervals as error bars (TODO implemented)
         error_lower = [
-            rate - ci_low for rate, ci_low in zip(data["rates"], data["ci_lower"])
+            rate - ci_low for rate, ci_low in zip(data["rates"], data["ci_lower"], strict=False)
         ]
         error_upper = [
-            ci_high - rate for rate, ci_high in zip(data["rates"], data["ci_upper"])
+            ci_high - rate for rate, ci_high in zip(data["rates"], data["ci_upper"], strict=False)
         ]
 
         axes[0].errorbar(
@@ -631,7 +630,7 @@ def plot_conversion_funnel(
         )
 
         # Add count labels on bars
-        for bar, count in zip(bars, data["counts"]):
+        for bar, count in zip(bars, data["counts"], strict=False):
             if count > 0:
                 axes[1].text(
                     bar.get_x() + bar.get_width() / 2,
@@ -698,7 +697,7 @@ def plot_conversion_funnel(
 
 
 def _plot_interactive_funnel(
-    df: pd.DataFrame, steps: List[str], group_col: str, include_statistical_tests: bool
+    df: pd.DataFrame, steps: list[str], group_col: str, include_statistical_tests: bool
 ) -> Any:
     """Create interactive Plotly funnel visualization (TODO implemented)."""
     fig = make_subplots(
@@ -787,7 +786,7 @@ def _plot_interactive_funnel(
     if include_statistical_tests and len(groups) == 2:
         test_results = _analyze_funnel_dropoffs(df, steps, group_col)
 
-        table_data: Dict[str, List[str]] = {
+        table_data: dict[str, list[str]] = {
             "Step Transition": [],
             "Group 1 Rate": [],
             "Group 2 Rate": [],
@@ -827,8 +826,8 @@ def _plot_interactive_funnel(
 
 
 def _analyze_funnel_dropoffs(
-    df: pd.DataFrame, steps: List[str], group_col: str
-) -> Dict[str, Dict]:
+    df: pd.DataFrame, steps: list[str], group_col: str
+) -> dict[str, dict]:
     """Analyze statistical significance of funnel drop-off differences (TODO implemented)."""
     if not SCIPY_AVAILABLE:
         return {}
@@ -890,10 +889,10 @@ def plot_time_series_analysis(
     metric_col: str,
     group_col: str = "group",
     agg_level: str = "day",
-    figsize: Tuple[int, int] = (16, 10),
+    figsize: tuple[int, int] = (16, 10),
     interactive: bool = False,
     include_seasonality: bool = True,
-) -> Union[plt.Figure, Any]:
+) -> plt.Figure | Any:
     """Plot time series analysis with seasonality detection and statistical tests.
 
     All TODOs implemented:
@@ -921,12 +920,12 @@ def plot_time_series_analysis(
     include_seasonality : bool, default=True
         Whether to include seasonality analysis.
 
-    Returns
+    Returns:
     -------
     fig : matplotlib.Figure or plotly.Figure
         The created figure object.
 
-    Raises
+    Raises:
     ------
     ValueError
         If date column is not found or cannot be parsed.
@@ -1116,7 +1115,7 @@ def plot_time_series_analysis(
         if temporal_tests:
             test_text.extend(
                 [
-                    f"\nTemporal Consistency Tests:",
+                    "\nTemporal Consistency Tests:",
                     f"Date Range: {temporal_tests['date_range'][0]} to {temporal_tests['date_range'][1]}",
                     f"Total Days: {temporal_tests['total_days']}",
                     f"Daily Variance (CV): {temporal_tests['daily_variance']:.3f}",
@@ -1126,7 +1125,7 @@ def plot_time_series_analysis(
             if "srm_by_day" in temporal_tests:
                 test_text.extend(
                     [
-                        f"\nDaily SRM Analysis:",
+                        "\nDaily SRM Analysis:",
                         f"Days with SRM issues: {temporal_tests['srm_by_day']['problematic_days']}",
                         f"SRM Rate: {temporal_tests['srm_by_day']['srm_rate']:.1%}",
                     ]
@@ -1233,9 +1232,9 @@ def _plot_interactive_timeseries(
 
 def _perform_temporal_tests(
     df: pd.DataFrame, date_col: str, metric_col: str, group_col: str
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Perform statistical tests for temporal consistency (TODO implemented)."""
-    results: Dict[str, Any] = {}
+    results: dict[str, Any] = {}
 
     try:
         # Basic temporal statistics
@@ -1276,9 +1275,9 @@ def plot_statistical_power(
     sample_sizes: np.ndarray,
     alpha: float = DEFAULT_ALPHA,
     baseline_rate: float = DEFAULT_BASELINE_RATE,
-    figsize: Tuple[int, int] = (15, 6),
+    figsize: tuple[int, int] = (15, 6),
     interactive: bool = False,
-) -> Union[plt.Figure, Any]:
+) -> plt.Figure | Any:
     """Plot statistical power curves with proper power calculations.
 
     All TODOs implemented:
@@ -1302,7 +1301,7 @@ def plot_statistical_power(
     interactive : bool, default=False
         Whether to create interactive Plotly plots.
 
-    Returns
+    Returns:
     -------
     fig : matplotlib.Figure or plotly.Figure
         The created figure object.
@@ -1491,7 +1490,7 @@ class ExperimentDashboard:
     - Professional HTML report template
     """
 
-    def __init__(self, experiment_name: str, config: Optional[Dict] = None):
+    def __init__(self, experiment_name: str, config: dict | None = None):
         """Initialize the experiment dashboard.
 
         Parameters
@@ -1503,9 +1502,9 @@ class ExperimentDashboard:
         """
         self.experiment_name = experiment_name
         self.config = config or {}
-        self.figures: Dict[str, plt.Figure] = {}
-        self.data_cache: Dict[str, Any] = {}
-        self.last_update: Optional[datetime] = None
+        self.figures: dict[str, plt.Figure] = {}
+        self.data_cache: dict[str, Any] = {}
+        self.last_update: datetime | None = None
 
         # Default configuration (TODO implemented)
         self.default_config = {
@@ -1525,8 +1524,8 @@ class ExperimentDashboard:
         )
 
     def generate_summary_dashboard(
-        self, df: pd.DataFrame, config: Dict, save_path: Optional[str] = None
-    ) -> Dict[str, plt.Figure]:
+        self, df: pd.DataFrame, config: dict, save_path: str | None = None
+    ) -> dict[str, plt.Figure]:
         """Generate comprehensive experiment dashboard with automated interpretation.
 
         Parameters
@@ -1538,7 +1537,7 @@ class ExperimentDashboard:
         save_path : str, optional
             Path to save dashboard outputs.
 
-        Returns
+        Returns:
         -------
         dashboard_figures : dict
             Dictionary of generated figures by type.
@@ -1633,7 +1632,7 @@ class ExperimentDashboard:
         return dashboard_figures
 
     def _create_multi_metric_summary(
-        self, df: pd.DataFrame, metrics: List[str], group_col: str
+        self, df: pd.DataFrame, metrics: list[str], group_col: str
     ) -> plt.Figure:
         """Create multi-metric summary visualization (TODO implemented)."""
         fig, axes = plt.subplots(2, 2, figsize=(16, 12))
@@ -1812,14 +1811,14 @@ class ExperimentDashboard:
         )
 
         plt.suptitle(
-            f"Multi-Metric Analysis Summary", fontsize=16, fontweight="bold", y=0.98
+            "Multi-Metric Analysis Summary", fontsize=16, fontweight="bold", y=0.98
         )
         plt.tight_layout()
 
         return fig
 
     def _create_interpretation_summary(
-        self, df: pd.DataFrame, config: Dict
+        self, df: pd.DataFrame, config: dict
     ) -> plt.Figure:
         """Create automated interpretation summary (TODO implemented)."""
         fig, ax = plt.subplots(figsize=(12, 8))
@@ -1896,7 +1895,7 @@ class ExperimentDashboard:
         # Combine all interpretations
         full_text = (
             [
-                f"Automated Experiment Interpretation",
+                "Automated Experiment Interpretation",
                 f"Experiment: {self.experiment_name}",
                 f"Analysis Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
                 "=" * 50,
@@ -1930,8 +1929,8 @@ class ExperimentDashboard:
         return fig
 
     def export_dashboard(
-        self, output_dir: str, formats: Optional[List[str]] = None
-    ) -> Dict[str, List[str]]:
+        self, output_dir: str, formats: list[str] | None = None
+    ) -> dict[str, list[str]]:
         """Export dashboard plots to multiple formats (TODO implemented).
 
         Parameters
@@ -1941,7 +1940,7 @@ class ExperimentDashboard:
         formats : list of str, optional
             Export formats. Uses config defaults if None.
 
-        Returns
+        Returns:
         -------
         exported_files : dict
             Dictionary mapping figure names to lists of exported file paths.
@@ -2311,7 +2310,7 @@ def create_publication_ready_plot(
     **kwargs
         Additional arguments for specific plot types.
 
-    Returns
+    Returns:
     -------
     fig : matplotlib.Figure
         Publication-ready figure.
@@ -2335,8 +2334,8 @@ def create_publication_ready_plot(
 
 
 def create_memory_efficient_plots(
-    df: pd.DataFrame, plot_configs: List[Dict], chunk_size: int = 10000
-) -> List[plt.Figure]:
+    df: pd.DataFrame, plot_configs: list[dict], chunk_size: int = 10000
+) -> list[plt.Figure]:
     """Create plots with memory optimization for large datasets (TODO implemented).
 
     Parameters
@@ -2348,7 +2347,7 @@ def create_memory_efficient_plots(
     chunk_size : int, default=10000
         Size of data chunks for processing.
 
-    Returns
+    Returns:
     -------
     figures : list of matplotlib.Figure
         List of generated figures.
@@ -2435,9 +2434,9 @@ class ThemeManager:
 
         # Update global brand colors
         global BRAND_COLORS
-        theme_colors = cast(Dict[str, str], theme["colors"])
+        theme_colors = cast(dict[str, str], theme["colors"])
         BRAND_COLORS.update(theme_colors)
 
-    def get_colors(self) -> Dict[str, str]:
+    def get_colors(self) -> dict[str, str]:
         """Get current theme colors."""
-        return cast(Dict[str, str], self.themes[self.theme_name]["colors"])
+        return cast(dict[str, str], self.themes[self.theme_name]["colors"])

@@ -9,7 +9,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Import GraphQL components
-from graphql_api import create_graphql_app, schema
+from graphql_api import create_graphql_app
 
 
 class TestGraphQLAPI(unittest.TestCase):

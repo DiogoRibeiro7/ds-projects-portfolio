@@ -1,5 +1,4 @@
-"""
-Integration tests covering the experiment data workflow.
+"""Integration tests covering the experiment data workflow.
 """
 
 from __future__ import annotations

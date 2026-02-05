@@ -1,54 +1,33 @@
-"""
-Data Profiling Tools
+"""Data Profiling Tools
 Automatic data quality reports, lineage tracking, versioning, and catalog integration
 """
 
-import json
 import hashlib
-import pickle
+import json
 import logging
-from typing import Dict, List, Any, Optional, Union, Tuple, Set
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timedelta
-from pathlib import Path
-import uuid
+import pickle
 import sqlite3
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy import stats
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-
-# Profiling libraries
-import pandas_profiling
-from ydata_profiling import ProfileReport
-import sweetviz as sv
-import dtale
-import dabl
+import uuid
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 # Data versioning and tracking
-import dvc.api
-import mlflow
-import wandb
-import neptune
+import numpy as np
+import pandas as pd
+
+# Profiling libraries
+import sweetviz as sv
+from scipy import stats
 
 # Database and catalog
 from sqlalchemy import (
     create_engine,
-    Column,
-    String,
-    Integer,
-    Float,
-    DateTime,
-    Text,
-    JSON,
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
+from ydata_profiling import ProfileReport
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -64,19 +43,19 @@ class DataProfile:
     dataset_id: str
     dataset_name: str
     timestamp: datetime
-    shape: Tuple[int, int]
-    columns: List[str]
-    dtypes: Dict[str, str]
+    shape: tuple[int, int]
+    columns: list[str]
+    dtypes: dict[str, str]
     memory_usage: int
-    statistics: Dict[str, Any]
-    missing_values: Dict[str, float]
-    unique_values: Dict[str, int]
-    correlations: Dict[str, float]
-    outliers: Dict[str, int]
-    distributions: Dict[str, Dict[str, Any]]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    statistics: dict[str, Any]
+    missing_values: dict[str, float]
+    unique_values: dict[str, int]
+    correlations: dict[str, float]
+    outliers: dict[str, int]
+    distributions: dict[str, dict[str, Any]]
+    metadata: dict[str, Any] = field(default_factory=dict)
     version: str = "1.0"
-    checksum: Optional[str] = None
+    checksum: str | None = None
 
 
 @dataclass
@@ -85,12 +64,12 @@ class DataLineage:
 
     lineage_id: str
     dataset_id: str
-    source_datasets: List[str]
-    transformations: List[Dict[str, Any]]
+    source_datasets: list[str]
+    transformations: list[dict[str, Any]]
     timestamp: datetime
     created_by: str
     version: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -102,10 +81,10 @@ class DataVersion:
     version_number: str
     timestamp: datetime
     checksum: str
-    changes: List[Dict[str, Any]]
-    stats_diff: Dict[str, Any]
-    schema_changes: List[Dict[str, Any]]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    changes: list[dict[str, Any]]
+    stats_diff: dict[str, Any]
+    schema_changes: list[dict[str, Any]]
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class DataProfiler:
@@ -182,7 +161,7 @@ class DataProfiler:
 
         return profile
 
-    def _compute_statistics(self, df: pd.DataFrame) -> Dict[str, Any]:
+    def _compute_statistics(self, df: pd.DataFrame) -> dict[str, Any]:
         """Compute statistical summaries"""
         stats = {}
 
@@ -224,7 +203,7 @@ class DataProfiler:
 
         return stats
 
-    def _detect_outliers(self, df: pd.DataFrame) -> Dict[str, int]:
+    def _detect_outliers(self, df: pd.DataFrame) -> dict[str, int]:
         """Detect outliers using multiple methods"""
         outliers = {}
 
@@ -241,7 +220,7 @@ class DataProfiler:
 
         return outliers
 
-    def _analyze_distributions(self, df: pd.DataFrame) -> Dict[str, Dict[str, Any]]:
+    def _analyze_distributions(self, df: pd.DataFrame) -> dict[str, dict[str, Any]]:
         """Analyze data distributions"""
         distributions = {}
 
@@ -477,7 +456,7 @@ class DataProfiler:
         return profile
 
     def generate_sweetviz_report(
-        self, df: pd.DataFrame, dataset_name: str, target_column: Optional[str] = None
+        self, df: pd.DataFrame, dataset_name: str, target_column: str | None = None
     ):
         """Generate EDA report using Sweetviz"""
         if target_column and target_column in df.columns:
@@ -495,7 +474,7 @@ class DataProfiler:
         df2: pd.DataFrame,
         name1: str = "Dataset 1",
         name2: str = "Dataset 2",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Compare two datasets"""
         profile1 = self.profile_dataset(df1, name1, detailed=False)
         profile2 = self.profile_dataset(df2, name2, detailed=False)
@@ -569,9 +548,9 @@ class DataLineageTracker:
 
     def track_transformation(
         self,
-        input_datasets: List[str],
+        input_datasets: list[str],
         output_dataset: str,
-        transformation: Dict[str, Any],
+        transformation: dict[str, Any],
         created_by: str = "system",
     ) -> DataLineage:
         """Track a data transformation"""
@@ -641,7 +620,7 @@ class DataLineageTracker:
         conn.commit()
         conn.close()
 
-    def get_lineage(self, dataset_id: str) -> Optional[DataLineage]:
+    def get_lineage(self, dataset_id: str) -> DataLineage | None:
         """Get lineage for a dataset"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -670,7 +649,7 @@ class DataLineageTracker:
 
         return None
 
-    def get_upstream_datasets(self, dataset_id: str, max_depth: int = 5) -> Set[str]:
+    def get_upstream_datasets(self, dataset_id: str, max_depth: int = 5) -> set[str]:
         """Get all upstream datasets"""
         upstream = set()
         to_process = [dataset_id]
@@ -728,7 +707,7 @@ class DataVersionManager:
         self.current_versions = {}
 
     def create_version(
-        self, df: pd.DataFrame, dataset_id: str, version_number: Optional[str] = None
+        self, df: pd.DataFrame, dataset_id: str, version_number: str | None = None
     ) -> DataVersion:
         """Create a new version of the dataset"""
         if version_number is None:
@@ -782,7 +761,7 @@ class DataVersionManager:
 
     def _detect_changes(
         self, df: pd.DataFrame, prev_version: DataVersion
-    ) -> Tuple[List, Dict, List]:
+    ) -> tuple[list, dict, list]:
         """Detect changes from previous version"""
         changes = []
         stats_diff = {}
@@ -837,7 +816,7 @@ class DataVersionManager:
 
     def _load_snapshot(
         self, dataset_id: str, version_number: str
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         """Load data snapshot"""
         file_path = self.storage_path / f"{dataset_id}_{version_number}.parquet"
         if file_path.exists():
@@ -846,11 +825,11 @@ class DataVersionManager:
 
     def get_version(
         self, dataset_id: str, version_number: str
-    ) -> Optional[DataVersion]:
+    ) -> DataVersion | None:
         """Get specific version"""
         return self.versions.get(f"{dataset_id}_{version_number}")
 
-    def list_versions(self, dataset_id: str) -> List[DataVersion]:
+    def list_versions(self, dataset_id: str) -> list[DataVersion]:
         """List all versions for a dataset"""
         versions = []
         for key, version in self.versions.items():
@@ -858,7 +837,7 @@ class DataVersionManager:
                 versions.append(version)
         return sorted(versions, key=lambda x: x.timestamp)
 
-    def rollback(self, dataset_id: str, version_number: str) -> Optional[pd.DataFrame]:
+    def rollback(self, dataset_id: str, version_number: str) -> pd.DataFrame | None:
         """Rollback to a specific version"""
         df = self._load_snapshot(dataset_id, version_number)
         if df is not None:
@@ -905,8 +884,8 @@ class DataCatalog:
         name: str,
         description: str,
         owner: str,
-        tags: List[str] = None,
-        metadata: Dict = None,
+        tags: list[str] = None,
+        metadata: dict = None,
     ):
         """Register a dataset in the catalog"""
         conn = sqlite3.connect(self.catalog_path)
@@ -937,8 +916,8 @@ class DataCatalog:
         logger.info(f"Dataset {name} registered in catalog")
 
     def search_datasets(
-        self, query: str = None, tags: List[str] = None, owner: str = None
-    ) -> List[Dict[str, Any]]:
+        self, query: str = None, tags: list[str] = None, owner: str = None
+    ) -> list[dict[str, Any]]:
         """Search datasets in catalog"""
         conn = sqlite3.connect(self.catalog_path)
         cursor = conn.cursor()

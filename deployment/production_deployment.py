@@ -1,28 +1,25 @@
-"""
-Production Deployment System
+"""Production Deployment System
 
 Comprehensive model deployment infrastructure with Kubernetes, monitoring, and auto-scaling.
 """
 
+import json
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+import aiohttp
+import boto3
+import mlflow
+import numpy as np
+import pandas as pd
+import redis
+from prometheus_client import Counter, Gauge, Histogram
+
 import docker
 from kubernetes import client, config
-import mlflow
-import yaml
-from dataclasses import dataclass, field
-from typing import Dict, Optional, List, Any
-import prometheus_client
-from prometheus_client import Counter, Histogram, Gauge, Summary
-import logging
-from datetime import datetime, timedelta
-import asyncio
-import aiohttp
-import json
-import pandas as pd
-import numpy as np
-from pathlib import Path
-import hashlib
-import redis
-import boto3
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -82,15 +79,15 @@ class ModelDeploymentConfig:
     canary_percentage: int = 10
     a_b_testing: bool = False
     a_b_percentage: int = 50
-    custom_metrics: Dict[str, Any] = field(default_factory=dict)
-    environment_variables: Dict[str, str] = field(default_factory=dict)
-    secrets: List[str] = field(default_factory=list)
+    custom_metrics: dict[str, Any] = field(default_factory=dict)
+    environment_variables: dict[str, str] = field(default_factory=dict)
+    secrets: list[str] = field(default_factory=list)
 
 
 class ModelDeploymentManager:
     """Manage model deployments to Kubernetes."""
 
-    def __init__(self, config_file: Optional[str] = None):
+    def __init__(self, config_file: str | None = None):
         """Initialize deployment manager."""
         if config_file:
             config.load_kube_config(config_file=config_file)
@@ -115,7 +112,7 @@ class ModelDeploymentManager:
         # MLflow client
         self.mlflow_client = mlflow.tracking.MlflowClient()
 
-    def deploy_model(self, config: ModelDeploymentConfig) -> Dict[str, Any]:
+    def deploy_model(self, config: ModelDeploymentConfig) -> dict[str, Any]:
         """Deploy model to Kubernetes."""
         logger.info(
             f"Deploying model {config.model_name} version {config.model_version}"
@@ -246,7 +243,7 @@ class ModelDeploymentManager:
                 )
             raise
 
-    def _create_secrets(self, config: ModelDeploymentConfig) -> List[str]:
+    def _create_secrets(self, config: ModelDeploymentConfig) -> list[str]:
         """Create Kubernetes secrets."""
         created_secrets = []
 
@@ -652,7 +649,7 @@ CMD ["python", "model_server.py"]
                 )
             raise
 
-    def _create_env_vars(self, config: ModelDeploymentConfig) -> List:
+    def _create_env_vars(self, config: ModelDeploymentConfig) -> list:
         """Create environment variables for container."""
         env_vars = [
             client.V1EnvVar(name="MODEL_NAME", value=config.model_name),
@@ -713,7 +710,7 @@ CMD ["python", "model_server.py"]
             )
         ]
 
-    def _setup_monitoring(self, config: ModelDeploymentConfig) -> Dict:
+    def _setup_monitoring(self, config: ModelDeploymentConfig) -> dict:
         """Setup monitoring for deployed model."""
         # Create ServiceMonitor for Prometheus
         service_monitor = {
@@ -743,7 +740,7 @@ CMD ["python", "model_server.py"]
             "alerts": alerts,
         }
 
-    def _create_grafana_dashboard(self, config: ModelDeploymentConfig) -> Dict:
+    def _create_grafana_dashboard(self, config: ModelDeploymentConfig) -> dict:
         """Create Grafana dashboard for model monitoring."""
         dashboard = {
             "dashboard": {
@@ -799,7 +796,7 @@ CMD ["python", "model_server.py"]
 
         return dashboard
 
-    def _create_alerts(self, config: ModelDeploymentConfig) -> List[Dict]:
+    def _create_alerts(self, config: ModelDeploymentConfig) -> list[dict]:
         """Create alert rules for model monitoring."""
         alerts = [
             {
@@ -865,7 +862,7 @@ CMD ["python", "model_server.py"]
         return False
 
     def rollback_deployment(
-        self, config: ModelDeploymentConfig, revision: Optional[int] = None
+        self, config: ModelDeploymentConfig, revision: int | None = None
     ):
         """Rollback deployment to previous version."""
         try:
@@ -898,7 +895,7 @@ CMD ["python", "model_server.py"]
             logger.error(f"Rollback failed: {e}")
             raise
 
-    def _fetch_secret_from_vault(self, secret_name: str) -> Dict[str, str]:
+    def _fetch_secret_from_vault(self, secret_name: str) -> dict[str, str]:
         """Fetch secret from HashiCorp Vault or AWS Secrets Manager."""
         # Example for AWS Secrets Manager
         client = boto3.client("secretsmanager")
@@ -1058,7 +1055,7 @@ class ModelMonitor:
 
     async def _calculate_drift(
         self, model_name: str, X: pd.DataFrame
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Calculate data drift using various methods."""
         drift_scores = {}
 
@@ -1101,7 +1098,7 @@ class ModelMonitor:
 
         return drift_scores
 
-    def _calculate_kl_divergence(self, ref_stats: Dict, curr_stats: Dict) -> float:
+    def _calculate_kl_divergence(self, ref_stats: dict, curr_stats: dict) -> float:
         """Calculate simplified KL divergence between distributions."""
         # Simplified calculation using normal approximation
         ref_mean = ref_stats["mean"]
@@ -1123,7 +1120,7 @@ class ModelMonitor:
         model_name: str,
         model_version: str,
         accuracy: float,
-        drift_scores: Dict[str, float],
+        drift_scores: dict[str, float],
     ):
         """Trigger model retraining pipeline."""
         self.logger.warning(f"Triggering retraining for {model_name} v{model_version}")
@@ -1163,9 +1160,8 @@ class ModelMonitor:
 
 def deploy_model_from_mlflow(
     model_name: str, model_version: str, environment: str = "staging"
-) -> Dict:
+) -> dict:
     """Deploy model from MLflow Model Registry."""
-
     # Get model URI from MLflow
     mlflow_client = mlflow.tracking.MlflowClient()
     model_uri = f"models:/{model_name}/{model_version}"

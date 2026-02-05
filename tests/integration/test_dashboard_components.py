@@ -1,24 +1,23 @@
-"""
-Test suite for dashboard components.
+"""Test suite for dashboard components.
 """
 
-import pytest
-import json
-from unittest.mock import Mock, patch, MagicMock
-import pandas as pd
+from unittest.mock import Mock, patch
+
 import numpy as np
+import pandas as pd
 import plotly.graph_objs as go
-from dash import Dash, html, dcc
-from dash.testing import DashComposite
+import pytest
+from dash import Dash, dcc, html
+
+from dashboard_enhanced.app import create_app
 from dashboard_enhanced.dashboard_framework import (
+    ChartBuilder,
     DashboardBase,
+    DataConnector,
     InteractiveDashboard,
     RealtimeDashboard,
-    ChartBuilder,
-    DataConnector,
 )
-from dashboard_enhanced.app import create_app
-from dashboard_enhanced.graphql_api import schema, Query
+from dashboard_enhanced.graphql_api import Query, schema
 
 pytestmark = pytest.mark.integration
 

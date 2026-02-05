@@ -1,5 +1,4 @@
-"""
-Data Science Portfolio Package
+"""Data Science Portfolio Package
 
 A comprehensive toolkit for A/B testing, statistical analysis, and experimental design.
 """

@@ -1,5 +1,4 @@
-"""
-Enhanced Feature Engineering for Bank Churn Prediction.
+"""Enhanced Feature Engineering for Bank Churn Prediction.
 Comprehensive feature engineering with automated selection, interaction detection,
 stability metrics, and proper target encoding.
 """
@@ -7,25 +6,20 @@ stability metrics, and proper target encoding.
 import warnings
 from dataclasses import dataclass, field
 from itertools import combinations
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
-from scipy import stats
 from scipy.stats import spearmanr
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import (
     RFE,
-    SelectFromModel,
-    SelectKBest,
     chi2,
     f_classif,
     mutual_info_classif,
 )
-from sklearn.model_selection import KFold, StratifiedKFold
-from sklearn.preprocessing import KBinsDiscretizer, StandardScaler
+from sklearn.model_selection import StratifiedKFold
 
 warnings.filterwarnings("ignore")
 
@@ -36,29 +30,27 @@ class FeatureImportanceResult:
 
     method: str
     scores: pd.DataFrame
-    selected_features: List[str]
+    selected_features: list[str]
     stability_score: float
-    confidence_intervals: Dict[str, Tuple[float, float]] = field(default_factory=dict)
-    feature_clusters: Dict[str, List[str]] = field(default_factory=dict)
+    confidence_intervals: dict[str, tuple[float, float]] = field(default_factory=dict)
+    feature_clusters: dict[str, list[str]] = field(default_factory=dict)
 
 
 class EnhancedFeatureSelector:
-    """
-    Enhanced automated feature selection with multiple methods,
+    """Enhanced automated feature selection with multiple methods,
     stability analysis, and ensemble voting.
     """
 
     def __init__(
         self,
-        methods: List[str] = None,
-        k: Union[int, float] = 0.5,
+        methods: list[str] = None,
+        k: int | float = 0.5,
         importance_threshold: float = 0.01,
         stability_selection: bool = True,
         n_bootstrap: int = 100,
         consensus_threshold: float = 0.5,
     ):
-        """
-        Initialize enhanced feature selector.
+        """Initialize enhanced feature selector.
 
         Args:
             methods: List of selection methods
@@ -92,7 +84,6 @@ class EnhancedFeatureSelector:
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "EnhancedFeatureSelector":
         """Fit feature selector with stability analysis."""
-
         # Determine number of features to select
         if isinstance(self.k, float) and 0 < self.k <= 1:
             n_features = int(self.k * X.shape[1])
@@ -122,7 +113,7 @@ class EnhancedFeatureSelector:
 
     def _stable_feature_selection(
         self, X: pd.DataFrame, y: pd.Series, method: str, n_features: int
-    ) -> Tuple[pd.Series, List[str]]:
+    ) -> tuple[pd.Series, list[str]]:
         """Perform stable feature selection using bootstrap."""
         n_samples = len(X)
         feature_counts = pd.Series(0, index=X.columns)
@@ -156,9 +147,8 @@ class EnhancedFeatureSelector:
 
     def _single_feature_selection(
         self, X: pd.DataFrame, y: pd.Series, method: str, n_features: int
-    ) -> Tuple[pd.Series, List[str]]:
+    ) -> tuple[pd.Series, list[str]]:
         """Perform single feature selection based on method."""
-
         if method == "mutual_info":
             scores = mutual_info_classif(X, y, random_state=42)
             scores_series = pd.Series(scores, index=X.columns)
@@ -327,12 +317,11 @@ class FeatureInteractionDetector:
     def __init__(
         self,
         max_interactions: int = 50,
-        interaction_types: List[str] = None,
+        interaction_types: list[str] = None,
         correlation_threshold: float = 0.1,
         importance_threshold: float = 0.01,
     ):
-        """
-        Initialize feature interaction detector.
+        """Initialize feature interaction detector.
 
         Args:
             max_interactions: Maximum number of interactions to create
@@ -350,9 +339,8 @@ class FeatureInteractionDetector:
         self.interactions_ = []
         self.interaction_importance_ = {}
 
-    def fit(self, X: pd.DataFrame, y: pd.Series, feature_list: List[str] = None):
-        """
-        Detect important interactions.
+    def fit(self, X: pd.DataFrame, y: pd.Series, feature_list: list[str] = None):
+        """Detect important interactions.
 
         Args:
             X: Feature DataFrame
@@ -465,21 +453,19 @@ class FeatureInteractionDetector:
 
 
 class TargetEncoder(BaseEstimator, TransformerMixin):
-    """
-    Proper target encoding with regularization and cross-validation
+    """Proper target encoding with regularization and cross-validation
     to prevent overfitting.
     """
 
     def __init__(
         self,
-        columns: List[str] = None,
+        columns: list[str] = None,
         smoothing: float = 1.0,
         min_samples_leaf: int = 1,
         cv: int = 5,
-        hierarchy: Dict[str, str] = None,
+        hierarchy: dict[str, str] = None,
     ):
-        """
-        Initialize target encoder.
+        """Initialize target encoder.
 
         Args:
             columns: Columns to encode (None for all categorical)
@@ -512,7 +498,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         return self
 
-    def _fit_column(self, X_col: pd.Series, y: pd.Series) -> Dict[Any, float]:
+    def _fit_column(self, X_col: pd.Series, y: pd.Series) -> dict[Any, float]:
         """Fit encoding for a single column using CV."""
         encoding = {}
 
@@ -620,8 +606,7 @@ class FeatureStabilityAnalyzer:
     """Analyze feature stability across different data splits and time periods."""
 
     def __init__(self, n_splits: int = 10, test_size: float = 0.2):
-        """
-        Initialize stability analyzer.
+        """Initialize stability analyzer.
 
         Args:
             n_splits: Number of splits for stability testing
@@ -633,10 +618,9 @@ class FeatureStabilityAnalyzer:
         self.temporal_stability_ = {}
 
     def analyze_stability(
-        self, X: pd.DataFrame, y: pd.Series, feature_list: List[str] = None
+        self, X: pd.DataFrame, y: pd.Series, feature_list: list[str] = None
     ) -> pd.DataFrame:
-        """
-        Analyze feature stability across different data splits.
+        """Analyze feature stability across different data splits.
 
         Args:
             X: Feature DataFrame
@@ -725,8 +709,7 @@ class FeatureStabilityAnalyzer:
     def analyze_temporal_stability(
         self, X: pd.DataFrame, y: pd.Series, time_column: str, n_periods: int = 5
     ) -> pd.DataFrame:
-        """
-        Analyze feature stability over time.
+        """Analyze feature stability over time.
 
         Args:
             X: Feature DataFrame with time column

@@ -1,5 +1,4 @@
-"""
-Minimal demo that exercises the data cleaning + analysis stack.
+"""Minimal demo that exercises the data cleaning + analysis stack.
 
 Usage:
     python examples/run_demo.py

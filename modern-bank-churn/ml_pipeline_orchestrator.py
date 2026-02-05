@@ -1,5 +1,4 @@
-"""
-ML Pipeline Orchestrator for Bank Churn Prediction
+"""ML Pipeline Orchestrator for Bank Churn Prediction
 
 This module provides a unified interface to orchestrate the complete ML pipeline,
 integrating all enhanced modules for feature engineering, modeling, evaluation,
@@ -9,47 +8,47 @@ Author: Portfolio Team
 Date: 2024
 """
 
+import json
 import logging
 import warnings
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, Any
 from dataclasses import dataclass, field
 from datetime import datetime
-import json
-import yaml
+from pathlib import Path
+from typing import Any
 
+import joblib
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import roc_auc_score, precision_recall_curve
-import joblib
-
-# Import our enhanced modules
-from enhanced_feature_engineering import (
-    EnhancedFeatureSelector,
-    FeatureInteractionDetector,
-    TargetEncoder,
-    FeatureStabilityAnalyzer,
-)
-from enhanced_modeling import (
-    StratifiedCrossValidator,
-    EnhancedEnsembleMethods,
-    HyperparameterOptimizer,
-    ModelCalibrator,
-    UncertaintyQuantifier,
-)
+import yaml
 from enhanced_evaluation import (
     BusinessMetricsCalculator,
     FairnessEvaluator,
     ModelComparisonFramework,
 )
+
+# Import our enhanced modules
+from enhanced_feature_engineering import (
+    EnhancedFeatureSelector,
+    FeatureInteractionDetector,
+    FeatureStabilityAnalyzer,
+    TargetEncoder,
+)
+from enhanced_modeling import (
+    EnhancedEnsembleMethods,
+    HyperparameterOptimizer,
+    ModelCalibrator,
+    StratifiedCrossValidator,
+    UncertaintyQuantifier,
+)
 from enhanced_production import (
-    ModelVersionControl,
+    ABTestingFramework,
     DriftDetector,
     ModelExplainer,
-    ABTestingFramework,
+    ModelVersionControl,
 )
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -61,8 +60,7 @@ warnings.filterwarnings("ignore")
 
 @dataclass
 class PipelineConfig:
-    """
-    Central configuration for the bank churn ML pipeline.
+    """Central configuration for the bank churn ML pipeline.
 
     The dataclass captures sampling ratios, feature engineering toggles,
     modeling flags, and production settings so experiments remain
@@ -90,7 +88,7 @@ class PipelineConfig:
     output_dir : str
         Directory where reports, artifacts, and MLflow references are written.
 
-    Examples
+    Examples:
     --------
     >>> cfg = PipelineConfig(test_size=0.25, n_trials=50, setup_ab_testing=True)
     >>> cfg.base_models
@@ -115,7 +113,7 @@ class PipelineConfig:
 
     # Modeling
     model_type: str = "ensemble"  # 'single', 'ensemble', 'stacking'
-    base_models: List[str] = field(
+    base_models: list[str] = field(
         default_factory=lambda: ["xgboost", "lightgbm", "catboost"]
     )
     hyperparameter_tuning: bool = True
@@ -127,7 +125,7 @@ class PipelineConfig:
     # Evaluation
     calculate_business_metrics: bool = True
     check_fairness: bool = True
-    sensitive_features: List[str] = field(
+    sensitive_features: list[str] = field(
         default_factory=lambda: ["gender", "age_group"]
     )
     compare_models: bool = True
@@ -145,8 +143,7 @@ class PipelineConfig:
 
 
 class MLPipelineOrchestrator:
-    """
-    Coordinate data prep, modeling, evaluation, and production hand-off.
+    """Coordinate data prep, modeling, evaluation, and production hand-off.
 
     The orchestrator glues together the enhanced feature engineering,
     modeling, evaluation, and production modules so a single call to
@@ -155,7 +152,7 @@ class MLPipelineOrchestrator:
     fairness metrics, and exports artifacts such as MLflow runs and SHAP
     explanations.
 
-    Attributes
+    Attributes:
     ----------
     config : PipelineConfig
         Immutable configuration describing sampling ratios, feature toggles,
@@ -164,7 +161,7 @@ class MLPipelineOrchestrator:
         Mutable status dictionary tracking timestamps, completed stages, and
         aggregate metrics for progress reporting or dashboards.
 
-    Examples
+    Examples:
     --------
     >>> import pandas as pd
     >>> data = pd.read_csv("data/churn.csv")
@@ -174,9 +171,8 @@ class MLPipelineOrchestrator:
     ['accuracy', 'auc']
     """
 
-    def __init__(self, config: Optional[PipelineConfig] = None):
-        """
-        Initialize the ML Pipeline Orchestrator.
+    def __init__(self, config: PipelineConfig | None = None):
+        """Initialize the ML Pipeline Orchestrator.
 
         Args:
             config: Pipeline configuration object
@@ -231,11 +227,10 @@ class MLPipelineOrchestrator:
     def run_pipeline(
         self,
         data: pd.DataFrame,
-        customer_values: Optional[pd.Series] = None,
+        customer_values: pd.Series | None = None,
         quick_mode: bool = False,
-    ) -> Dict[str, Any]:
-        """
-        Run the complete ML pipeline.
+    ) -> dict[str, Any]:
+        """Run the complete ML pipeline.
 
         Args:
             data: Input dataframe with features and target
@@ -326,9 +321,8 @@ class MLPipelineOrchestrator:
 
     def _prepare_data(
         self, data: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
-        """
-        Prepare data for modeling.
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+        """Prepare data for modeling.
 
         Args:
             data: Input dataframe
@@ -365,9 +359,8 @@ class MLPipelineOrchestrator:
         X_test: pd.DataFrame,
         y_train: pd.Series,
         quick_mode: bool,
-    ) -> Tuple[np.ndarray, np.ndarray, List[str]]:
-        """
-        Perform feature engineering.
+    ) -> tuple[np.ndarray, np.ndarray, list[str]]:
+        """Perform feature engineering.
 
         Args:
             X_train: Training features
@@ -439,9 +432,8 @@ class MLPipelineOrchestrator:
 
     def _train_model(
         self, X_train: np.ndarray, y_train: pd.Series, quick_mode: bool
-    ) -> Tuple[Any, Dict[str, Any]]:
-        """
-        Train the model.
+    ) -> tuple[Any, dict[str, Any]]:
+        """Train the model.
 
         Args:
             X_train: Training features
@@ -526,11 +518,10 @@ class MLPipelineOrchestrator:
         y_train: pd.Series,
         X_test: np.ndarray,
         y_test: pd.Series,
-        feature_names: List[str],
-        customer_values: Optional[pd.Series],
-    ) -> Dict[str, Any]:
-        """
-        Evaluate the model comprehensively.
+        feature_names: list[str],
+        customer_values: pd.Series | None,
+    ) -> dict[str, Any]:
+        """Evaluate the model comprehensively.
 
         Args:
             model: Trained model
@@ -557,9 +548,9 @@ class MLPipelineOrchestrator:
         # Basic metrics
         from sklearn.metrics import (
             accuracy_score,
+            f1_score,
             precision_score,
             recall_score,
-            f1_score,
         )
 
         evaluation_results["accuracy"] = accuracy_score(y_test, y_pred)
@@ -622,10 +613,9 @@ class MLPipelineOrchestrator:
         X_train: np.ndarray,
         X_test: np.ndarray,
         y_test: pd.Series,
-        feature_names: List[str],
-    ) -> Dict[str, Any]:
-        """
-        Prepare model for production deployment.
+        feature_names: list[str],
+    ) -> dict[str, Any]:
+        """Prepare model for production deployment.
 
         Args:
             model: Trained model
@@ -691,12 +681,11 @@ class MLPipelineOrchestrator:
 
     def _generate_report(
         self,
-        training_metrics: Dict,
-        evaluation_results: Dict,
-        production_artifacts: Dict,
-    ) -> Dict[str, Any]:
-        """
-        Generate comprehensive pipeline report.
+        training_metrics: dict,
+        evaluation_results: dict,
+        production_artifacts: dict,
+    ) -> dict[str, Any]:
+        """Generate comprehensive pipeline report.
 
         Args:
             training_metrics: Training stage metrics
@@ -752,10 +741,9 @@ class MLPipelineOrchestrator:
         return report
 
     def _save_artifacts(
-        self, model: Any, feature_names: List[str], evaluation_results: Dict
+        self, model: Any, feature_names: list[str], evaluation_results: dict
     ):
-        """
-        Save pipeline artifacts.
+        """Save pipeline artifacts.
 
         Args:
             model: Trained model
@@ -781,10 +769,9 @@ class MLPipelineOrchestrator:
         logger.info(f"Artifacts saved to {self.output_dir}")
 
     def run_experiment(
-        self, data: pd.DataFrame, experiment_config: Dict
-    ) -> Dict[str, Any]:
-        """
-        Run a quick experiment with custom configuration.
+        self, data: pd.DataFrame, experiment_config: dict
+    ) -> dict[str, Any]:
+        """Run a quick experiment with custom configuration.
 
         Args:
             data: Input dataframe
@@ -804,10 +791,9 @@ class MLPipelineOrchestrator:
         return results
 
     def load_and_run(
-        self, data_path: str, config_path: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """
-        Load data and configuration, then run pipeline.
+        self, data_path: str, config_path: str | None = None
+    ) -> dict[str, Any]:
+        """Load data and configuration, then run pipeline.
 
         Args:
             data_path: Path to data file
@@ -826,7 +812,7 @@ class MLPipelineOrchestrator:
 
         # Load configuration if provided
         if config_path:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 if config_path.endswith(".yaml"):
                     config_dict = yaml.safe_load(f)
                 elif config_path.endswith(".json"):
@@ -844,8 +830,7 @@ class MLPipelineOrchestrator:
 
 
 def create_example_config() -> PipelineConfig:
-    """
-    Create an example pipeline configuration.
+    """Create an example pipeline configuration.
 
     Returns:
         Example PipelineConfig object
@@ -884,7 +869,6 @@ def create_example_config() -> PipelineConfig:
 
 def main():
     """Example usage of the ML Pipeline Orchestrator."""
-
     # Create sample data
     np.random.seed(42)
     n_samples = 1000

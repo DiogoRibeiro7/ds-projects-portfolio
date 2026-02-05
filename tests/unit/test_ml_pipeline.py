@@ -1,23 +1,20 @@
-"""
-Unit tests for ML Pipeline module with property-based testing.
+"""Unit tests for ML Pipeline module with property-based testing.
 """
 
-import pytest
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pandas as pd
-from unittest.mock import Mock, patch, MagicMock
-from hypothesis import given, strategies as st, assume, settings
-from hypothesis.extra.pandas import data_frames, column, range_indexes
-import joblib
-import tempfile
-from pathlib import Path
-
+import pytest
+from hypothesis import assume, given, settings
+from hypothesis import strategies as st
+from hypothesis.extra.pandas import column, data_frames
+from modern_bank_churn.evaluation_enhancements import ModelEvaluator
+from modern_bank_churn.feature_engineering import FeatureEngineer
 from modern_bank_churn.ml_pipeline_orchestrator import (
     MLPipelineOrchestrator,
     PipelineConfig,
 )
-from modern_bank_churn.feature_engineering import FeatureEngineer
-from modern_bank_churn.evaluation_enhancements import ModelEvaluator
 from modern_bank_churn.production_readiness import ProductionPipeline
 
 pytestmark = pytest.mark.unit

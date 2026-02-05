@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-"""
-Quick fixes for notebook execution issues identified in testing.
+"""Quick fixes for notebook execution issues identified in testing.
 """
 
-import os
 from pathlib import Path
 
 import numpy as np
@@ -12,7 +10,6 @@ import pandas as pd
 
 def create_sample_data_files():
     """Create sample data files for notebooks that need them."""
-
     # Create directories if they don't exist
     Path("ab_testing/data").mkdir(parents=True, exist_ok=True)
     Path("modern-bank-churn/data").mkdir(parents=True, exist_ok=True)

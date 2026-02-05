@@ -364,8 +364,7 @@ def calculate_power(
 
 
 class ExperimentAnalyzer:
-    """
-    Analyze controlled experiments end-to-end (SRM, conversion, multi-metrics).
+    """Analyze controlled experiments end-to-end (SRM, conversion, multi-metrics).
 
     The analyzer expects tidy pandas DataFrames with a categorical ``group``
     column plus one or more metric columns (binary conversions, continuous

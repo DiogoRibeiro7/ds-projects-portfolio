@@ -1,5 +1,4 @@
-"""
-Detailed performance reporting and analysis for optimization results.
+"""Detailed performance reporting and analysis for optimization results.
 """
 
 import json
@@ -8,15 +7,12 @@ import tracemalloc
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import psutil
-import seaborn as sns
-from plotly.subplots import make_subplots
 
 
 @dataclass
@@ -34,8 +30,8 @@ class DetailedMetrics:
     throughput: float  # items/second
     timestamp: str
     optimization_applied: str
-    speedup: Optional[float] = None
-    memory_reduction: Optional[float] = None
+    speedup: float | None = None
+    memory_reduction: float | None = None
 
 
 class DetailedPerformanceReporter:
@@ -51,8 +47,7 @@ class DetailedPerformanceReporter:
     def track_operation(
         self, operation_name: str, func: callable, data: Any, optimization: str = "none"
     ) -> DetailedMetrics:
-        """
-        Track detailed metrics for an operation.
+        """Track detailed metrics for an operation.
 
         Args:
             operation_name: Name of operation
@@ -464,9 +459,8 @@ class OptimizationAnalyzer:
     @staticmethod
     def analyze_optimization_impact(
         baseline: pd.DataFrame, optimized: pd.DataFrame
-    ) -> Dict[str, Any]:
-        """
-        Analyze impact of optimizations.
+    ) -> dict[str, Any]:
+        """Analyze impact of optimizations.
 
         Args:
             baseline: Baseline performance DataFrame
@@ -506,7 +500,7 @@ class OptimizationAnalyzer:
     @staticmethod
     def _test_significance(
         baseline_times: pd.Series, optimized_times: pd.Series
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Test statistical significance of performance improvement."""
         from scipy import stats
 
@@ -534,7 +528,7 @@ class OptimizationAnalyzer:
         }
 
     @staticmethod
-    def identify_bottlenecks(metrics_df: pd.DataFrame) -> List[Dict[str, Any]]:
+    def identify_bottlenecks(metrics_df: pd.DataFrame) -> list[dict[str, Any]]:
         """Identify performance bottlenecks from metrics."""
         bottlenecks = []
 
@@ -577,7 +571,7 @@ class OptimizationAnalyzer:
         return bottlenecks
 
     @staticmethod
-    def recommend_optimizations(bottlenecks: List[Dict[str, Any]]) -> List[str]:
+    def recommend_optimizations(bottlenecks: list[dict[str, Any]]) -> list[str]:
         """Recommend optimizations based on identified bottlenecks."""
         recommendations = []
 

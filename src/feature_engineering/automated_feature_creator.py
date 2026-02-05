@@ -1,40 +1,35 @@
-"""
-Automated Feature Engineering System
+"""Automated Feature Engineering System
 
 Comprehensive automated feature creation with multiple strategies and techniques.
 """
 
-import pandas as pd
+import warnings
+
 import numpy as np
-from typing import List, Dict, Optional, Union, Tuple, Any
-from sklearn.preprocessing import (
-    PolynomialFeatures,
-    StandardScaler,
-    RobustScaler,
-    MinMaxScaler,
-    PowerTransformer,
-    QuantileTransformer,
-)
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.feature_selection import (
-    SelectKBest,
     RFE,
     SelectFromModel,
-    mutual_info_classif,
-    mutual_info_regression,
+    SelectKBest,
+    chi2,
     f_classif,
     f_regression,
-    chi2,
+    mutual_info_classif,
+    mutual_info_regression,
 )
-from sklearn.decomposition import PCA, TruncatedSVD, FastICA
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.model_selection import cross_val_score
-import warnings
+from sklearn.preprocessing import (
+    PolynomialFeatures,
+    PowerTransformer,
+    QuantileTransformer,
+    RobustScaler,
+)
 
 warnings.filterwarnings("ignore")
 
 # Optional imports with graceful fallback
 try:
-    from category_encoders import TargetEncoder, CatBoostEncoder, OneHotEncoder
+    from category_encoders import CatBoostEncoder, OneHotEncoder, TargetEncoder
 
     CATEGORY_ENCODERS_AVAILABLE = True
 except ImportError:
@@ -67,12 +62,11 @@ class AutomatedFeatureEngineer:
     def __init__(
         self,
         task_type: str = "classification",
-        max_features: Optional[int] = None,
+        max_features: int | None = None,
         feature_selection_method: str = "mutual_info",
         verbosity: int = 1,
     ):
-        """
-        Initialize automated feature engineer.
+        """Initialize automated feature engineer.
 
         Args:
             task_type: 'classification' or 'regression'
@@ -92,16 +86,15 @@ class AutomatedFeatureEngineer:
     def engineer_features(
         self,
         df: pd.DataFrame,
-        target: Optional[pd.Series] = None,
-        entity_col: Optional[str] = None,
-        time_col: Optional[str] = None,
+        target: pd.Series | None = None,
+        entity_col: str | None = None,
+        time_col: str | None = None,
         include_interactions: bool = True,
         include_polynomial: bool = True,
         include_aggregates: bool = True,
         include_deep_features: bool = False,
     ) -> pd.DataFrame:
-        """
-        Main feature engineering pipeline.
+        """Main feature engineering pipeline.
 
         Args:
             df: Input dataframe
@@ -190,7 +183,7 @@ class AutomatedFeatureEngineer:
 
         return df_features
 
-    def _detect_feature_types(self, df: pd.DataFrame) -> Dict:
+    def _detect_feature_types(self, df: pd.DataFrame) -> dict:
         """Automatically detect feature types."""
         feature_types = {
             "numeric": [],
@@ -246,7 +239,7 @@ class AutomatedFeatureEngineer:
         return feature_types
 
     def _create_basic_features(
-        self, df: pd.DataFrame, feature_types: Dict
+        self, df: pd.DataFrame, feature_types: dict
     ) -> pd.DataFrame:
         """Create basic statistical features."""
         df = df.copy()
@@ -271,7 +264,7 @@ class AutomatedFeatureEngineer:
         return df
 
     def _create_missing_value_features(
-        self, df: pd.DataFrame, original_cols: List[str]
+        self, df: pd.DataFrame, original_cols: list[str]
     ) -> pd.DataFrame:
         """Create features from missing values."""
         df = df.copy()
@@ -288,7 +281,7 @@ class AutomatedFeatureEngineer:
         return df
 
     def _create_statistical_features(
-        self, df: pd.DataFrame, feature_types: Dict
+        self, df: pd.DataFrame, feature_types: dict
     ) -> pd.DataFrame:
         """Create statistical aggregation features."""
         df = df.copy()
@@ -314,7 +307,7 @@ class AutomatedFeatureEngineer:
         return df
 
     def _create_interaction_features(
-        self, df: pd.DataFrame, feature_types: Dict, max_interactions: int = 50
+        self, df: pd.DataFrame, feature_types: dict, max_interactions: int = 50
     ) -> pd.DataFrame:
         """Create interaction features between numeric variables."""
         df = df.copy()
@@ -344,7 +337,7 @@ class AutomatedFeatureEngineer:
         return df
 
     def _create_polynomial_features(
-        self, df: pd.DataFrame, feature_types: Dict, degree: int = 2
+        self, df: pd.DataFrame, feature_types: dict, degree: int = 2
     ) -> pd.DataFrame:
         """Create polynomial features."""
         df = df.copy()
@@ -428,7 +421,7 @@ class AutomatedFeatureEngineer:
         return df
 
     def _create_text_features(
-        self, df: pd.DataFrame, text_cols: List[str]
+        self, df: pd.DataFrame, text_cols: list[str]
     ) -> pd.DataFrame:
         """Create features from text columns."""
         df = df.copy()
@@ -467,7 +460,7 @@ class AutomatedFeatureEngineer:
         return df
 
     def _create_aggregate_features(
-        self, df: pd.DataFrame, entity_col: str, feature_types: Dict
+        self, df: pd.DataFrame, entity_col: str, feature_types: dict
     ) -> pd.DataFrame:
         """Create aggregate features grouped by entity."""
         df = df.copy()
@@ -510,7 +503,7 @@ class AutomatedFeatureEngineer:
         return df
 
     def _create_deep_features(
-        self, df: pd.DataFrame, entity_col: str, time_col: Optional[str] = None
+        self, df: pd.DataFrame, entity_col: str, time_col: str | None = None
     ) -> pd.DataFrame:
         """Create deep features using Featuretools."""
         if not FEATURETOOLS_AVAILABLE:
@@ -565,7 +558,7 @@ class AutomatedFeatureEngineer:
             return df
 
     def _apply_target_encoding(
-        self, df: pd.DataFrame, target: pd.Series, feature_types: Dict
+        self, df: pd.DataFrame, target: pd.Series, feature_types: dict
     ) -> pd.DataFrame:
         """Apply target encoding to categorical features."""
         df = df.copy()
@@ -606,7 +599,7 @@ class AutomatedFeatureEngineer:
         return df
 
     def _apply_transformations(
-        self, df: pd.DataFrame, feature_types: Dict
+        self, df: pd.DataFrame, feature_types: dict
     ) -> pd.DataFrame:
         """Apply various transformations to features."""
         df = df.copy()
@@ -733,7 +726,7 @@ class AutomatedFeatureEngineer:
 
         if hasattr(selector, "scores_"):
             self.feature_metadata["feature_scores"] = dict(
-                zip(numeric_df.columns, selector.scores_)
+                zip(numeric_df.columns, selector.scores_, strict=False)
             )
 
         if self.verbosity >= 1:
@@ -761,7 +754,7 @@ class AutomatedFeatureEngineer:
 
         # Store feature importance
         self.feature_importance = dict(
-            zip(numeric_df.columns, model.feature_importances_)
+            zip(numeric_df.columns, model.feature_importances_, strict=False)
         )
 
         # Sort by importance
@@ -769,7 +762,7 @@ class AutomatedFeatureEngineer:
             sorted(self.feature_importance.items(), key=lambda x: x[1], reverse=True)
         )
 
-    def _summarize_types(self, feature_types: Dict) -> str:
+    def _summarize_types(self, feature_types: dict) -> str:
         """Create summary string of feature types."""
         summary = []
         for type_name, features in feature_types.items():
@@ -777,17 +770,16 @@ class AutomatedFeatureEngineer:
                 summary.append(f"{type_name}={len(features)}")
         return ", ".join(summary)
 
-    def get_feature_importance(self) -> Dict:
+    def get_feature_importance(self) -> dict:
         """Return feature importance scores."""
         return self.feature_importance
 
-    def get_feature_metadata(self) -> Dict:
+    def get_feature_metadata(self) -> dict:
         """Return feature engineering metadata."""
         return self.feature_metadata
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Transform new data using fitted encoders and transformers.
+        """Transform new data using fitted encoders and transformers.
 
         Args:
             df: New dataframe to transform

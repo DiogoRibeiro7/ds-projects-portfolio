@@ -1,11 +1,8 @@
-"""
-Enhanced Web Dashboard Application with Real-time Streaming and Interactive Features.
+"""Enhanced Web Dashboard Application with Real-time Streaming and Interactive Features.
 Includes REST API, WebSocket support, and comprehensive dashboard capabilities.
 """
 
-import asyncio
 import base64
-import hashlib
 import io
 import json
 import logging
@@ -13,8 +10,6 @@ import threading
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -26,7 +21,6 @@ from flask_cors import CORS
 from flask_jwt_extended import (
     JWTManager,
     create_access_token,
-    get_jwt_identity,
     jwt_required,
 )
 from flask_limiter import Limiter
@@ -69,10 +63,9 @@ memory_cache = {}
 
 @dataclass
 class DashboardConfig:
-    """
-    User-facing configuration toggles for the Flask dashboard.
+    """User-facing configuration toggles for the Flask dashboard.
 
-    Attributes
+    Attributes:
     ----------
     theme : str
         Visual theme (`"light"` or `"dark"`). Drives CSS selection.
@@ -85,7 +78,7 @@ class DashboardConfig:
     mobile_breakpoint : int
         CSS breakpoint in pixels for switching to the mobile layout.
 
-    Examples
+    Examples:
     --------
     >>> cfg = DashboardConfig(refresh_interval=10000, theme="dark")
     >>> cfg.export_formats
@@ -95,7 +88,7 @@ class DashboardConfig:
     theme: str = "light"
     auto_refresh: bool = True
     refresh_interval: int = 5000
-    export_formats: List[str] = None
+    export_formats: list[str] = None
     mobile_breakpoint: int = 768
 
     def __post_init__(self):
@@ -295,7 +288,7 @@ class VisualizationEngine:
         return pio.to_html(fig, include_plotlyjs="cdn", div_id="scatter3d-chart")
 
     @staticmethod
-    def create_dashboard_layout(charts: List[str], layout: str = "grid") -> str:
+    def create_dashboard_layout(charts: list[str], layout: str = "grid") -> str:
         """Create responsive dashboard layout."""
         if layout == "grid":
             html = '<div class="dashboard-grid">'
@@ -345,7 +338,7 @@ class ExportManager:
             return None
 
     @staticmethod
-    def export_to_pptx(charts: List[Dict], filename: str = "dashboard.pptx") -> bytes:
+    def export_to_pptx(charts: list[dict], filename: str = "dashboard.pptx") -> bytes:
         """Export dashboard to PowerPoint."""
         try:
             from pptx import Presentation
@@ -426,8 +419,7 @@ def login():
 @jwt_required()
 @limiter.limit("100 per minute")
 def get_data(dataset_name: str):
-    """
-    Serve cached dashboard data sets via the authenticated REST API.
+    """Serve cached dashboard data sets via the authenticated REST API.
 
     Parameters
     ----------
@@ -435,20 +427,20 @@ def get_data(dataset_name: str):
         Logical dataset key such as ``"churn_overview"``. A distinct Redis
         key (``data:<name>``) is created per dataset.
 
-    Returns
+    Returns:
     -------
     flask.Response
         JSON payload containing the dataset plus cache headers. Responses are
         cached for 300 seconds (Redis when available, otherwise an in-process
         dictionary).
 
-    Notes
+    Notes:
     -----
     This endpoint requires a valid JWT (``@jwt_required``) and is rate limited
     to 100 requests/minute. The fallback ``generate_sample_data`` helper is
     used when a live data source is not configured.
 
-    Examples
+    Examples:
     --------
     >>> from flask.testing import FlaskClient
     >>> client = app.test_client()
@@ -592,7 +584,7 @@ def handle_request_update(data):
 # ============== Helper Functions ==============
 
 
-def generate_sample_data(dataset_name: str) -> Dict:
+def generate_sample_data(dataset_name: str) -> dict:
     """Generate sample data for demonstration."""
     np.random.seed(None)  # Random seed for variety
 

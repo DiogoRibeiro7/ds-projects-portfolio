@@ -1,29 +1,25 @@
-"""
-Comprehensive Audit Logging System
+"""Comprehensive Audit Logging System
 """
 
-import json
+import base64
+import gzip
 import hashlib
+import json
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass, field, asdict
-from enum import Enum
-from pathlib import Path
 import sqlite3
 import threading
-from queue import Queue, Empty
-import gzip
-import pickle
-import yaml
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from queue import Empty, Queue
+from typing import Any
 
 import pandas as pd
-import numpy as np
 from cryptography.fernet import Fernet
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
-from cryptography.hazmat.backends import default_backend
-import base64
 
 logger = logging.getLogger(__name__)
 
@@ -85,19 +81,19 @@ class AuditEvent:
     timestamp: datetime
     event_type: AuditEventType
     severity: AuditSeverity
-    user_id: Optional[str]
-    session_id: Optional[str]
-    ip_address: Optional[str]
-    user_agent: Optional[str]
-    resource: Optional[str]  # Resource being accessed/modified
+    user_id: str | None
+    session_id: str | None
+    ip_address: str | None
+    user_agent: str | None
+    resource: str | None  # Resource being accessed/modified
     action: str  # Specific action taken
     result: str  # Success/Failure/Partial
-    details: Dict[str, Any] = field(default_factory=dict)
-    error_message: Optional[str] = None
-    stack_trace: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    tags: List[str] = field(default_factory=list)
-    correlation_id: Optional[str] = None  # For tracking related events
+    details: dict[str, Any] = field(default_factory=dict)
+    error_message: str | None = None
+    stack_trace: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    correlation_id: str | None = None  # For tracking related events
 
 
 @dataclass
@@ -113,7 +109,7 @@ class AuditConfig:
 
     # Security settings
     enable_encryption: bool = True
-    encryption_key: Optional[str] = None
+    encryption_key: str | None = None
     enable_integrity_check: bool = True
     enable_tamper_detection: bool = True
 
@@ -124,7 +120,7 @@ class AuditConfig:
     max_queue_size: int = 10000
 
     # Filtering settings
-    log_levels: List[AuditSeverity] = field(
+    log_levels: list[AuditSeverity] = field(
         default_factory=lambda: [
             AuditSeverity.INFO,
             AuditSeverity.WARNING,
@@ -132,13 +128,13 @@ class AuditConfig:
             AuditSeverity.CRITICAL,
         ]
     )
-    excluded_event_types: List[AuditEventType] = field(default_factory=list)
+    excluded_event_types: list[AuditEventType] = field(default_factory=list)
 
     # Alerting settings
     enable_real_time_alerts: bool = True
-    alert_thresholds: Dict[str, int] = field(default_factory=dict)
-    alert_email: Optional[str] = None
-    alert_webhook: Optional[str] = None
+    alert_thresholds: dict[str, int] = field(default_factory=dict)
+    alert_email: str | None = None
+    alert_webhook: str | None = None
 
 
 class AuditStorage:
@@ -308,12 +304,12 @@ class SQLiteAuditStorage(AuditStorage):
 
     def retrieve_events(
         self,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        event_types: Optional[List[AuditEventType]] = None,
-        user_id: Optional[str] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        event_types: list[AuditEventType] | None = None,
+        user_id: str | None = None,
         limit: int = 1000,
-    ) -> List[AuditEvent]:
+    ) -> list[AuditEvent]:
         """Retrieve audit events from database"""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
@@ -444,12 +440,12 @@ class FileAuditStorage(AuditStorage):
 
     def retrieve_events(
         self,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        event_types: Optional[List[AuditEventType]] = None,
-        user_id: Optional[str] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        event_types: list[AuditEventType] | None = None,
+        user_id: str | None = None,
         limit: int = 1000,
-    ) -> List[AuditEvent]:
+    ) -> list[AuditEvent]:
         """Retrieve events from files"""
         events = []
 
@@ -605,12 +601,12 @@ class AuditLogger:
         action: str,
         result: str = "SUCCESS",
         severity: AuditSeverity = AuditSeverity.INFO,
-        user_id: Optional[str] = None,
-        session_id: Optional[str] = None,
-        resource: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None,
-        correlation_id: Optional[str] = None,
+        user_id: str | None = None,
+        session_id: str | None = None,
+        resource: str | None = None,
+        details: dict[str, Any] | None = None,
+        error_message: str | None = None,
+        correlation_id: str | None = None,
         **kwargs,
     ) -> str:
         """Log an audit event"""
@@ -683,7 +679,7 @@ class AuditLogger:
         model_id: str,
         action: str,
         user_id: str,
-        details: Dict[str, Any] = None,
+        details: dict[str, Any] = None,
         **kwargs,
     ) -> str:
         """Log model-related event"""
@@ -710,8 +706,8 @@ class AuditLogger:
     def log_security_event(
         self,
         event_type: str,
-        user_id: Optional[str] = None,
-        details: Dict[str, Any] = None,
+        user_id: str | None = None,
+        details: dict[str, Any] = None,
         severity: AuditSeverity = AuditSeverity.WARNING,
         **kwargs,
     ) -> str:
@@ -740,13 +736,13 @@ class AuditLogger:
 
     def query_events(
         self,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        event_types: Optional[List[AuditEventType]] = None,
-        user_id: Optional[str] = None,
-        correlation_id: Optional[str] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        event_types: list[AuditEventType] | None = None,
+        user_id: str | None = None,
+        correlation_id: str | None = None,
         limit: int = 1000,
-    ) -> List[AuditEvent]:
+    ) -> list[AuditEvent]:
         """Query audit events"""
         events = self.storage.retrieve_events(
             start_date=start_date,
@@ -765,7 +761,7 @@ class AuditLogger:
 
     def generate_audit_report(
         self, start_date: datetime, end_date: datetime, report_type: str = "summary"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate audit report"""
         events = self.query_events(
             start_date=start_date, end_date=end_date, limit=100000
@@ -781,8 +777,8 @@ class AuditLogger:
             raise ValueError(f"Unknown report type: {report_type}")
 
     def _generate_summary_report(
-        self, events: List[AuditEvent], start_date: datetime, end_date: datetime
-    ) -> Dict[str, Any]:
+        self, events: list[AuditEvent], start_date: datetime, end_date: datetime
+    ) -> dict[str, Any]:
         """Generate summary audit report"""
         report = {
             "period": {"start": start_date.isoformat(), "end": end_date.isoformat()},
@@ -852,8 +848,8 @@ class AuditLogger:
         return report
 
     def _generate_detailed_report(
-        self, events: List[AuditEvent], start_date: datetime, end_date: datetime
-    ) -> Dict[str, Any]:
+        self, events: list[AuditEvent], start_date: datetime, end_date: datetime
+    ) -> dict[str, Any]:
         """Generate detailed audit report"""
         # Convert events to DataFrame for analysis
         df = pd.DataFrame([asdict(e) for e in events])
@@ -898,8 +894,8 @@ class AuditLogger:
         return report
 
     def _generate_compliance_report(
-        self, events: List[AuditEvent], start_date: datetime, end_date: datetime
-    ) -> Dict[str, Any]:
+        self, events: list[AuditEvent], start_date: datetime, end_date: datetime
+    ) -> dict[str, Any]:
         """Generate compliance-focused audit report"""
         report = {
             "period": {"start": start_date.isoformat(), "end": end_date.isoformat()},
@@ -1118,7 +1114,7 @@ class AlertManager:
         pass
 
 
-def audit_operation(event_type: AuditEventType, resource: Optional[str] = None):
+def audit_operation(event_type: AuditEventType, resource: str | None = None):
     """Decorator for auditing function calls"""
 
     def decorator(func):

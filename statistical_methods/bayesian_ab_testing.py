@@ -1,17 +1,13 @@
-"""
-Bayesian A/B testing methods with advanced capabilities.
+"""Bayesian A/B testing methods with advanced capabilities.
 """
 
 import warnings
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-from scipy import stats
-from scipy.special import betaln, gammaln
 
 warnings.filterwarnings("ignore")
 
@@ -23,10 +19,10 @@ class BayesianTestResult:
     probability_b_better: float
     expected_loss_a: float
     expected_loss_b: float
-    credible_interval_a: Tuple[float, float]
-    credible_interval_b: Tuple[float, float]
+    credible_interval_a: tuple[float, float]
+    credible_interval_b: tuple[float, float]
     effect_size: float
-    effect_credible_interval: Tuple[float, float]
+    effect_credible_interval: tuple[float, float]
     rope_probability: float  # Region of Practical Equivalence
     samples_a: np.ndarray
     samples_b: np.ndarray
@@ -36,8 +32,7 @@ class BayesianABTesting:
     """Advanced Bayesian A/B testing implementation."""
 
     def __init__(self, prior_alpha: float = 1, prior_beta: float = 1):
-        """
-        Initialize Bayesian A/B testing.
+        """Initialize Bayesian A/B testing.
 
         Args:
             prior_alpha: Alpha parameter for Beta prior
@@ -53,10 +48,9 @@ class BayesianABTesting:
         conversions_b: int,
         visitors_b: int,
         n_samples: int = 100000,
-        rope: Tuple[float, float] = (-0.01, 0.01),
+        rope: tuple[float, float] = (-0.01, 0.01),
     ) -> BayesianTestResult:
-        """
-        Perform Bayesian A/B test for conversion rates.
+        """Perform Bayesian A/B test for conversion rates.
 
         Args:
             conversions_a: Number of conversions in variant A
@@ -115,8 +109,7 @@ class BayesianABTesting:
     def test_continuous(
         self, data_a: np.ndarray, data_b: np.ndarray, n_samples: int = 100000
     ) -> BayesianTestResult:
-        """
-        Bayesian A/B test for continuous metrics (e.g., revenue).
+        """Bayesian A/B test for continuous metrics (e.g., revenue).
 
         Uses BEST (Bayesian Estimation Supersedes t-test) method.
 
@@ -185,12 +178,11 @@ class BayesianABTesting:
 
     def sequential_test(
         self,
-        conversions: List[Tuple[int, int]],
-        visitors: List[Tuple[int, int]],
+        conversions: list[tuple[int, int]],
+        visitors: list[tuple[int, int]],
         threshold: float = 0.95,
-    ) -> List[Dict[str, Any]]:
-        """
-        Sequential Bayesian testing with early stopping.
+    ) -> list[dict[str, Any]]:
+        """Sequential Bayesian testing with early stopping.
 
         Args:
             conversions: List of (conversions_a, conversions_b) over time
@@ -204,7 +196,7 @@ class BayesianABTesting:
         cumul_conv_a, cumul_conv_b = 0, 0
         cumul_vis_a, cumul_vis_b = 0, 0
 
-        for (conv_a, conv_b), (vis_a, vis_b) in zip(conversions, visitors):
+        for (conv_a, conv_b), (vis_a, vis_b) in zip(conversions, visitors, strict=False):
             cumul_conv_a += conv_a
             cumul_conv_b += conv_b
             cumul_vis_a += vis_a
@@ -237,8 +229,7 @@ class BayesianABTesting:
     def plot_posterior(
         self, result: BayesianTestResult, metric_name: str = "Conversion Rate"
     ):
-        """
-        Plot posterior distributions and difference.
+        """Plot posterior distributions and difference.
 
         Args:
             result: BayesianTestResult from test
@@ -326,13 +317,12 @@ class BayesianMultivariateTest:
 
     def test_multiple_metrics(
         self,
-        metrics_a: Dict[str, np.ndarray],
-        metrics_b: Dict[str, np.ndarray],
-        weights: Optional[Dict[str, float]] = None,
+        metrics_a: dict[str, np.ndarray],
+        metrics_b: dict[str, np.ndarray],
+        weights: dict[str, float] | None = None,
         n_samples: int = 100000,
-    ) -> Dict[str, Any]:
-        """
-        Test multiple metrics with optional weighting.
+    ) -> dict[str, Any]:
+        """Test multiple metrics with optional weighting.
 
         Args:
             metrics_a: Dictionary of metric arrays for variant A
@@ -415,9 +405,8 @@ class HierarchicalBayesianTest:
         metric_col: str,
         treatment_col: str,
         n_samples: int = 10000,
-    ) -> Dict[str, Any]:
-        """
-        Hierarchical Bayesian test accounting for segment effects.
+    ) -> dict[str, Any]:
+        """Hierarchical Bayesian test accounting for segment effects.
 
         Args:
             data: DataFrame with test data
@@ -497,8 +486,7 @@ def calculate_sample_size_bayesian(
     confidence: float = 0.95,
     power: float = 0.8,
 ) -> int:
-    """
-    Calculate required sample size for Bayesian A/B test.
+    """Calculate required sample size for Bayesian A/B test.
 
     Args:
         baseline_rate: Baseline conversion rate
@@ -530,9 +518,8 @@ def calculate_sample_size_bayesian(
 
 def simulate_bayesian_test(
     true_rate_a: float, true_rate_b: float, sample_size: int, n_simulations: int = 1000
-) -> Dict[str, float]:
-    """
-    Simulate Bayesian A/B test to validate performance.
+) -> dict[str, float]:
+    """Simulate Bayesian A/B test to validate performance.
 
     Args:
         true_rate_a: True conversion rate for A
@@ -593,7 +580,7 @@ if __name__ == "__main__":
         conversions_a=120, visitors_a=1000, conversions_b=150, visitors_b=1000
     )
 
-    print(f"\nConversion Test Results:")
+    print("\nConversion Test Results:")
     print(f"Probability B is better: {result.probability_b_better:.3f}")
     print(f"Expected loss if choosing A: {result.expected_loss_a:.4f}")
     print(f"Expected loss if choosing B: {result.expected_loss_b:.4f}")

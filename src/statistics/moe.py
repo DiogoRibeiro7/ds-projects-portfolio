@@ -1,12 +1,11 @@
-"""
-Mixture-of-Experts models with Gaussian experts.
+"""Mixture-of-Experts models with Gaussian experts.
 """
 
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, Optional, Sequence, Tuple
 
 import numpy as np
 from numpy import erf
@@ -50,7 +49,7 @@ class GaussianExpert:
 class SoftmaxGatingNetwork:
     """Linear softmax gating network."""
 
-    def __init__(self, n_features: int, n_experts: int, seed: Optional[int] = None):
+    def __init__(self, n_features: int, n_experts: int, seed: int | None = None):
         rng = np.random.default_rng(seed)
         self.weights = rng.normal(scale=0.1, size=(n_features, n_experts))
 
@@ -68,8 +67,7 @@ class SoftmaxGatingNetwork:
 
 
 class GaussianMixtureOfExperts:
-    """
-    Mixture-of-Experts with Gaussian experts trained via EM-like updates.
+    """Mixture-of-Experts with Gaussian experts trained via EM-like updates.
 
     Args:
         n_experts: Number of experts in the mixture.
@@ -84,7 +82,7 @@ class GaussianMixtureOfExperts:
         max_iters: int = 200,
         lr: float = 0.1,
         reg: float = 1e-3,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ):
         if n_experts < 1:
             raise ValueError("n_experts must be >= 1")
@@ -93,7 +91,7 @@ class GaussianMixtureOfExperts:
         self.lr = lr
         self.reg = reg
         self.seed = seed
-        self.gating: Optional[SoftmaxGatingNetwork] = None
+        self.gating: SoftmaxGatingNetwork | None = None
         self.experts: list[GaussianExpert] = []
 
     def _prepare_features(self, x: np.ndarray) -> np.ndarray:
@@ -103,7 +101,7 @@ class GaussianMixtureOfExperts:
         bias = np.ones((x.shape[0], 1))
         return np.hstack([x, bias])
 
-    def fit(self, x: np.ndarray, y: Iterable[float]) -> "GaussianMixtureOfExperts":
+    def fit(self, x: np.ndarray, y: Iterable[float]) -> GaussianMixtureOfExperts:
         x = self._prepare_features(x)
         y = np.asarray(list(y), dtype=float)
         if y.ndim != 1 or y.shape[0] != x.shape[0]:
@@ -143,7 +141,7 @@ class GaussianMixtureOfExperts:
 
     def mixture_components(
         self, x: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         if self.gating is None or not self.experts:
             raise ValueError("Model has not been fitted")
         x_feat = self._prepare_features(x)

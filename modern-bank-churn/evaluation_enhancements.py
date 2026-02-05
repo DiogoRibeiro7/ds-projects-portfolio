@@ -1,20 +1,16 @@
-"""
-Advanced Evaluation Framework for Bank Churn Models.
+"""Advanced Evaluation Framework for Bank Churn Models.
 Implements custom business metrics, fairness evaluation, and ROI-based assessment.
 """
 
 import warnings
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from scipy import stats
 from sklearn.metrics import (
     auc,
-    classification_report,
     confusion_matrix,
     f1_score,
     precision_recall_curve,
@@ -45,10 +41,10 @@ class BusinessMetrics:
 class FairnessMetrics:
     """Container for fairness and bias metrics."""
 
-    demographic_parity: Dict[str, float]
-    equal_opportunity: Dict[str, float]
-    calibration_by_group: Dict[str, float]
-    disparate_impact: Dict[str, float]
+    demographic_parity: dict[str, float]
+    equal_opportunity: dict[str, float]
+    calibration_by_group: dict[str, float]
+    disparate_impact: dict[str, float]
     group_fairness_score: float
 
 
@@ -62,8 +58,7 @@ class CustomBusinessMetrics:
         acquisition_cost: float = 200,
         intervention_success_rate: float = 0.3,
     ):
-        """
-        Initialize business metrics calculator.
+        """Initialize business metrics calculator.
 
         Args:
             avg_customer_value: Average customer lifetime value
@@ -79,8 +74,7 @@ class CustomBusinessMetrics:
     def calculate_roi(
         self, y_true: np.ndarray, y_pred: np.ndarray, y_prob: np.ndarray = None
     ) -> BusinessMetrics:
-        """
-        Calculate ROI and business metrics.
+        """Calculate ROI and business metrics.
 
         Args:
             y_true: True labels
@@ -143,9 +137,8 @@ class CustomBusinessMetrics:
 
     def optimal_threshold(
         self, y_true: np.ndarray, y_prob: np.ndarray, metric: str = "roi"
-    ) -> Tuple[float, float]:
-        """
-        Find optimal probability threshold based on business metric.
+    ) -> tuple[float, float]:
+        """Find optimal probability threshold based on business metric.
 
         Args:
             y_true: True labels
@@ -184,9 +177,8 @@ class CustomBusinessMetrics:
         y_true: np.ndarray,
         y_prob: np.ndarray,
         budget_fractions: np.ndarray = None,
-    ) -> Dict:
-        """
-        Calculate profit curve for different intervention budgets.
+    ) -> dict:
+        """Calculate profit curve for different intervention budgets.
 
         Args:
             y_true: True labels
@@ -237,9 +229,8 @@ class CustomBusinessMetrics:
 class FairnessEvaluator:
     """Evaluate model fairness and bias."""
 
-    def __init__(self, protected_attributes: List[str]):
-        """
-        Initialize fairness evaluator.
+    def __init__(self, protected_attributes: list[str]):
+        """Initialize fairness evaluator.
 
         Args:
             protected_attributes: List of protected attribute names
@@ -254,8 +245,7 @@ class FairnessEvaluator:
         y_pred: np.ndarray,
         y_prob: np.ndarray = None,
     ) -> FairnessMetrics:
-        """
-        Evaluate fairness metrics.
+        """Evaluate fairness metrics.
 
         Args:
             X: Feature DataFrame with protected attributes
@@ -358,9 +348,8 @@ class FairnessEvaluator:
 
     def bias_mitigation_recommendations(
         self, fairness_metrics: FairnessMetrics
-    ) -> List[str]:
-        """
-        Provide recommendations for bias mitigation.
+    ) -> list[str]:
+        """Provide recommendations for bias mitigation.
 
         Args:
             fairness_metrics: Calculated fairness metrics
@@ -424,8 +413,7 @@ class ModelComparisonFramework:
         y_prob: np.ndarray = None,
         model_object=None,
     ):
-        """
-        Add model to comparison.
+        """Add model to comparison.
 
         Args:
             name: Model name
@@ -447,8 +435,7 @@ class ModelComparisonFramework:
         fairness_evaluator: FairnessEvaluator = None,
         X: pd.DataFrame = None,
     ) -> pd.DataFrame:
-        """
-        Compare all models.
+        """Compare all models.
 
         Args:
             business_metrics_calculator: Optional business metrics calculator
@@ -508,9 +495,8 @@ class ModelComparisonFramework:
         model2_name: str,
         metric: str = "roc_auc",
         n_bootstrap: int = 1000,
-    ) -> Dict:
-        """
-        Test statistical significance of model differences.
+    ) -> dict:
+        """Test statistical significance of model differences.
 
         Args:
             model1_name: First model name
@@ -579,9 +565,8 @@ class ModelComparisonFramework:
             "significant": p_value < 0.05,
         }
 
-    def rank_models(self, weights: Dict[str, float] = None) -> pd.DataFrame:
-        """
-        Rank models based on weighted metrics.
+    def rank_models(self, weights: dict[str, float] = None) -> pd.DataFrame:
+        """Rank models based on weighted metrics.
 
         Args:
             weights: Dictionary of metric weights
@@ -629,9 +614,8 @@ class ModelComparisonFramework:
 class EvaluationVisualizer:
     """Visualization tools for model evaluation."""
 
-    def __init__(self, figsize: Tuple[int, int] = (15, 10)):
-        """
-        Initialize visualizer.
+    def __init__(self, figsize: tuple[int, int] = (15, 10)):
+        """Initialize visualizer.
 
         Args:
             figsize: Figure size
@@ -641,8 +625,7 @@ class EvaluationVisualizer:
     def plot_comprehensive_evaluation(
         self, y_true: np.ndarray, y_prob: np.ndarray, model_name: str = "Model"
     ) -> plt.Figure:
-        """
-        Create comprehensive evaluation plot.
+        """Create comprehensive evaluation plot.
 
         Args:
             y_true: True labels
@@ -781,7 +764,7 @@ if __name__ == "__main__":
 
     # Statistical significance
     sig_test = comparison.statistical_significance_test("Model_1", "Model_2")
-    print(f"\nStatistical Significance Test:")
+    print("\nStatistical Significance Test:")
     print(f"P-value: {sig_test['p_value']:.4f}")
     print(f"Significant: {sig_test['significant']}")
 

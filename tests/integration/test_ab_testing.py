@@ -1,19 +1,18 @@
-"""
-Test suite for AB testing module.
+"""Test suite for AB testing module.
 """
 
-import pytest
+
 import numpy as np
 import pandas as pd
-from scipy import stats
-from unittest.mock import Mock, patch
+import pytest
+
 from ab_testing import (
     ABTestRunner,
     BayesianABTest,
     MultiArmedBandit,
-    SequentialTest,
     PowerAnalysis,
     SampleSizeCalculator,
+    SequentialTest,
 )
 from ab_testing.erfcinv_fix import erfcinv
 

@@ -1,31 +1,25 @@
-"""
-CI/CD Pipeline for ML Models
+"""CI/CD Pipeline for ML Models
 
 Automated pipeline for testing, validation, and deployment of ML models.
 """
 
-import yaml
-import json
-import os
-from pathlib import Path
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, field
-import subprocess
-import pytest
-import mlflow
-from mlflow.models import ModelSignature
-import pandas as pd
-import numpy as np
-from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
-import docker
-import git
-from github import Github
-import gitlab
-import requests
-from datetime import datetime
-import logging
 import asyncio
 import hashlib
+import json
+import logging
+import subprocess
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+
+import git
+import mlflow
+import numpy as np
+import pandas as pd
+import requests
+from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
+
+import docker
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -43,15 +37,15 @@ class PipelineConfig:
     model_registry_uri: str = "http://mlflow:5000"
     docker_registry: str = "registry.example.com"
     kubernetes_namespace: str = "ml-models"
-    environments: List[str] = field(
+    environments: list[str] = field(
         default_factory=lambda: ["dev", "staging", "production"]
     )
     test_coverage_threshold: float = 0.8
-    performance_thresholds: Dict[str, float] = field(default_factory=dict)
+    performance_thresholds: dict[str, float] = field(default_factory=dict)
     security_scanning: bool = True
     auto_deploy_staging: bool = True
     require_manual_approval: bool = True
-    notification_channels: List[str] = field(default_factory=list)
+    notification_channels: list[str] = field(default_factory=list)
 
 
 class MLPipeline:
@@ -66,7 +60,7 @@ class MLPipeline:
         self.validation_results = {}
         self.deployment_status = {}
 
-    async def run_pipeline(self, trigger_event: Dict) -> Dict:
+    async def run_pipeline(self, trigger_event: dict) -> dict:
         """Run the complete CI/CD pipeline."""
         logger.info(f"Starting pipeline for {self.config.model_name}")
 
@@ -145,7 +139,7 @@ class MLPipeline:
             f"{self.config.model_name}_{timestamp}".encode()
         ).hexdigest()[:12]
 
-    async def _checkout_code(self, pipeline_run: Dict):
+    async def _checkout_code(self, pipeline_run: dict):
         """Checkout code from repository."""
         stage = "checkout"
         logger.info(f"Stage: {stage}")
@@ -181,7 +175,7 @@ class MLPipeline:
             }
             raise
 
-    async def _run_tests(self, pipeline_run: Dict):
+    async def _run_tests(self, pipeline_run: dict):
         """Run unit and integration tests."""
         stage = "testing"
         logger.info(f"Stage: {stage}")
@@ -197,7 +191,7 @@ class MLPipeline:
 
             # Parse coverage report
             with open(
-                f"./workspace/{self.config.project_name}/coverage.json", "r"
+                f"./workspace/{self.config.project_name}/coverage.json"
             ) as f:
                 coverage_data = json.load(f)
 
@@ -233,7 +227,7 @@ class MLPipeline:
             }
             raise
 
-    async def _build_model(self, pipeline_run: Dict):
+    async def _build_model(self, pipeline_run: dict):
         """Build and train the model."""
         stage = "build_model"
         logger.info(f"Stage: {stage}")
@@ -271,7 +265,7 @@ class MLPipeline:
             }
             raise
 
-    async def _validate_model(self, pipeline_run: Dict):
+    async def _validate_model(self, pipeline_run: dict):
         """Validate model performance."""
         stage = "validation"
         logger.info(f"Stage: {stage}")
@@ -319,7 +313,7 @@ class MLPipeline:
             }
             raise
 
-    def _calculate_metrics(self, y_true: np.ndarray, y_pred: np.ndarray) -> Dict:
+    def _calculate_metrics(self, y_true: np.ndarray, y_pred: np.ndarray) -> dict:
         """Calculate model performance metrics."""
         # Determine if classification or regression
         if len(np.unique(y_true)) < 20:  # Likely classification
@@ -337,7 +331,7 @@ class MLPipeline:
                 "mae": mean_absolute_error(y_true, y_pred),
             }
 
-    async def _security_scan(self, pipeline_run: Dict):
+    async def _security_scan(self, pipeline_run: dict):
         """Run security scanning on model and dependencies."""
         stage = "security_scan"
         logger.info(f"Stage: {stage}")
@@ -402,7 +396,7 @@ class MLPipeline:
             # Security scan failures shouldn't stop pipeline
             logger.error(f"Security scan failed: {e}")
 
-    async def _check_model_security(self, pipeline_run: Dict) -> List[Dict]:
+    async def _check_model_security(self, pipeline_run: dict) -> list[dict]:
         """Check model for security vulnerabilities."""
         vulnerabilities = []
 
@@ -432,7 +426,7 @@ class MLPipeline:
 
         return vulnerabilities
 
-    async def _build_container(self, pipeline_run: Dict):
+    async def _build_container(self, pipeline_run: dict):
         """Build Docker container for model serving."""
         stage = "build_container"
         logger.info(f"Stage: {stage}")
@@ -480,7 +474,7 @@ class MLPipeline:
             }
             raise
 
-    def _generate_dockerfile(self, pipeline_run: Dict) -> str:
+    def _generate_dockerfile(self, pipeline_run: dict) -> str:
         """Generate Dockerfile for model serving."""
         return """
 FROM python:3.9-slim
@@ -511,7 +505,7 @@ EXPOSE 8080
 CMD ["python", "serve_model.py"]
 """
 
-    def _scan_container(self, image_tag: str) -> Dict:
+    def _scan_container(self, image_tag: str) -> dict:
         """Scan container for vulnerabilities using Trivy."""
         try:
             result = subprocess.run(
@@ -542,7 +536,7 @@ CMD ["python", "serve_model.py"]
 
         return {"vulnerabilities": {}, "passed": True}
 
-    async def _integration_tests(self, pipeline_run: Dict):
+    async def _integration_tests(self, pipeline_run: dict):
         """Run integration tests with the containerized model."""
         stage = "integration_tests"
         logger.info(f"Stage: {stage}")
@@ -585,7 +579,7 @@ CMD ["python", "serve_model.py"]
             }
             raise
 
-    async def _run_integration_test_suite(self) -> Dict:
+    async def _run_integration_test_suite(self) -> dict:
         """Run integration test suite against deployed model."""
         test_results = {"passed": True, "tests": []}
 
@@ -617,15 +611,15 @@ CMD ["python", "serve_model.py"]
 
         return test_results
 
-    async def _deploy_staging(self, pipeline_run: Dict):
+    async def _deploy_staging(self, pipeline_run: dict):
         """Deploy model to staging environment."""
         stage = "deploy_staging"
         logger.info(f"Stage: {stage}")
 
         try:
             from production_deployment import (
-                ModelDeploymentManager,
                 ModelDeploymentConfig,
+                ModelDeploymentManager,
             )
 
             config = ModelDeploymentConfig(
@@ -657,7 +651,7 @@ CMD ["python", "serve_model.py"]
             }
             raise
 
-    async def _performance_tests(self, pipeline_run: Dict):
+    async def _performance_tests(self, pipeline_run: dict):
         """Run performance tests against staging deployment."""
         stage = "performance_tests"
         logger.info(f"Stage: {stage}")
@@ -693,7 +687,7 @@ CMD ["python", "serve_model.py"]
             }
             raise
 
-    async def _run_load_test(self, endpoint: str) -> Dict:
+    async def _run_load_test(self, endpoint: str) -> dict:
         """Run load test using locust or similar tool."""
         # Run locust test
         result = subprocess.run(
@@ -720,7 +714,7 @@ CMD ["python", "serve_model.py"]
 
         # Parse results
         with open(
-            f"./workspace/{self.config.project_name}/tests/load_test_stats.csv", "r"
+            f"./workspace/{self.config.project_name}/tests/load_test_stats.csv"
         ) as f:
             import csv
 
@@ -735,7 +729,7 @@ CMD ["python", "serve_model.py"]
             "total_requests": int(stats[0]["Request Count"]),
         }
 
-    async def _manual_approval(self, pipeline_run: Dict):
+    async def _manual_approval(self, pipeline_run: dict):
         """Wait for manual approval before production deployment."""
         stage = "manual_approval"
         logger.info(f"Stage: {stage}")
@@ -774,7 +768,7 @@ CMD ["python", "serve_model.py"]
             }
             raise
 
-    async def _request_approval(self, approval_request: Dict) -> bool:
+    async def _request_approval(self, approval_request: dict) -> bool:
         """Request manual approval."""
         # Simplified - in production, implement actual approval workflow
         logger.info("Waiting for manual approval...")
@@ -789,15 +783,15 @@ CMD ["python", "serve_model.py"]
 
         return True  # Auto-approve for demo
 
-    async def _deploy_production(self, pipeline_run: Dict):
+    async def _deploy_production(self, pipeline_run: dict):
         """Deploy model to production environment."""
         stage = "deploy_production"
         logger.info(f"Stage: {stage}")
 
         try:
             from production_deployment import (
-                ModelDeploymentManager,
                 ModelDeploymentConfig,
+                ModelDeploymentManager,
             )
 
             config = ModelDeploymentConfig(
@@ -841,7 +835,7 @@ CMD ["python", "serve_model.py"]
             }
             raise
 
-    async def _smoke_tests(self, pipeline_run: Dict):
+    async def _smoke_tests(self, pipeline_run: dict):
         """Run smoke tests against production deployment."""
         stage = "smoke_tests"
         logger.info(f"Stage: {stage}")
@@ -899,14 +893,14 @@ CMD ["python", "serve_model.py"]
         except:
             return False
 
-    async def _rollback(self, pipeline_run: Dict):
+    async def _rollback(self, pipeline_run: dict):
         """Rollback deployment if pipeline failed."""
         logger.warning("Initiating rollback...")
 
         try:
             from production_deployment import (
-                ModelDeploymentManager,
                 ModelDeploymentConfig,
+                ModelDeploymentManager,
             )
 
             manager = ModelDeploymentManager()
@@ -942,7 +936,7 @@ CMD ["python", "serve_model.py"]
                 "timestamp": datetime.now().isoformat(),
             }
 
-    async def _send_notifications(self, pipeline_run: Dict):
+    async def _send_notifications(self, pipeline_run: dict):
         """Send pipeline notifications."""
         try:
             for channel in self.config.notification_channels:
@@ -955,7 +949,7 @@ CMD ["python", "serve_model.py"]
         except Exception as e:
             logger.error(f"Failed to send notifications: {e}")
 
-    async def _send_slack_notification(self, pipeline_run: Dict, webhook_url: str):
+    async def _send_slack_notification(self, pipeline_run: dict, webhook_url: str):
         """Send Slack notification."""
         status_emoji = "✅" if pipeline_run["status"] == "success" else "❌"
 
@@ -994,7 +988,7 @@ CMD ["python", "serve_model.py"]
 
         requests.post(webhook_url.replace("slack://", ""), json=message)
 
-    def _calculate_duration(self, pipeline_run: Dict) -> str:
+    def _calculate_duration(self, pipeline_run: dict) -> str:
         """Calculate pipeline duration."""
         if "completed_at" in pipeline_run:
             start = datetime.fromisoformat(pipeline_run["started_at"])
@@ -1003,7 +997,7 @@ CMD ["python", "serve_model.py"]
             return str(duration).split(".")[0]
         return "In progress"
 
-    def _store_pipeline_results(self, pipeline_run: Dict):
+    def _store_pipeline_results(self, pipeline_run: dict):
         """Store pipeline results for auditing."""
         # Store in database or file system
         results_path = Path(f"./pipeline_runs/{pipeline_run['run_id']}.json")

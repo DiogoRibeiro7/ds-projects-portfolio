@@ -1,35 +1,30 @@
-"""
-Data Quality Dashboard
+"""Data Quality Dashboard
 Interactive dashboard for monitoring data quality, profiling, and lineage
 """
 
-import streamlit as st
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import pandas as pd
+from datetime import datetime
+
 import numpy as np
-from datetime import datetime, timedelta
-import json
-from pathlib import Path
-from typing import Dict, List, Any, Optional
-import sqlite3
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+from plotly.subplots import make_subplots
+
+from src.data_preprocessing.preprocessing_pipelines import (
+    PreprocessingConfig,
+    PreprocessingPipeline,
+)
+from src.data_profiling.profiling_tools import (
+    DataCatalog,
+    DataLineageTracker,
+    DataProfiler,
+    DataVersionManager,
+)
 
 # Import our quality modules
 from src.data_quality.quality_framework import (
     DataQualityFramework,
-    ValidationStatus,
-    DataQualityLevel,
-)
-from src.data_profiling.profiling_tools import (
-    DataProfiler,
-    DataLineageTracker,
-    DataVersionManager,
-    DataCatalog,
-)
-from src.data_preprocessing.preprocessing_pipelines import (
-    PreprocessingPipeline,
-    PreprocessingConfig,
 )
 
 # Configure Streamlit

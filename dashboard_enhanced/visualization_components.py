@@ -1,5 +1,4 @@
-"""
-Interactive Visualization Components
+"""Interactive Visualization Components
 
 Advanced visualization components using Plotly and Bokeh with animations,
 custom interactions, and accessibility features.
@@ -9,44 +8,29 @@ Date: 2024
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
-from datetime import datetime, timedelta
-import pandas as pd
+from typing import Any
+
 import numpy as np
+import pandas as pd
+import plotly.express as px
 
 # Plotly imports
 import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import plotly.io as pio
+from bokeh.models import (
+    BoxZoomTool,
+    ColumnDataSource,
+    CrosshairTool,
+    HoverTool,
+    PanTool,
+    ResetTool,
+    SaveTool,
+    TapTool,
+    WheelZoomTool,
+)
 
 # Bokeh imports
-from bokeh.plotting import figure, output_file, show
-from bokeh.models import (
-    HoverTool,
-    ColumnDataSource,
-    CustomJS,
-    Slider,
-    RangeSlider,
-    Select,
-    DatePicker,
-    CheckboxGroup,
-    DataTable,
-    DateFormatter,
-    TableColumn,
-    WheelZoomTool,
-    ResetTool,
-    PanTool,
-    SaveTool,
-    BoxZoomTool,
-    TapTool,
-    CrosshairTool,
-)
-from bokeh.layouts import column, row, gridplot
-from bokeh.palettes import Category20, Viridis256
-from bokeh.transform import cumsum, linear_cmap
-from bokeh.models.widgets import Button, TextInput
-from bokeh.events import ButtonClick
+from bokeh.plotting import figure
+from plotly.subplots import make_subplots
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -54,8 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 class InteractiveVisualizations:
-    """
-    Advanced interactive visualization components with animations,
+    """Advanced interactive visualization components with animations,
     custom interactions, and accessibility features.
     """
 
@@ -72,13 +55,12 @@ class InteractiveVisualizations:
         self,
         df: pd.DataFrame,
         x_col: str,
-        y_cols: List[str],
+        y_cols: list[str],
         title: str = "Animated Time Series",
         play_button: bool = True,
         range_slider: bool = True,
     ) -> go.Figure:
-        """
-        Create animated time series visualization.
+        """Create animated time series visualization.
 
         Args:
             df: DataFrame with time series data
@@ -240,12 +222,11 @@ class InteractiveVisualizations:
         x_col: str,
         y_col: str,
         z_col: str,
-        color_col: Optional[str] = None,
-        size_col: Optional[str] = None,
+        color_col: str | None = None,
+        size_col: str | None = None,
         title: str = "3D Scatter Plot",
     ) -> go.Figure:
-        """
-        Create interactive 3D scatter plot.
+        """Create interactive 3D scatter plot.
 
         Args:
             df: DataFrame with data
@@ -320,8 +301,7 @@ class InteractiveVisualizations:
         value_col: str,
         title: str = "Sankey Diagram",
     ) -> go.Figure:
-        """
-        Create interactive Sankey diagram for flow visualization.
+        """Create interactive Sankey diagram for flow visualization.
 
         Args:
             df: DataFrame with flow data
@@ -381,12 +361,11 @@ class InteractiveVisualizations:
     def create_sunburst_chart(
         self,
         df: pd.DataFrame,
-        path_cols: List[str],
+        path_cols: list[str],
         value_col: str,
         title: str = "Sunburst Chart",
     ) -> go.Figure:
-        """
-        Create interactive sunburst chart for hierarchical data.
+        """Create interactive sunburst chart for hierarchical data.
 
         Args:
             df: DataFrame with hierarchical data
@@ -422,12 +401,11 @@ class InteractiveVisualizations:
     def create_parallel_coordinates(
         self,
         df: pd.DataFrame,
-        dimensions: List[str],
-        color_col: Optional[str] = None,
+        dimensions: list[str],
+        color_col: str | None = None,
         title: str = "Parallel Coordinates",
     ) -> go.Figure:
-        """
-        Create parallel coordinates plot for multi-dimensional data.
+        """Create parallel coordinates plot for multi-dimensional data.
 
         Args:
             df: DataFrame with multi-dimensional data
@@ -488,8 +466,7 @@ class InteractiveVisualizations:
         y_col: str,
         title: str = "Interactive Bokeh Plot",
     ) -> figure:
-        """
-        Create interactive Bokeh plot with tools and widgets.
+        """Create interactive Bokeh plot with tools and widgets.
 
         Args:
             df: DataFrame with data
@@ -553,10 +530,9 @@ class InteractiveVisualizations:
         return p
 
     def create_data_storytelling_template(
-        self, story_data: List[Dict[str, Any]], title: str = "Data Story"
+        self, story_data: list[dict[str, Any]], title: str = "Data Story"
     ) -> go.Figure:
-        """
-        Create a data storytelling template with multiple visualizations.
+        """Create a data storytelling template with multiple visualizations.
 
         Args:
             story_data: List of dictionaries with story elements
@@ -656,8 +632,7 @@ class InteractiveVisualizations:
         title: str = "Accessible Chart",
         **kwargs,
     ) -> go.Figure:
-        """
-        Create a chart with enhanced accessibility features.
+        """Create a chart with enhanced accessibility features.
 
         Args:
             df: DataFrame with data
@@ -801,9 +776,8 @@ class InteractiveVisualizations:
 
     def export_chart_with_description(
         self, fig: go.Figure, filename: str, alt_text: str, long_description: str
-    ) -> Dict[str, str]:
-        """
-        Export chart with accessibility descriptions.
+    ) -> dict[str, str]:
+        """Export chart with accessibility descriptions.
 
         Args:
             fig: Plotly figure to export
@@ -871,7 +845,6 @@ class InteractiveVisualizations:
 # Example usage and demo
 def create_demo_visualizations():
     """Create demo visualizations showcasing all features."""
-
     # Initialize visualization component
     viz = InteractiveVisualizations()
 

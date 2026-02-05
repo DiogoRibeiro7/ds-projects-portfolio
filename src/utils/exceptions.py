@@ -1,11 +1,10 @@
-"""
-Custom exception classes for the data science portfolio.
+"""Custom exception classes for the data science portfolio.
 
 This module provides specific exception types for better error handling
 and debugging across the codebase.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class PortfolioBaseException(Exception):
@@ -14,11 +13,10 @@ class PortfolioBaseException(Exception):
     def __init__(
         self,
         message: str,
-        error_code: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        error_code: str | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
-        """
-        Initialize the base exception.
+        """Initialize the base exception.
 
         Args:
             message: Human-readable error message
@@ -81,7 +79,7 @@ class DataTypeError(PortfolioBaseException):
         message: str,
         expected_type: str,
         actual_type: str,
-        column: Optional[str] = None,
+        column: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize with type information."""
@@ -151,7 +149,7 @@ class ConvergenceError(StatisticalError):
         message: str,
         iterations: int,
         max_iterations: int,
-        tolerance: Optional[float] = None,
+        tolerance: float | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize with convergence information."""
@@ -209,8 +207,8 @@ class CalibrationError(ModelError):
     def __init__(
         self,
         message: str,
-        calibration_score: Optional[float] = None,
-        threshold: Optional[float] = None,
+        calibration_score: float | None = None,
+        threshold: float | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize with calibration details."""
@@ -298,16 +296,15 @@ class IOError(PortfolioBaseException):
 
 
 class FileNotFoundError(IOError):
-    """
-    Raised when a required file is missing from disk or cloud storage.
+    """Raised when a required file is missing from disk or cloud storage.
 
-    Attributes
+    Attributes:
     ----------
     file_path : str
         Absolute or relative path that failed to resolve. Also exposed via the
         ``details`` dict on :class:`PortfolioBaseException`.
 
-    Examples
+    Examples:
     --------
     >>> raise FileNotFoundError("Training data missing", file_path="data/churn.csv")
     Traceback (most recent call last):
@@ -333,7 +330,7 @@ class InvalidFileFormatError(IOError):
         self,
         message: str,
         expected_format: str,
-        actual_format: Optional[str] = None,
+        actual_format: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize with format information."""
@@ -366,7 +363,7 @@ class InvalidParameterError(ConfigurationError):
         message: str,
         parameter: str,
         value: Any,
-        valid_range: Optional[str] = None,
+        valid_range: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize with parameter details."""
@@ -420,7 +417,7 @@ class TimeoutError(PerformanceError):
         self,
         message: str,
         timeout_seconds: float,
-        elapsed_seconds: Optional[float] = None,
+        elapsed_seconds: float | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize with timeout details."""
@@ -436,13 +433,12 @@ class TimeoutError(PerformanceError):
 def validate_parameter(
     parameter_name: str,
     value: Any,
-    min_value: Optional[float] = None,
-    max_value: Optional[float] = None,
-    allowed_values: Optional[list] = None,
-    parameter_type: Optional[type] = None,
+    min_value: float | None = None,
+    max_value: float | None = None,
+    allowed_values: list | None = None,
+    parameter_type: type | None = None,
 ) -> None:
-    """
-    Validate a parameter value against constraints.
+    """Validate a parameter value against constraints.
 
     Args:
         parameter_name: Name of the parameter
@@ -493,12 +489,11 @@ def validate_parameter(
 
 def validate_dataframe(
     df: Any,
-    required_columns: Optional[list] = None,
-    min_rows: Optional[int] = None,
+    required_columns: list | None = None,
+    min_rows: int | None = None,
     max_missing_rate: float = 0.05,
 ) -> None:
-    """
-    Validate a pandas DataFrame.
+    """Validate a pandas DataFrame.
 
     Args:
         df: Object to validate as DataFrame
@@ -534,7 +529,7 @@ def validate_dataframe(
     # Check minimum rows
     if min_rows and len(df) < min_rows:
         raise InsufficientDataError(
-            f"DataFrame has insufficient rows",
+            "DataFrame has insufficient rows",
             required=min_rows,
             actual=len(df),
         )

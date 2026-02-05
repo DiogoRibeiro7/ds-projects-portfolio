@@ -5,8 +5,7 @@ import os
 import sys
 import tempfile
 import unittest
-from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

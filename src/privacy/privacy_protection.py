@@ -1,38 +1,37 @@
-"""
-Privacy Protection Module
+"""Privacy Protection Module
 Differential privacy, PII detection, data anonymization, and GDPR compliance
 """
 
-import re
+import base64
 import hashlib
-import logging
 import json
-from typing import Dict, List, Any, Optional, Union, Tuple, Callable
-from dataclasses import dataclass, field, asdict
+import logging
+import re
+import warnings
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any
+
 import numpy as np
 import pandas as pd
-from faker import Faker
-import secrets
-import warnings
-
-# Differential privacy
-from diffprivlib import mechanisms
-from diffprivlib.models import GaussianNB, LogisticRegression as DPLogisticRegression
-from diffprivlib.tools import mean, median, std, var, count_nonzero
-from diffprivlib.utils import PrivacyLeakWarning
+import phonenumbers
 
 # PII detection
 import spacy
-import phonenumbers
 from creditcard import CreditCard
 
 # Encryption
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
-import base64
+
+# Differential privacy
+from diffprivlib import mechanisms
+from diffprivlib.models import GaussianNB
+from diffprivlib.models import LogisticRegression as DPLogisticRegression
+from diffprivlib.tools import mean, median
+from diffprivlib.utils import PrivacyLeakWarning
+from faker import Faker
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -101,7 +100,7 @@ class PIIDetectionResult:
     column: str
     pii_type: PIIType
     confidence: float
-    sample_values: List[str]
+    sample_values: list[str]
     detection_method: str
 
 
@@ -109,13 +108,13 @@ class PIIDetectionResult:
 class AnonymizationResult:
     """Result of data anonymization"""
 
-    original_shape: Tuple[int, int]
-    anonymized_shape: Tuple[int, int]
-    pii_columns_found: List[str]
-    anonymization_methods_used: Dict[str, str]
-    k_anonymity: Optional[int] = None
-    l_diversity: Optional[int] = None
-    t_closeness: Optional[float] = None
+    original_shape: tuple[int, int]
+    anonymized_shape: tuple[int, int]
+    pii_columns_found: list[str]
+    anonymization_methods_used: dict[str, str]
+    k_anonymity: int | None = None
+    l_diversity: int | None = None
+    t_closeness: float | None = None
 
 
 class DifferentialPrivacy:
@@ -166,7 +165,7 @@ class DifferentialPrivacy:
         return noisy_data
 
     def private_mean(
-        self, data: np.ndarray, bounds: Tuple[float, float] = None
+        self, data: np.ndarray, bounds: tuple[float, float] = None
     ) -> float:
         """Calculate differentially private mean"""
         if bounds is None:
@@ -178,7 +177,7 @@ class DifferentialPrivacy:
         return dp_mean
 
     def private_median(
-        self, data: np.ndarray, bounds: Tuple[float, float] = None
+        self, data: np.ndarray, bounds: tuple[float, float] = None
     ) -> float:
         """Calculate differentially private median"""
         if bounds is None:
@@ -191,7 +190,7 @@ class DifferentialPrivacy:
 
     def private_histogram(
         self, data: np.ndarray, bins: int = 10
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Create differentially private histogram"""
         # Get histogram
         counts, bin_edges = np.histogram(data, bins=bins)
@@ -233,7 +232,7 @@ class DifferentialPrivacy:
 
         return model
 
-    def get_privacy_budget_status(self) -> Dict[str, float]:
+    def get_privacy_budget_status(self) -> dict[str, float]:
         """Get privacy budget status"""
         return {
             "total_budget": self.privacy_budget,
@@ -276,7 +275,7 @@ class PIIDetector:
             PIIType.DATE_OF_BIRTH: re.compile(r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b"),
         }
 
-    def detect_pii(self, df: pd.DataFrame) -> List[PIIDetectionResult]:
+    def detect_pii(self, df: pd.DataFrame) -> list[PIIDetectionResult]:
         """Detect PII in DataFrame"""
         results = []
 
@@ -312,7 +311,7 @@ class PIIDetector:
 
     def _detect_with_ner(
         self, column: str, sample_values: pd.Series
-    ) -> List[PIIDetectionResult]:
+    ) -> list[PIIDetectionResult]:
         """Detect PII using Named Entity Recognition"""
         results = []
 
@@ -377,8 +376,8 @@ class DataAnonymizer:
         self.mapping_tables = {}
 
     def anonymize_dataframe(
-        self, df: pd.DataFrame, pii_columns: Optional[List[str]] = None
-    ) -> Tuple[pd.DataFrame, AnonymizationResult]:
+        self, df: pd.DataFrame, pii_columns: list[str] | None = None
+    ) -> tuple[pd.DataFrame, AnonymizationResult]:
         """Anonymize entire DataFrame"""
         # Detect PII if not specified
         if pii_columns is None:
@@ -536,7 +535,7 @@ class DataAnonymizer:
         return pd.DataFrame(synthetic_data)
 
     def calculate_k_anonymity(
-        self, df: pd.DataFrame, quasi_identifiers: List[str] = None
+        self, df: pd.DataFrame, quasi_identifiers: list[str] = None
     ) -> int:
         """Calculate k-anonymity value"""
         if quasi_identifiers is None:
@@ -557,9 +556,9 @@ class DataAnonymizer:
     def calculate_l_diversity(
         self,
         df: pd.DataFrame,
-        quasi_identifiers: List[str] = None,
+        quasi_identifiers: list[str] = None,
         sensitive_attribute: str = None,
-    ) -> Optional[int]:
+    ) -> int | None:
         """Calculate l-diversity value"""
         if quasi_identifiers is None or sensitive_attribute is None:
             return None
@@ -575,9 +574,9 @@ class DataAnonymizer:
     def calculate_t_closeness(
         self,
         df: pd.DataFrame,
-        quasi_identifiers: List[str] = None,
+        quasi_identifiers: list[str] = None,
         sensitive_attribute: str = None,
-    ) -> Optional[float]:
+    ) -> float | None:
         """Calculate t-closeness value"""
         if quasi_identifiers is None or sensitive_attribute is None:
             return None
@@ -606,7 +605,7 @@ class GDPRCompliance:
         self.audit_log = []
 
     def record_consent(
-        self, subject_id: str, purposes: List[str], granted: bool = True
+        self, subject_id: str, purposes: list[str], granted: bool = True
     ) -> str:
         """Record user consent"""
         consent_id = hashlib.sha256(
@@ -651,7 +650,7 @@ class GDPRCompliance:
             return True
         return False
 
-    def right_to_access(self, subject_id: str) -> Dict[str, Any]:
+    def right_to_access(self, subject_id: str) -> dict[str, Any]:
         """Implement right to access (data portability)"""
         if subject_id not in self.data_subjects:
             return {}
@@ -670,7 +669,7 @@ class GDPRCompliance:
         }
 
     def right_to_rectification(
-        self, subject_id: str, corrections: Dict[str, Any]
+        self, subject_id: str, corrections: dict[str, Any]
     ) -> bool:
         """Implement right to rectification (correct data)"""
         if subject_id not in self.data_subjects:
@@ -728,7 +727,7 @@ class GDPRCompliance:
         else:
             raise ValueError(f"Unsupported format: {format}")
 
-    def check_retention_policy(self) -> List[str]:
+    def check_retention_policy(self) -> list[str]:
         """Check and apply data retention policy"""
         expired_subjects = []
         current_time = datetime.now()
@@ -749,7 +748,7 @@ class GDPRCompliance:
 
         return expired_subjects
 
-    def _log_activity(self, action: str, subject_id: str, details: Dict[str, Any]):
+    def _log_activity(self, action: str, subject_id: str, details: dict[str, Any]):
         """Log GDPR-related activity"""
         log_entry = {
             "timestamp": datetime.now(),
@@ -764,7 +763,7 @@ class GDPRCompliance:
         if len(self.audit_log) > 10000:
             self.audit_log = self.audit_log[-5000:]
 
-    def get_audit_log(self, subject_id: Optional[str] = None) -> List[Dict]:
+    def get_audit_log(self, subject_id: str | None = None) -> list[dict]:
         """Get audit log entries"""
         if subject_id:
             return [
@@ -784,8 +783,8 @@ class PrivacyFramework:
         self.gdpr_compliance = GDPRCompliance(config)
 
     def apply_privacy_protection(
-        self, df: pd.DataFrame, subject_id: Optional[str] = None
-    ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+        self, df: pd.DataFrame, subject_id: str | None = None
+    ) -> tuple[pd.DataFrame, dict[str, Any]]:
         """Apply comprehensive privacy protection"""
         report = {
             "timestamp": datetime.now(),
@@ -827,7 +826,7 @@ class PrivacyFramework:
 
         return df_anon, report
 
-    def generate_privacy_report(self, df: pd.DataFrame) -> Dict[str, Any]:
+    def generate_privacy_report(self, df: pd.DataFrame) -> dict[str, Any]:
         """Generate comprehensive privacy report"""
         report = {
             "timestamp": datetime.now(),

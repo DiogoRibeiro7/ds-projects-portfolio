@@ -1,16 +1,14 @@
-"""
-Production Readiness Components for Bank Churn Models.
+"""Production Readiness Components for Bank Churn Models.
 Implements model versioning, monitoring, drift detection, explainability, and A/B testing.
 """
 
 import hashlib
 import json
-import pickle
 import warnings
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import joblib
 import lime
@@ -18,7 +16,6 @@ import lime.lime_tabular
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import shap
 from scipy import stats
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
@@ -33,12 +30,12 @@ class ModelVersion:
     version_id: str
     model_name: str
     timestamp: datetime
-    metrics: Dict[str, float]
-    parameters: Dict[str, Any]
-    feature_names: List[str]
+    metrics: dict[str, float]
+    parameters: dict[str, Any]
+    feature_names: list[str]
     training_data_hash: str
     model_path: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 @dataclass
@@ -46,12 +43,12 @@ class DriftReport:
     """Container for drift detection results."""
 
     timestamp: datetime
-    feature_drift: Dict[str, float]
+    feature_drift: dict[str, float]
     prediction_drift: float
-    performance_drift: Dict[str, float]
+    performance_drift: dict[str, float]
     has_drift: bool
     drift_severity: str
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 @dataclass
@@ -61,18 +58,17 @@ class MonitoringMetrics:
     timestamp: datetime
     prediction_volume: int
     avg_confidence: float
-    performance_metrics: Dict[str, float]
+    performance_metrics: dict[str, float]
     latency_ms: float
     error_rate: float
-    data_quality_issues: List[str]
+    data_quality_issues: list[str]
 
 
 class ModelVersionControl:
     """Model versioning and registry system."""
 
     def __init__(self, base_path: str = "./model_registry"):
-        """
-        Initialize model version control.
+        """Initialize model version control.
 
         Args:
             base_path: Base path for model storage
@@ -89,12 +85,11 @@ class ModelVersionControl:
         model_name: str,
         X_train: pd.DataFrame,
         y_train: pd.Series,
-        metrics: Dict[str, float],
-        parameters: Dict[str, Any] = None,
-        metadata: Dict[str, Any] = None,
+        metrics: dict[str, float],
+        parameters: dict[str, Any] = None,
+        metadata: dict[str, Any] = None,
     ) -> str:
-        """
-        Save model with versioning.
+        """Save model with versioning.
 
         Args:
             model: Trained model
@@ -151,8 +146,7 @@ class ModelVersionControl:
         return version_id
 
     def load_model(self, model_name: str, version_id: str = None):
-        """
-        Load model by version.
+        """Load model by version.
 
         Args:
             model_name: Model name
@@ -177,8 +171,7 @@ class ModelVersionControl:
     def compare_versions(
         self, model_name: str, version1: str, version2: str
     ) -> pd.DataFrame:
-        """
-        Compare two model versions.
+        """Compare two model versions.
 
         Args:
             model_name: Model name
@@ -251,7 +244,7 @@ class ModelVersionControl:
         """Load registry from file."""
         registry_path = self.base_path / "registry.json"
         if registry_path.exists():
-            with open(registry_path, "r") as f:
+            with open(registry_path) as f:
                 registry_dict = json.load(f)
 
             for model_name, versions in registry_dict.items():
@@ -265,9 +258,8 @@ class ModelVersionControl:
 class ModelMonitor:
     """Real-time model monitoring."""
 
-    def __init__(self, alert_thresholds: Dict[str, float] = None):
-        """
-        Initialize model monitor.
+    def __init__(self, alert_thresholds: dict[str, float] = None):
+        """Initialize model monitor.
 
         Args:
             alert_thresholds: Thresholds for alerts
@@ -291,8 +283,7 @@ class ModelMonitor:
         latency_ms: float,
         error: bool = False,
     ):
-        """
-        Log single prediction for monitoring.
+        """Log single prediction for monitoring.
 
         Args:
             features: Input features
@@ -320,8 +311,7 @@ class ModelMonitor:
         self._check_alerts(latency_ms, error, data_quality_issues)
 
     def get_monitoring_metrics(self, window_size: int = 100) -> MonitoringMetrics:
-        """
-        Calculate monitoring metrics for recent predictions.
+        """Calculate monitoring metrics for recent predictions.
 
         Args:
             window_size: Number of recent predictions to analyze
@@ -357,7 +347,7 @@ class ModelMonitor:
 
         return metrics
 
-    def _check_data_quality(self, features: pd.DataFrame) -> List[str]:
+    def _check_data_quality(self, features: pd.DataFrame) -> list[str]:
         """Check for data quality issues."""
         issues = []
 
@@ -378,7 +368,7 @@ class ModelMonitor:
         return issues
 
     def _check_alerts(
-        self, latency_ms: float, error: bool, data_quality_issues: List[str]
+        self, latency_ms: float, error: bool, data_quality_issues: list[str]
     ):
         """Check and trigger alerts."""
         alerts = []
@@ -405,8 +395,7 @@ class DriftDetector:
     def __init__(
         self, reference_data: pd.DataFrame, reference_predictions: np.ndarray = None
     ):
-        """
-        Initialize drift detector.
+        """Initialize drift detector.
 
         Args:
             reference_data: Reference feature data
@@ -422,8 +411,7 @@ class DriftDetector:
         current_predictions: np.ndarray = None,
         method: str = "ks",
     ) -> DriftReport:
-        """
-        Detect drift in data and predictions.
+        """Detect drift in data and predictions.
 
         Args:
             current_data: Current feature data
@@ -635,9 +623,8 @@ class DriftDetector:
 class ModelExplainer:
     """Model explainability using SHAP and LIME."""
 
-    def __init__(self, model, X_train: pd.DataFrame, feature_names: List[str] = None):
-        """
-        Initialize explainer.
+    def __init__(self, model, X_train: pd.DataFrame, feature_names: list[str] = None):
+        """Initialize explainer.
 
         Args:
             model: Trained model
@@ -670,9 +657,8 @@ class ModelExplainer:
             mode="classification",
         )
 
-    def explain_prediction_shap(self, X: pd.DataFrame, plot: bool = True) -> Dict:
-        """
-        Explain prediction using SHAP.
+    def explain_prediction_shap(self, X: pd.DataFrame, plot: bool = True) -> dict:
+        """Explain prediction using SHAP.
 
         Args:
             X: Features to explain
@@ -711,9 +697,8 @@ class ModelExplainer:
 
         return explanation
 
-    def explain_prediction_lime(self, X: pd.DataFrame, num_features: int = 10) -> Dict:
-        """
-        Explain prediction using LIME.
+    def explain_prediction_lime(self, X: pd.DataFrame, num_features: int = 10) -> dict:
+        """Explain prediction using LIME.
 
         Args:
             X: Features to explain (single row)
@@ -746,8 +731,7 @@ class ModelExplainer:
         }
 
     def global_feature_importance(self, n_samples: int = 1000) -> pd.DataFrame:
-        """
-        Calculate global feature importance.
+        """Calculate global feature importance.
 
         Args:
             n_samples: Number of samples to use
@@ -786,8 +770,7 @@ class ABTestingFramework:
     """A/B testing for model deployment."""
 
     def __init__(self, model_a, model_b, traffic_split: float = 0.5):
-        """
-        Initialize A/B testing framework.
+        """Initialize A/B testing framework.
 
         Args:
             model_a: Control model
@@ -799,9 +782,8 @@ class ABTestingFramework:
         self.traffic_split = traffic_split
         self.test_results = {"model_a": [], "model_b": []}
 
-    def route_traffic(self, X: pd.DataFrame) -> Tuple[str, np.ndarray]:
-        """
-        Route traffic to models based on split.
+    def route_traffic(self, X: pd.DataFrame) -> tuple[str, np.ndarray]:
+        """Route traffic to models based on split.
 
         Args:
             X: Features
@@ -828,8 +810,7 @@ class ABTestingFramework:
         actual: int = None,
         business_value: float = None,
     ):
-        """
-        Log A/B test result.
+        """Log A/B test result.
 
         Args:
             model_name: Which model was used
@@ -847,9 +828,8 @@ class ABTestingFramework:
 
         self.test_results[model_name].append(result)
 
-    def analyze_results(self, min_samples: int = 100) -> Dict:
-        """
-        Analyze A/B test results.
+    def analyze_results(self, min_samples: int = 100) -> dict:
+        """Analyze A/B test results.
 
         Args:
             min_samples: Minimum samples for significance
@@ -933,7 +913,7 @@ class ABTestingFramework:
 
         return analysis
 
-    def _calculate_metrics(self, y_true: np.ndarray, y_pred: np.ndarray) -> Dict:
+    def _calculate_metrics(self, y_true: np.ndarray, y_pred: np.ndarray) -> dict:
         """Calculate performance metrics."""
         y_pred_binary = (y_pred >= 0.5).astype(int)
 

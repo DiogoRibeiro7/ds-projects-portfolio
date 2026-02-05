@@ -1,20 +1,16 @@
-"""
-Statistical validation suite for comparing implementations with established libraries
+"""Statistical validation suite for comparing implementations with established libraries
 and validating against known test cases.
 """
 
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import statsmodels.api as sm
-import statsmodels.stats.api as sms
 from scipy import stats
-from statsmodels.stats.anova import anova_lm
 from statsmodels.stats.proportion import proportions_ztest
 from statsmodels.stats.weightstats import ttest_ind as sm_ttest
 
@@ -25,18 +21,16 @@ from advanced_statistical_tests import (
     EffectSizeCalculations,
     MultipleTestingCorrections,
     NonParametricTests,
-    PowerAnalysis,
 )
 
 # Import our implementations
 from bayesian_ab_testing import BayesianABTesting
 from causal_inference import (
-    DifferenceInDifferences,
     InstrumentalVariables,
     PropensityScoreMatching,
     RegressionDiscontinuity,
 )
-from multi_armed_bandits import UCB, EpsilonGreedy, ThompsonSampling
+from multi_armed_bandits import ThompsonSampling
 
 
 @dataclass
@@ -50,15 +44,14 @@ class ValidationResult:
     relative_difference: float
     passed: bool
     tolerance: float
-    details: Dict[str, Any] = None
+    details: dict[str, Any] = None
 
 
 class StatisticalValidator:
     """Validate statistical implementations against reference libraries."""
 
     def __init__(self, tolerance: float = 0.01):
-        """
-        Initialize validator.
+        """Initialize validator.
 
         Args:
             tolerance: Maximum acceptable relative difference
@@ -67,8 +60,7 @@ class StatisticalValidator:
         self.results = []
 
     def validate_all(self) -> pd.DataFrame:
-        """
-        Run all validation tests.
+        """Run all validation tests.
 
         Returns:
             DataFrame with validation results
@@ -241,7 +233,7 @@ class StatisticalValidator:
         bonferroni_manual = np.minimum(p_values * len(p_values), 1.0)
 
         for i, (our, ref) in enumerate(
-            zip(results_df["pvalue_bonferroni"], bonferroni_manual)
+            zip(results_df["pvalue_bonferroni"], bonferroni_manual, strict=False)
         ):
             self._add_result(f"Bonferroni p[{i}]", our, ref)
 
@@ -431,7 +423,7 @@ class StatisticalValidator:
         test_name: str,
         our_result: float,
         reference_result: float,
-        tolerance: Optional[float] = None,
+        tolerance: float | None = None,
     ):
         """Add validation result."""
         if tolerance is None:
@@ -468,8 +460,7 @@ class SimulationValidator:
     def validate_type1_error(
         test_func: Callable, n_simulations: int = 10000, alpha: float = 0.05
     ) -> float:
-        """
-        Validate Type I error rate through simulation.
+        """Validate Type I error rate through simulation.
 
         Args:
             test_func: Function that returns p-value
@@ -499,8 +490,7 @@ class SimulationValidator:
         n_simulations: int = 1000,
         alpha: float = 0.05,
     ) -> float:
-        """
-        Validate statistical power through simulation.
+        """Validate statistical power through simulation.
 
         Args:
             test_func: Function that returns p-value
@@ -531,8 +521,7 @@ class SimulationValidator:
         n_simulations: int = 1000,
         confidence_level: float = 0.95,
     ) -> float:
-        """
-        Validate confidence interval coverage.
+        """Validate confidence interval coverage.
 
         Args:
             ci_func: Function that returns (lower, upper) CI
@@ -565,9 +554,8 @@ class TheoreticalValidator:
     @staticmethod
     def validate_unbiasedness(
         estimator: Callable, true_value: float, n_simulations: int = 10000
-    ) -> Dict[str, float]:
-        """
-        Check if estimator is unbiased.
+    ) -> dict[str, float]:
+        """Check if estimator is unbiased.
 
         Args:
             estimator: Estimator function
@@ -598,10 +586,9 @@ class TheoreticalValidator:
 
     @staticmethod
     def validate_consistency(
-        estimator: Callable, true_value: float, sample_sizes: List[int] = None
+        estimator: Callable, true_value: float, sample_sizes: list[int] = None
     ) -> pd.DataFrame:
-        """
-        Check if estimator is consistent (converges to true value).
+        """Check if estimator is consistent (converges to true value).
 
         Args:
             estimator: Estimator function
@@ -647,7 +634,7 @@ def generate_validation_report():
 
     # Save results
     results_df.to_csv("statistical_methods/validation_results.csv", index=False)
-    print(f"\nResults saved to validation_results.csv")
+    print("\nResults saved to validation_results.csv")
 
     # Plot validation results
     fig, axes = plt.subplots(2, 2, figsize=(15, 10))

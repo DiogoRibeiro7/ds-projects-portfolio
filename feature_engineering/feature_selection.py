@@ -1,41 +1,31 @@
-"""
-Advanced Feature Selection Methods
+"""Advanced Feature Selection Methods
 
 Comprehensive feature selection techniques for optimal model performance.
 """
 
-import pandas as pd
+import warnings
+
 import numpy as np
-from typing import List, Dict, Optional, Union, Tuple, Any
-from sklearn.base import BaseEstimator, TransformerMixin
+import pandas as pd
+from sklearn.ensemble import (
+    ExtraTreesClassifier,
+    ExtraTreesRegressor,
+    GradientBoostingClassifier,
+    GradientBoostingRegressor,
+    RandomForestClassifier,
+    RandomForestRegressor,
+)
 from sklearn.feature_selection import (
-    SelectKBest,
-    SelectPercentile,
-    SelectFpr,
-    SelectFdr,
-    SelectFwe,
     RFE,
-    RFECV,
     SelectFromModel,
+    SelectKBest,
     VarianceThreshold,
     mutual_info_classif,
     mutual_info_regression,
-    f_classif,
-    f_regression,
-    chi2,
 )
-from sklearn.ensemble import (
-    RandomForestClassifier,
-    RandomForestRegressor,
-    GradientBoostingClassifier,
-    GradientBoostingRegressor,
-    ExtraTreesClassifier,
-    ExtraTreesRegressor,
-)
-from sklearn.linear_model import LassoCV, RidgeCV, ElasticNetCV, LogisticRegressionCV
+from sklearn.linear_model import ElasticNetCV, LassoCV, LogisticRegressionCV
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
-import warnings
 
 warnings.filterwarnings("ignore")
 
@@ -68,13 +58,12 @@ class AdvancedFeatureSelector:
     def __init__(
         self,
         task_type: str = "classification",
-        selection_methods: List[str] = None,
-        max_features: Optional[int] = None,
+        selection_methods: list[str] = None,
+        max_features: int | None = None,
         cv_folds: int = 5,
         verbosity: int = 1,
     ):
-        """
-        Initialize advanced feature selector.
+        """Initialize advanced feature selector.
 
         Args:
             task_type: 'classification' or 'regression'
@@ -98,9 +87,8 @@ class AdvancedFeatureSelector:
 
     def fit_select(
         self, X: pd.DataFrame, y: pd.Series, return_scores: bool = False
-    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, Dict]]:
-        """
-        Fit selectors and select features.
+    ) -> pd.DataFrame | tuple[pd.DataFrame, dict]:
+        """Fit selectors and select features.
 
         Args:
             X: Feature dataframe
@@ -134,7 +122,7 @@ class AdvancedFeatureSelector:
 
     def _apply_selection_method(
         self, X: pd.DataFrame, y: pd.Series, method: str
-    ) -> Tuple[List[str], Dict[str, float]]:
+    ) -> tuple[list[str], dict[str, float]]:
         """Apply specific selection method."""
         if method == "variance":
             return self._variance_selection(X)
@@ -174,7 +162,7 @@ class AdvancedFeatureSelector:
 
     def _variance_selection(
         self, X: pd.DataFrame, threshold: float = 0.01
-    ) -> Tuple[List[str], Dict[str, float]]:
+    ) -> tuple[list[str], dict[str, float]]:
         """Select features based on variance."""
         selector = VarianceThreshold(threshold=threshold)
         selector.fit(X)
@@ -182,14 +170,14 @@ class AdvancedFeatureSelector:
         selected_mask = selector.get_support()
         selected_features = X.columns[selected_mask].tolist()
 
-        scores = dict(zip(X.columns, selector.variances_))
+        scores = dict(zip(X.columns, selector.variances_, strict=False))
 
         self.selectors["variance"] = selector
         return selected_features, scores
 
     def _correlation_selection(
         self, X: pd.DataFrame, y: pd.Series, threshold: float = 0.9
-    ) -> Tuple[List[str], Dict[str, float]]:
+    ) -> tuple[list[str], dict[str, float]]:
         """Select features based on correlation."""
         # Calculate correlation with target
         correlations = X.corrwith(y).abs()
@@ -225,14 +213,14 @@ class AdvancedFeatureSelector:
 
     def _mutual_info_selection(
         self, X: pd.DataFrame, y: pd.Series
-    ) -> Tuple[List[str], Dict[str, float]]:
+    ) -> tuple[list[str], dict[str, float]]:
         """Select features using mutual information."""
         if self.task_type == "classification":
             mi_scores = mutual_info_classif(X, y)
         else:
             mi_scores = mutual_info_regression(X, y)
 
-        scores = dict(zip(X.columns, mi_scores))
+        scores = dict(zip(X.columns, mi_scores, strict=False))
 
         # Select top features
         if self.max_features:
@@ -256,7 +244,7 @@ class AdvancedFeatureSelector:
 
     def _importance_selection(
         self, X: pd.DataFrame, y: pd.Series
-    ) -> Tuple[List[str], Dict[str, float]]:
+    ) -> tuple[list[str], dict[str, float]]:
         """Select features using tree-based importance."""
         if self.task_type == "classification":
             model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
@@ -266,7 +254,7 @@ class AdvancedFeatureSelector:
         model.fit(X, y)
 
         importances = model.feature_importances_
-        scores = dict(zip(X.columns, importances))
+        scores = dict(zip(X.columns, importances, strict=False))
 
         # Select features
         if self.max_features:
@@ -283,7 +271,7 @@ class AdvancedFeatureSelector:
 
     def _lasso_selection(
         self, X: pd.DataFrame, y: pd.Series
-    ) -> Tuple[List[str], Dict[str, float]]:
+    ) -> tuple[list[str], dict[str, float]]:
         """Select features using Lasso regularization."""
         # Standardize features
         scaler = StandardScaler()
@@ -311,7 +299,7 @@ class AdvancedFeatureSelector:
         else:
             coefs = np.zeros(X.shape[1])
 
-        scores = dict(zip(X.columns, coefs))
+        scores = dict(zip(X.columns, coefs, strict=False))
 
         # Select non-zero coefficients
         selected_mask = coefs != 0
@@ -326,7 +314,7 @@ class AdvancedFeatureSelector:
 
     def _rfe_selection(
         self, X: pd.DataFrame, y: pd.Series
-    ) -> Tuple[List[str], Dict[str, float]]:
+    ) -> tuple[list[str], dict[str, float]]:
         """Select features using Recursive Feature Elimination."""
         if self.task_type == "classification":
             estimator = RandomForestClassifier(
@@ -349,14 +337,14 @@ class AdvancedFeatureSelector:
         selected_features = X.columns[selected_mask].tolist()
 
         # Create scores from ranking
-        scores = dict(zip(X.columns, 1 / selector.ranking_))
+        scores = dict(zip(X.columns, 1 / selector.ranking_, strict=False))
 
         self.selectors["rfe"] = selector
         return selected_features, scores
 
     def _boruta_selection(
         self, X: pd.DataFrame, y: pd.Series
-    ) -> Tuple[List[str], Dict[str, float]]:
+    ) -> tuple[list[str], dict[str, float]]:
         """Select features using Boruta algorithm."""
         if not BORUTA_AVAILABLE:
             print("Boruta not available. Using importance selection instead.")
@@ -379,14 +367,14 @@ class AdvancedFeatureSelector:
         # Get feature importance scores
         scores = {}
         if hasattr(boruta_selector, "ranking_"):
-            scores = dict(zip(X.columns, 1 / boruta_selector.ranking_))
+            scores = dict(zip(X.columns, 1 / boruta_selector.ranking_, strict=False))
 
         self.selectors["boruta"] = boruta_selector
         return selected_features, scores
 
     def _shap_selection(
         self, X: pd.DataFrame, y: pd.Series
-    ) -> Tuple[List[str], Dict[str, float]]:
+    ) -> tuple[list[str], dict[str, float]]:
         """Select features using SHAP values."""
         if not SHAP_AVAILABLE:
             print("SHAP not available. Using importance selection instead.")
@@ -410,7 +398,7 @@ class AdvancedFeatureSelector:
         else:
             shap_importance = np.abs(shap_values.values).mean(axis=0)
 
-        scores = dict(zip(X.columns, shap_importance))
+        scores = dict(zip(X.columns, shap_importance, strict=False))
 
         # Select top features
         if self.max_features:
@@ -424,8 +412,8 @@ class AdvancedFeatureSelector:
         return selected_features, scores
 
     def _forward_selection(
-        self, X: pd.DataFrame, y: pd.Series, max_features: Optional[int] = None
-    ) -> Tuple[List[str], Dict[str, float]]:
+        self, X: pd.DataFrame, y: pd.Series, max_features: int | None = None
+    ) -> tuple[list[str], dict[str, float]]:
         """Forward feature selection."""
         if max_features is None:
             max_features = self.max_features or X.shape[1] // 2
@@ -473,7 +461,7 @@ class AdvancedFeatureSelector:
 
     def _backward_selection(
         self, X: pd.DataFrame, y: pd.Series, min_features: int = 1
-    ) -> Tuple[List[str], Dict[str, float]]:
+    ) -> tuple[list[str], dict[str, float]]:
         """Backward feature selection."""
         selected_features = list(X.columns)
         scores = {}
@@ -539,7 +527,7 @@ class AdvancedFeatureSelector:
         y: pd.Series,
         population_size: int = 50,
         generations: int = 20,
-    ) -> Tuple[List[str], Dict[str, float]]:
+    ) -> tuple[list[str], dict[str, float]]:
         """Genetic algorithm for feature selection."""
         n_features = X.shape[1]
 
@@ -640,11 +628,11 @@ class AdvancedFeatureSelector:
         selected_features = X.columns[best_individual.astype(bool)].tolist()
 
         # Create scores
-        feature_scores = dict(zip(X.columns, best_individual))
+        feature_scores = dict(zip(X.columns, best_individual, strict=False))
 
         return selected_features, feature_scores
 
-    def _combine_selections(self, results: Dict, X: pd.DataFrame) -> List[str]:
+    def _combine_selections(self, results: dict, X: pd.DataFrame) -> list[str]:
         """Combine results from multiple selection methods."""
         # Count how many methods selected each feature
         feature_counts = {}
@@ -706,10 +694,9 @@ class FeatureImportanceAnalyzer:
         self.model_importances = {}
 
     def analyze(
-        self, X: pd.DataFrame, y: pd.Series, models: List[str] = None
+        self, X: pd.DataFrame, y: pd.Series, models: list[str] = None
     ) -> pd.DataFrame:
-        """
-        Analyze feature importance using multiple models.
+        """Analyze feature importance using multiple models.
 
         Args:
             X: Feature dataframe

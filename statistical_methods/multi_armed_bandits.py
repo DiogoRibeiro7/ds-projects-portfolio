@@ -1,17 +1,13 @@
-"""
-Multi-armed bandit algorithms for optimization and experimentation.
+"""Multi-armed bandit algorithms for optimization and experimentation.
 """
 
-import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-from scipy import stats
 
 
 @dataclass
@@ -20,7 +16,7 @@ class BanditArm:
 
     id: str
     pulls: int = 0
-    rewards: List[float] = field(default_factory=list)
+    rewards: list[float] = field(default_factory=list)
     total_reward: float = 0.0
 
     @property
@@ -45,9 +41,8 @@ class BanditArm:
 class BanditAlgorithm(ABC):
     """Abstract base class for bandit algorithms."""
 
-    def __init__(self, n_arms: int, arm_names: Optional[List[str]] = None):
-        """
-        Initialize bandit algorithm.
+    def __init__(self, n_arms: int, arm_names: list[str] | None = None):
+        """Initialize bandit algorithm.
 
         Args:
             n_arms: Number of arms
@@ -66,8 +61,7 @@ class BanditAlgorithm(ABC):
         pass
 
     def update(self, arm_idx: int, reward: float):
-        """
-        Update algorithm after observing reward.
+        """Update algorithm after observing reward.
 
         Args:
             arm_idx: Index of pulled arm
@@ -112,10 +106,9 @@ class EpsilonGreedy(BanditAlgorithm):
         epsilon: float = 0.1,
         decay_rate: float = 0.99,
         min_epsilon: float = 0.01,
-        arm_names: Optional[List[str]] = None,
+        arm_names: list[str] | None = None,
     ):
-        """
-        Initialize epsilon-greedy algorithm.
+        """Initialize epsilon-greedy algorithm.
 
         Args:
             n_arms: Number of arms
@@ -156,10 +149,9 @@ class ThompsonSampling(BanditAlgorithm):
         n_arms: int,
         prior_alpha: float = 1,
         prior_beta: float = 1,
-        arm_names: Optional[List[str]] = None,
+        arm_names: list[str] | None = None,
     ):
-        """
-        Initialize Thompson Sampling.
+        """Initialize Thompson Sampling.
 
         Args:
             n_arms: Number of arms
@@ -219,10 +211,9 @@ class UCB(BanditAlgorithm):
         self,
         n_arms: int,
         confidence: float = 2.0,
-        arm_names: Optional[List[str]] = None,
+        arm_names: list[str] | None = None,
     ):
-        """
-        Initialize UCB algorithm.
+        """Initialize UCB algorithm.
 
         Args:
             n_arms: Number of arms
@@ -259,10 +250,9 @@ class LinUCB(BanditAlgorithm):
         n_arms: int,
         n_features: int,
         alpha: float = 1.0,
-        arm_names: Optional[List[str]] = None,
+        arm_names: list[str] | None = None,
     ):
-        """
-        Initialize LinUCB for contextual bandits.
+        """Initialize LinUCB for contextual bandits.
 
         Args:
             n_arms: Number of arms
@@ -280,8 +270,7 @@ class LinUCB(BanditAlgorithm):
         self.theta = [np.zeros((n_features, 1)) for _ in range(n_arms)]
 
     def select_arm(self, context: np.ndarray) -> int:
-        """
-        Select arm based on context.
+        """Select arm based on context.
 
         Args:
             context: Feature vector for current context
@@ -305,8 +294,7 @@ class LinUCB(BanditAlgorithm):
         return np.argmax(p)
 
     def update_contextual(self, arm_idx: int, reward: float, context: np.ndarray):
-        """
-        Update model with contextual information.
+        """Update model with contextual information.
 
         Args:
             arm_idx: Index of pulled arm
@@ -322,9 +310,8 @@ class LinUCB(BanditAlgorithm):
 class BanditSimulator:
     """Simulate and compare bandit algorithms."""
 
-    def __init__(self, true_probs: List[float], n_rounds: int = 1000):
-        """
-        Initialize bandit simulator.
+    def __init__(self, true_probs: list[float], n_rounds: int = 1000):
+        """Initialize bandit simulator.
 
         Args:
             true_probs: True reward probabilities for each arm
@@ -335,9 +322,8 @@ class BanditSimulator:
         self.n_rounds = n_rounds
         self.optimal_arm = np.argmax(true_probs)
 
-    def simulate(self, algorithm: BanditAlgorithm) -> Dict[str, Any]:
-        """
-        Simulate bandit algorithm.
+    def simulate(self, algorithm: BanditAlgorithm) -> dict[str, Any]:
+        """Simulate bandit algorithm.
 
         Args:
             algorithm: Bandit algorithm to test
@@ -380,9 +366,8 @@ class BanditSimulator:
             "arm_statistics": algorithm.get_statistics(),
         }
 
-    def compare_algorithms(self, algorithms: List[BanditAlgorithm]) -> pd.DataFrame:
-        """
-        Compare multiple bandit algorithms.
+    def compare_algorithms(self, algorithms: list[BanditAlgorithm]) -> pd.DataFrame:
+        """Compare multiple bandit algorithms.
 
         Args:
             algorithms: List of algorithms to compare
@@ -406,9 +391,8 @@ class BanditSimulator:
 
         return pd.DataFrame(results)
 
-    def plot_comparison(self, algorithms: List[BanditAlgorithm]):
-        """
-        Plot comparison of algorithms.
+    def plot_comparison(self, algorithms: list[BanditAlgorithm]):
+        """Plot comparison of algorithms.
 
         Args:
             algorithms: List of algorithms to compare
@@ -474,10 +458,9 @@ class DynamicBandit:
     """Bandit with time-varying reward probabilities."""
 
     def __init__(
-        self, n_arms: int, change_points: List[int], prob_schedules: List[List[float]]
+        self, n_arms: int, change_points: list[int], prob_schedules: list[list[float]]
     ):
-        """
-        Initialize dynamic bandit.
+        """Initialize dynamic bandit.
 
         Args:
             n_arms: Number of arms
@@ -489,7 +472,7 @@ class DynamicBandit:
         self.prob_schedules = prob_schedules
         self.current_period = 0
 
-    def get_current_probs(self, round: int) -> List[float]:
+    def get_current_probs(self, round: int) -> list[float]:
         """Get current reward probabilities based on round."""
         # Find current period
         for i, cp in enumerate(self.change_points[1:]):
@@ -499,9 +482,8 @@ class DynamicBandit:
 
     def simulate_dynamic(
         self, algorithm: BanditAlgorithm, n_rounds: int
-    ) -> Dict[str, Any]:
-        """
-        Simulate algorithm on dynamic bandit.
+    ) -> dict[str, Any]:
+        """Simulate algorithm on dynamic bandit.
 
         Args:
             algorithm: Bandit algorithm

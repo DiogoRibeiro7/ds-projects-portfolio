@@ -1,30 +1,24 @@
-"""
-Authentication and Authorization System
+"""Authentication and Authorization System
 """
 
+import base64
 import hashlib
 import hmac
-import secrets
-import jwt
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
 import json
-from pathlib import Path
-import time
-import base64
+import logging
 import re
-
-import bcrypt
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
-from cryptography.hazmat.backends import default_backend
-from cryptography.fernet import Fernet
+import secrets
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
 
 # For session management
 from functools import wraps
+from typing import Any
+
+import bcrypt
+import jwt
 import redis
 from cachetools import TTLCache
 
@@ -72,17 +66,17 @@ class User:
     user_id: str
     username: str
     email: str
-    roles: List[UserRole] = field(default_factory=list)
-    permissions: List[Permission] = field(default_factory=list)
+    roles: list[UserRole] = field(default_factory=list)
+    permissions: list[Permission] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
-    last_login: Optional[datetime] = None
+    last_login: datetime | None = None
     is_active: bool = True
     mfa_enabled: bool = False
-    mfa_secret: Optional[str] = None
-    password_hash: Optional[str] = None
+    mfa_secret: str | None = None
+    password_hash: str | None = None
     failed_attempts: int = 0
-    locked_until: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    locked_until: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -96,7 +90,7 @@ class Session:
     ip_address: str
     user_agent: str
     is_active: bool = True
-    refresh_token: Optional[str] = None
+    refresh_token: str | None = None
     last_activity: datetime = field(default_factory=datetime.now)
 
 
@@ -130,7 +124,7 @@ class RolePermissionManager:
     def __init__(self):
         self.role_permissions = self._initialize_role_permissions()
 
-    def _initialize_role_permissions(self) -> Dict[UserRole, List[Permission]]:
+    def _initialize_role_permissions(self) -> dict[UserRole, list[Permission]]:
         """Initialize default role-permission mappings"""
         return {
             UserRole.ADMIN: list(Permission),  # All permissions
@@ -153,7 +147,7 @@ class RolePermissionManager:
             UserRole.API_USER: [Permission.MODEL_READ, Permission.DATA_READ],
         }
 
-    def get_permissions(self, roles: List[UserRole]) -> List[Permission]:
+    def get_permissions(self, roles: list[UserRole]) -> list[Permission]:
         """Get all permissions for given roles"""
         permissions = set()
         for role in roles:
@@ -303,7 +297,7 @@ class TokenManager:
             payload, self.config.jwt_secret, algorithm=self.config.jwt_algorithm
         )
 
-    def verify_token(self, token: str) -> Optional[Dict]:
+    def verify_token(self, token: str) -> dict | None:
         """Verify and decode JWT token"""
         try:
             payload = jwt.decode(
@@ -317,7 +311,7 @@ class TokenManager:
             logger.warning(f"Invalid token: {e}")
             return None
 
-    def refresh_access_token(self, refresh_token: str) -> Optional[str]:
+    def refresh_access_token(self, refresh_token: str) -> str | None:
         """Generate new access token from refresh token"""
         payload = self.verify_token(refresh_token)
         if not payload or payload.get("type") != "refresh":
@@ -393,7 +387,7 @@ class SessionManager:
 
         return session
 
-    def get_session(self, session_id: str) -> Optional[Session]:
+    def get_session(self, session_id: str) -> Session | None:
         """Retrieve session by ID"""
         if self.config.session_store == "redis":
             data = self.redis_client.get(f"session:{session_id}")
@@ -519,7 +513,7 @@ class MFAManager:
 
         return str(code).zfill(6)
 
-    def generate_backup_codes(self, count: int = 10) -> List[str]:
+    def generate_backup_codes(self, count: int = 10) -> list[str]:
         """Generate backup codes for account recovery"""
         return [secrets.token_hex(4) for _ in range(count)]
 
@@ -532,8 +526,8 @@ class APIKeyManager:
         self.api_keys = {}  # In production, use database
 
     def generate_api_key(
-        self, user: User, name: str, permissions: List[Permission]
-    ) -> Tuple[str, str]:
+        self, user: User, name: str, permissions: list[Permission]
+    ) -> tuple[str, str]:
         """Generate API key for user"""
         # Generate key components
         key_id = secrets.token_hex(8)
@@ -559,7 +553,7 @@ class APIKeyManager:
         full_key = f"{key_id}.{key_secret}"
         return key_id, full_key
 
-    def verify_api_key(self, api_key: str) -> Optional[Dict]:
+    def verify_api_key(self, api_key: str) -> dict | None:
         """Verify API key"""
         try:
             # Parse key
@@ -601,7 +595,7 @@ class APIKeyManager:
         if key_id in self.api_keys:
             self.api_keys[key_id]["is_active"] = False
 
-    def list_api_keys(self, user_id: str) -> List[Dict]:
+    def list_api_keys(self, user_id: str) -> list[dict]:
         """List user's API keys"""
         user_keys = []
         for key_id, key_info in self.api_keys.items():
@@ -635,7 +629,7 @@ class AuthenticationService:
         self.audit_log = []
 
     def register_user(
-        self, username: str, email: str, password: str, roles: List[UserRole] = None
+        self, username: str, email: str, password: str, roles: list[UserRole] = None
     ) -> User:
         """Register new user"""
         # Check if user exists
@@ -666,10 +660,10 @@ class AuthenticationService:
         self,
         username: str,
         password: str,
-        mfa_code: Optional[str] = None,
+        mfa_code: str | None = None,
         ip_address: str = "127.0.0.1",
         user_agent: str = "Unknown",
-    ) -> Tuple[Optional[User], Optional[str], Optional[Session]]:
+    ) -> tuple[User | None, str | None, Session | None]:
         """Authenticate user and return user, token, and session"""
         # Get user
         user = self.users.get(username)
@@ -734,10 +728,10 @@ class AuthenticationService:
 
     def verify_request(
         self,
-        token: Optional[str] = None,
-        session_id: Optional[str] = None,
-        api_key: Optional[str] = None,
-    ) -> Optional[User]:
+        token: str | None = None,
+        session_id: str | None = None,
+        api_key: str | None = None,
+    ) -> User | None:
         """Verify request authentication"""
         # Try token authentication
         if token:
@@ -774,7 +768,7 @@ class AuthenticationService:
 
         return None
 
-    def logout(self, user: User, session_id: Optional[str] = None):
+    def logout(self, user: User, session_id: str | None = None):
         """Logout user"""
         if session_id:
             self.session_manager.invalidate_session(session_id)
@@ -824,7 +818,7 @@ class AuthenticationService:
         self._log_event("MFA_DISABLED", user.user_id, {})
         return True
 
-    def _log_event(self, event_type: str, user_id: Optional[str], details: Dict):
+    def _log_event(self, event_type: str, user_id: str | None, details: dict):
         """Log authentication event"""
         event = {
             "timestamp": datetime.now().isoformat(),
@@ -839,11 +833,11 @@ class AuthenticationService:
 
     def get_audit_log(
         self,
-        user_id: Optional[str] = None,
-        event_type: Optional[str] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-    ) -> List[Dict]:
+        user_id: str | None = None,
+        event_type: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> list[dict]:
         """Get filtered audit log"""
         filtered_log = self.audit_log
 

@@ -1,5 +1,4 @@
-"""
-Performance profiling utilities for identifying bottlenecks and optimization opportunities.
+"""Performance profiling utilities for identifying bottlenecks and optimization opportunities.
 """
 
 import cProfile
@@ -9,15 +8,15 @@ import json
 import pstats
 import time
 import tracemalloc
+from collections.abc import Callable
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import psutil
-from memory_profiler import profile as memory_profile
 
 
 class PerformanceProfiler:
@@ -31,8 +30,7 @@ class PerformanceProfiler:
 
     @contextmanager
     def profile_block(self, name: str, verbose: bool = True):
-        """
-        Context manager for profiling code blocks.
+        """Context manager for profiling code blocks.
 
         Usage:
             with profiler.profile_block("data_processing"):
@@ -102,9 +100,8 @@ class PerformanceProfiler:
 
     def profile_dataframe_operation(
         self, df: pd.DataFrame, operation: Callable, name: str = "dataframe_operation"
-    ) -> Tuple[Any, Dict]:
-        """
-        Profile a pandas DataFrame operation.
+    ) -> tuple[Any, dict]:
+        """Profile a pandas DataFrame operation.
 
         Args:
             df: Input DataFrame
@@ -147,10 +144,9 @@ class PerformanceProfiler:
         return result, metrics
 
     def compare_implementations(
-        self, implementations: Dict[str, Callable], test_data: Any = None
+        self, implementations: dict[str, Callable], test_data: Any = None
     ) -> pd.DataFrame:
-        """
-        Compare multiple implementations of the same functionality.
+        """Compare multiple implementations of the same functionality.
 
         Args:
             implementations: Dictionary of {name: function}
@@ -188,9 +184,8 @@ class PerformanceProfiler:
 
         return comparison_df.sort_values("execution_time")
 
-    def profile_function_detailed(self, func: Callable, *args, **kwargs) -> Dict:
-        """
-        Detailed profiling of a function using cProfile.
+    def profile_function_detailed(self, func: Callable, *args, **kwargs) -> dict:
+        """Detailed profiling of a function using cProfile.
 
         Returns:
             Dictionary with detailed profiling information
@@ -217,7 +212,7 @@ class PerformanceProfiler:
             "top_functions": self._parse_profile_stats(ps),
         }
 
-    def _parse_profile_stats(self, stats: pstats.Stats) -> List[Dict]:
+    def _parse_profile_stats(self, stats: pstats.Stats) -> list[dict]:
         """Parse profile stats into structured format."""
         top_functions = []
 
@@ -234,7 +229,7 @@ class PerformanceProfiler:
 
         return top_functions
 
-    def save_report(self, filename: Optional[str] = None) -> str:
+    def save_report(self, filename: str | None = None) -> str:
         """Save profiling results to a report."""
         if not filename:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -259,7 +254,7 @@ class PerformanceProfiler:
         print(f"Report saved to: {filepath}")
         return str(filepath)
 
-    def _generate_summary(self) -> Dict:
+    def _generate_summary(self) -> dict:
         """Generate summary statistics from results."""
         if not self.results:
             return {}
@@ -295,7 +290,7 @@ class PerformanceProfiler:
             ),
         }
 
-    def _save_markdown_report(self, filepath: Path, report: Dict):
+    def _save_markdown_report(self, filepath: Path, report: dict):
         """Save a markdown version of the report."""
         with open(filepath, "w") as f:
             f.write("# Performance Profile Report\n\n")
@@ -352,8 +347,7 @@ class MemoryOptimizer:
     def optimize_dataframe_dtypes(
         df: pd.DataFrame, verbose: bool = True
     ) -> pd.DataFrame:
-        """
-        Optimize DataFrame memory usage by converting to more efficient dtypes.
+        """Optimize DataFrame memory usage by converting to more efficient dtypes.
 
         Args:
             df: Input DataFrame
@@ -391,7 +385,7 @@ class MemoryOptimizer:
         reduction_pct = (initial_memory - final_memory) / initial_memory * 100
 
         if verbose:
-            print(f"Memory optimization results:")
+            print("Memory optimization results:")
             print(f"  Initial memory: {initial_memory:.2f} MB")
             print(f"  Final memory: {final_memory:.2f} MB")
             print(f"  Reduction: {reduction_pct:.1f}%")
@@ -400,10 +394,9 @@ class MemoryOptimizer:
 
     @staticmethod
     def estimate_dataframe_memory(
-        shape: Tuple[int, int], dtypes: Dict[str, str]
+        shape: tuple[int, int], dtypes: dict[str, str]
     ) -> float:
-        """
-        Estimate memory usage for a DataFrame with given shape and dtypes.
+        """Estimate memory usage for a DataFrame with given shape and dtypes.
 
         Args:
             shape: (rows, columns)
@@ -441,9 +434,8 @@ class MemoryOptimizer:
 
 def benchmark_function(
     func: Callable, n_runs: int = 10, *args, **kwargs
-) -> Dict[str, float]:
-    """
-    Benchmark a synchronous callable several times and summarize latency.
+) -> dict[str, float]:
+    """Benchmark a synchronous callable several times and summarize latency.
 
     Parameters
     ----------
@@ -456,18 +448,18 @@ def benchmark_function(
     *args, **kwargs :
         Positional and keyword arguments forwarded to ``func`` each run.
 
-    Returns
+    Returns:
     -------
     Dict[str, float]
         Summary statistics measured in seconds: ``mean``, ``std``, ``min``,
         ``max``, ``median``, ``total`` plus the integer ``runs`` count.
 
-    Raises
+    Raises:
     ------
     ValueError
         If ``n_runs`` is less than 1.
 
-    Examples
+    Examples:
     --------
     >>> import numpy as np
     >>> def slow_dot():
@@ -498,8 +490,7 @@ def benchmark_function(
 
 
 def profile_memory(func: Callable) -> Callable:
-    """
-    Decorator to profile memory usage of a function.
+    """Decorator to profile memory usage of a function.
 
     Usage:
         @profile_memory

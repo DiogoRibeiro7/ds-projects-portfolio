@@ -1,29 +1,25 @@
-"""
-Advanced Feature Transformation Pipeline
+"""Advanced Feature Transformation Pipeline
 
 Sophisticated feature transformation techniques for various data types.
 """
 
-import pandas as pd
+import warnings
+
 import numpy as np
-from typing import List, Dict, Optional, Union, Tuple, Any
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.preprocessing import (
-    StandardScaler,
-    MinMaxScaler,
-    RobustScaler,
-    PowerTransformer,
-    QuantileTransformer,
-    KBinsDiscretizer,
-)
-from sklearn.decomposition import PCA, TruncatedSVD, FastICA, FactorAnalysis, NMF
-from sklearn.manifold import TSNE
-from sklearn.cluster import KMeans, DBSCAN
-from sklearn.mixture import GaussianMixture
+import pandas as pd
 from scipy import stats
 from scipy.special import boxcox1p
-from scipy.stats import skew, kurtosis
-import warnings
+from scipy.stats import skew
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.cluster import DBSCAN, KMeans
+from sklearn.decomposition import NMF, PCA, FactorAnalysis, FastICA, TruncatedSVD
+from sklearn.manifold import TSNE
+from sklearn.mixture import GaussianMixture
+from sklearn.preprocessing import (
+    KBinsDiscretizer,
+    PowerTransformer,
+    QuantileTransformer,
+)
 
 warnings.filterwarnings("ignore")
 
@@ -32,8 +28,7 @@ class OutlierTransformer(BaseEstimator, TransformerMixin):
     """Handle outliers using various strategies."""
 
     def __init__(self, method: str = "iqr", threshold: float = 1.5):
-        """
-        Initialize outlier transformer.
+        """Initialize outlier transformer.
 
         Args:
             method: 'iqr', 'zscore', 'isolation_forest', 'lof'
@@ -103,8 +98,7 @@ class SkewnessTransformer(BaseEstimator, TransformerMixin):
     """Transform features to reduce skewness."""
 
     def __init__(self, threshold: float = 0.5, method: str = "boxcox"):
-        """
-        Initialize skewness transformer.
+        """Initialize skewness transformer.
 
         Args:
             threshold: Skewness threshold for transformation
@@ -162,8 +156,7 @@ class DimensionalityReducer(BaseEstimator, TransformerMixin):
     """Reduce dimensionality using various techniques."""
 
     def __init__(self, method: str = "pca", n_components: int = 10, **kwargs):
-        """
-        Initialize dimensionality reducer.
+        """Initialize dimensionality reducer.
 
         Args:
             method: 'pca', 'svd', 'ica', 'nmf', 'factor', 'tsne', 'autoencoder'
@@ -226,14 +219,14 @@ class DimensionalityReducer(BaseEstimator, TransformerMixin):
     def _create_autoencoder(self, input_dim: int):
         """Create autoencoder neural network."""
         try:
-            from tensorflow.keras.models import Model
-            from tensorflow.keras.layers import (
-                Input,
-                Dense,
-                BatchNormalization,
-                Dropout,
-            )
             from tensorflow.keras import regularizers
+            from tensorflow.keras.layers import (
+                BatchNormalization,
+                Dense,
+                Dropout,
+                Input,
+            )
+            from tensorflow.keras.models import Model
 
             # Encoder
             input_layer = Input(shape=(input_dim,))
@@ -303,8 +296,7 @@ class ClusteringTransformer(BaseEstimator, TransformerMixin):
     """Create features based on clustering."""
 
     def __init__(self, method: str = "kmeans", n_clusters: int = 5, **kwargs):
-        """
-        Initialize clustering transformer.
+        """Initialize clustering transformer.
 
         Args:
             method: 'kmeans', 'dbscan', 'gmm', 'hierarchical'
@@ -385,8 +377,7 @@ class InteractionTransformer(BaseEstimator, TransformerMixin):
         max_features: int = 10,
         interaction_only: bool = True,
     ):
-        """
-        Initialize interaction transformer.
+        """Initialize interaction transformer.
 
         Args:
             interaction_type: 'multiply', 'divide', 'add', 'subtract', 'all'
@@ -447,8 +438,7 @@ class BinningTransformer(BaseEstimator, TransformerMixin):
     def __init__(
         self, strategy: str = "quantile", n_bins: int = 5, encode: str = "ordinal"
     ):
-        """
-        Initialize binning transformer.
+        """Initialize binning transformer.
 
         Args:
             strategy: 'uniform', 'quantile', 'kmeans'
@@ -512,8 +502,7 @@ class TargetTransformer(BaseEstimator, TransformerMixin):
     """Transform target variable for better model performance."""
 
     def __init__(self, method: str = "auto"):
-        """
-        Initialize target transformer.
+        """Initialize target transformer.
 
         Args:
             method: 'auto', 'log', 'sqrt', 'boxcox', 'quantile'
@@ -618,9 +607,8 @@ class TargetTransformer(BaseEstimator, TransformerMixin):
 class FeatureAugmenter(BaseEstimator, TransformerMixin):
     """Augment features using various techniques."""
 
-    def __init__(self, augmentation_types: List[str] = None):
-        """
-        Initialize feature augmenter.
+    def __init__(self, augmentation_types: list[str] = None):
+        """Initialize feature augmenter.
 
         Args:
             augmentation_types: List of augmentation types to apply
@@ -683,9 +671,8 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         return result
 
 
-def create_transformation_pipeline(transformations: List[str], **kwargs) -> List:
-    """
-    Create a transformation pipeline from a list of transformation names.
+def create_transformation_pipeline(transformations: list[str], **kwargs) -> list:
+    """Create a transformation pipeline from a list of transformation names.
 
     Args:
         transformations: List of transformation names

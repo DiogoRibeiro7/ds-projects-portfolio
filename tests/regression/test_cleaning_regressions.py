@@ -1,5 +1,4 @@
-"""
-Regression tests for data cleaning edge cases.
+"""Regression tests for data cleaning edge cases.
 """
 
 from __future__ import annotations
@@ -13,8 +12,7 @@ pytestmark = pytest.mark.regression
 
 
 def test_clean_ab_data_handles_missing_metric_columns():
-    """
-    Bug repro: historically passing a metric column that did not exist would
+    """Bug repro: historically passing a metric column that did not exist would
     raise a KeyError during outlier detection. Ensure the helper skips cleanly.
     """
     df = pd.DataFrame(
@@ -39,8 +37,7 @@ def test_clean_ab_data_handles_missing_metric_columns():
 
 
 def test_clean_ab_data_retains_group_balance_after_missing_values():
-    """
-    Regression guard: removing rows with missing critical columns must preserve
+    """Regression guard: removing rows with missing critical columns must preserve
     remaining groups and not introduce NaNs in the cleaned frame.
     """
     df = pd.DataFrame(

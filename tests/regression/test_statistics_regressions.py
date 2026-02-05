@@ -1,5 +1,4 @@
-"""
-Regression tests guarding against historical numerical bugs.
+"""Regression tests guarding against historical numerical bugs.
 """
 
 import math
@@ -12,8 +11,7 @@ pytestmark = pytest.mark.regression
 
 
 def test_two_prop_handles_all_zero_variance():
-    """
-    Historically, zero-variance cohorts caused division-by-zero errors.
+    """Historically, zero-variance cohorts caused division-by-zero errors.
 
     Ensure we return a neutral statistic and p-value of 1.0 instead of
     crashing when both cohorts recorded zero conversions.
@@ -24,8 +22,7 @@ def test_two_prop_handles_all_zero_variance():
 
 
 def test_two_prop_handles_degenerate_all_success_branch():
-    """
-    When one cohort hits 100% conversion, make sure we surface +/- inf.
+    """When one cohort hits 100% conversion, make sure we surface +/- inf.
     """
     z_stat, p_value = two_prop_ztest(0, 100, 100, 100)
     assert math.isinf(z_stat)
@@ -33,8 +30,7 @@ def test_two_prop_handles_degenerate_all_success_branch():
 
 
 def test_bootstrap_ci_diff_snapshot():
-    """
-    Bootstrap intervals should remain stable for fixed seeds/data.
+    """Bootstrap intervals should remain stable for fixed seeds/data.
     """
     ci = bootstrap_ci_diff(
         0.12,

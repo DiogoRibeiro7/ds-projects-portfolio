@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-Command-line interface for running notebook tests.
+"""Command-line interface for running notebook tests.
 """
 
 import argparse
@@ -113,7 +112,7 @@ Examples:
     if args.report_only:
         print(f"Generating report from {args.report_only}...")
         try:
-            with open(args.report_only, "r") as f:
+            with open(args.report_only) as f:
                 results = json.load(f)
 
             output_path = Path(args.output) / "notebook_test_report.html"

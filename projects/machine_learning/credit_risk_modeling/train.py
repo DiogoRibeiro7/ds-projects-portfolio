@@ -1,15 +1,14 @@
-import numpy as np
 import pandas as pd
 from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
     average_precision_score,
     confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
 )
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler

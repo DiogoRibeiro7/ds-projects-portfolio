@@ -1,22 +1,19 @@
-"""
-HTML report generator for notebook test results.
+"""HTML report generator for notebook test results.
 """
 
-import base64
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 
 class HTMLReportGenerator:
     """Generates beautiful HTML reports for notebook test results."""
 
     def __init__(
-        self, results: Dict[str, Any], output_path: str = "notebook_test_report.html"
+        self, results: dict[str, Any], output_path: str = "notebook_test_report.html"
     ):
-        """
-        Initialize the report generator.
+        """Initialize the report generator.
 
         Args:
             results: Test results dictionary from NotebookTestRunner
@@ -708,10 +705,9 @@ class HTMLReportGenerator:
 
 
 def generate_html_report(
-    results: Dict[str, Any], output_path: str = "notebook_test_report.html"
+    results: dict[str, Any], output_path: str = "notebook_test_report.html"
 ):
-    """
-    Convenience function to generate HTML report.
+    """Convenience function to generate HTML report.
 
     Args:
         results: Test results from NotebookTestRunner

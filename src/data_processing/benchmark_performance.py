@@ -1,20 +1,20 @@
-"""
-Performance benchmarking utilities for data processing operations.
+"""Performance benchmarking utilities for data processing operations.
 
 This module provides comprehensive benchmarking for comparing optimized
 vs non-optimized data processing operations.
 """
 
-import time
+import json
 import logging
+import time
+import warnings
+from collections.abc import Callable
+from datetime import datetime
+from typing import Any
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Any, Callable
-import matplotlib.pyplot as plt
-import seaborn as sns
-from datetime import datetime
-import json
-import warnings
 
 try:
     import memory_profiler
@@ -26,10 +26,8 @@ except ImportError:
 
 from .cleaning import (
     OptimizedDataProcessor,
-    clean_ab_data,
-    apply_cuped,
-    optimize_dataframe_memory,
     _detect_outliers,
+    apply_cuped,
 )
 
 # Configure logging
@@ -69,7 +67,7 @@ class PerformanceBenchmark:
         n_groups : int, default=2
             Number of experimental groups.
 
-        Returns
+        Returns:
         -------
         df : pd.DataFrame
             Synthetic test dataset.
@@ -119,7 +117,7 @@ class PerformanceBenchmark:
         **kwargs
             Keyword arguments for the function.
 
-        Returns
+        Returns:
         -------
         elapsed_time : float
             Average execution time in seconds.
@@ -134,7 +132,7 @@ class PerformanceBenchmark:
 
         return np.mean(times)
 
-    def measure_memory(self, func: Callable, *args, **kwargs) -> Dict[str, float]:
+    def measure_memory(self, func: Callable, *args, **kwargs) -> dict[str, float]:
         """Measure memory usage of a function.
 
         Parameters
@@ -146,7 +144,7 @@ class PerformanceBenchmark:
         **kwargs
             Keyword arguments for the function.
 
-        Returns
+        Returns:
         -------
         memory_stats : dict
             Memory usage statistics.
@@ -167,7 +165,7 @@ class PerformanceBenchmark:
             "memory_increment_mb": max(mem_usage) - baseline,
         }
 
-    def benchmark_outlier_detection(self, sizes: List[int] = None) -> Dict[str, Any]:
+    def benchmark_outlier_detection(self, sizes: list[int] = None) -> dict[str, Any]:
         """Benchmark outlier detection methods.
 
         Parameters
@@ -175,7 +173,7 @@ class PerformanceBenchmark:
         sizes : list of int, optional
             Dataset sizes to test.
 
-        Returns
+        Returns:
         -------
         results : dict
             Benchmark results.
@@ -221,7 +219,7 @@ class PerformanceBenchmark:
 
         return results
 
-    def benchmark_cuped(self, sizes: List[int] = None) -> Dict[str, Any]:
+    def benchmark_cuped(self, sizes: list[int] = None) -> dict[str, Any]:
         """Benchmark CUPED variance reduction.
 
         Parameters
@@ -229,7 +227,7 @@ class PerformanceBenchmark:
         sizes : list of int, optional
             Dataset sizes to test.
 
-        Returns
+        Returns:
         -------
         results : dict
             Benchmark results.
@@ -266,7 +264,7 @@ class PerformanceBenchmark:
 
         return results
 
-    def benchmark_groupby(self, sizes: List[int] = None) -> Dict[str, Any]:
+    def benchmark_groupby(self, sizes: list[int] = None) -> dict[str, Any]:
         """Benchmark groupby operations.
 
         Parameters
@@ -274,7 +272,7 @@ class PerformanceBenchmark:
         sizes : list of int, optional
             Dataset sizes to test.
 
-        Returns
+        Returns:
         -------
         results : dict
             Benchmark results.
@@ -318,7 +316,7 @@ class PerformanceBenchmark:
 
         return results
 
-    def benchmark_memory_optimization(self, sizes: List[int] = None) -> Dict[str, Any]:
+    def benchmark_memory_optimization(self, sizes: list[int] = None) -> dict[str, Any]:
         """Benchmark memory optimization.
 
         Parameters
@@ -326,7 +324,7 @@ class PerformanceBenchmark:
         sizes : list of int, optional
             Dataset sizes to test.
 
-        Returns
+        Returns:
         -------
         results : dict
             Benchmark results.
@@ -365,7 +363,7 @@ class PerformanceBenchmark:
 
         return results
 
-    def benchmark_feature_engineering(self, sizes: List[int] = None) -> Dict[str, Any]:
+    def benchmark_feature_engineering(self, sizes: list[int] = None) -> dict[str, Any]:
         """Benchmark feature engineering operations.
 
         Parameters
@@ -373,7 +371,7 @@ class PerformanceBenchmark:
         sizes : list of int, optional
             Dataset sizes to test.
 
-        Returns
+        Returns:
         -------
         results : dict
             Benchmark results.
@@ -450,10 +448,10 @@ class PerformanceBenchmark:
 
         return results
 
-    def run_comprehensive_benchmark(self) -> Dict[str, Any]:
+    def run_comprehensive_benchmark(self) -> dict[str, Any]:
         """Run comprehensive benchmark suite.
 
-        Returns
+        Returns:
         -------
         all_results : dict
             Complete benchmark results.
@@ -493,7 +491,7 @@ class PerformanceBenchmark:
 
         return all_results
 
-    def _calculate_summary(self, benchmarks: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_summary(self, benchmarks: dict[str, Any]) -> dict[str, Any]:
         """Calculate summary statistics from benchmark results.
 
         Parameters
@@ -501,7 +499,7 @@ class PerformanceBenchmark:
         benchmarks : dict
             Benchmark results.
 
-        Returns
+        Returns:
         -------
         summary : dict
             Summary statistics.
@@ -524,7 +522,7 @@ class PerformanceBenchmark:
 
         return summary
 
-    def _save_results(self, results: Dict[str, Any]) -> None:
+    def _save_results(self, results: dict[str, Any]) -> None:
         """Save benchmark results to file.
 
         Parameters
@@ -540,7 +538,7 @@ class PerformanceBenchmark:
 
         logger.info(f"Results saved to {filename}")
 
-    def _plot_results(self, benchmarks: Dict[str, Any]) -> None:
+    def _plot_results(self, benchmarks: dict[str, Any]) -> None:
         """Generate visualization of benchmark results.
 
         Parameters
@@ -609,7 +607,7 @@ class PerformanceBenchmark:
         logger.info(f"Plot saved to {filename}")
 
 
-def run_benchmark(dataset_sizes: List[int] = None) -> Dict[str, Any]:
+def run_benchmark(dataset_sizes: list[int] = None) -> dict[str, Any]:
     """Run performance benchmarks.
 
     Parameters
@@ -617,7 +615,7 @@ def run_benchmark(dataset_sizes: List[int] = None) -> Dict[str, Any]:
     dataset_sizes : list of int, optional
         Dataset sizes to benchmark.
 
-    Returns
+    Returns:
     -------
     results : dict
         Benchmark results.

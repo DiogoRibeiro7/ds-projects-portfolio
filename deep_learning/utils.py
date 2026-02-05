@@ -1,5 +1,4 @@
-"""
-Deep Learning Utilities
+"""Deep Learning Utilities
 =======================
 
 Common utility functions for deep learning experiments, including:
@@ -11,41 +10,35 @@ Common utility functions for deep learning experiments, including:
 - Reproducibility helpers
 """
 
+import json
+import logging
+import os
+import pickle
+import random
+import time
+from collections.abc import Callable
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader, random_split
-import torchvision
-import torchvision.transforms as transforms
-from typing import Dict, List, Tuple, Optional, Union, Callable, Any
-import matplotlib.pyplot as plt
-import seaborn as sns
-from pathlib import Path
-import json
-import random
-import os
-import time
-from datetime import datetime
-import warnings
-from collections import defaultdict, OrderedDict
-import pickle
-from PIL import Image
-import cv2
 from sklearn.metrics import (
     accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
     confusion_matrix,
-    classification_report,
-    roc_auc_score,
-    mean_squared_error,
+    f1_score,
     mean_absolute_error,
+    mean_squared_error,
+    precision_score,
     r2_score,
+    recall_score,
+    roc_auc_score,
 )
-import logging
+from torch.utils.data import DataLoader, Dataset, random_split
 
 # Setup logging
 logging.basicConfig(
@@ -69,7 +62,7 @@ class DataNormalizer:
         self.method = method
         self.stats = {}
 
-    def fit(self, data: Union[np.ndarray, torch.Tensor]) -> "DataNormalizer":
+    def fit(self, data: np.ndarray | torch.Tensor) -> "DataNormalizer":
         """Fit normalizer to data."""
         if isinstance(data, torch.Tensor):
             data = data.numpy()
@@ -87,8 +80,8 @@ class DataNormalizer:
         return self
 
     def transform(
-        self, data: Union[np.ndarray, torch.Tensor]
-    ) -> Union[np.ndarray, torch.Tensor]:
+        self, data: np.ndarray | torch.Tensor
+    ) -> np.ndarray | torch.Tensor:
         """Transform data."""
         is_tensor = isinstance(data, torch.Tensor)
         if is_tensor:
@@ -108,8 +101,8 @@ class DataNormalizer:
         return torch.from_numpy(normalized).float() if is_tensor else normalized
 
     def inverse_transform(
-        self, data: Union[np.ndarray, torch.Tensor]
-    ) -> Union[np.ndarray, torch.Tensor]:
+        self, data: np.ndarray | torch.Tensor
+    ) -> np.ndarray | torch.Tensor:
         """Inverse transform data."""
         is_tensor = isinstance(data, torch.Tensor)
         if is_tensor:
@@ -135,7 +128,7 @@ class AdvancedAugmentation:
     @staticmethod
     def mixup(
         images: torch.Tensor, labels: torch.Tensor, alpha: float = 1.0
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, float]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, float]:
         """Apply MixUp augmentation."""
         batch_size = images.size(0)
 
@@ -152,7 +145,7 @@ class AdvancedAugmentation:
     @staticmethod
     def cutmix(
         images: torch.Tensor, labels: torch.Tensor, beta: float = 1.0
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, float]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, float]:
         """Apply CutMix augmentation."""
         batch_size = images.size(0)
 
@@ -196,7 +189,7 @@ class AdvancedAugmentation:
         sl: float = 0.02,
         sh: float = 0.4,
         r1: float = 0.3,
-        mean: List[float] = [0.5, 0.5, 0.5],
+        mean: list[float] = [0.5, 0.5, 0.5],
     ) -> torch.Tensor:
         """Apply Random Erasing augmentation."""
         if random.random() > probability:
@@ -238,7 +231,7 @@ class ModelBuilder:
     @staticmethod
     def build_mlp(
         input_dim: int,
-        hidden_dims: List[int],
+        hidden_dims: list[int],
         output_dim: int,
         activation: str = "relu",
         dropout: float = 0.0,
@@ -271,9 +264,9 @@ class ModelBuilder:
     def build_cnn(
         input_channels: int,
         num_classes: int,
-        conv_channels: List[int] = [32, 64, 128],
-        kernel_sizes: List[int] = [3, 3, 3],
-        fc_dims: List[int] = [256, 128],
+        conv_channels: list[int] = [32, 64, 128],
+        kernel_sizes: list[int] = [3, 3, 3],
+        fc_dims: list[int] = [256, 128],
     ) -> nn.Module:
         """Build Convolutional Neural Network."""
 
@@ -285,7 +278,7 @@ class ModelBuilder:
                 conv_layers = []
                 in_channels = input_channels
 
-                for out_channels, kernel_size in zip(conv_channels, kernel_sizes):
+                for out_channels, kernel_size in zip(conv_channels, kernel_sizes, strict=False):
                     conv_layers.extend(
                         [
                             nn.Conv2d(
@@ -347,7 +340,7 @@ class ModelUtils:
     """Utility functions for models."""
 
     @staticmethod
-    def count_parameters(model: nn.Module) -> Dict[str, int]:
+    def count_parameters(model: nn.Module) -> dict[str, int]:
         """Count model parameters."""
         total = sum(p.numel() for p in model.parameters())
         trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -358,8 +351,8 @@ class ModelUtils:
     @staticmethod
     def freeze_layers(
         model: nn.Module,
-        freeze_until: Optional[int] = None,
-        freeze_pattern: Optional[str] = None,
+        freeze_until: int | None = None,
+        freeze_pattern: str | None = None,
     ) -> None:
         """Freeze model layers."""
         if freeze_until is not None:
@@ -375,8 +368,8 @@ class ModelUtils:
     @staticmethod
     def unfreeze_layers(
         model: nn.Module,
-        unfreeze_from: Optional[int] = None,
-        unfreeze_pattern: Optional[str] = None,
+        unfreeze_from: int | None = None,
+        unfreeze_pattern: str | None = None,
     ) -> None:
         """Unfreeze model layers."""
         if unfreeze_from is not None:
@@ -392,7 +385,7 @@ class ModelUtils:
     @staticmethod
     def get_layer_outputs(
         model: nn.Module, input_tensor: torch.Tensor
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """Get outputs from all layers."""
         outputs = {}
         hooks = []
@@ -415,11 +408,12 @@ class ModelUtils:
         return outputs
 
     @staticmethod
-    def model_summary(model: nn.Module, input_shape: Tuple[int, ...]) -> str:
+    def model_summary(model: nn.Module, input_shape: tuple[int, ...]) -> str:
         """Generate model summary."""
-        from torchsummary import summary
         import io
         from contextlib import redirect_stdout
+
+        from torchsummary import summary
 
         f = io.StringIO()
         with redirect_stdout(f):
@@ -453,7 +447,7 @@ class EarlyStopping:
         self.counter = 0
         self.stopped = False
 
-    def __call__(self, score: float, model: Optional[nn.Module] = None) -> bool:
+    def __call__(self, score: float, model: nn.Module | None = None) -> bool:
         """Check if should stop."""
         if self.best_score is None:
             self.best_score = score
@@ -531,7 +525,7 @@ class TrainingUtils:
         device: torch.device,
         use_mixup: bool = False,
         mixup_alpha: float = 1.0,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """Train for one epoch."""
         model.train()
         running_loss = 0.0
@@ -577,7 +571,7 @@ class TrainingUtils:
         dataloader: DataLoader,
         criterion: nn.Module,
         device: torch.device,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """Validate model."""
         model.eval()
         running_loss = 0.0
@@ -611,7 +605,7 @@ class Visualizer:
 
     @staticmethod
     def plot_training_history(
-        history: Dict[str, List[float]], save_path: Optional[str] = None
+        history: dict[str, list[float]], save_path: str | None = None
     ) -> None:
         """Plot training history."""
         fig, axes = plt.subplots(1, 2, figsize=(12, 4))
@@ -644,8 +638,8 @@ class Visualizer:
     def plot_confusion_matrix(
         y_true: np.ndarray,
         y_pred: np.ndarray,
-        class_names: Optional[List[str]] = None,
-        save_path: Optional[str] = None,
+        class_names: list[str] | None = None,
+        save_path: str | None = None,
     ) -> None:
         """Plot confusion matrix."""
         cm = confusion_matrix(y_true, y_pred)
@@ -672,7 +666,7 @@ class Visualizer:
         model: nn.Module,
         input_tensor: torch.Tensor,
         layer_name: str,
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
     ) -> None:
         """Visualize layer activations."""
         activations = {}
@@ -764,9 +758,9 @@ class Metrics:
     def classification_metrics(
         y_true: np.ndarray,
         y_pred: np.ndarray,
-        y_prob: Optional[np.ndarray] = None,
+        y_prob: np.ndarray | None = None,
         average: str = "weighted",
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Compute classification metrics."""
         metrics = {
             "accuracy": accuracy_score(y_true, y_pred),
@@ -783,7 +777,7 @@ class Metrics:
         return metrics
 
     @staticmethod
-    def regression_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
+    def regression_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
         """Compute regression metrics."""
         return {
             "mse": mean_squared_error(y_true, y_pred),
@@ -795,7 +789,7 @@ class Metrics:
 
     @staticmethod
     def per_class_accuracy(
-        y_true: np.ndarray, y_pred: np.ndarray, class_names: Optional[List[str]] = None
+        y_true: np.ndarray, y_pred: np.ndarray, class_names: list[str] | None = None
     ) -> pd.DataFrame:
         """Compute per-class accuracy."""
         cm = confusion_matrix(y_true, y_pred)
@@ -833,7 +827,7 @@ def save_checkpoint(
     epoch: int,
     loss: float,
     save_path: str,
-    additional_info: Optional[Dict] = None,
+    additional_info: dict | None = None,
 ) -> None:
     """Save model checkpoint."""
     checkpoint = {
@@ -854,8 +848,8 @@ def save_checkpoint(
 def load_checkpoint(
     checkpoint_path: str,
     model: nn.Module,
-    optimizer: Optional[torch.optim.Optimizer] = None,
-) -> Dict:
+    optimizer: torch.optim.Optimizer | None = None,
+) -> dict:
     """Load model checkpoint."""
     checkpoint = torch.load(checkpoint_path, map_location=device)
     model.load_state_dict(checkpoint["model_state_dict"])
@@ -877,9 +871,9 @@ class CustomDataset(Dataset):
 
     def __init__(
         self,
-        data: Union[np.ndarray, torch.Tensor],
-        labels: Union[np.ndarray, torch.Tensor],
-        transform: Optional[Callable] = None,
+        data: np.ndarray | torch.Tensor,
+        labels: np.ndarray | torch.Tensor,
+        transform: Callable | None = None,
     ):
         self.data = torch.from_numpy(data) if isinstance(data, np.ndarray) else data
         self.labels = (
@@ -890,7 +884,7 @@ class CustomDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         sample = self.data[idx]
         label = self.labels[idx]
 
@@ -901,14 +895,14 @@ class CustomDataset(Dataset):
 
 
 def create_data_loaders(
-    data: Union[np.ndarray, torch.Tensor],
-    labels: Union[np.ndarray, torch.Tensor],
+    data: np.ndarray | torch.Tensor,
+    labels: np.ndarray | torch.Tensor,
     batch_size: int = 32,
     val_split: float = 0.2,
     test_split: float = 0.1,
     num_workers: int = 4,
-    transform: Optional[Callable] = None,
-) -> Tuple[DataLoader, DataLoader, DataLoader]:
+    transform: Callable | None = None,
+) -> tuple[DataLoader, DataLoader, DataLoader]:
     """Create train, validation, and test data loaders."""
     dataset = CustomDataset(data, labels, transform)
 
@@ -958,7 +952,7 @@ def create_data_loaders(
 
 def export_to_onnx(
     model: nn.Module,
-    input_shape: Tuple[int, ...],
+    input_shape: tuple[int, ...],
     save_path: str,
     opset_version: int = 11,
 ) -> None:
@@ -982,7 +976,7 @@ def export_to_onnx(
 
 def export_to_torchscript(
     model: nn.Module,
-    input_shape: Tuple[int, ...],
+    input_shape: tuple[int, ...],
     save_path: str,
     method: str = "trace",
 ) -> None:
@@ -1009,8 +1003,8 @@ class ModelProfiler:
 
     @staticmethod
     def profile_model(
-        model: nn.Module, input_shape: Tuple[int, ...], num_iterations: int = 100
-    ) -> Dict[str, Any]:
+        model: nn.Module, input_shape: tuple[int, ...], num_iterations: int = 100
+    ) -> dict[str, Any]:
         """Profile model performance."""
         model.eval()
         device = next(model.parameters()).device
@@ -1094,8 +1088,8 @@ def get_device() -> torch.device:
 
 
 def move_to_device(
-    data: Union[torch.Tensor, List, Dict], device: torch.device
-) -> Union[torch.Tensor, List, Dict]:
+    data: torch.Tensor | list | dict, device: torch.device
+) -> torch.Tensor | list | dict:
     """Recursively move data to device."""
     if isinstance(data, torch.Tensor):
         return data.to(device)
@@ -1107,7 +1101,7 @@ def move_to_device(
         return data
 
 
-def save_results(results: Dict, save_dir: str, prefix: str = "results") -> None:
+def save_results(results: dict, save_dir: str, prefix: str = "results") -> None:
     """Save experimental results."""
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -1127,12 +1121,12 @@ def save_results(results: Dict, save_dir: str, prefix: str = "results") -> None:
     logger.info(f"Results saved to {save_dir}")
 
 
-def load_results(file_path: str) -> Dict:
+def load_results(file_path: str) -> dict:
     """Load experimental results."""
     file_path = Path(file_path)
 
     if file_path.suffix == ".json":
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             return json.load(f)
     elif file_path.suffix == ".pkl":
         with open(file_path, "rb") as f:

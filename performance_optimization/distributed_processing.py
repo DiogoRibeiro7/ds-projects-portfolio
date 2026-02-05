@@ -1,23 +1,18 @@
-"""
-Distributed and parallel processing utilities for large-scale data operations.
+"""Distributed and parallel processing utilities for large-scale data operations.
 """
 
-import functools
-import json
 import multiprocessing as mp
-import pickle
 import time
 import warnings
+from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import dask.array as da
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 from dask.distributed import Client
-from dask.distributed import as_completed as dask_as_completed
 
 # Check for distributed processing libraries
 DASK_AVAILABLE = True  # Already imported
@@ -48,13 +43,12 @@ class DistributedConfig:
 
     def __init__(
         self,
-        n_workers: Optional[int] = None,
+        n_workers: int | None = None,
         memory_limit: str = "2GB",
         threads_per_worker: int = 1,
         scheduler: str = "threads",
     ):
-        """
-        Initialize distributed configuration.
+        """Initialize distributed configuration.
 
         Args:
             n_workers: Number of workers (default: CPU count)
@@ -71,7 +65,7 @@ class DistributedConfig:
 class DaskOperations:
     """Distributed operations using Dask."""
 
-    def __init__(self, config: Optional[DistributedConfig] = None):
+    def __init__(self, config: DistributedConfig | None = None):
         """Initialize Dask operations with configuration."""
         self.config = config or DistributedConfig()
         self.client = None
@@ -95,7 +89,7 @@ class DaskOperations:
 
     @staticmethod
     def parallelize_dataframe(
-        df: pd.DataFrame, n_partitions: Optional[int] = None
+        df: pd.DataFrame, n_partitions: int | None = None
     ) -> dd.DataFrame:
         """Convert pandas DataFrame to Dask DataFrame for parallel processing."""
         if n_partitions is None:
@@ -103,7 +97,7 @@ class DaskOperations:
         return dd.from_pandas(df, npartitions=n_partitions)
 
     @staticmethod
-    def parallelize_array(arr: np.ndarray, chunks: Optional[tuple] = None) -> da.Array:
+    def parallelize_array(arr: np.ndarray, chunks: tuple | None = None) -> da.Array:
         """Convert numpy array to Dask array for parallel processing."""
         if chunks is None:
             # Auto-determine chunk size
@@ -111,7 +105,7 @@ class DaskOperations:
         return da.from_array(arr, chunks=chunks)
 
     def parallel_apply(
-        self, df: dd.DataFrame, func: Callable, meta: Optional[Any] = None
+        self, df: dd.DataFrame, func: Callable, meta: Any | None = None
     ) -> dd.DataFrame:
         """Apply function in parallel across DataFrame partitions."""
         return df.map_partitions(func, meta=meta)
@@ -119,8 +113,8 @@ class DaskOperations:
     def parallel_groupby_agg(
         self,
         df: pd.DataFrame,
-        groupby_cols: List[str],
-        agg_dict: Dict[str, Union[str, List[str]]],
+        groupby_cols: list[str],
+        agg_dict: dict[str, str | list[str]],
     ) -> pd.DataFrame:
         """Parallel groupby aggregation using Dask."""
         # Convert to Dask DataFrame
@@ -136,7 +130,7 @@ class DaskOperations:
         self,
         df1: pd.DataFrame,
         df2: pd.DataFrame,
-        on: Union[str, List[str]],
+        on: str | list[str],
         how: str = "inner",
     ) -> pd.DataFrame:
         """Parallel merge operation using Dask."""
@@ -174,8 +168,8 @@ class RayOperations:
 
     @staticmethod
     def parallel_map(
-        func: Callable, data_list: List[Any], n_workers: Optional[int] = None
-    ) -> List[Any]:
+        func: Callable, data_list: list[Any], n_workers: int | None = None
+    ) -> list[Any]:
         """Parallel map operation using Ray."""
         if not RAY_AVAILABLE or ray is None:
             return [func(d) for d in data_list]
@@ -216,10 +210,9 @@ class ParallelProcessor:
     """High-level parallel processing interface."""
 
     def __init__(
-        self, backend: str = "multiprocessing", n_workers: Optional[int] = None
+        self, backend: str = "multiprocessing", n_workers: int | None = None
     ):
-        """
-        Initialize parallel processor.
+        """Initialize parallel processor.
 
         Args:
             backend: Processing backend ('multiprocessing', 'threading', 'dask', 'ray')
@@ -229,10 +222,9 @@ class ParallelProcessor:
         self.n_workers = n_workers or mp.cpu_count()
 
     def parallel_execute(
-        self, func: Callable, data_list: List[Any], show_progress: bool = True
-    ) -> List[Any]:
-        """
-        Execute function in parallel across data list.
+        self, func: Callable, data_list: list[Any], show_progress: bool = True
+    ) -> list[Any]:
+        """Execute function in parallel across data list.
 
         Args:
             func: Function to apply to each element
@@ -255,8 +247,8 @@ class ParallelProcessor:
             return [func(d) for d in data_list]
 
     def _thread_execute(
-        self, func: Callable, data_list: List[Any], show_progress: bool
-    ) -> List[Any]:
+        self, func: Callable, data_list: list[Any], show_progress: bool
+    ) -> list[Any]:
         """Execute using ThreadPoolExecutor."""
         results = []
         with ThreadPoolExecutor(max_workers=self.n_workers) as executor:
@@ -279,8 +271,8 @@ class ParallelProcessor:
         return [r[1] for r in results]
 
     def _process_execute(
-        self, func: Callable, data_list: List[Any], show_progress: bool
-    ) -> List[Any]:
+        self, func: Callable, data_list: list[Any], show_progress: bool
+    ) -> list[Any]:
         """Execute using ProcessPoolExecutor."""
         results = []
         with ProcessPoolExecutor(max_workers=self.n_workers) as executor:
@@ -303,8 +295,8 @@ class ParallelProcessor:
         return [r[1] for r in results]
 
     def _dask_execute(
-        self, func: Callable, data_list: List[Any], show_progress: bool
-    ) -> List[Any]:
+        self, func: Callable, data_list: list[Any], show_progress: bool
+    ) -> list[Any]:
         """Execute using Dask."""
         from dask import compute, delayed
 
@@ -319,18 +311,17 @@ class ParallelProcessor:
 class MapReduce:
     """MapReduce implementation for large-scale data processing."""
 
-    def __init__(self, n_workers: Optional[int] = None):
+    def __init__(self, n_workers: int | None = None):
         """Initialize MapReduce with specified workers."""
         self.n_workers = n_workers or mp.cpu_count()
 
     def map_reduce(
         self,
-        data: List[Any],
-        mapper: Callable[[Any], List[Tuple[Any, Any]]],
-        reducer: Callable[[Any, List[Any]], Any],
-    ) -> Dict[Any, Any]:
-        """
-        Execute MapReduce operation.
+        data: list[Any],
+        mapper: Callable[[Any], list[tuple[Any, Any]]],
+        reducer: Callable[[Any, list[Any]], Any],
+    ) -> dict[Any, Any]:
+        """Execute MapReduce operation.
 
         Args:
             data: Input data
@@ -346,7 +337,6 @@ class MapReduce:
 
         # Flatten and group by key
         from collections import defaultdict
-        from itertools import chain
 
         grouped = defaultdict(list)
         for kvpairs in map_results:
@@ -372,24 +362,23 @@ class DataParallelizer:
     """Utilities for data parallelization strategies."""
 
     @staticmethod
-    def partition_dataframe(df: pd.DataFrame, n_partitions: int) -> List[pd.DataFrame]:
+    def partition_dataframe(df: pd.DataFrame, n_partitions: int) -> list[pd.DataFrame]:
         """Partition DataFrame into chunks for parallel processing."""
         chunk_size = len(df) // n_partitions + 1
         return [df.iloc[i : i + chunk_size] for i in range(0, len(df), chunk_size)]
 
     @staticmethod
-    def partition_array(arr: np.ndarray, n_partitions: int) -> List[np.ndarray]:
+    def partition_array(arr: np.ndarray, n_partitions: int) -> list[np.ndarray]:
         """Partition numpy array into chunks."""
         return np.array_split(arr, n_partitions)
 
     @staticmethod
     def scatter_gather(
         func: Callable,
-        data: Union[pd.DataFrame, np.ndarray],
-        n_workers: Optional[int] = None,
-    ) -> Union[pd.DataFrame, np.ndarray]:
-        """
-        Scatter data to workers, apply function, and gather results.
+        data: pd.DataFrame | np.ndarray,
+        n_workers: int | None = None,
+    ) -> pd.DataFrame | np.ndarray:
+        """Scatter data to workers, apply function, and gather results.
 
         Args:
             func: Function to apply to each partition
@@ -421,12 +410,11 @@ class DataParallelizer:
 def benchmark_distributed(
     func: Callable,
     data: Any,
-    backends: List[str],
+    backends: list[str],
     n_workers: int = 4,
     iterations: int = 3,
 ) -> pd.DataFrame:
-    """
-    Benchmark different distributed processing backends.
+    """Benchmark different distributed processing backends.
 
     Args:
         func: Function to benchmark

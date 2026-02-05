@@ -1,5 +1,4 @@
-"""
-Tests for monotone quantile head and training utilities.
+"""Tests for monotone quantile head and training utilities.
 """
 
 from __future__ import annotations

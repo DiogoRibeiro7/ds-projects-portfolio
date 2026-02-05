@@ -1,37 +1,35 @@
-"""
-Monitoring and Observability Infrastructure
+"""Monitoring and Observability Infrastructure
 
 Comprehensive monitoring, logging, and alerting for ML systems.
 """
 
-import pandas as pd
-import numpy as np
-from typing import Dict, List, Optional, Any, Tuple
+import logging
+import warnings
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-import logging
-import json
-import asyncio
-from prometheus_client import (
-    Counter,
-    Histogram,
-    Gauge,
-    Summary,
-    CollectorRegistry,
-    push_to_gateway,
-)
+from typing import Any
+
 import grafana_api
+import numpy as np
+import pandas as pd
+import sentry_sdk
+import statsd
 from elasticsearch import Elasticsearch
 from logstash import TCPLogstashHandler
-import sentry_sdk
-from sentry_sdk.integrations.logging import LoggingIntegration
-import statsd
-from opentelemetry import trace, metrics
+from opentelemetry import trace
 from opentelemetry.exporter.jaeger import JaegerExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from prometheus_client import (
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    Summary,
+    push_to_gateway,
+)
 from scipy import stats
-import warnings
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 warnings.filterwarnings("ignore")
 
@@ -114,8 +112,8 @@ class MonitoringConfig:
     grafana_host: str = "grafana:3000"
     jaeger_host: str = "jaeger:14268"
     statsd_host: str = "statsd:8125"
-    sentry_dsn: Optional[str] = None
-    alert_webhook_url: Optional[str] = None
+    sentry_dsn: str | None = None
+    alert_webhook_url: str | None = None
     monitoring_interval: int = 60  # seconds
     retention_days: int = 30
     enable_profiling: bool = True
@@ -123,7 +121,7 @@ class MonitoringConfig:
     enable_metrics: bool = True
     enable_logging: bool = True
     log_level: str = "INFO"
-    custom_dashboards: List[str] = field(default_factory=list)
+    custom_dashboards: list[str] = field(default_factory=list)
 
 
 class ModelMonitoringService:
@@ -268,7 +266,7 @@ class ModelMonitoringService:
 
     async def _check_data_quality(
         self, data: pd.DataFrame, model_name: str
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Check data quality and record issues."""
         issues = []
 
@@ -355,7 +353,7 @@ class ModelMonitoringService:
         input_data: pd.DataFrame,
         predictions: np.ndarray,
         latency: float,
-        quality_issues: List[Dict],
+        quality_issues: list[dict],
     ):
         """Log inference details to Elasticsearch."""
         log_entry = {
@@ -466,7 +464,7 @@ class ModelMonitoringService:
 
     def _create_panel(
         self, title: str, query: str, panel_type: str, row: int, col: int
-    ) -> Dict:
+    ) -> dict:
         """Create Grafana panel configuration."""
         return {
             "title": title,
@@ -489,13 +487,13 @@ class AlertingService:
         self.alert_rules[rule.name] = rule
         logger.info(f"Registered alert rule: {rule.name}")
 
-    async def check_alerts(self, metrics: Dict[str, Any]):
+    async def check_alerts(self, metrics: dict[str, Any]):
         """Check all alert rules against current metrics."""
         for rule_name, rule in self.alert_rules.items():
             if await rule.evaluate(metrics):
                 await self.trigger_alert(rule, metrics)
 
-    async def trigger_alert(self, rule: "AlertRule", metrics: Dict[str, Any]):
+    async def trigger_alert(self, rule: "AlertRule", metrics: dict[str, Any]):
         """Trigger an alert."""
         alert = {
             "timestamp": datetime.now().isoformat(),
@@ -519,7 +517,7 @@ class AlertingService:
 
         logger.warning(f"Alert triggered: {alert['message']}")
 
-    async def _send_notifications(self, alert: Dict):
+    async def _send_notifications(self, alert: dict):
         """Send alert notifications."""
         # Slack webhook
         if self.config.alert_webhook_url:
@@ -575,9 +573,9 @@ class AlertRule:
     severity: str  # info, warning, critical
     message_template: str
     cooldown_minutes: int = 5
-    last_triggered: Optional[datetime] = None
+    last_triggered: datetime | None = None
 
-    async def evaluate(self, metrics: Dict[str, Any]) -> bool:
+    async def evaluate(self, metrics: dict[str, Any]) -> bool:
         """Evaluate if alert should be triggered."""
         # Check cooldown
         if self.last_triggered:
@@ -640,7 +638,7 @@ class PerformanceProfiler:
 
         return decorator
 
-    def get_profile_summary(self, model_name: str) -> Dict:
+    def get_profile_summary(self, model_name: str) -> dict:
         """Get profiling summary for model."""
         model_profiles = [
             p for k, p in self.profiles.items() if k.startswith(model_name)
@@ -662,7 +660,7 @@ class LogAggregator:
     def __init__(self, es_client: Elasticsearch):
         self.es_client = es_client
 
-    async def aggregate_logs(self, model_name: str, time_range: str = "1h") -> Dict:
+    async def aggregate_logs(self, model_name: str, time_range: str = "1h") -> dict:
         """Aggregate logs for analysis."""
         query = {
             "query": {
@@ -682,7 +680,7 @@ class LogAggregator:
             },
         }
 
-        result = self.es_client.search(index=f"ml-inference-*", body=query)
+        result = self.es_client.search(index="ml-inference-*", body=query)
 
         return {
             "total_requests": result["hits"]["total"]["value"],
@@ -693,7 +691,7 @@ class LogAggregator:
             "request_timeline": result["aggregations"]["request_timeline"]["buckets"],
         }
 
-    async def detect_anomalies(self, model_name: str) -> List[Dict]:
+    async def detect_anomalies(self, model_name: str) -> list[dict]:
         """Detect anomalies in logs."""
         # Get recent logs
         logs = await self.aggregate_logs(model_name, "24h")
@@ -724,7 +722,7 @@ class LogAggregator:
 # Monitoring utilities
 def setup_monitoring(
     config: MonitoringConfig,
-) -> Tuple[ModelMonitoringService, AlertingService]:
+) -> tuple[ModelMonitoringService, AlertingService]:
     """Setup monitoring infrastructure."""
     monitoring_service = ModelMonitoringService(config)
     alerting_service = AlertingService(config)

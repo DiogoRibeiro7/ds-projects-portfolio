@@ -1,56 +1,40 @@
-"""
-Distributed Computing Module
+"""Distributed Computing Module
 Implements Dask and Ray for scalable ML processing
 """
 
+import logging
 import os
 import time
-import logging
-from typing import Any, Dict, List, Optional, Callable, Union, Tuple
-import numpy as np
-import pandas as pd
+from collections.abc import Callable
 from dataclasses import dataclass
-from functools import wraps
-import pickle
-import joblib
+from typing import Any
 
 # Dask imports
 import dask
 import dask.dataframe as dd
-import dask.array as da
-from dask.distributed import Client, as_completed, wait, fire_and_forget
-from dask.delayed import delayed
-from dask_ml.model_selection import train_test_split
-from dask_ml.preprocessing import StandardScaler, MinMaxScaler
-from dask_ml.linear_model import LogisticRegression, LinearRegression
-from dask_ml.ensemble import RandomForestClassifier as DaskRFC
-from dask_ml.xgboost import XGBClassifier as DaskXGBClassifier
-from dask_ml.metrics import accuracy_score, roc_auc_score
-import dask_cuda
+import numpy as np
+import pandas as pd
 
 # Ray imports
 import ray
-from ray import tune, train, serve
+from dask.delayed import delayed
+from dask.distributed import Client
+from dask_ml.preprocessing import StandardScaler
+from ray import tune
 from ray.data import Dataset
-from ray.train import Trainer, ScalingConfig
+from ray.train import ScalingConfig
 from ray.train.xgboost import XGBoostTrainer
-from ray.train.lightgbm import LightGBMTrainer
-from ray.train.torch import TorchTrainer
+from ray.tune.schedulers import ASHAScheduler
 from ray.tune.search.optuna import OptunaSearch
-from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining
-from ray.util.multiprocessing import Pool
-from ray.util.queue import Queue
-from ray.util.metrics import Counter, Gauge, Histogram
-import modin.pandas as mpd
 
 # GPU acceleration
 try:
-    import cupy as cp
     import cudf
     import cuml
-    from cuml.dask.preprocessing import StandardScaler as CumlStandardScaler
+    import cupy as cp
     from cuml.dask.ensemble import RandomForestClassifier as CumlRFC
     from cuml.dask.linear_model import LogisticRegression as CumlLR
+    from cuml.dask.preprocessing import StandardScaler as CumlStandardScaler
 
     GPU_AVAILABLE = True
 except ImportError:
@@ -72,8 +56,8 @@ class ComputeConfig:
     memory_per_worker: str = "4GB"
     use_gpu: bool = False
     gpu_per_worker: float = 0.0
-    dashboard_address: Optional[str] = None
-    scheduler_address: Optional[str] = None
+    dashboard_address: str | None = None
+    scheduler_address: str | None = None
     adaptive_scaling: bool = True
     min_workers: int = 1
     max_workers: int = 10
@@ -186,8 +170,8 @@ class DaskMLPipeline:
         return df
 
     def preprocess_data(
-        self, X: dd.DataFrame, y: Optional[dd.Series] = None, use_gpu: bool = False
-    ) -> Tuple[dd.DataFrame, Optional[dd.Series]]:
+        self, X: dd.DataFrame, y: dd.Series | None = None, use_gpu: bool = False
+    ) -> tuple[dd.DataFrame, dd.Series | None]:
         """Preprocess data with scaling"""
         if use_gpu and GPU_AVAILABLE:
             self.scaler = CumlStandardScaler()
@@ -213,7 +197,7 @@ class DaskMLPipeline:
 
     def train_distributed(
         self, X: dd.DataFrame, y: dd.Series, model_class: Any, **model_kwargs
-    ) -> List:
+    ) -> list:
         """Train models on distributed partitions"""
         # Get partition pairs
         X_parts = X.to_delayed()
@@ -221,7 +205,7 @@ class DaskMLPipeline:
 
         # Train on each partition
         models = []
-        for X_part, y_part in zip(X_parts, y_parts):
+        for X_part, y_part in zip(X_parts, y_parts, strict=False):
             model = self.train_model_partition(
                 X_part, y_part, model_class, **model_kwargs
             )
@@ -231,7 +215,7 @@ class DaskMLPipeline:
         models = dask.compute(*models)
         return models
 
-    def ensemble_predict(self, models: List, X: dd.DataFrame) -> dd.Series:
+    def ensemble_predict(self, models: list, X: dd.DataFrame) -> dd.Series:
         """Make ensemble predictions from multiple models"""
         predictions = []
 
@@ -246,8 +230,8 @@ class DaskMLPipeline:
         return ensemble_pred
 
     def hyperparameter_search(
-        self, X: dd.DataFrame, y: dd.Series, model_class: Any, param_grid: Dict
-    ) -> Dict:
+        self, X: dd.DataFrame, y: dd.Series, model_class: Any, param_grid: dict
+    ) -> dict:
         """Distributed hyperparameter search"""
         from dask_ml.model_selection import GridSearchCV
 
@@ -403,7 +387,7 @@ class RayMLPipeline:
 
     def batch_inference(
         self, model: Any, dataset: Dataset, batch_size: int = 1000
-    ) -> List[np.ndarray]:
+    ) -> list[np.ndarray]:
         """Perform batch inference using Ray"""
         # Serialize model
         model_ref = ray.put(model)
@@ -429,8 +413,8 @@ class GPUAccelerator:
         logger.info(f"GPU Accelerator initialized with {self.device_count} devices")
 
     def to_gpu(
-        self, data: Union[pd.DataFrame, np.ndarray]
-    ) -> Union[cudf.DataFrame, cp.ndarray]:
+        self, data: pd.DataFrame | np.ndarray
+    ) -> cudf.DataFrame | cp.ndarray:
         """Transfer data to GPU"""
         if isinstance(data, pd.DataFrame):
             return cudf.from_pandas(data)
@@ -440,8 +424,8 @@ class GPUAccelerator:
             raise TypeError(f"Unsupported data type: {type(data)}")
 
     def to_cpu(
-        self, data: Union[cudf.DataFrame, cp.ndarray]
-    ) -> Union[pd.DataFrame, np.ndarray]:
+        self, data: cudf.DataFrame | cp.ndarray
+    ) -> pd.DataFrame | np.ndarray:
         """Transfer data from GPU to CPU"""
         if isinstance(data, cudf.DataFrame):
             return data.to_pandas()
@@ -501,10 +485,8 @@ class GPUAccelerator:
     @staticmethod
     def benchmark_gpu_vs_cpu(
         func_gpu: Callable, func_cpu: Callable, data: Any, iterations: int = 10
-    ) -> Dict:
+    ) -> dict:
         """Benchmark GPU vs CPU performance"""
-        import time
-
         # GPU benchmark
         gpu_times = []
         for _ in range(iterations):
@@ -539,7 +521,7 @@ class ParallelProcessor:
         """Process a single chunk"""
         return func(chunk, **kwargs)
 
-    def parallel_map(self, func: Callable, data: List, **kwargs) -> List:
+    def parallel_map(self, func: Callable, data: list, **kwargs) -> list:
         """Parallel map operation"""
         # Split data into chunks
         chunk_size = len(data) // self.n_workers
@@ -552,7 +534,7 @@ class ParallelProcessor:
         results = ray.get(futures)
         return [item for sublist in results for item in sublist]
 
-    def parallel_reduce(self, func: Callable, data: List, initial: Any = None) -> Any:
+    def parallel_reduce(self, func: Callable, data: list, initial: Any = None) -> Any:
         """Parallel reduce operation"""
         if len(data) == 0:
             return initial

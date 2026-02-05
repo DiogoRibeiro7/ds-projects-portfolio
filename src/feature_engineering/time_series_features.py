@@ -1,24 +1,23 @@
-"""
-Time Series Feature Extraction
+"""Time Series Feature Extraction
 
 Advanced time series feature engineering techniques.
 """
 
-import pandas as pd
+import warnings
+
 import numpy as np
-from typing import List, Dict, Optional, Union, Tuple, Any
-from sklearn.base import BaseEstimator, TransformerMixin
-from scipy import stats, signal
+import pandas as pd
+from scipy import stats
 from scipy.fft import fft, fftfreq
 from scipy.stats import entropy
-import warnings
+from sklearn.base import BaseEstimator, TransformerMixin
 
 warnings.filterwarnings("ignore")
 
 # Optional imports
 try:
-    from statsmodels.tsa.stattools import acf, pacf, adfuller, kpss
     from statsmodels.tsa.seasonal import seasonal_decompose
+    from statsmodels.tsa.stattools import acf, adfuller, kpss, pacf
 
     STATSMODELS_AVAILABLE = True
 except ImportError:
@@ -38,15 +37,14 @@ class TimeSeriesFeatureExtractor:
 
     def __init__(
         self,
-        window_sizes: List[int] = None,
+        window_sizes: list[int] = None,
         include_statistical: bool = True,
         include_frequency: bool = True,
         include_entropy: bool = True,
         include_autocorrelation: bool = True,
         include_tsfresh: bool = False,
     ):
-        """
-        Initialize time series feature extractor.
+        """Initialize time series feature extractor.
 
         Args:
             window_sizes: List of window sizes for rolling features
@@ -67,11 +65,10 @@ class TimeSeriesFeatureExtractor:
         self,
         df: pd.DataFrame,
         time_col: str,
-        value_cols: List[str],
-        entity_col: Optional[str] = None,
+        value_cols: list[str],
+        entity_col: str | None = None,
     ) -> pd.DataFrame:
-        """
-        Extract time series features.
+        """Extract time series features.
 
         Args:
             df: Input dataframe
@@ -101,7 +98,7 @@ class TimeSeriesFeatureExtractor:
             return self._extract_all_features(df, value_cols)
 
     def _extract_all_features(
-        self, df: pd.DataFrame, value_cols: List[str]
+        self, df: pd.DataFrame, value_cols: list[str]
     ) -> pd.DataFrame:
         """Extract all types of features."""
         features = df.copy()
@@ -153,7 +150,7 @@ class TimeSeriesFeatureExtractor:
 
     def _extract_statistical_features(
         self, series: np.ndarray, prefix: str
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Extract basic statistical features."""
         features = {}
 
@@ -236,7 +233,7 @@ class TimeSeriesFeatureExtractor:
 
     def _extract_frequency_features(
         self, series: np.ndarray, prefix: str
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Extract frequency domain features."""
         features = {}
 
@@ -300,7 +297,7 @@ class TimeSeriesFeatureExtractor:
 
     def _extract_entropy_features(
         self, series: np.ndarray, prefix: str
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Extract entropy-based features."""
         features = {}
 
@@ -407,7 +404,7 @@ class TimeSeriesFeatureExtractor:
 
     def _extract_autocorrelation_features(
         self, series: np.ndarray, prefix: str
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Extract autocorrelation features."""
         features = {}
 
@@ -466,7 +463,7 @@ class TimeSeriesFeatureExtractor:
         return features
 
     def _extract_lag_features(
-        self, series: pd.Series, prefix: str, lags: List[int] = None
+        self, series: pd.Series, prefix: str, lags: list[int] = None
     ) -> pd.DataFrame:
         """Extract lag features."""
         if lags is None:
@@ -492,7 +489,7 @@ class TimeSeriesFeatureExtractor:
         return pd.concat(lag_dfs, axis=1)
 
     def _extract_tsfresh_features(
-        self, df: pd.DataFrame, value_cols: List[str]
+        self, df: pd.DataFrame, value_cols: list[str]
     ) -> pd.DataFrame:
         """Extract features using TSFresh."""
         if not TSFRESH_AVAILABLE:
@@ -530,8 +527,7 @@ class SeasonalFeatureExtractor(BaseEstimator, TransformerMixin):
     """Extract seasonal features from time series."""
 
     def __init__(self, period: int = 12, method: str = "decompose"):
-        """
-        Initialize seasonal feature extractor.
+        """Initialize seasonal feature extractor.
 
         Args:
             period: Seasonal period
@@ -586,10 +582,9 @@ class WindowFeatureExtractor(BaseEstimator, TransformerMixin):
         self,
         window_size: int = 10,
         step_size: int = 1,
-        feature_functions: List[callable] = None,
+        feature_functions: list[callable] = None,
     ):
-        """
-        Initialize window feature extractor.
+        """Initialize window feature extractor.
 
         Args:
             window_size: Size of sliding window
@@ -658,8 +653,7 @@ class ChangePointDetector(BaseEstimator, TransformerMixin):
     """Detect and create features from change points in time series."""
 
     def __init__(self, method: str = "cusum", threshold: float = 0.05):
-        """
-        Initialize change point detector.
+        """Initialize change point detector.
 
         Args:
             method: 'cusum', 'pelt', 'binary_segmentation'
@@ -714,7 +708,7 @@ class ChangePointDetector(BaseEstimator, TransformerMixin):
 
         return X_df
 
-    def _detect_cusum(self, series: np.ndarray) -> List[int]:
+    def _detect_cusum(self, series: np.ndarray) -> list[int]:
         """Detect change points using CUSUM."""
         mean = np.mean(series)
         std = np.std(series)
@@ -735,7 +729,7 @@ class ChangePointDetector(BaseEstimator, TransformerMixin):
 
         return change_points
 
-    def _detect_binary_segmentation(self, series: np.ndarray) -> List[int]:
+    def _detect_binary_segmentation(self, series: np.ndarray) -> list[int]:
         """Detect change points using binary segmentation."""
         change_points = []
 

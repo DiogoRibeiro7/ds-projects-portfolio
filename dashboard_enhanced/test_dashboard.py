@@ -1,23 +1,17 @@
-"""
-Comprehensive Testing Suite for Enhanced Dashboard.
+"""Comprehensive Testing Suite for Enhanced Dashboard.
 Includes unit tests, integration tests, end-to-end tests, performance tests, and visual regression tests.
 """
 
-import asyncio
 import json
 import logging
 import os
-import time
 import unittest
-from datetime import datetime, timedelta
-from io import BytesIO
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import imagehash
 import numpy as np
 import pandas as pd
 import pytest
-import requests
 from locust import HttpUser, between, task
 from PIL import Image
 from playwright.sync_api import sync_playwright
@@ -243,7 +237,7 @@ class TestAPIIntegration(unittest.TestCase):
         """Test data access with authentication."""
         mock_jwt.return_value = lambda f: f
         response = self.client.get(
-            "/api/data/timeseries", headers={"Authorization": f"Bearer fake_token"}
+            "/api/data/timeseries", headers={"Authorization": "Bearer fake_token"}
         )
         self.assertEqual(response.status_code, 200)
 

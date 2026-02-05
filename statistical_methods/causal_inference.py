@@ -1,32 +1,27 @@
-"""
-Causal inference methods including Instrumental Variables (IV),
+"""Causal inference methods including Instrumental Variables (IV),
 Difference-in-Differences (DiD), Regression Discontinuity Design (RDD),
 Propensity Score Matching, and Synthetic Control.
 """
 
 import warnings
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from scipy import stats
 from scipy.optimize import minimize
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import StandardScaler
 
 warnings.filterwarnings("ignore")
 
 
 @dataclass
 class CausalEstimate:
-    """
-    Container for causal effect estimates returned by estimators.
+    """Container for causal effect estimates returned by estimators.
 
-    Attributes
+    Attributes:
     ----------
     effect : float
         Estimated causal effect in the same units as the outcome variable.
@@ -45,7 +40,7 @@ class CausalEstimate:
     diagnostics : Dict[str, Any] | None
         Optional metadata such as weak-instrument F-statistics.
 
-    Examples
+    Examples:
     --------
     >>> CausalEstimate(
     ...     effect=-0.12,
@@ -62,12 +57,12 @@ class CausalEstimate:
 
     effect: float
     standard_error: float
-    confidence_interval: Tuple[float, float]
+    confidence_interval: tuple[float, float]
     p_value: float
     method: str
     n_treated: int
     n_control: int
-    diagnostics: Dict[str, Any] = None
+    diagnostics: dict[str, Any] = None
 
 
 class InstrumentalVariables:
@@ -83,10 +78,9 @@ class InstrumentalVariables:
         y: np.ndarray,
         X: np.ndarray,
         Z: np.ndarray,
-        W: Optional[np.ndarray] = None,
+        W: np.ndarray | None = None,
     ) -> CausalEstimate:
-        """
-        Two-Stage Least Squares (2SLS) estimation.
+        """Two-Stage Least Squares (2SLS) estimation.
 
         Args:
             y: Outcome variable
@@ -175,10 +169,9 @@ class DifferenceInDifferences:
         treatment_col: str,
         time_col: str,
         group_col: str,
-        covariates: Optional[List[str]] = None,
+        covariates: list[str] | None = None,
     ) -> CausalEstimate:
-        """
-        Estimate DiD treatment effect.
+        """Estimate DiD treatment effect.
 
         Args:
             data: Panel data DataFrame
@@ -268,8 +261,7 @@ class DifferenceInDifferences:
         time_col: str,
         event_time_col: str,
     ) -> pd.DataFrame:
-        """
-        Perform event study analysis.
+        """Perform event study analysis.
 
         Args:
             data: Panel data
@@ -324,11 +316,10 @@ class RegressionDiscontinuity:
         running_var: np.ndarray,
         outcome: np.ndarray,
         cutoff: float,
-        bandwidth: Optional[float] = None,
+        bandwidth: float | None = None,
         polynomial: int = 1,
     ) -> CausalEstimate:
-        """
-        Sharp Regression Discontinuity estimation.
+        """Sharp Regression Discontinuity estimation.
 
         Args:
             running_var: Running/forcing variable
@@ -434,10 +425,9 @@ class RegressionDiscontinuity:
         outcome: np.ndarray,
         treatment: np.ndarray,
         cutoff: float,
-        bandwidth: Optional[float] = None,
+        bandwidth: float | None = None,
     ) -> CausalEstimate:
-        """
-        Fuzzy Regression Discontinuity estimation.
+        """Fuzzy Regression Discontinuity estimation.
 
         Args:
             running_var: Running variable
@@ -470,10 +460,9 @@ class PropensityScoreMatching:
         treatment: np.ndarray,
         outcome: np.ndarray,
         n_neighbors: int = 1,
-        caliper: Optional[float] = None,
+        caliper: float | None = None,
     ) -> CausalEstimate:
-        """
-        Estimate Average Treatment Effect using PSM.
+        """Estimate Average Treatment Effect using PSM.
 
         Args:
             X: Covariates
@@ -570,8 +559,7 @@ class PropensityScoreMatching:
     def inverse_propensity_weighting(
         self, X: np.ndarray, treatment: np.ndarray, outcome: np.ndarray
     ) -> CausalEstimate:
-        """
-        Inverse Propensity Score Weighting (IPW) estimation.
+        """Inverse Propensity Score Weighting (IPW) estimation.
 
         Args:
             X: Covariates
@@ -653,8 +641,7 @@ class SyntheticControl:
     def estimate(
         self, treated_unit: np.ndarray, control_units: np.ndarray, pre_period: int
     ) -> CausalEstimate:
-        """
-        Estimate treatment effect using Synthetic Control.
+        """Estimate treatment effect using Synthetic Control.
 
         Args:
             treated_unit: Time series for treated unit

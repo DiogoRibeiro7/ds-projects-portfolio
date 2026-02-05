@@ -1,24 +1,14 @@
-"""
-Notebook validation utilities for comprehensive testing of Jupyter notebooks.
+"""Notebook validation utilities for comprehensive testing of Jupyter notebooks.
 """
 
-import ast
-import json
-import os
 import re
-import sys
-import tracemalloc
-import warnings
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import nbformat
 import numpy as np
 import pandas as pd
-import psutil
-from memory_profiler import memory_usage
-from nbformat import NotebookNode
 
 
 class NotebookValidator:
@@ -32,10 +22,10 @@ class NotebookValidator:
         self.warnings = []
         self.info = []
 
-        with open(notebook_path, "r", encoding="utf-8") as f:
+        with open(notebook_path, encoding="utf-8") as f:
             self.notebook = nbformat.read(f, as_version=4)
 
-    def validate_all(self) -> Dict[str, Any]:
+    def validate_all(self) -> dict[str, Any]:
         """Run all validation checks on the notebook."""
         results = {
             "notebook": str(self.notebook_path),
@@ -60,7 +50,7 @@ class NotebookValidator:
 
         return results
 
-    def check_hardcoded_paths(self) -> Dict[str, Any]:
+    def check_hardcoded_paths(self) -> dict[str, Any]:
         """Check for hardcoded paths that should be parameterized."""
         hardcoded_paths = []
         path_patterns = [
@@ -116,7 +106,7 @@ class NotebookValidator:
             "details": hardcoded_paths,
         }
 
-    def check_data_files(self) -> Dict[str, Any]:
+    def check_data_files(self) -> dict[str, Any]:
         """Verify all referenced data files exist."""
         missing_files = []
         found_files = []
@@ -171,7 +161,7 @@ class NotebookValidator:
             "found_files": found_files,
         }
 
-    def check_random_seeds(self) -> Dict[str, Any]:
+    def check_random_seeds(self) -> dict[str, Any]:
         """Ensure random seeds are set for reproducibility."""
         seed_patterns = {
             "numpy": r"np\.random\.seed\(\d+\)",
@@ -237,7 +227,7 @@ class NotebookValidator:
             "imported_libs": list(imported_libs),
         }
 
-    def check_visualizations(self) -> Dict[str, Any]:
+    def check_visualizations(self) -> dict[str, Any]:
         """Check that visualizations are properly configured."""
         viz_patterns = {
             "matplotlib": [r"plt\.show\(\)", r"plt\.savefig\(", r"fig\.show\(\)"],
@@ -318,7 +308,7 @@ class NotebookValidator:
             "details": {"found": found_viz, "issues": missing_show},
         }
 
-    def check_memory_patterns(self) -> Dict[str, Any]:
+    def check_memory_patterns(self) -> dict[str, Any]:
         """Check for potential memory leak patterns."""
         memory_issues = []
 
@@ -393,7 +383,7 @@ class NotebookValidator:
             "details": memory_issues,
         }
 
-    def check_code_quality(self) -> Dict[str, Any]:
+    def check_code_quality(self) -> dict[str, Any]:
         """Check code quality metrics."""
         quality_issues = []
 
@@ -480,7 +470,7 @@ class NotebookValidator:
             "details": quality_issues,
         }
 
-    def check_imports(self) -> Dict[str, Any]:
+    def check_imports(self) -> dict[str, Any]:
         """Check import organization and dependencies."""
         import_issues = []
         all_imports = []
@@ -531,7 +521,7 @@ class NotebookValidator:
             "issues": import_issues,
         }
 
-    def check_markdown_quality(self) -> Dict[str, Any]:
+    def check_markdown_quality(self) -> dict[str, Any]:
         """Check markdown cell quality."""
         markdown_stats = {
             "total_cells": 0,
@@ -602,7 +592,7 @@ class DataValidator:
     """Validates data quality in notebooks."""
 
     @staticmethod
-    def validate_dataframe(df: pd.DataFrame, name: str = "data") -> Dict[str, Any]:
+    def validate_dataframe(df: pd.DataFrame, name: str = "data") -> dict[str, Any]:
         """Validate a pandas DataFrame for quality issues."""
         results = {"name": name, "shape": df.shape, "checks": {}}
 
@@ -669,8 +659,8 @@ class DataValidator:
 
     @staticmethod
     def validate_schema(
-        df: pd.DataFrame, expected_schema: Dict[str, str]
-    ) -> Dict[str, Any]:
+        df: pd.DataFrame, expected_schema: dict[str, str]
+    ) -> dict[str, Any]:
         """Validate DataFrame against expected schema."""
         results = {
             "matches": True,
@@ -726,8 +716,8 @@ class DataValidator:
 
     @staticmethod
     def validate_metrics(
-        metrics: Dict[str, float], expected_ranges: Dict[str, Tuple[float, float]]
-    ) -> Dict[str, Any]:
+        metrics: dict[str, float], expected_ranges: dict[str, tuple[float, float]]
+    ) -> dict[str, Any]:
         """Validate that metrics are within expected ranges."""
         results = {"all_valid": True, "out_of_range": {}}
 

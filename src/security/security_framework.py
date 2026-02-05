@@ -1,46 +1,39 @@
-"""
-Security Framework
+"""Security Framework
 Comprehensive security implementation with input sanitization, injection prevention, and secret management
 """
 
-import re
-import logging
+import base64
 import hashlib
 import hmac
-import secrets
-import json
-import os
-from typing import Any, Dict, List, Optional, Union, Callable
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from functools import wraps
 import html
-import bleach
-from urllib.parse import quote, urlparse
-import sqlparse
-from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
-from cryptography.hazmat.backends import default_backend
-import jwt
-import base64
-from pathlib import Path
-
-# SQL injection prevention
-import sqlalchemy
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-import psycopg2
-from psycopg2 import sql
-
-# Rate limiting
-from functools import lru_cache
+import json
+import logging
+import os
+import re
+import secrets
 import time
 from collections import defaultdict, deque
+from dataclasses import dataclass, field
+
+# Rate limiting
+from functools import wraps
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlparse
+
+import bleach
+
+# SQL injection prevention
+import validators
+from cryptography.fernet import Fernet
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
 
 # Input validation
-from pydantic import BaseModel, Field, validator, EmailStr
-import validators
+from pydantic import BaseModel
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -57,7 +50,7 @@ class SecurityConfig:
     enable_csrf_protection: bool = True
     enable_rate_limiting: bool = True
     max_request_size: int = 10 * 1024 * 1024  # 10MB
-    allowed_file_types: List[str] = field(
+    allowed_file_types: list[str] = field(
         default_factory=lambda: [".csv", ".json", ".xlsx", ".parquet"]
     )
     password_min_length: int = 12
@@ -216,7 +209,7 @@ class InputSanitizer:
 
         return filename
 
-    def sanitize_email(self, email: str) -> Optional[str]:
+    def sanitize_email(self, email: str) -> str | None:
         """Sanitize and validate email address"""
         email = email.strip().lower()
 
@@ -231,7 +224,7 @@ class InputSanitizer:
 
         return email
 
-    def sanitize_url(self, url: str) -> Optional[str]:
+    def sanitize_url(self, url: str) -> str | None:
         """Sanitize and validate URL"""
         # Basic URL validation
         if not validators.url(url):
@@ -251,7 +244,7 @@ class InputSanitizer:
 
         return url
 
-    def validate_json(self, json_str: str) -> Optional[Dict]:
+    def validate_json(self, json_str: str) -> dict | None:
         """Validate and parse JSON safely"""
         try:
             # Limit JSON size
@@ -295,7 +288,7 @@ class SQLInjectionPrevention:
         Session = sessionmaker(bind=engine)
         return Session()
 
-    def execute_safe_query(self, session, query: str, params: Dict = None):
+    def execute_safe_query(self, session, query: str, params: dict = None):
         """Execute query with parameterized inputs"""
         # Use parameterized queries
         if params:
@@ -305,7 +298,7 @@ class SQLInjectionPrevention:
         return result
 
     def build_safe_query(
-        self, table: str, columns: List[str], conditions: Dict = None
+        self, table: str, columns: list[str], conditions: dict = None
     ) -> tuple:
         """Build safe SQL query with parameters"""
         # Validate table name
@@ -373,7 +366,7 @@ class XSSProtection:
             policies.append(policy)
         return "; ".join(policies)
 
-    def add_security_headers(self) -> Dict[str, str]:
+    def add_security_headers(self) -> dict[str, str]:
         """Get security headers for HTTP responses"""
         return {
             "Content-Security-Policy": self.get_csp_header(),
@@ -407,7 +400,7 @@ class XSSProtection:
 class SecretManager:
     """Secure secret management"""
 
-    def __init__(self, master_key: Optional[str] = None):
+    def __init__(self, master_key: str | None = None):
         if master_key:
             self.master_key = master_key.encode()
         else:
@@ -458,7 +451,7 @@ class SecretManager:
         # Save secrets
         self._save_secrets(secrets)
 
-    def get_secret(self, key: str) -> Optional[str]:
+    def get_secret(self, key: str) -> str | None:
         """Retrieve and decrypt secret"""
         secrets = self._load_secrets()
 
@@ -469,15 +462,15 @@ class SecretManager:
         decrypted_value = self.fernet.decrypt(encrypted_value)
         return decrypted_value.decode()
 
-    def _load_secrets(self) -> Dict[str, str]:
+    def _load_secrets(self) -> dict[str, str]:
         """Load secrets from file"""
         if not self.secrets_file.exists():
             return {}
 
-        with open(self.secrets_file, "r") as f:
+        with open(self.secrets_file) as f:
             return json.load(f)
 
-    def _save_secrets(self, secrets: Dict[str, str]) -> None:
+    def _save_secrets(self, secrets: dict[str, str]) -> None:
         """Save secrets to file"""
         with open(self.secrets_file, "w") as f:
             json.dump(secrets, f)
@@ -514,7 +507,7 @@ class PasswordValidator:
     def __init__(self, config: SecurityConfig = None):
         self.config = config or SecurityConfig()
 
-    def validate_password(self, password: str) -> tuple[bool, List[str]]:
+    def validate_password(self, password: str) -> tuple[bool, list[str]]:
         """Validate password strength"""
         errors = []
 
@@ -781,7 +774,7 @@ class SecurityFramework:
         self.csrf_protection = CSRFProtection(secrets.token_urlsafe(32))
         self.file_validator = FileUploadValidator(config)
 
-    def sanitize_request(self, request_data: Dict) -> Dict:
+    def sanitize_request(self, request_data: dict) -> dict:
         """Sanitize entire request"""
         sanitized = {}
 
@@ -807,7 +800,7 @@ class SecurityFramework:
         return sanitized
 
     def validate_api_request(
-        self, request: Dict, schema: BaseModel
+        self, request: dict, schema: BaseModel
     ) -> tuple[bool, Any]:
         """Validate API request against schema"""
         try:
@@ -822,8 +815,8 @@ class SecurityFramework:
             return False, str(e)
 
     def secure_database_query(
-        self, query: str, params: Dict = None
-    ) -> tuple[str, Dict]:
+        self, query: str, params: dict = None
+    ) -> tuple[str, dict]:
         """Create secure database query"""
         # Sanitize parameters
         safe_params = {}
@@ -837,7 +830,7 @@ class SecurityFramework:
         # Use parameterized query
         return query, safe_params
 
-    def get_security_headers(self) -> Dict[str, str]:
+    def get_security_headers(self) -> dict[str, str]:
         """Get security headers for HTTP responses"""
         return self.xss_protection.add_security_headers()
 

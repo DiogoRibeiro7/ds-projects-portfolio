@@ -1,5 +1,4 @@
-"""
-Snapshot tests for conversion analysis outputs.
+"""Snapshot tests for conversion analysis outputs.
 """
 
 from __future__ import annotations

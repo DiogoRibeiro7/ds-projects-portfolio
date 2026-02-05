@@ -1,6 +1,5 @@
 """Performance tests for dashboard using Locust."""
 
-import json
 import random
 
 from locust import HttpUser, between, task

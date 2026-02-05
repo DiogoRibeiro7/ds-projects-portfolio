@@ -1,19 +1,17 @@
 #!/usr/bin/env python
-"""
-Comprehensive test runner script for the DS Projects Portfolio.
+"""Comprehensive test runner script for the DS Projects Portfolio.
 
 This script provides a centralized way to run all tests with various configurations
 and generate comprehensive reports.
 """
 
-import sys
-import os
 import argparse
-import subprocess
 import json
-from pathlib import Path
-from datetime import datetime
 import logging
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
 
 # Setup logging
 logging.basicConfig(
@@ -295,7 +293,7 @@ class TestRunner:
             if e.stderr:
                 print(e.stderr, file=sys.stderr)
             return False
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             logger.error(f"Command not found: {cmd[0]}")
             return False
 

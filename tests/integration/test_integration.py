@@ -1,22 +1,20 @@
-"""
-Integration tests for end-to-end pipeline execution.
+"""Integration tests for end-to-end pipeline execution.
 """
 
-import pytest
-import pandas as pd
-import numpy as np
-import tempfile
-import time
-import concurrent.futures
-from pathlib import Path
-import requests
-import json
-from unittest.mock import patch, MagicMock
 import asyncio
-import aiohttp
-from multiprocessing import Pool
-import threading
+import concurrent.futures
+import json
 import queue
+import threading
+import time
+from multiprocessing import Pool
+from pathlib import Path
+from unittest.mock import patch
+
+import aiohttp
+import numpy as np
+import pandas as pd
+import pytest
 
 pytestmark = pytest.mark.integration
 
@@ -25,9 +23,9 @@ from modern_bank_churn.ml_pipeline_orchestrator import (
     PipelineConfig,
 )
 from statistical_methods.statistical_analyzer import StatisticalAnalyzer
-from statistical_methods.hypothesis_tester import HypothesisTester
-from dashboard_enhanced.dashboard_framework import EnhancedDashboard, DashboardConfig
+
 from dashboard_enhanced.api_infrastructure import APIInfrastructure
+from dashboard_enhanced.dashboard_framework import EnhancedDashboard
 
 
 class TestEndToEndPipeline:
@@ -446,10 +444,11 @@ class TestDashboardIntegration:
     @pytest.mark.integration
     def test_dashboard_export_functionality(self, sample_dataframe, temp_dir):
         """Test dashboard export capabilities."""
+        import plotly.graph_objects as go
+
         from dashboard_enhanced.visualization_components import (
             InteractiveVisualizations,
         )
-        import plotly.graph_objects as go
 
         viz = InteractiveVisualizations()
 
@@ -620,8 +619,9 @@ class TestDataSizeScaling:
     @pytest.mark.slow
     def test_memory_efficiency(self):
         """Test memory efficiency with large datasets."""
-        import psutil
         import gc
+
+        import psutil
 
         # Get initial memory
         process = psutil.Process()

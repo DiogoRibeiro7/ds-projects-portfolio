@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-Verify docstring coverage for public modules, classes, and functions.
+"""Verify docstring coverage for public modules, classes, and functions.
 
 The script scans key source packages, counts the number of documented symbols,
 and fails when coverage falls below the configured threshold or when a missing
@@ -13,10 +12,9 @@ from __future__ import annotations
 import argparse
 import ast
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
-
 
 TARGETS: tuple[str, ...] = (
     "src",

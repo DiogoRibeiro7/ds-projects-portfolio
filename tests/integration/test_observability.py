@@ -1,23 +1,22 @@
-"""
-Test suite for observability utilities.
+"""Test suite for observability utilities.
 """
 
-import pytest
-import logging
 import json
+import logging
 import time
-from unittest.mock import Mock, patch, MagicMock, call
-from datetime import datetime, timedelta
-import pandas as pd
+from unittest.mock import Mock, patch
+
 import numpy as np
+import pytest
+
 from src.utils.observability import (
-    MetricsCollector,
-    Logger,
-    Tracer,
     AlertManager,
-    HealthChecker,
-    PerformanceMonitor,
     ErrorTracker,
+    HealthChecker,
+    Logger,
+    MetricsCollector,
+    PerformanceMonitor,
+    Tracer,
 )
 
 pytestmark = pytest.mark.integration

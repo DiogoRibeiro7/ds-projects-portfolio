@@ -1,23 +1,17 @@
-"""
-Pytest integration for notebook testing.
+"""Pytest integration for notebook testing.
 This allows notebook tests to be run as part of the standard pytest suite.
 """
 
-import json
-import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
 
-import nbformat
 import pytest
-from nbval import NbvalReporter
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from notebook_runner import NotebookTestConfig, NotebookTestRunner
-from notebook_validator import DataValidator, NotebookValidator
+from notebook_validator import NotebookValidator
 from report_generator import generate_html_report
 
 # Configuration

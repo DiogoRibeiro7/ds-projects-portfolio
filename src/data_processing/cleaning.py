@@ -1,5 +1,4 @@
-"""
-Enhanced data processing utilities for A/B testing and experimentation.
+"""Enhanced data processing utilities for A/B testing and experimentation.
 
 This module handles data cleaning, validation, and preparation for statistical analysis
 with comprehensive implementations of all TODO items and high-performance optimizations.
@@ -7,12 +6,12 @@ with comprehensive implementations of all TODO items and high-performance optimi
 
 import json
 import logging
-import warnings
 import multiprocessing
-from datetime import datetime, timedelta
-from functools import lru_cache, wraps
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
 import time
+import warnings
+from datetime import datetime
+from functools import lru_cache, wraps
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -37,8 +36,8 @@ except ImportError:
     warnings.warn("Joblib not available - parallel processing will be disabled")
 
 try:
-    import dask.dataframe as dd
     import dask.array as da
+    import dask.dataframe as dd
 
     DASK_AVAILABLE = True
 except ImportError:
@@ -112,8 +111,7 @@ def monitor_performance(func):
 
 
 class OptimizedDataProcessor:
-    """
-    High-performance data processing utilities with CPU/GPU acceleration.
+    """High-performance data processing utilities with CPU/GPU acceleration.
 
     The processor exposes vectorized helpers (Numba-accelerated when
     available) for outlier detection, grouped aggregations, and CUPED-style
@@ -121,7 +119,7 @@ class OptimizedDataProcessor:
     core; ``use_gpu=True`` attempts to import CuPy and falls back gracefully if
     no GPU is available.
 
-    Examples
+    Examples:
     --------
     >>> import numpy as np
     >>> processor = OptimizedDataProcessor(n_jobs=4)
@@ -171,7 +169,7 @@ class OptimizedDataProcessor:
         threshold : float, default=3.0
             Z-score threshold for outlier detection.
 
-        Returns
+        Returns:
         -------
         outlier_mask : np.ndarray
             Boolean array indicating outliers.
@@ -201,7 +199,7 @@ class OptimizedDataProcessor:
         operation : str
             Aggregation operation: 'mean', 'sum', 'std'.
 
-        Returns
+        Returns:
         -------
         results : np.ndarray
             Aggregated results by group.
@@ -226,7 +224,7 @@ class OptimizedDataProcessor:
     @jit(nopython=True) if NUMBA_AVAILABLE else lambda f: f
     def fast_variance_reduction(
         metric: np.ndarray, covariate: np.ndarray
-    ) -> Tuple[np.ndarray, float]:
+    ) -> tuple[np.ndarray, float]:
         """Numba-optimized CUPED variance reduction.
 
         Parameters
@@ -236,7 +234,7 @@ class OptimizedDataProcessor:
         covariate : np.ndarray
             Pre-experiment covariate values.
 
-        Returns
+        Returns:
         -------
         adjusted_metric : np.ndarray
             CUPED-adjusted metric values.
@@ -275,7 +273,7 @@ class OptimizedDataProcessor:
         df: pd.DataFrame,
         metric_col: str,
         covariate_col: str,
-        group_col: Optional[str] = None,
+        group_col: str | None = None,
     ) -> pd.DataFrame:
         """Parallel CUPED application for large datasets.
 
@@ -290,7 +288,7 @@ class OptimizedDataProcessor:
         group_col : str, optional
             Group column for stratified CUPED.
 
-        Returns
+        Returns:
         -------
         df_result : pd.DataFrame
             DataFrame with CUPED-adjusted metrics.
@@ -349,7 +347,7 @@ class OptimizedDataProcessor:
         self,
         df: pd.DataFrame,
         group_col: str,
-        agg_funcs: Dict[str, Union[str, List[str]]],
+        agg_funcs: dict[str, str | list[str]],
     ) -> pd.DataFrame:
         """Memory-efficient groupby for large datasets using chunking or Dask.
 
@@ -362,7 +360,7 @@ class OptimizedDataProcessor:
         agg_funcs : dict
             Aggregation functions by column.
 
-        Returns
+        Returns:
         -------
         result : pd.DataFrame
             Aggregated results.
@@ -406,7 +404,7 @@ class OptimizedDataProcessor:
         return result
 
     def vectorized_feature_engineering(
-        self, df: pd.DataFrame, config: Dict[str, Any]
+        self, df: pd.DataFrame, config: dict[str, Any]
     ) -> pd.DataFrame:
         """Vectorized feature engineering for maximum speed.
 
@@ -417,7 +415,7 @@ class OptimizedDataProcessor:
         config : dict
             Feature engineering configuration.
 
-        Returns
+        Returns:
         -------
         df_features : pd.DataFrame
             DataFrame with engineered features.
@@ -493,7 +491,7 @@ class OptimizedDataProcessor:
         agg_func : str
             Aggregation function.
 
-        Returns
+        Returns:
         -------
         result : pd.Series
             Cached or computed aggregation result.
@@ -510,7 +508,7 @@ class OptimizedDataProcessor:
         df : pd.DataFrame
             Input dataframe.
 
-        Returns
+        Returns:
         -------
         df_optimized : pd.DataFrame
             Memory-optimized dataframe.
@@ -562,7 +560,7 @@ class OptimizedDataProcessor:
     def parallel_outlier_detection(
         self,
         df: pd.DataFrame,
-        columns: List[str],
+        columns: list[str],
         method: str = "zscore",
         threshold: float = 3.0,
     ) -> pd.DataFrame:
@@ -579,7 +577,7 @@ class OptimizedDataProcessor:
         threshold : float
             Outlier threshold.
 
-        Returns
+        Returns:
         -------
         df_clean : pd.DataFrame
             DataFrame with outliers removed.
@@ -630,8 +628,8 @@ class OptimizedDataProcessor:
 
     @monitor_performance
     def batch_process_experiments(
-        self, experiments: List[pd.DataFrame], processing_config: Dict[str, Any]
-    ) -> List[pd.DataFrame]:
+        self, experiments: list[pd.DataFrame], processing_config: dict[str, Any]
+    ) -> list[pd.DataFrame]:
         """Batch process multiple experiments in parallel.
 
         Parameters
@@ -641,7 +639,7 @@ class OptimizedDataProcessor:
         processing_config : dict
             Processing configuration.
 
-        Returns
+        Returns:
         -------
         processed_experiments : list of pd.DataFrame
             Processed experiment dataframes.
@@ -662,7 +660,7 @@ class OptimizedDataProcessor:
         return processed
 
     def process_single_experiment(
-        self, df: pd.DataFrame, config: Dict[str, Any]
+        self, df: pd.DataFrame, config: dict[str, Any]
     ) -> pd.DataFrame:
         """Process a single experiment with all optimizations.
 
@@ -673,7 +671,7 @@ class OptimizedDataProcessor:
         config : dict
             Processing configuration.
 
-        Returns
+        Returns:
         -------
         df_processed : pd.DataFrame
             Processed dataframe.
@@ -721,7 +719,7 @@ def get_optimized_processor(n_jobs: int = -1) -> OptimizedDataProcessor:
     n_jobs : int
         Number of parallel jobs.
 
-    Returns
+    Returns:
     -------
     processor : OptimizedDataProcessor
         Optimized data processor instance.
@@ -736,12 +734,12 @@ def clean_ab_data(
     df: pd.DataFrame,
     user_col: str = "user_id",
     group_col: str = "group",
-    metric_cols: Optional[List[str]] = None,
+    metric_cols: list[str] | None = None,
     outlier_method: str = "iqr",
     outlier_threshold: float = DEFAULT_OUTLIER_THRESHOLD,
     by_group: bool = True,
     generate_report: bool = False,
-) -> Union[pd.DataFrame, Tuple[pd.DataFrame, Dict]]:
+) -> pd.DataFrame | tuple[pd.DataFrame, dict]:
     """Clean A/B test data with comprehensive preprocessing and quality reporting.
 
     Parameters
@@ -763,7 +761,7 @@ def clean_ab_data(
     generate_report : bool, default=False
         Whether to return detailed cleaning report.
 
-    Returns
+    Returns:
     -------
     df_clean : pd.DataFrame
         Cleaned dataset.
@@ -774,7 +772,7 @@ def clean_ab_data(
     initial_count = len(df_clean)
 
     # Initialize report
-    report: Dict[str, Any] = {
+    report: dict[str, Any] = {
         "initial_count": initial_count,
         "cleaning_steps": [],
         "final_count": 0,
@@ -925,7 +923,7 @@ def _detect_outliers(
     threshold : float
         Threshold for outlier detection.
 
-    Returns
+    Returns:
     -------
     outlier_mask : pd.Series
         Boolean mask indicating outliers.
@@ -965,11 +963,11 @@ def validate_experiment_data(
     df: pd.DataFrame,
     user_col: str = "user_id",
     group_col: str = "group",
-    required_groups: Optional[List[str]] = None,
-    date_col: Optional[str] = None,
+    required_groups: list[str] | None = None,
+    date_col: str | None = None,
     min_sample_ratio: float = DEFAULT_MIN_SAMPLE_RATIO,
     max_missing_rate: float = DEFAULT_MAX_MISSING_RATE,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Comprehensive experiment data validation with enhanced checks.
 
     Parameters
@@ -989,12 +987,12 @@ def validate_experiment_data(
     max_missing_rate : float, default=0.05
         Maximum acceptable missing data rate.
 
-    Returns
+    Returns:
     -------
     validation_results : dict
         Comprehensive validation results and recommendations.
     """
-    validation_results: Dict[str, Any] = {
+    validation_results: dict[str, Any] = {
         "is_valid": True,
         "warnings": [],
         "errors": [],
@@ -1106,7 +1104,7 @@ def validate_experiment_data(
 
 def _analyze_temporal_patterns(
     df: pd.DataFrame, date_col: str, group_col: str
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Analyze temporal patterns in experiment data."""
     try:
         df_temp = df.copy()
@@ -1139,7 +1137,7 @@ def _analyze_temporal_patterns(
 
 def _analyze_user_patterns(
     df: pd.DataFrame, user_col: str, group_col: str
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Analyze user behavior patterns."""
     user_counts = df[user_col].value_counts()
     duplicate_users = (user_counts > 1).sum()
@@ -1177,7 +1175,7 @@ def apply_cuped(
     method : str, default='global'
         CUPED method: 'global', 'by_group', 'multi_covariate'.
 
-    Returns
+    Returns:
     -------
     df_cuped : pd.DataFrame
         Data with CUPED-adjusted metrics and diagnostic information.
@@ -1261,7 +1259,7 @@ def apply_cuped(
 class DataQualityChecker:
     """Comprehensive data quality assessment with ML-based anomaly detection."""
 
-    def __init__(self, config: Optional[Dict] = None):
+    def __init__(self, config: dict | None = None):
         """Initialize the data quality checker.
 
         Parameters
@@ -1282,13 +1280,13 @@ class DataQualityChecker:
         self.thresholds = {**self.default_thresholds, **self.config}
 
         # Initialize ML models for anomaly detection
-        self._anomaly_detectors: Dict[str, Any] = {}
+        self._anomaly_detectors: dict[str, Any] = {}
 
         logger.info("DataQualityChecker initialized with comprehensive monitoring")
 
     def run_full_check(
-        self, df: pd.DataFrame, experiment_config: Dict
-    ) -> Dict[str, Any]:
+        self, df: pd.DataFrame, experiment_config: dict
+    ) -> dict[str, Any]:
         """Run comprehensive data quality assessment with ML-based detection.
 
         Parameters
@@ -1298,12 +1296,12 @@ class DataQualityChecker:
         experiment_config : dict
             Experiment configuration including column names and expected values.
 
-        Returns
+        Returns:
         -------
         quality_report : dict
             Comprehensive quality assessment with scores and recommendations.
         """
-        quality_report: Dict[str, Any] = {
+        quality_report: dict[str, Any] = {
             "overall_score": 100,
             "checks": {},
             "recommendations": [],
@@ -1348,9 +1346,9 @@ class DataQualityChecker:
 
         return quality_report
 
-    def _check_structure(self, df: pd.DataFrame, config: Dict) -> Dict[str, Any]:
+    def _check_structure(self, df: pd.DataFrame, config: dict) -> dict[str, Any]:
         """Check basic data structure requirements."""
-        structure_check: Dict[str, Any] = {
+        structure_check: dict[str, Any] = {
             "status": "passed",
             "issues": [],
             "score": 100,
@@ -1391,9 +1389,9 @@ class DataQualityChecker:
 
         return structure_check
 
-    def _analyze_missing_patterns(self, df: pd.DataFrame) -> Dict[str, Any]:
+    def _analyze_missing_patterns(self, df: pd.DataFrame) -> dict[str, Any]:
         """Analyze missing data patterns with advanced detection."""
-        missing_analysis: Dict[str, Any] = {
+        missing_analysis: dict[str, Any] = {
             "overall_missing_rate": df.isnull().sum().sum()
             / (len(df) * len(df.columns)),
             "column_missing_rates": df.isnull().mean().to_dict(),
@@ -1447,15 +1445,15 @@ class DataQualityChecker:
         return missing_analysis
 
     def _check_temporal_consistency(
-        self, df: pd.DataFrame, config: Dict
-    ) -> Dict[str, Any]:
+        self, df: pd.DataFrame, config: dict
+    ) -> dict[str, Any]:
         """Check for temporal consistency and detect unusual patterns."""
         date_col = config["date_col"]
 
         if date_col not in df.columns:
             return {"status": "skipped", "reason": "date column not found"}
 
-        temporal_check: Dict[str, Any] = {
+        temporal_check: dict[str, Any] = {
             "status": "passed",
             "issues": [],
             "score": 100,
@@ -1504,9 +1502,9 @@ class DataQualityChecker:
 
         return temporal_check
 
-    def _detect_user_anomalies(self, df: pd.DataFrame, config: Dict) -> Dict[str, Any]:
+    def _detect_user_anomalies(self, df: pd.DataFrame, config: dict) -> dict[str, Any]:
         """Detect anomalous user behavior patterns."""
-        user_analysis: Dict[str, Any] = {
+        user_analysis: dict[str, Any] = {
             "status": "passed",
             "anomalies": [],
             "score": 100,
@@ -1546,10 +1544,10 @@ class DataQualityChecker:
         return user_analysis
 
     def _analyze_metric_distributions(
-        self, df: pd.DataFrame, metric_cols: List[str]
-    ) -> Dict[str, Any]:
+        self, df: pd.DataFrame, metric_cols: list[str]
+    ) -> dict[str, Any]:
         """Analyze metric distributions for anomalies."""
-        metric_analysis: Dict[str, Any] = {
+        metric_analysis: dict[str, Any] = {
             "distributions": {},
             "anomalies": [],
             "score": 100,
@@ -1592,7 +1590,7 @@ class DataQualityChecker:
 
         return metric_analysis
 
-    def _calculate_overall_score(self, checks: Dict) -> float:
+    def _calculate_overall_score(self, checks: dict) -> float:
         """Calculate weighted overall quality score."""
         weights = {
             "structure": 0.3,
@@ -1612,7 +1610,7 @@ class DataQualityChecker:
 
         return weighted_score / total_weight if total_weight > 0 else 0.0
 
-    def _generate_recommendations(self, quality_report: Dict) -> List[str]:
+    def _generate_recommendations(self, quality_report: dict) -> list[str]:
         """Generate actionable recommendations based on quality assessment."""
         recommendations = []
         overall_score = quality_report["overall_score"]
@@ -1653,7 +1651,7 @@ class DataQualityChecker:
 def get_experiment_summary(
     df: pd.DataFrame,
     group_col: str = "group",
-    metrics: Optional[List[str]] = None,
+    metrics: list[str] | None = None,
     include_power_analysis: bool = True,
     confidence_level: float = 0.95,
 ) -> pd.DataFrame:
@@ -1672,7 +1670,7 @@ def get_experiment_summary(
     confidence_level : float, default=0.95
         Confidence level for intervals.
 
-    Returns
+    Returns:
     -------
     summary : pd.DataFrame
         Comprehensive summary statistics with effect sizes and power.
@@ -1832,7 +1830,7 @@ def get_experiment_summary(
 
 
 def export_analysis_results(
-    results: Dict[str, Any], output_path: str, format: str = "json"
+    results: dict[str, Any], output_path: str, format: str = "json"
 ) -> None:
     """Export analysis results to various formats.
 
@@ -1862,7 +1860,7 @@ def export_analysis_results(
         raise ValueError(f"Unsupported export format: {format}")
 
 
-def _export_html_report(results: Dict[str, Any], output_path: str) -> None:
+def _export_html_report(results: dict[str, Any], output_path: str) -> None:
     """Export results as formatted HTML report."""
     html_template = """
     <!DOCTYPE html>
@@ -1923,7 +1921,7 @@ def optimize_dataframe_memory(df: pd.DataFrame) -> pd.DataFrame:
     df : pd.DataFrame
         DataFrame to optimize.
 
-    Returns
+    Returns:
     -------
     df_optimized : pd.DataFrame
         Memory-optimized DataFrame.

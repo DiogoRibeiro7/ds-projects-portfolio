@@ -1,12 +1,10 @@
-"""
-Advanced Feature Engineering for Bank Churn Prediction.
+"""Advanced Feature Engineering for Bank Churn Prediction.
 Implements automated feature selection, interaction detection, and stability metrics.
 """
 
 import warnings
 from dataclasses import dataclass
 from itertools import combinations
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -15,14 +13,10 @@ from scipy.stats import spearmanr
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import (
-    RFE,
-    SelectFromModel,
-    SelectKBest,
     chi2,
     f_classif,
     mutual_info_classif,
 )
-from sklearn.preprocessing import KBinsDiscretizer
 
 warnings.filterwarnings("ignore")
 
@@ -33,7 +27,7 @@ class FeatureImportance:
 
     method: str
     scores: pd.DataFrame
-    selected_features: List[str]
+    selected_features: list[str]
     stability_score: float = None
 
 
@@ -41,10 +35,9 @@ class AutomatedFeatureSelector:
     """Automated feature selection using multiple methods."""
 
     def __init__(
-        self, methods: List[str] = None, k: int = 20, importance_threshold: float = 0.01
+        self, methods: list[str] = None, k: int = 20, importance_threshold: float = 0.01
     ):
-        """
-        Initialize feature selector.
+        """Initialize feature selector.
 
         Args:
             methods: List of selection methods to use
@@ -61,8 +54,7 @@ class AutomatedFeatureSelector:
         self.selected_features_ = {}
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "AutomatedFeatureSelector":
-        """
-        Fit feature selector on data.
+        """Fit feature selector on data.
 
         Args:
             X: Feature DataFrame
@@ -135,9 +127,8 @@ class AutomatedFeatureSelector:
 
         return self
 
-    def get_consensus_features(self, min_methods: int = 2) -> List[str]:
-        """
-        Get features selected by multiple methods.
+    def get_consensus_features(self, min_methods: int = 2) -> list[str]:
+        """Get features selected by multiple methods.
 
         Args:
             min_methods: Minimum number of methods that must select a feature
@@ -182,8 +173,7 @@ class FeatureInteractionDetector:
         correlation_threshold: float = 0.7,
         top_k: int = 20,
     ):
-        """
-        Initialize interaction detector.
+        """Initialize interaction detector.
 
         Args:
             max_interactions: Maximum interaction order (2 for pairs, 3 for triples)
@@ -199,8 +189,7 @@ class FeatureInteractionDetector:
     def detect_interactions(
         self, X: pd.DataFrame, y: pd.Series, method: str = "mutual_info"
     ) -> pd.DataFrame:
-        """
-        Detect feature interactions.
+        """Detect feature interactions.
 
         Args:
             X: Feature DataFrame
@@ -270,15 +259,14 @@ class FeatureInteractionDetector:
         self.interaction_scores_ = dict(
             zip(
                 self.interactions_["interaction_name"],
-                self.interactions_["interaction_score"],
+                self.interactions_["interaction_score"], strict=False,
             )
         )
 
         return self.interactions_
 
     def create_interactions(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        Create interaction features.
+        """Create interaction features.
 
         Args:
             X: Feature DataFrame
@@ -308,8 +296,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         cv_folds: int = 5,
         noise_level: float = 0.01,
     ):
-        """
-        Initialize target encoder.
+        """Initialize target encoder.
 
         Args:
             smoothing: Smoothing parameter for regularization
@@ -325,8 +312,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.global_mean_ = None
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "TargetEncoder":
-        """
-        Fit target encoder.
+        """Fit target encoder.
 
         Args:
             X: Feature DataFrame (categorical)
@@ -350,8 +336,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        Transform features using target encoding.
+        """Transform features using target encoding.
 
         Args:
             X: Feature DataFrame
@@ -381,8 +366,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         return X_encoded
 
     def fit_transform_cv(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
-        """
-        Fit and transform with cross-validation to prevent overfitting.
+        """Fit and transform with cross-validation to prevent overfitting.
 
         Args:
             X: Feature DataFrame
@@ -439,8 +423,7 @@ class FeatureStabilityAnalyzer:
     def calculate_temporal_stability(
         self, X: pd.DataFrame, time_column: str, window_size: int = 30
     ) -> pd.DataFrame:
-        """
-        Calculate feature stability over time.
+        """Calculate feature stability over time.
 
         Args:
             X: Feature DataFrame
@@ -498,8 +481,7 @@ class FeatureStabilityAnalyzer:
     def calculate_segment_stability(
         self, X: pd.DataFrame, segment_column: str
     ) -> pd.DataFrame:
-        """
-        Calculate feature stability across segments.
+        """Calculate feature stability across segments.
 
         Args:
             X: Feature DataFrame
@@ -543,8 +525,7 @@ class FeatureStabilityAnalyzer:
     def _calculate_psi(
         self, reference: pd.Series, current: pd.Series, n_bins: int = 10
     ) -> float:
-        """
-        Calculate Population Stability Index.
+        """Calculate Population Stability Index.
 
         Args:
             reference: Reference distribution
@@ -578,8 +559,7 @@ class FeatureStabilityAnalyzer:
     def detect_feature_drift(
         self, X_reference: pd.DataFrame, X_current: pd.DataFrame, method: str = "ks"
     ) -> pd.DataFrame:
-        """
-        Detect feature drift between reference and current data.
+        """Detect feature drift between reference and current data.
 
         Args:
             X_reference: Reference DataFrame
@@ -646,10 +626,9 @@ class AdvancedFeatureEngineering:
         self.feature_importance_history = []
 
     def fit_transform(
-        self, X: pd.DataFrame, y: pd.Series, categorical_columns: List[str] = None
+        self, X: pd.DataFrame, y: pd.Series, categorical_columns: list[str] = None
     ) -> pd.DataFrame:
-        """
-        Complete feature engineering pipeline.
+        """Complete feature engineering pipeline.
 
         Args:
             X: Feature DataFrame
@@ -706,9 +685,8 @@ class AdvancedFeatureEngineering:
 
         return X_transformed[selected_features] if selected_features else X_transformed
 
-    def get_feature_report(self) -> Dict:
-        """
-        Get comprehensive feature engineering report.
+    def get_feature_report(self) -> dict:
+        """Get comprehensive feature engineering report.
 
         Returns:
             Dictionary with feature engineering results

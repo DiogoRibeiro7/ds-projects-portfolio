@@ -1,21 +1,19 @@
-"""
-Test suite for cloud integration module.
+"""Test suite for cloud integration module.
 """
 
-import pytest
-import json
-import os
-from unittest.mock import Mock, patch, MagicMock, call
 from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
+
 import pandas as pd
-import numpy as np
+import pytest
+
 from src.cloud.cloud_integrations import (
     AWSIntegration,
-    GCPIntegration,
     AzureIntegration,
-    CloudStorageManager,
-    CloudMLPlatform,
     CloudDataPipeline,
+    CloudMLPlatform,
+    CloudStorageManager,
+    GCPIntegration,
 )
 
 pytestmark = pytest.mark.integration

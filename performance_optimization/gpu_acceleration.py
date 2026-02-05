@@ -1,11 +1,10 @@
-"""
-GPU acceleration utilities using CuPy and RAPIDS for massive speedups.
+"""GPU acceleration utilities using CuPy and RAPIDS for massive speedups.
 """
 
 import time
 import warnings
 from functools import wraps
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -142,7 +141,7 @@ class GPUArrayOperations:
 
     @staticmethod
     @auto_gpu
-    def svd_gpu(matrix: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def svd_gpu(matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """GPU-accelerated Singular Value Decomposition."""
         if CUPY_AVAILABLE:
             matrix_gpu = cp.asarray(matrix)
@@ -215,7 +214,7 @@ class GPUDataFrameOperations:
     @staticmethod
     @auto_gpu
     def groupby_agg_gpu(
-        df: pd.DataFrame, groupby_cols: List[str], agg_dict: dict
+        df: pd.DataFrame, groupby_cols: list[str], agg_dict: dict
     ) -> pd.DataFrame:
         """GPU-accelerated groupby aggregation."""
         if RAPIDS_AVAILABLE:
@@ -229,7 +228,7 @@ class GPUDataFrameOperations:
     def merge_gpu(
         df1: pd.DataFrame,
         df2: pd.DataFrame,
-        on: Union[str, List[str]],
+        on: str | list[str],
         how: str = "inner",
     ) -> pd.DataFrame:
         """GPU-accelerated DataFrame merge."""
@@ -243,7 +242,7 @@ class GPUDataFrameOperations:
     @staticmethod
     @auto_gpu
     def sort_values_gpu(
-        df: pd.DataFrame, by: Union[str, List[str]], ascending: bool = True
+        df: pd.DataFrame, by: str | list[str], ascending: bool = True
     ) -> pd.DataFrame:
         """GPU-accelerated sorting."""
         if RAPIDS_AVAILABLE:
@@ -333,7 +332,7 @@ class GPUDeepLearning:
     @staticmethod
     @auto_gpu
     def neural_network_forward_gpu(
-        data: np.ndarray, weights: List[np.ndarray], activation: str = "relu"
+        data: np.ndarray, weights: list[np.ndarray], activation: str = "relu"
     ) -> np.ndarray:
         """GPU-accelerated neural network forward pass."""
         if TORCH_AVAILABLE and torch.cuda.is_available():
@@ -373,7 +372,6 @@ def benchmark_gpu_vs_cpu(
     operation_name: str, cpu_func, gpu_func, data: Any, iterations: int = 10
 ) -> dict:
     """Benchmark GPU vs CPU performance."""
-
     # CPU benchmark
     cpu_times = []
     for _ in range(iterations):

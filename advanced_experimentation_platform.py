@@ -1,5 +1,4 @@
-"""
-Advanced Experimentation Platform - Next Generation Features
+"""Advanced Experimentation Platform - Next Generation Features
 
 This module represents the next evolution of the A/B testing platform,
 focusing on cutting-edge statistical methods, MLOps integration, and
@@ -11,13 +10,10 @@ face when scaling experimentation platforms for enterprise use.
 """
 
 import asyncio
-import json
 import logging
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from collections.abc import Callable
 from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -30,8 +26,7 @@ import pandas as pd
 #       - Create power analysis and sample size calculations
 #       - Implement segmentation analysis with interaction testing
 class ClassicalAnalysis:
-    """
-    Enhanced classical statistical analysis for A/B testing with comprehensive
+    """Enhanced classical statistical analysis for A/B testing with comprehensive
     hypothesis testing, effect size calculations, and multiple testing corrections.
     """
 
@@ -58,10 +53,9 @@ class ClassicalAnalysis:
         treatment_col: str,
         outcome_col: str,
         test_type: str = "auto",
-        correction_method: Optional[str] = None,
-    ) -> Dict:
-        """
-        Comprehensive A/B test analysis with automatic test selection.
+        correction_method: str | None = None,
+    ) -> dict:
+        """Comprehensive A/B test analysis with automatic test selection.
 
         Includes:
         - Automatic test selection based on data characteristics
@@ -149,7 +143,7 @@ class ClassicalAnalysis:
 
     def _calculate_descriptive_stats(
         self, data: pd.DataFrame, treatment_col: str, outcome_col: str
-    ) -> Dict:
+    ) -> dict:
         """Calculate comprehensive descriptive statistics."""
         try:
             stats = {}
@@ -239,7 +233,7 @@ class ClassicalAnalysis:
 
     def _run_t_test(
         self, data: pd.DataFrame, treatment_col: str, outcome_col: str
-    ) -> Dict:
+    ) -> dict:
         """Run two-sample t-test."""
         try:
             groups = data[treatment_col].unique()
@@ -291,7 +285,7 @@ class ClassicalAnalysis:
 
     def _run_chi_square_test(
         self, data: pd.DataFrame, treatment_col: str, outcome_col: str
-    ) -> Dict:
+    ) -> dict:
         """Run chi-square test of independence."""
         try:
             # Create contingency table
@@ -332,7 +326,7 @@ class ClassicalAnalysis:
 
     def _run_mann_whitney_test(
         self, data: pd.DataFrame, treatment_col: str, outcome_col: str
-    ) -> Dict:
+    ) -> dict:
         """Run Mann-Whitney U test (non-parametric)."""
         try:
             groups = data[treatment_col].unique()
@@ -383,7 +377,7 @@ class ClassicalAnalysis:
 
     def _run_fisher_exact_test(
         self, data: pd.DataFrame, treatment_col: str, outcome_col: str
-    ) -> Dict:
+    ) -> dict:
         """Run Fisher's exact test for small samples."""
         try:
             # Create 2x2 contingency table
@@ -440,7 +434,7 @@ class ClassicalAnalysis:
 
     def _calculate_effect_size(
         self, data: pd.DataFrame, treatment_col: str, outcome_col: str, test_type: str
-    ) -> Dict:
+    ) -> dict:
         """Calculate appropriate effect size measures."""
         try:
             groups = data[treatment_col].unique()
@@ -523,7 +517,7 @@ class ClassicalAnalysis:
 
     def _calculate_confidence_intervals(
         self, data: pd.DataFrame, treatment_col: str, outcome_col: str, test_type: str
-    ) -> Dict:
+    ) -> dict:
         """Calculate confidence intervals for treatment effects."""
         try:
             groups = data[treatment_col].unique()
@@ -603,7 +597,7 @@ class ClassicalAnalysis:
 
     def _calculate_power_analysis(
         self, data: pd.DataFrame, treatment_col: str, outcome_col: str, test_type: str
-    ) -> Dict:
+    ) -> dict:
         """Calculate statistical power and required sample sizes."""
         try:
             groups = data[treatment_col].unique()
@@ -691,7 +685,7 @@ class ClassicalAnalysis:
         except Exception as e:
             return {"error": f"Power analysis failed: {e}"}
 
-    def _apply_correction(self, test_results: Dict, correction_method: str) -> Dict:
+    def _apply_correction(self, test_results: dict, correction_method: str) -> dict:
         """Apply multiple testing correction."""
         try:
             if correction_method not in self.correction_methods:
@@ -716,12 +710,12 @@ class ClassicalAnalysis:
             self.logger.warning(f"Multiple testing correction failed: {e}")
             return test_results
 
-    def _bonferroni_correction(self, p_values: List[float]) -> List[float]:
+    def _bonferroni_correction(self, p_values: list[float]) -> list[float]:
         """Apply Bonferroni correction."""
         m = len(p_values)
         return [min(1.0, p * m) for p in p_values]
 
-    def _holm_correction(self, p_values: List[float]) -> List[float]:
+    def _holm_correction(self, p_values: list[float]) -> list[float]:
         """Apply Holm correction (step-down method)."""
         n = len(p_values)
         sorted_indices = np.argsort(p_values)
@@ -732,7 +726,7 @@ class ClassicalAnalysis:
 
         return corrected.tolist()
 
-    def _hochberg_correction(self, p_values: List[float]) -> List[float]:
+    def _hochberg_correction(self, p_values: list[float]) -> list[float]:
         """Apply Hochberg correction (step-up method)."""
         n = len(p_values)
         sorted_indices = np.argsort(p_values)[::-1]  # Descending order
@@ -743,7 +737,7 @@ class ClassicalAnalysis:
 
         return corrected.tolist()
 
-    def _benjamini_hochberg_correction(self, p_values: List[float]) -> List[float]:
+    def _benjamini_hochberg_correction(self, p_values: list[float]) -> list[float]:
         """Apply Benjamini-Hochberg FDR correction."""
         n = len(p_values)
         sorted_indices = np.argsort(p_values)
@@ -754,7 +748,7 @@ class ClassicalAnalysis:
 
         return corrected.tolist()
 
-    def _benjamini_yekutieli_correction(self, p_values: List[float]) -> List[float]:
+    def _benjamini_yekutieli_correction(self, p_values: list[float]) -> list[float]:
         """Apply Benjamini-Yekutieli FDR correction (for dependent tests)."""
         n = len(p_values)
         c_n = sum(1.0 / i for i in range(1, n + 1))  # Harmonic series
@@ -772,10 +766,9 @@ class ClassicalAnalysis:
         data: pd.DataFrame,
         treatment_col: str,
         outcome_col: str,
-        segment_cols: List[str],
-    ) -> Dict:
-        """
-        Run segmentation analysis with interaction testing.
+        segment_cols: list[str],
+    ) -> dict:
+        """Run segmentation analysis with interaction testing.
 
         Includes:
         - Treatment effects within each segment
@@ -837,14 +830,13 @@ class ClassicalAnalysis:
 #       - Create credible interval calculations with multiple confidence levels
 #       - Add Bayesian model comparison with Bayes factors
 class BayesianAnalyzer:
-    """
-    Advanced Bayesian analysis for A/B testing with hierarchical modeling.
+    """Advanced Bayesian analysis for A/B testing with hierarchical modeling.
 
     This class implements cutting-edge Bayesian methods that are
     becoming standard in modern experimentation platforms.
     """
 
-    def __init__(self, prior_params: Optional[Dict] = None):
+    def __init__(self, prior_params: dict | None = None):
         """Initialize Bayesian analyzer with comprehensive prior specifications."""
         # Default prior parameters for different distributions
         self.prior_params = prior_params or {
@@ -891,10 +883,9 @@ class BayesianAnalyzer:
         data: pd.DataFrame,
         group_col: str,
         metric_col: str,
-        hierarchy_cols: Optional[List[str]] = None,
-    ) -> Dict:
-        """
-        Implement hierarchical Bayesian model fitting with multi-level random effects.
+        hierarchy_cols: list[str] | None = None,
+    ) -> dict:
+        """Implement hierarchical Bayesian model fitting with multi-level random effects.
 
         This implementation includes:
         - Multi-level random effects for different user segments
@@ -1246,9 +1237,8 @@ class BayesianAnalyzer:
 
     def calculate_posterior_probabilities(
         self, samples: np.ndarray, treatment_better_threshold: float = 0.0
-    ) -> Dict:
-        """
-        Calculate comprehensive posterior probabilities for decision making.
+    ) -> dict:
+        """Calculate comprehensive posterior probabilities for decision making.
 
         Includes:
         - P(treatment > control)
@@ -1377,9 +1367,8 @@ class BayesianAnalyzer:
 
     def bayesian_power_analysis(
         self, prior_samples: int = 10000, effect_sizes: np.ndarray = None
-    ) -> Dict:
-        """
-        Implement comprehensive Bayesian power analysis.
+    ) -> dict:
+        """Implement comprehensive Bayesian power analysis.
 
         Includes:
         - Prior predictive power calculations
@@ -1618,8 +1607,7 @@ class BayesianAnalyzer:
 #       - Create regression discontinuity design (RDD) analysis
 #       - Add difference-in-differences (DiD) with synthetic controls
 class CausalInferenceEngine:
-    """
-    Comprehensive causal inference toolkit for observational studies
+    """Comprehensive causal inference toolkit for observational studies
     and quasi-experimental designs.
     """
 
@@ -1640,11 +1628,10 @@ class CausalInferenceEngine:
         self,
         data: pd.DataFrame,
         treatment_col: str,
-        covariates: List[str],
+        covariates: list[str],
         method: str = "logistic",
     ) -> pd.Series:
-        """
-        Implement advanced propensity score estimation with comprehensive diagnostics.
+        """Implement advanced propensity score estimation with comprehensive diagnostics.
 
         Includes:
         - Multiple estimation methods (logistic, boosting, neural networks)
@@ -1732,7 +1719,7 @@ class CausalInferenceEngine:
 
             return np.clip(propensity_scores, 0.01, 0.99)
 
-        except Exception as e:
+        except Exception:
             # Fallback to simple means
             return np.full(len(X), y.mean())
 
@@ -1760,7 +1747,7 @@ class CausalInferenceEngine:
             avg_predictions = np.mean(predictions, axis=0)
             return np.clip(avg_predictions, 0.01, 0.99)
 
-        except Exception as e:
+        except Exception:
             return np.full(len(X), y.mean())
 
     def _simple_tree_prediction(
@@ -1821,7 +1808,7 @@ class CausalInferenceEngine:
             final_probs = 1 / (1 + np.exp(-predictions))
             return np.clip(final_probs, 0.01, 0.99)
 
-        except Exception as e:
+        except Exception:
             return np.full(len(X), y.mean())
 
     def _estimate_nn_propensity(self, X: pd.DataFrame, y: pd.Series) -> np.ndarray:
@@ -1880,7 +1867,7 @@ class CausalInferenceEngine:
 
             return np.clip(final_predictions, 0.01, 0.99)
 
-        except Exception as e:
+        except Exception:
             return np.full(len(X), y.mean())
 
     def _trim_extreme_propensities(
@@ -1897,10 +1884,9 @@ class CausalInferenceEngine:
         data: pd.DataFrame,
         outcome_col: str,
         treatment_col: str,
-        covariates: List[str],
-    ) -> Dict:
-        """
-        Implement doubly robust causal effect estimation with cross-fitting.
+        covariates: list[str],
+    ) -> dict:
+        """Implement doubly robust causal effect estimation with cross-fitting.
 
         Includes:
         - Cross-fitting to avoid overfitting bias
@@ -2099,7 +2085,7 @@ class CausalInferenceEngine:
         mu_1: np.ndarray,
         T: pd.Series,
         Y: pd.Series,
-    ) -> Dict:
+    ) -> dict:
         """Calculate diagnostics for doubly robust estimation."""
         try:
             diagnostics = {}
@@ -2159,10 +2145,9 @@ class CausalInferenceEngine:
         data: pd.DataFrame,
         outcome_col: str,
         treatment_col: str,
-        instruments: List[str],
-    ) -> Dict:
-        """
-        Implement instrumental variable estimation with comprehensive diagnostics.
+        instruments: list[str],
+    ) -> dict:
+        """Implement instrumental variable estimation with comprehensive diagnostics.
 
         Includes:
         - Weak instrument diagnostics (F-statistics, Stock-Yogo tests)
@@ -2226,7 +2211,7 @@ class CausalInferenceEngine:
 
     def _two_stage_least_squares(
         self, Y: np.ndarray, T: np.ndarray, Z: np.ndarray
-    ) -> Dict:
+    ) -> dict:
         """Implement Two-Stage Least Squares estimation."""
         try:
             n = len(Y)
@@ -2288,7 +2273,7 @@ class CausalInferenceEngine:
         except Exception as e:
             return {"error": f"2SLS estimation failed: {e}"}
 
-    def _first_stage_diagnostics(self, T: np.ndarray, Z: np.ndarray) -> Dict:
+    def _first_stage_diagnostics(self, T: np.ndarray, Z: np.ndarray) -> dict:
         """Calculate first-stage regression diagnostics."""
         try:
             n = len(T)
@@ -2332,7 +2317,7 @@ class CausalInferenceEngine:
         except Exception as e:
             return {"error": f"First stage diagnostics failed: {e}"}
 
-    def _weak_instrument_tests(self, T: np.ndarray, Z: np.ndarray) -> Dict:
+    def _weak_instrument_tests(self, T: np.ndarray, Z: np.ndarray) -> dict:
         """Perform weak instrument tests."""
         try:
             first_stage = self._first_stage_diagnostics(T, Z)
@@ -2378,8 +2363,8 @@ class CausalInferenceEngine:
             return {"error": f"Weak instrument tests failed: {e}"}
 
     def _overidentification_tests(
-        self, Y: np.ndarray, T: np.ndarray, Z: np.ndarray, tsls_results: Dict
-    ) -> Dict:
+        self, Y: np.ndarray, T: np.ndarray, Z: np.ndarray, tsls_results: dict
+    ) -> dict:
         """Perform overidentification tests (Sargan test)."""
         try:
             if "error" in tsls_results:
@@ -2446,8 +2431,8 @@ class CausalInferenceEngine:
             return {"error": f"Overidentification test failed: {e}"}
 
     def _iv_sensitivity_analysis(
-        self, Y: np.ndarray, T: np.ndarray, Z: np.ndarray, tsls_results: Dict
-    ) -> Dict:
+        self, Y: np.ndarray, T: np.ndarray, Z: np.ndarray, tsls_results: dict
+    ) -> dict:
         """Perform sensitivity analysis for IV assumptions."""
         try:
             if "error" in tsls_results:
@@ -2483,7 +2468,7 @@ class CausalInferenceEngine:
         except Exception as e:
             return {"error": f"Sensitivity analysis failed: {e}"}
 
-    def _ols_estimate(self, Y: np.ndarray, T: np.ndarray) -> Dict:
+    def _ols_estimate(self, Y: np.ndarray, T: np.ndarray) -> dict:
         """Calculate OLS estimate for comparison."""
         try:
             n = len(Y)
@@ -2503,8 +2488,8 @@ class CausalInferenceEngine:
         T: np.ndarray,
         Z: np.ndarray,
         iv_estimate: float,
-        ols_result: Dict,
-    ) -> Dict:
+        ols_result: dict,
+    ) -> dict:
         """Perform Hausman test for endogeneity."""
         try:
             if "error" in ols_result:
@@ -2538,7 +2523,7 @@ class CausalInferenceEngine:
 
     def _instrument_sensitivity(
         self, Y: np.ndarray, T: np.ndarray, Z: np.ndarray
-    ) -> Dict:
+    ) -> dict:
         """Test sensitivity to different instrument combinations."""
         try:
             if Z.shape[1] < 2:
@@ -2594,9 +2579,8 @@ class CausalInferenceEngine:
         unit_col: str,
         time_col: str,
         treatment_time: datetime,
-    ) -> Dict:
-        """
-        Implement synthetic control method for causal inference.
+    ) -> dict:
+        """Implement synthetic control method for causal inference.
 
         Should include:
         - Optimal weight selection for synthetic control
@@ -2776,12 +2760,11 @@ class CausalInferenceEngine:
 #       - Add integration with alerting systems (PagerDuty, Slack, email)
 #       - Implement automatic experiment stopping rules with safety mechanisms
 class RealTimeMonitor:
-    """
-    Real-time experiment monitoring system with automated alerting
+    """Real-time experiment monitoring system with automated alerting
     and safety mechanisms for production A/B tests.
     """
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         """Initialize real-time monitoring with comprehensive configuration."""
         self.config = config
 
@@ -2913,8 +2896,7 @@ class RealTimeMonitor:
         self.monitoring_tasks = []
 
     async def stream_experiment_data(self, experiment_id: str) -> None:
-        """
-        Implement real-time data streaming with comprehensive error handling.
+        """Implement real-time data streaming with comprehensive error handling.
 
         Includes:
         - Asynchronous data ingestion from multiple sources
@@ -2990,7 +2972,7 @@ class RealTimeMonitor:
             self.logger.error(f"Real-time streaming failed for {experiment_id}: {e}")
             self.monitoring_active = False
 
-    async def _stream_from_kafka(self, experiment_id: str, data_buffer: List):
+    async def _stream_from_kafka(self, experiment_id: str, data_buffer: list):
         """Stream data from Kafka with retry logic."""
         try:
             # This would use aiokafka in a real implementation
@@ -3040,7 +3022,7 @@ class RealTimeMonitor:
         except Exception as e:
             self.logger.error(f"Kafka streaming setup failed: {e}")
 
-    async def _stream_from_database(self, experiment_id: str, data_buffer: List):
+    async def _stream_from_database(self, experiment_id: str, data_buffer: list):
         """Stream data from database with polling."""
         try:
             db_config = self.data_sources["database"]
@@ -3083,7 +3065,7 @@ class RealTimeMonitor:
         except Exception as e:
             self.logger.error(f"Database streaming setup failed: {e}")
 
-    async def _stream_from_api(self, experiment_id: str, data_buffer: List):
+    async def _stream_from_api(self, experiment_id: str, data_buffer: list):
         """Stream data from API endpoints."""
         try:
             api_config = self.data_sources["api"]
@@ -3121,7 +3103,7 @@ class RealTimeMonitor:
         except Exception as e:
             self.logger.error(f"API streaming setup failed: {e}")
 
-    async def _process_data_batch(self, experiment_id: str, data_batch: List):
+    async def _process_data_batch(self, experiment_id: str, data_batch: list):
         """Process a batch of streaming data."""
         try:
             if not data_batch:
@@ -3149,7 +3131,7 @@ class RealTimeMonitor:
         except Exception as e:
             self.logger.error(f"Batch processing failed: {e}")
 
-    def _validate_streaming_data(self, data_batch: List) -> List:
+    def _validate_streaming_data(self, data_batch: list) -> list:
         """Validate streaming data quality."""
         validated_data = []
 
@@ -3176,7 +3158,7 @@ class RealTimeMonitor:
 
         return validated_data
 
-    def _update_experiment_state(self, experiment_id: str, data_batch: List):
+    def _update_experiment_state(self, experiment_id: str, data_batch: list):
         """Update experiment state with new data."""
         if experiment_id not in self.experiment_states:
             self.experiment_states[experiment_id] = {
@@ -3197,7 +3179,7 @@ class RealTimeMonitor:
 
         state["last_update"] = datetime.now()
 
-    def _update_real_time_metrics(self, experiment_id: str, data_batch: List):
+    def _update_real_time_metrics(self, experiment_id: str, data_batch: list):
         """Update real-time metrics for experiment."""
         if not data_batch:
             return
@@ -3225,7 +3207,7 @@ class RealTimeMonitor:
             ratio = min(counts) / max(counts)
             state["metrics"]["sample_ratio"] = ratio
 
-    async def _trigger_immediate_alert(self, experiment_id: str, anomaly_info: Dict):
+    async def _trigger_immediate_alert(self, experiment_id: str, anomaly_info: dict):
         """Trigger immediate alert for detected anomalies."""
         try:
             alert_data = {
@@ -3246,9 +3228,8 @@ class RealTimeMonitor:
         except Exception as e:
             self.logger.error(f"Failed to trigger immediate alert: {e}")
 
-    def detect_anomalies(self, data: pd.DataFrame, baseline_window: int = 168) -> Dict:
-        """
-        Implement comprehensive real-time anomaly detection.
+    def detect_anomalies(self, data: pd.DataFrame, baseline_window: int = 168) -> dict:
+        """Implement comprehensive real-time anomaly detection.
 
         Includes:
         - Statistical process control (SPC) methods
@@ -3320,7 +3301,7 @@ class RealTimeMonitor:
             self.logger.error(f"Anomaly detection failed: {e}")
             return {"anomalies_detected": False, "error": str(e)}
 
-    def _statistical_process_control(self, data: pd.DataFrame) -> Dict:
+    def _statistical_process_control(self, data: pd.DataFrame) -> dict:
         """Implement Statistical Process Control charts."""
         try:
             spc_results = {
@@ -3420,7 +3401,7 @@ class RealTimeMonitor:
 
         return max_count
 
-    def _ml_anomaly_detection(self, data: pd.DataFrame) -> Dict:
+    def _ml_anomaly_detection(self, data: pd.DataFrame) -> dict:
         """Machine learning-based anomaly detection."""
         try:
             # Use Isolation Forest for anomaly detection
@@ -3471,7 +3452,7 @@ class RealTimeMonitor:
             self.logger.warning(f"ML anomaly detection failed: {e}")
             return {"anomaly_detected": False, "error": str(e)}
 
-    def _detect_changepoints(self, data: pd.DataFrame) -> List:
+    def _detect_changepoints(self, data: pd.DataFrame) -> list:
         """Detect changepoints in time series data."""
         try:
             changepoints = []
@@ -3539,7 +3520,7 @@ class RealTimeMonitor:
         except Exception:
             return []
 
-    def _multivariate_anomaly_detection(self, data: pd.DataFrame) -> Dict:
+    def _multivariate_anomaly_detection(self, data: pd.DataFrame) -> dict:
         """Multivariate anomaly detection for correlated metrics."""
         try:
             # Use Mahalanobis distance for multivariate anomaly detection
@@ -3586,7 +3567,7 @@ class RealTimeMonitor:
             self.logger.warning(f"Multivariate anomaly detection failed: {e}")
             return {"anomaly_detected": False, "error": str(e)}
 
-    def _generate_anomaly_recommendations(self, anomaly_results: Dict) -> List[str]:
+    def _generate_anomaly_recommendations(self, anomaly_results: dict) -> list[str]:
         """Generate actionable recommendations based on detected anomalies."""
         recommendations = []
 
@@ -3636,8 +3617,7 @@ class RealTimeMonitor:
 #       - Create personalization algorithms based on treatment effects
 #       - Add policy learning for optimal treatment assignment
 class UpliftModelingEngine:
-    """
-    Advanced uplift modeling for personalized treatment assignment
+    """Advanced uplift modeling for personalized treatment assignment
     and heterogeneous treatment effect estimation.
     """
 
@@ -3696,11 +3676,10 @@ class UpliftModelingEngine:
         data: pd.DataFrame,
         outcome_col: str,
         treatment_col: str,
-        features: List[str],
+        features: list[str],
         learner_type: str = "X",
     ) -> Any:
-        """
-        Implement comprehensive metalearner framework.
+        """Implement comprehensive metalearner framework.
 
         Includes:
         - S-learner: Single model approach
@@ -3827,7 +3806,7 @@ class UpliftModelingEngine:
                 X.mean() if X.select_dtypes(include=[np.number]).shape[1] > 0 else 0
             )
 
-    def _fit_s_learner(self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray) -> Dict:
+    def _fit_s_learner(self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray) -> dict:
         """Single model approach - treats treatment as another feature."""
         try:
             from sklearn.ensemble import RandomForestRegressor
@@ -3863,7 +3842,7 @@ class UpliftModelingEngine:
         except ImportError:
             return {"type": "s_learner", "error": "sklearn not available"}
 
-    def _fit_t_learner(self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray) -> Dict:
+    def _fit_t_learner(self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray) -> dict:
         """Separate models for treatment and control groups."""
         try:
             from sklearn.ensemble import RandomForestRegressor
@@ -3901,7 +3880,7 @@ class UpliftModelingEngine:
         except ImportError:
             return {"type": "t_learner", "error": "sklearn not available"}
 
-    def _fit_x_learner(self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray) -> Dict:
+    def _fit_x_learner(self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray) -> dict:
         """Cross-validation based approach with imputed treatment effects."""
         try:
             from sklearn.ensemble import RandomForestRegressor
@@ -3949,7 +3928,7 @@ class UpliftModelingEngine:
         except ImportError:
             return {"type": "x_learner", "error": "sklearn not available"}
 
-    def _fit_r_learner(self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray) -> Dict:
+    def _fit_r_learner(self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray) -> dict:
         """Residual-based approach."""
         try:
             from sklearn.ensemble import RandomForestRegressor
@@ -3996,7 +3975,7 @@ class UpliftModelingEngine:
         except ImportError:
             return {"type": "r_learner", "error": "sklearn not available"}
 
-    def _fit_dr_learner(self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray) -> Dict:
+    def _fit_dr_learner(self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray) -> dict:
         """Doubly robust approach with cross-fitting."""
         try:
             from sklearn.ensemble import RandomForestRegressor
@@ -4063,8 +4042,8 @@ class UpliftModelingEngine:
             return {"type": "dr_learner", "error": "sklearn not available"}
 
     def _calculate_feature_importance(
-        self, model: Dict, X: pd.DataFrame, learner_type: str
-    ) -> Dict:
+        self, model: dict, X: pd.DataFrame, learner_type: str
+    ) -> dict:
         """Calculate feature importance for different learner types."""
         try:
             importance_dict = {}
@@ -4073,7 +4052,7 @@ class UpliftModelingEngine:
                 if hasattr(model["model"], "feature_importances_"):
                     importances = model["model"].feature_importances_
                     feature_names = model["feature_names"]
-                    importance_dict = dict(zip(feature_names, importances))
+                    importance_dict = dict(zip(feature_names, importances, strict=False))
 
             elif learner_type.upper() == "T":
                 # Average importance from both models
@@ -4084,14 +4063,14 @@ class UpliftModelingEngine:
                     imp_control = model["model_control"].feature_importances_
                     avg_importance = (imp_treated + imp_control) / 2
 
-                    importance_dict = dict(zip(model["feature_names"], avg_importance))
+                    importance_dict = dict(zip(model["feature_names"], avg_importance, strict=False))
 
             elif learner_type.upper() in ["X", "R", "DR"]:
                 # Use tau model importance
                 tau_model = model.get("tau_model") or model.get("tau_1")
                 if tau_model and hasattr(tau_model, "feature_importances_"):
                     importance_dict = dict(
-                        zip(model["feature_names"], tau_model.feature_importances_)
+                        zip(model["feature_names"], tau_model.feature_importances_, strict=False)
                     )
 
             # Normalize importance scores
@@ -4110,7 +4089,7 @@ class UpliftModelingEngine:
 
     def _cross_validate_metalearner(
         self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray, learner_type: str
-    ) -> Dict:
+    ) -> dict:
         """Cross-validate metalearner performance."""
         try:
             from sklearn.model_selection import KFold
@@ -4168,7 +4147,7 @@ class UpliftModelingEngine:
             self.logger.warning(f"Cross-validation failed: {e}")
             return {"cv_scores": [], "mean_cv_score": 0, "std_cv_score": 0}
 
-    def _predict_treatment_effects(self, model: Dict, X: pd.DataFrame) -> np.ndarray:
+    def _predict_treatment_effects(self, model: dict, X: pd.DataFrame) -> np.ndarray:
         """Predict treatment effects using fitted model."""
         try:
             model_type = model.get("type", "")
@@ -4229,10 +4208,9 @@ class UpliftModelingEngine:
         data: pd.DataFrame,
         outcome_col: str,
         treatment_col: str,
-        features: List[str],
-    ) -> Dict:
-        """
-        Implement causal forest for heterogeneous treatment effects.
+        features: list[str],
+    ) -> dict:
+        """Implement causal forest for heterogeneous treatment effects.
 
         Includes:
         - Honest splitting for unbiased effect estimation
@@ -4302,7 +4280,7 @@ class UpliftModelingEngine:
 
     def _fit_simplified_causal_forest(
         self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray
-    ) -> Dict:
+    ) -> dict:
         """Simplified causal forest implementation."""
         try:
             from sklearn.ensemble import RandomForestRegressor
@@ -4368,8 +4346,8 @@ class UpliftModelingEngine:
             return {"error": str(e)}
 
     def _calculate_heterogeneity_importance(
-        self, forest_results: Dict, X: pd.DataFrame, y: np.ndarray, t: np.ndarray
-    ) -> Dict:
+        self, forest_results: dict, X: pd.DataFrame, y: np.ndarray, t: np.ndarray
+    ) -> dict:
         """Calculate variable importance for treatment effect heterogeneity."""
         try:
             if "error" in forest_results:
@@ -4418,8 +4396,8 @@ class UpliftModelingEngine:
             return {"error": str(e)}
 
     def _identify_subgroups(
-        self, forest_results: Dict, X: pd.DataFrame, feature_names: List[str]
-    ) -> Dict:
+        self, forest_results: dict, X: pd.DataFrame, feature_names: list[str]
+    ) -> dict:
         """Identify subgroups with different treatment effects."""
         try:
             if "error" in forest_results:
@@ -4474,8 +4452,8 @@ class UpliftModelingEngine:
             return {"error": str(e)}
 
     def _bootstrap_confidence_intervals(
-        self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray, forest_results: Dict
-    ) -> Dict:
+        self, X: pd.DataFrame, y: np.ndarray, t: np.ndarray, forest_results: dict
+    ) -> dict:
         """Calculate bootstrap confidence intervals for treatment effects."""
         try:
             n_bootstrap = 100
@@ -4522,8 +4500,8 @@ class UpliftModelingEngine:
             return {"error": str(e)}
 
     def _generate_policy_tree(
-        self, forest_results: Dict, X: pd.DataFrame, feature_names: List[str]
-    ) -> Dict:
+        self, forest_results: dict, X: pd.DataFrame, feature_names: list[str]
+    ) -> dict:
         """Generate interpretable policy tree."""
         try:
             if "error" in forest_results:
@@ -4602,12 +4580,11 @@ class UpliftModelingEngine:
 #       - Add feature store integration for consistent feature engineering
 #       - Implement experiment configuration management with GitOps
 class ExperimentMLOps:
-    """
-    MLOps pipeline for automated experiment lifecycle management
+    """MLOps pipeline for automated experiment lifecycle management
     from design to deployment to analysis.
     """
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         # TODO: Initialize MLOps configuration
         #       - Model registry connections (MLflow, Weights & Biases)
         #       - Feature store integration (Feast, Tecton)
@@ -4623,9 +4600,8 @@ class ExperimentMLOps:
         #       - Reproducibility guarantees
         self.version_control = {}
 
-    def create_experiment_pipeline(self, experiment_config: Dict) -> str:
-        """
-        Automated experiment pipeline creation.
+    def create_experiment_pipeline(self, experiment_config: dict) -> str:
+        """Automated experiment pipeline creation.
 
         Should include:
         - Pipeline definition from configuration
@@ -4706,9 +4682,8 @@ class ExperimentMLOps:
 
     def deploy_experiment(
         self, experiment_id: str, deployment_target: str = "production"
-    ) -> Dict:
-        """
-        Automated experiment deployment.
+    ) -> dict:
+        """Automated experiment deployment.
 
         Should include:
         - Blue-green deployment strategies
@@ -4805,9 +4780,8 @@ class ExperimentMLOps:
         except Exception as e:
             return {"error": f"Deployment failed: {e}", "experiment_id": experiment_id}
 
-    def validate_experiment_setup(self, experiment_config: Dict) -> Dict:
-        """
-        Comprehensive experiment validation.
+    def validate_experiment_setup(self, experiment_config: dict) -> dict:
+        """Comprehensive experiment validation.
 
         Should include:
         - Configuration schema validation
@@ -4958,9 +4932,8 @@ class ExperimentMLOps:
                 "checks": {},
             }
 
-    def monitor_experiment_performance(self, experiment_id: str) -> Dict:
-        """
-        Production experiment monitoring.
+    def monitor_experiment_performance(self, experiment_id: str) -> dict:
+        """Production experiment monitoring.
 
         Should include:
         - System performance metrics (latency, throughput)
@@ -5102,9 +5075,8 @@ class ExperimentMLOps:
         except Exception as e:
             return {"error": f"Monitoring failed: {e}", "experiment_id": experiment_id}
 
-    def automate_analysis_pipeline(self, experiment_id: str) -> Dict:
-        """
-        Automated analysis and reporting.
+    def automate_analysis_pipeline(self, experiment_id: str) -> dict:
+        """Automated analysis and reporting.
 
         Should include:
         - Scheduled analysis runs
@@ -5308,7 +5280,7 @@ class ExperimentMLOps:
                 "experiment_id": experiment_id,
             }
 
-    def _get_similar_experiments(self, experiment_id: str) -> List[str]:
+    def _get_similar_experiments(self, experiment_id: str) -> list[str]:
         """Helper method to find similar historical experiments."""
         # Simulated similar experiments
         return [f"exp_{i}" for i in range(1, 4)]
@@ -5321,8 +5293,7 @@ class ExperimentMLOps:
 #       - Create bandit-based A/B testing with automated allocation
 #       - Add regret bounds and performance guarantees
 class MultiArmedBanditEngine:
-    """
-    Advanced multi-armed bandit algorithms for dynamic experiment
+    """Advanced multi-armed bandit algorithms for dynamic experiment
     allocation and online optimization.
     """
 
@@ -5379,7 +5350,7 @@ class MultiArmedBanditEngine:
         # Logging
         self.logger = logging.getLogger(__name__)
 
-    def initialize_arms(self, n_arms: int, arm_names: List[str] = None) -> None:
+    def initialize_arms(self, n_arms: int, arm_names: list[str] = None) -> None:
         """Initialize bandit arms with prior parameters."""
         try:
             self.bandit_state["n_arms"] = n_arms
@@ -5414,10 +5385,9 @@ class MultiArmedBanditEngine:
             self.logger.error(f"Arm initialization failed: {e}")
 
     def thompson_sampling_update(
-        self, arm: int, reward: float, context: Optional[np.ndarray] = None
+        self, arm: int, reward: float, context: np.ndarray | None = None
     ) -> None:
-        """
-        Thompson Sampling posterior updates with comprehensive reward handling.
+        """Thompson Sampling posterior updates with comprehensive reward handling.
 
         Includes:
         - Beta-Bernoulli conjugate updates for binary rewards
@@ -5530,7 +5500,7 @@ class MultiArmedBanditEngine:
         except Exception as e:
             self.logger.warning(f"Arm {arm} contextual initialization failed: {e}")
 
-    def select_arm(self, context: Optional[np.ndarray] = None) -> int:
+    def select_arm(self, context: np.ndarray | None = None) -> int:
         """Select arm based on configured algorithm."""
         try:
             if self.bandit_state["n_arms"] == 0:
@@ -5552,7 +5522,7 @@ class MultiArmedBanditEngine:
             self.logger.error(f"Arm selection failed: {e}")
             return 0  # Fallback to first arm
 
-    def _thompson_sampling_selection(self, context: Optional[np.ndarray] = None) -> int:
+    def _thompson_sampling_selection(self, context: np.ndarray | None = None) -> int:
         """Thompson sampling arm selection."""
         try:
             if context is not None and self.contextual:
@@ -5693,10 +5663,9 @@ class MultiArmedBanditEngine:
             return 0
 
     def ucb_arm_selection(
-        self, context: Optional[np.ndarray] = None, confidence_level: float = 0.95
+        self, context: np.ndarray | None = None, confidence_level: float = 0.95
     ) -> int:
-        """
-        Upper Confidence Bound arm selection with comprehensive variants.
+        """Upper Confidence Bound arm selection with comprehensive variants.
 
         Includes:
         - UCB1 for stationary environments
@@ -5757,8 +5726,7 @@ class MultiArmedBanditEngine:
     def contextual_bandit_update(
         self, arm: int, reward: float, context: np.ndarray, method: str = "linucb"
     ) -> None:
-        """
-        Contextual bandit updates with multiple algorithm support.
+        """Contextual bandit updates with multiple algorithm support.
 
         Includes:
         - LinUCB parameter updates
@@ -5831,9 +5799,8 @@ class MultiArmedBanditEngine:
         except Exception as e:
             self.logger.warning(f"Gradient bandit update failed: {e}")
 
-    def calculate_regret(self, optimal_arm_reward: float = None) -> Dict:
-        """
-        Calculate cumulative regret and regret bounds.
+    def calculate_regret(self, optimal_arm_reward: float = None) -> dict:
+        """Calculate cumulative regret and regret bounds.
 
         Includes:
         - Cumulative regret calculation
@@ -5902,7 +5869,7 @@ class MultiArmedBanditEngine:
 
     def _calculate_theoretical_regret_bounds(
         self, T: int, optimal_reward: float
-    ) -> Dict:
+    ) -> dict:
         """Calculate theoretical regret bounds for different algorithms."""
         try:
             K = self.bandit_state["n_arms"]
@@ -5932,7 +5899,7 @@ class MultiArmedBanditEngine:
             self.logger.warning(f"Theoretical bounds calculation failed: {e}")
             return {}
 
-    def get_arm_statistics(self) -> Dict:
+    def get_arm_statistics(self) -> dict:
         """Get comprehensive statistics for all arms."""
         try:
             statistics = {
@@ -6019,8 +5986,7 @@ class MultiArmedBanditEngine:
     def update_contextual_model(
         self, arm: int, context: np.ndarray, reward: float
     ) -> None:
-        """
-        Contextual bandit learning with advanced model updates.
+        """Contextual bandit learning with advanced model updates.
 
         Should include:
         - Online gradient descent for linear models
@@ -6116,9 +6082,8 @@ class MultiArmedBanditEngine:
         except Exception as e:
             self.logger.error(f"Contextual model update failed: {e}")
 
-    def calculate_regret_bounds(self, time_horizon: int) -> Dict:
-        """
-        Theoretical regret analysis with bounds and confidence intervals.
+    def calculate_regret_bounds(self, time_horizon: int) -> dict:
+        """Theoretical regret analysis with bounds and confidence intervals.
 
         Should include:
         - Cumulative regret calculations
@@ -6284,9 +6249,8 @@ class MultiArmedBanditEngine:
         except Exception as e:
             return {"error": f"Regret calculation failed: {e}"}
 
-    def adaptive_allocation_strategy(self, current_statistics: Dict) -> Dict:
-        """
-        Dynamic allocation optimization with business constraints.
+    def adaptive_allocation_strategy(self, current_statistics: dict) -> dict:
+        """Dynamic allocation optimization with business constraints.
 
         Should include:
         - Allocation adjustment based on observed performance
@@ -6467,8 +6431,8 @@ class MultiArmedBanditEngine:
             return {"error": f"Allocation strategy failed: {e}"}
 
     def _generate_allocation_recommendations(
-        self, final_allocations: Dict, arm_scores: Dict, current_allocations: Dict
-    ) -> List[str]:
+        self, final_allocations: dict, arm_scores: dict, current_allocations: dict
+    ) -> list[str]:
         """Generate actionable recommendations based on allocation strategy."""
         recommendations = []
 
@@ -6510,12 +6474,11 @@ class MultiArmedBanditEngine:
 #       - Add geographic experiments with spatial correlation
 #       - Implement switchback experiments for time-series data
 class NetworkExperimentAnalyzer:
-    """
-    Specialized analysis for network experiments where units
+    """Specialized analysis for network experiments where units
     may influence each other through various mechanisms.
     """
 
-    def __init__(self, network_data: Optional[pd.DataFrame] = None):
+    def __init__(self, network_data: pd.DataFrame | None = None):
         # TODO: Initialize network structure
         #       - Graph representation of user connections
         #       - Geographic proximity data
@@ -6532,9 +6495,8 @@ class NetworkExperimentAnalyzer:
 
     def cluster_randomized_analysis(
         self, data: pd.DataFrame, cluster_col: str, outcome_col: str, treatment_col: str
-    ) -> Dict:
-        """
-        Cluster randomized experiment analysis with ICC and design effects.
+    ) -> dict:
+        """Cluster randomized experiment analysis with ICC and design effects.
 
         Should include:
         - Intra-cluster correlation coefficient (ICC) estimation
@@ -6702,9 +6664,8 @@ class NetworkExperimentAnalyzer:
         treatment_col: str,
         outcome_col: str,
         network_distance_threshold: float = 1.0,
-    ) -> Dict:
-        """
-        Spillover effect detection and quantification with network analysis.
+    ) -> dict:
+        """Spillover effect detection and quantification with network analysis.
 
         Should include:
         - Direct vs indirect treatment effect estimation
@@ -6910,9 +6871,8 @@ class NetworkExperimentAnalyzer:
 
     def switchback_experiment_analysis(
         self, data: pd.DataFrame, time_col: str, treatment_col: str, outcome_col: str
-    ) -> Dict:
-        """
-        Switchback (time-series) experiment analysis with carryover detection.
+    ) -> dict:
+        """Switchback (time-series) experiment analysis with carryover detection.
 
         Should include:
         - Carryover effect detection and adjustment
@@ -6922,7 +6882,6 @@ class NetworkExperimentAnalyzer:
         - Power analysis for time-series experiments
         """
         try:
-            from scipy import stats
             from statsmodels.stats.diagnostic import acorr_ljungbox
             from statsmodels.tsa.seasonal import seasonal_decompose
 
@@ -7126,9 +7085,8 @@ class NetworkExperimentAnalyzer:
 
     def social_network_analysis(
         self, user_network: pd.DataFrame, treatment_data: pd.DataFrame
-    ) -> Dict:
-        """
-        Social network experiment analysis with centrality and peer effects.
+    ) -> dict:
+        """Social network experiment analysis with centrality and peer effects.
 
         Should include:
         - Network centrality impact on treatment effects
@@ -7388,8 +7346,8 @@ class NetworkExperimentAnalyzer:
         self,
         peer_correlation: float,
         contagion_coefficient: float,
-        centrality_effects: Dict,
-    ) -> List[str]:
+        centrality_effects: dict,
+    ) -> list[str]:
         """Generate recommendations based on network analysis."""
         recommendations = []
 
@@ -7429,12 +7387,11 @@ class NetworkExperimentAnalyzer:
 #       - Add Bayesian experimental design with utility functions
 #       - Implement factorial and fractional factorial designs
 class ExperimentalDesignOptimizer:
-    """
-    Advanced experimental design optimization using optimal design
+    """Advanced experimental design optimization using optimal design
     theory and modern computational methods.
     """
 
-    def __init__(self, design_objectives: List[str] = None):
+    def __init__(self, design_objectives: list[str] = None):
         # TODO: Initialize design optimization framework
         #       - Multiple optimality criteria (D, A, E, G-optimal)
         #       - Cost constraints and budget optimization
@@ -7450,8 +7407,8 @@ class ExperimentalDesignOptimizer:
         self.optimization_config = {}
 
     def optimal_allocation_design(
-        self, constraints: Dict, effect_sizes: Dict, cost_per_unit: Dict = None
-    ) -> Dict:
+        self, constraints: dict, effect_sizes: dict, cost_per_unit: dict = None
+    ) -> dict:
         """Optimal allocation across treatment arms with multiple criteria."""
         try:
             n_arms = len(effect_sizes)
@@ -7518,13 +7475,13 @@ class ExperimentalDesignOptimizer:
 
     def factorial_design_optimization(
         self,
-        factors: List[str],
-        interactions: List[Tuple] = None,
+        factors: list[str],
+        interactions: list[tuple] = None,
         budget_constraint: float = None,
-    ) -> Dict:
+    ) -> dict:
         """Factorial and fractional factorial design optimization."""
         try:
-            from itertools import combinations, product
+            from itertools import product
 
             n_factors = len(factors)
             factor_levels = {f: 2 for f in factors}  # Assume 2-level design
@@ -7572,8 +7529,8 @@ class ExperimentalDesignOptimizer:
             return {"error": f"Factorial design failed: {e}"}
 
     def adaptive_sample_size_design(
-        self, initial_design: Dict, adaptation_rules: Dict
-    ) -> Dict:
+        self, initial_design: dict, adaptation_rules: dict
+    ) -> dict:
         """Adaptive sample size with interim analyses and stopping rules."""
         try:
             from scipy import stats
@@ -7638,10 +7595,10 @@ class ExperimentalDesignOptimizer:
 
     def bayesian_experimental_design(
         self,
-        prior_beliefs: Dict,
+        prior_beliefs: dict,
         utility_function: Callable = None,
-        design_space: Dict = None,
-    ) -> Dict:
+        design_space: dict = None,
+    ) -> dict:
         """Bayesian optimal experimental design with expected utility."""
         try:
             # Prior parameters
@@ -7691,8 +7648,7 @@ class ExperimentalDesignOptimizer:
 #       - Add homomorphic encryption for secure multi-party computation
 #       - Implement local differential privacy for user-level protection
 class PrivacyPreservingAnalytics:
-    """
-    Privacy-preserving analytics for experiments with sensitive
+    """Privacy-preserving analytics for experiments with sensitive
     user data and regulatory compliance requirements.
     """
 
@@ -7712,8 +7668,8 @@ class PrivacyPreservingAnalytics:
         self.secure_protocols = {}
 
     def differential_private_statistics(
-        self, data: pd.DataFrame, queries: List[str], epsilon: float
-    ) -> Dict:
+        self, data: pd.DataFrame, queries: list[str], epsilon: float
+    ) -> dict:
         """Differential privacy for statistical queries using Laplace mechanism."""
         try:
             results = {}
@@ -7759,8 +7715,8 @@ class PrivacyPreservingAnalytics:
             return {"error": f"Differential privacy failed: {e}"}
 
     def federated_experiment_analysis(
-        self, local_datasets: List[pd.DataFrame], aggregation_method: str = "fedavg"
-    ) -> Dict:
+        self, local_datasets: list[pd.DataFrame], aggregation_method: str = "fedavg"
+    ) -> dict:
         """Federated learning for distributed experiments."""
         try:
             n_sites = len(local_datasets)
@@ -7833,7 +7789,7 @@ class PrivacyPreservingAnalytics:
                     )
 
             return synthetic
-        except Exception as e:
+        except Exception:
             return pd.DataFrame()
 
     def homomorphic_computation(
@@ -7878,12 +7834,11 @@ class PrivacyPreservingAnalytics:
 #       - Add regime change detection for treatment effects
 #       - Implement state-space models for dynamic treatment effects
 class TimeSeriesExperimentAnalyzer:
-    """
-    Specialized time-series analysis for experiments with
+    """Specialized time-series analysis for experiments with
     temporal dependencies and dynamic treatment effects.
     """
 
-    def __init__(self, time_series_config: Dict = None):
+    def __init__(self, time_series_config: dict = None):
         # TODO: Initialize time series analysis framework
         #       - Model selection criteria (AIC, BIC, cross-validation)
         #       - Seasonality detection and handling
@@ -7902,8 +7857,8 @@ class TimeSeriesExperimentAnalyzer:
         self,
         time_series_data: pd.DataFrame,
         intervention_time: datetime,
-        control_series: Optional[pd.DataFrame] = None,
-    ) -> Dict:
+        control_series: pd.DataFrame | None = None,
+    ) -> dict:
         """Causal impact analysis for time series interventions."""
         try:
             # Split pre/post intervention
@@ -7953,7 +7908,7 @@ class TimeSeriesExperimentAnalyzer:
         time_col: str,
         outcome_col: str,
         intervention_time: datetime,
-    ) -> Dict:
+    ) -> dict:
         """Interrupted time series (ITS) analysis with segmented regression."""
         try:
             data[time_col] = pd.to_datetime(data[time_col])
@@ -7992,7 +7947,7 @@ class TimeSeriesExperimentAnalyzer:
 
     def dynamic_treatment_effects(
         self, data: pd.DataFrame, treatment_col: str, outcome_col: str, time_col: str
-    ) -> Dict:
+    ) -> dict:
         """Time-varying treatment effect estimation."""
         try:
             data[time_col] = pd.to_datetime(data[time_col])
@@ -8021,7 +7976,7 @@ class TimeSeriesExperimentAnalyzer:
 
             return {
                 "time_varying_effects": list(
-                    zip([str(t) for t in times], [float(e) for e in effects])
+                    zip([str(t) for t in times], [float(e) for e in effects], strict=False)
                 )[:20],
                 "mean_effect": float(np.mean(effects)) if effects else 0,
                 "effect_volatility": float(np.std(effects)) if len(effects) > 1 else 0,
@@ -8037,7 +7992,7 @@ class TimeSeriesExperimentAnalyzer:
 
     def regime_change_detection(
         self, time_series: pd.Series, method: str = "cusum"
-    ) -> Dict:
+    ) -> dict:
         """Structural break and regime change detection."""
         try:
             # CUSUM test
@@ -8083,12 +8038,11 @@ class TimeSeriesExperimentAnalyzer:
 #       - Add experiment portfolio tracking and meta-analysis
 #       - Implement knowledge management for experiment learnings
 class ExperimentReportingEngine:
-    """
-    Advanced reporting and communication tools for experiment
+    """Advanced reporting and communication tools for experiment
     results tailored to different stakeholder audiences.
     """
 
-    def __init__(self, reporting_config: Dict):
+    def __init__(self, reporting_config: dict):
         # TODO: Initialize reporting configuration
         #       - Stakeholder audience definitions
         #       - Report templates and branding
@@ -8104,10 +8058,9 @@ class ExperimentReportingEngine:
         self.knowledge_base = {}
 
     def generate_executive_summary(
-        self, experiment_results: Dict, business_context: Dict
+        self, experiment_results: dict, business_context: dict
     ) -> str:
-        """
-        Automated executive summary generation
+        """Automated executive summary generation
 
         Includes:
         - Natural language generation for key findings
@@ -8140,14 +8093,14 @@ class ExperimentReportingEngine:
                         f"- **Statistically Significant Result** (p-value: {p_value:.4f})"
                     )
                     summary_parts.append(
-                        f"  - The treatment shows a measurable impact with high confidence"
+                        "  - The treatment shows a measurable impact with high confidence"
                     )
                 else:
                     summary_parts.append(
                         f"- **No Significant Difference** (p-value: {p_value:.4f})"
                     )
                     summary_parts.append(
-                        f"  - Results are inconclusive; consider extending the experiment"
+                        "  - Results are inconclusive; consider extending the experiment"
                     )
 
             # Effect size interpretation
@@ -8265,10 +8218,9 @@ class ExperimentReportingEngine:
             return f"# Executive Summary\n\nError generating summary: {str(e)}"
 
     def create_technical_deep_dive(
-        self, experiment_results: Dict, methodology_details: Dict
-    ) -> Dict:
-        """
-        Technical deep-dive report for data scientists
+        self, experiment_results: dict, methodology_details: dict
+    ) -> dict:
+        """Technical deep-dive report for data scientists
 
         Includes:
         - Statistical methodology explanation
@@ -8471,7 +8423,7 @@ class ExperimentReportingEngine:
         else:
             return "large"
 
-    def _calculate_robustness_score(self, results: Dict) -> float:
+    def _calculate_robustness_score(self, results: dict) -> float:
         """Calculate robustness score (0-1) based on various factors."""
         score = 0.0
         factors = 0
@@ -8514,7 +8466,7 @@ class ExperimentReportingEngine:
 
         return score / factors if factors > 0 else 0.5
 
-    def _generate_sensitivity_recommendations(self, scenarios: List[Dict]) -> List[str]:
+    def _generate_sensitivity_recommendations(self, scenarios: list[dict]) -> list[str]:
         """Generate recommendations based on sensitivity analysis."""
         recommendations = []
 
@@ -8546,8 +8498,8 @@ class ExperimentReportingEngine:
         return recommendations
 
     def _generate_technical_recommendations(
-        self, results: Dict, assumptions: Dict
-    ) -> List[str]:
+        self, results: dict, assumptions: dict
+    ) -> list[str]:
         """Generate technical recommendations based on results and assumptions."""
         recommendations = []
 
@@ -8583,9 +8535,8 @@ class ExperimentReportingEngine:
 
         return recommendations
 
-    def portfolio_meta_analysis(self, experiment_history: List[Dict]) -> Dict:
-        """
-        Meta-analysis across experiment portfolio
+    def portfolio_meta_analysis(self, experiment_history: list[dict]) -> dict:
+        """Meta-analysis across experiment portfolio
 
         Includes:
         - Effect size aggregation across similar experiments
@@ -8731,7 +8682,7 @@ class ExperimentReportingEngine:
             self.logger.error(f"Portfolio meta-analysis failed: {e}")
             return {"error": str(e)}
 
-    def _extract_time_period(self, experiments: List[Dict]) -> Dict:
+    def _extract_time_period(self, experiments: list[dict]) -> dict:
         """Extract time period from experiment history."""
         dates = [exp.get("date") for exp in experiments if exp.get("date")]
         if dates:
@@ -8750,7 +8701,7 @@ class ExperimentReportingEngine:
         return {"start": None, "end": None, "duration_days": 0}
 
     def _calculate_pooled_effect_size(
-        self, effect_sizes: List[Dict], experiments: List[Dict]
+        self, effect_sizes: list[dict], experiments: list[dict]
     ) -> float:
         """Calculate pooled effect size using inverse variance weighting."""
         if not effect_sizes:
@@ -8772,7 +8723,7 @@ class ExperimentReportingEngine:
 
         return weighted_sum / weight_sum if weight_sum > 0 else 0.0
 
-    def _calculate_heterogeneity(self, effect_sizes: List[float]) -> str:
+    def _calculate_heterogeneity(self, effect_sizes: list[float]) -> str:
         """Calculate heterogeneity measure (simplified I-squared)."""
         if len(effect_sizes) < 2:
             return "insufficient data"
@@ -8785,7 +8736,7 @@ class ExperimentReportingEngine:
         else:
             return "high heterogeneity"
 
-    def _calculate_learning_velocity(self, experiments: List[Dict]) -> Dict:
+    def _calculate_learning_velocity(self, experiments: list[dict]) -> dict:
         """Calculate learning velocity metrics."""
         # Sort by date if available
         dated_exps = [e for e in experiments if e.get("date")]
@@ -8819,7 +8770,7 @@ class ExperimentReportingEngine:
             ),
         }
 
-    def _calculate_experiment_velocity(self, experiments: List[Dict]) -> float:
+    def _calculate_experiment_velocity(self, experiments: list[dict]) -> float:
         """Calculate experiments per month."""
         dated_exps = [e for e in experiments if e.get("date")]
         if len(dated_exps) < 2:
@@ -8833,8 +8784,8 @@ class ExperimentReportingEngine:
         return len(dated_exps) / (duration_days / 30.0)
 
     def _generate_resource_recommendations(
-        self, success_by_type: Dict, experiments: List[Dict]
-    ) -> List[str]:
+        self, success_by_type: dict, experiments: list[dict]
+    ) -> list[str]:
         """Generate recommendations for resource allocation."""
         recommendations = []
 
@@ -8870,7 +8821,7 @@ class ExperimentReportingEngine:
 
         return recommendations
 
-    def _generate_predictive_insights(self, experiments: List[Dict]) -> Dict:
+    def _generate_predictive_insights(self, experiments: list[dict]) -> dict:
         """Generate predictive insights for future experiment success."""
         insights = {"success_predictors": [], "risk_factors": []}
 
@@ -8926,7 +8877,7 @@ class ExperimentReportingEngine:
 
         return insights
 
-    def _analyze_trend(self, values: List[float]) -> str:
+    def _analyze_trend(self, values: list[float]) -> str:
         """Analyze trend in a time series of values."""
         if len(values) < 3:
             return "insufficient data"
@@ -8942,7 +8893,7 @@ class ExperimentReportingEngine:
         else:
             return "decreasing"
 
-    def _analyze_success_trend(self, experiments: List[Dict]) -> str:
+    def _analyze_success_trend(self, experiments: list[dict]) -> str:
         """Analyze success rate trend over time."""
         dated_exps = sorted(
             [e for e in experiments if e.get("date")], key=lambda x: x["date"]
@@ -8953,7 +8904,7 @@ class ExperimentReportingEngine:
         success_values = [1 if e.get("p_value", 1.0) < 0.05 else 0 for e in dated_exps]
         return self._analyze_trend(success_values)
 
-    def _detect_seasonal_patterns(self, experiments: List[Dict]) -> str:
+    def _detect_seasonal_patterns(self, experiments: list[dict]) -> str:
         """Detect seasonal patterns in experiment outcomes."""
         # Simplified seasonal detection
         dated_exps = [e for e in experiments if e.get("date")]
@@ -8965,8 +8916,8 @@ class ExperimentReportingEngine:
         )
 
     def _extract_key_learnings(
-        self, experiments: List[Dict], success_by_type: Dict
-    ) -> List[str]:
+        self, experiments: list[dict], success_by_type: dict
+    ) -> list[str]:
         """Extract key learnings from experiment portfolio."""
         learnings = []
 
@@ -9001,10 +8952,9 @@ class ExperimentReportingEngine:
         return learnings
 
     def interactive_results_dashboard(
-        self, experiment_data: pd.DataFrame, results: Dict
+        self, experiment_data: pd.DataFrame, results: dict
     ) -> Any:
-        """
-        Interactive dashboard for result exploration
+        """Interactive dashboard for result exploration
 
         Includes:
         - Drill-down capabilities by user segments
@@ -9252,7 +9202,7 @@ class ExperimentReportingEngine:
                 "status": "failed",
             }
 
-    def _identify_segments(self, data: pd.DataFrame) -> List[str]:
+    def _identify_segments(self, data: pd.DataFrame) -> list[str]:
         """Identify available segments in the data."""
         segments = []
 
@@ -9274,8 +9224,8 @@ class ExperimentReportingEngine:
         return segments
 
     def _calculate_segment_results(
-        self, data: pd.DataFrame, segments: List[str], overall_results: Dict
-    ) -> Dict:
+        self, data: pd.DataFrame, segments: list[str], overall_results: dict
+    ) -> dict:
         """Calculate results for each segment."""
         segment_results = {}
 
@@ -9297,9 +9247,8 @@ class ExperimentReportingEngine:
 
         return segment_results
 
-    def knowledge_extraction(self, experiment_results: Dict) -> Dict:
-        """
-        Automated knowledge extraction and cataloging
+    def knowledge_extraction(self, experiment_results: dict) -> dict:
+        """Automated knowledge extraction and cataloging
 
         Includes:
         - Key insight identification and classification
@@ -9543,7 +9492,7 @@ class ExperimentReportingEngine:
             self.logger.error(f"Knowledge extraction failed: {e}")
             return {"error": str(e)}
 
-    def _identify_learning_patterns(self, results: Dict) -> List[Dict]:
+    def _identify_learning_patterns(self, results: dict) -> list[dict]:
         """Identify learning patterns from experiment results."""
         patterns = []
 
@@ -9573,7 +9522,7 @@ class ExperimentReportingEngine:
 
         return patterns
 
-    def _extract_best_practices(self, results: Dict) -> List[Dict]:
+    def _extract_best_practices(self, results: dict) -> list[dict]:
         """Extract best practices from experiment execution."""
         practices = []
 
@@ -9637,7 +9586,7 @@ class ExperimentReportingEngine:
         else:
             return "low"
 
-    def _classify_business_impact(self, results: Dict) -> str:
+    def _classify_business_impact(self, results: dict) -> str:
         """Classify business impact."""
         p_value = results.get("p_value", 1.0)
         effect_size = results.get("effect_size", {}).get("cohens_d", 0)
@@ -9651,7 +9600,7 @@ class ExperimentReportingEngine:
         else:
             return "none"
 
-    def _generate_knowledge_summary(self, results: Dict, insights: List[Dict]) -> str:
+    def _generate_knowledge_summary(self, results: dict, insights: list[dict]) -> str:
         """Generate a concise summary for knowledge base."""
         p_value = results.get("p_value", 1.0)
         effect_size = results.get("effect_size", {}).get("cohens_d", 0)
@@ -9661,7 +9610,7 @@ class ExperimentReportingEngine:
         else:
             return f"No significant effect detected (p={p_value:.4f}). {len(insights)} insights for future improvements."
 
-    def _generate_knowledge_tags(self, results: Dict) -> List[str]:
+    def _generate_knowledge_tags(self, results: dict) -> list[str]:
         """Generate searchable tags."""
         tags = []
 
@@ -9690,7 +9639,7 @@ class ExperimentReportingEngine:
 
         return tags
 
-    def _generate_search_terms(self, results: Dict) -> List[str]:
+    def _generate_search_terms(self, results: dict) -> list[str]:
         """Generate searchable terms for knowledge base."""
         terms = [
             "ab_test",
@@ -9710,8 +9659,7 @@ class ExperimentReportingEngine:
 
 # Integration class that ties all components together
 class AdvancedExperimentationPlatform:
-    """
-    TODO: Create unified platform integrating all advanced components
+    """TODO: Create unified platform integrating all advanced components
 
     This should be the main entry point that orchestrates all the advanced
     functionality in a coherent, production-ready system.
@@ -9724,9 +9672,8 @@ class AdvancedExperimentationPlatform:
     - API design for external integrations
     """
 
-    def __init__(self, platform_config: Dict):
-        """
-        Initialize all platform components with dependency injection,
+    def __init__(self, platform_config: dict):
+        """Initialize all platform components with dependency injection,
         health checks, and monitoring.
         """
         self.config = platform_config
@@ -9869,9 +9816,8 @@ class AdvancedExperimentationPlatform:
             self.logger.error(f"Platform initialization failed: {e}")
             raise
 
-    def run_comprehensive_experiment(self, experiment_config: Dict) -> Dict:
-        """
-        End-to-end experiment execution orchestrating all platform components.
+    def run_comprehensive_experiment(self, experiment_config: dict) -> dict:
+        """End-to-end experiment execution orchestrating all platform components.
 
         Orchestrates:
         - Experimental design optimization
@@ -10127,7 +10073,7 @@ class AdvancedExperimentationPlatform:
                 "execution_time_seconds": time.time() - start_time,
             }
 
-    def _perform_data_quality_checks(self, data: pd.DataFrame) -> Dict:
+    def _perform_data_quality_checks(self, data: pd.DataFrame) -> dict:
         """Perform comprehensive data quality checks."""
         checks = {"passed": True, "checks": []}
 
@@ -10174,8 +10120,8 @@ class AdvancedExperimentationPlatform:
         return checks
 
     def _generate_recommendations(
-        self, analysis_results: Dict, config: Dict
-    ) -> List[Dict]:
+        self, analysis_results: dict, config: dict
+    ) -> list[dict]:
         """Generate actionable recommendations based on analysis results."""
         recommendations = []
 
@@ -10243,7 +10189,7 @@ class AdvancedExperimentationPlatform:
 
         return recommendations
 
-    def get_health_status(self) -> Dict:
+    def get_health_status(self) -> dict:
         """Get health status of all components."""
         return {
             "overall_health": (
@@ -10257,8 +10203,7 @@ class AdvancedExperimentationPlatform:
 
 
 def demonstrate_comprehensive_platform():
-    """
-    Comprehensive demonstration of the Advanced Experimentation Platform.
+    """Comprehensive demonstration of the Advanced Experimentation Platform.
 
     Demonstrates:
     - Integration between components
@@ -10303,7 +10248,7 @@ def demonstrate_comprehensive_platform():
 
     try:
         platform = AdvancedExperimentationPlatform(platform_config)
-        print(f"Platform initialized successfully")
+        print("Platform initialized successfully")
         print(f"Component health: {platform.get_health_status()['overall_health']}")
 
         # Run comprehensive experiment
@@ -10347,7 +10292,7 @@ def demonstrate_comprehensive_platform():
                 "classical", {}
             )
             if "p_value" in classical_result:
-                print(f"\nKey Statistical Results:")
+                print("\nKey Statistical Results:")
                 print(f"  - P-value: {classical_result['p_value']:.4f}")
 
                 effect_size = classical_result.get("effect_size", {})
@@ -10444,7 +10389,7 @@ def demonstrate_comprehensive_platform():
         meta_analysis = reporting_engine.portfolio_meta_analysis(experiment_history)
 
         if "error" not in meta_analysis:
-            print(f"\nPortfolio Statistics:")
+            print("\nPortfolio Statistics:")
             print(
                 f"  - Total Experiments: {meta_analysis['metadata']['total_experiments']}"
             )
@@ -10453,7 +10398,7 @@ def demonstrate_comprehensive_platform():
                 overall_rate = meta_analysis["success_rates"]["overall_success_rate"]
                 print(f"  - Overall Success Rate: {overall_rate:.1%}")
 
-                print(f"\n  Success by Type:")
+                print("\n  Success by Type:")
                 for exp_type, stats in meta_analysis["success_rates"][
                     "by_type"
                 ].items():
@@ -10465,14 +10410,14 @@ def demonstrate_comprehensive_platform():
                 "effect_size_aggregation" in meta_analysis
                 and "mean_effect_size" in meta_analysis["effect_size_aggregation"]
             ):
-                print(f"\n  Effect Size Summary:")
+                print("\n  Effect Size Summary:")
                 agg = meta_analysis["effect_size_aggregation"]
                 print(f"    - Mean: {agg['mean_effect_size']:.3f}")
                 print(f"    - Median: {agg['median_effect_size']:.3f}")
                 print(f"    - Pooled: {agg['pooled_effect_size']:.3f}")
 
             if "key_learnings" in meta_analysis:
-                print(f"\n  Key Learnings:")
+                print("\n  Key Learnings:")
                 for learning in meta_analysis["key_learnings"]:
                     print(f"    - {learning}")
 
@@ -10512,7 +10457,7 @@ def demonstrate_comprehensive_platform():
                         print(f"    -> {insight['recommendation']}")
 
             if "future_hypotheses" in knowledge:
-                print(f"\nFuture Hypotheses:")
+                print("\nFuture Hypotheses:")
                 for hyp in knowledge["future_hypotheses"][:2]:
                     print(f"  - {hyp['hypothesis']}")
                     print(
@@ -10520,7 +10465,7 @@ def demonstrate_comprehensive_platform():
                     )
 
             if "classification" in knowledge:
-                print(f"\nClassification:")
+                print("\nClassification:")
                 class_info = knowledge["classification"]
                 print(f"  - Outcome: {class_info['outcome']}")
                 print(f"  - Magnitude: {class_info['magnitude']}")
@@ -10583,7 +10528,7 @@ if __name__ == "__main__":
 class AdvancedExperimentationPlatform:
     """Unified platform integrating all advanced experimentation methods."""
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         # Initialize all engines
         self.classical_analyzer = ClassicalAnalysis()
         self.bayesian_analyzer = BayesianAnalyzer()
@@ -10592,12 +10537,12 @@ class AdvancedExperimentationPlatform:
         self.bandit_engine = MultiArmedBanditEngine()
         self.logger = logging.getLogger(__name__)
 
-    def create_experiment(self, config: Dict) -> str:
+    def create_experiment(self, config: dict) -> str:
         """Create comprehensive experiment with auto method selection."""
         experiment_id = f"exp_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         return experiment_id
 
-    def run_analysis(self, experiment_id: str, data: pd.DataFrame) -> Dict:
+    def run_analysis(self, experiment_id: str, data: pd.DataFrame) -> dict:
         """Execute multi-method analysis pipeline."""
         results = {
             "classical": self.classical_analyzer.run_ab_test(data, "group", "outcome"),

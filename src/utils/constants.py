@@ -1,5 +1,4 @@
-"""
-Constants and configuration values for the data science portfolio.
+"""Constants and configuration values for the data science portfolio.
 
 This module centralizes all magic numbers and configuration constants
 to improve code maintainability and readability.

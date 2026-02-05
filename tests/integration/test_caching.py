@@ -1,22 +1,22 @@
-"""
-Test suite for intelligent caching system.
+"""Test suite for intelligent caching system.
 """
 
-import pytest
+import shutil
+import tempfile
+import time
+from pathlib import Path
+from unittest.mock import patch
+
 import numpy as np
 import pandas as pd
-import time
-import tempfile
-import shutil
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+import pytest
 
-from src.utils.caching import SmartCache, SimpleFileCache, get_cache, auto_cache
 from src.utils.cache_integration import (
     CachedDataProcessor,
     CachedModelTrainer,
     CacheManager,
 )
+from src.utils.caching import SimpleFileCache, SmartCache, auto_cache
 
 pytestmark = pytest.mark.integration
 

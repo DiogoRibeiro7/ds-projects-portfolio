@@ -1,5 +1,4 @@
-"""
-Data processing optimization utilities for improved performance.
+"""Data processing optimization utilities for improved performance.
 """
 
 import functools
@@ -8,11 +7,11 @@ import json
 import multiprocessing as mp
 import pickle
 import warnings
+from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any
 
-import dask.dataframe as dd
 import numba
 import numpy as np
 import pandas as pd
@@ -26,10 +25,9 @@ class DataProcessingOptimizer:
 
     @staticmethod
     def vectorize_operation(
-        df: pd.DataFrame, operation: str, columns: List[str]
+        df: pd.DataFrame, operation: str, columns: list[str]
     ) -> pd.Series:
-        """
-        Vectorize operations instead of using loops.
+        """Vectorize operations instead of using loops.
 
         Args:
             df: Input DataFrame
@@ -54,10 +52,9 @@ class DataProcessingOptimizer:
 
     @staticmethod
     def process_in_chunks(
-        filepath: str, chunk_size: int = 10000, processor: Optional[Callable] = None
+        filepath: str, chunk_size: int = 10000, processor: Callable | None = None
     ) -> pd.DataFrame:
-        """
-        Process large CSV files in chunks to reduce memory usage.
+        """Process large CSV files in chunks to reduce memory usage.
 
         Args:
             filepath: Path to CSV file
@@ -78,10 +75,9 @@ class DataProcessingOptimizer:
 
     @staticmethod
     def parallel_apply(
-        df: pd.DataFrame, func: Callable, n_workers: Optional[int] = None
+        df: pd.DataFrame, func: Callable, n_workers: int | None = None
     ) -> pd.DataFrame:
-        """
-        Apply function to DataFrame in parallel.
+        """Apply function to DataFrame in parallel.
 
         Args:
             df: Input DataFrame
@@ -106,11 +102,10 @@ class DataProcessingOptimizer:
     @staticmethod
     def optimize_groupby(
         df: pd.DataFrame,
-        groupby_cols: List[str],
-        agg_funcs: Dict[str, Union[str, List[str]]],
+        groupby_cols: list[str],
+        agg_funcs: dict[str, str | list[str]],
     ) -> pd.DataFrame:
-        """
-        Optimized groupby operation using categorical dtypes.
+        """Optimized groupby operation using categorical dtypes.
 
         Args:
             df: Input DataFrame
@@ -131,8 +126,7 @@ class DataProcessingOptimizer:
 
     @staticmethod
     def use_query_optimization(df: pd.DataFrame, conditions: str) -> pd.DataFrame:
-        """
-        Use query() method for faster filtering.
+        """Use query() method for faster filtering.
 
         Args:
             df: Input DataFrame
@@ -148,11 +142,10 @@ class DataProcessingOptimizer:
     def optimize_merge(
         df1: pd.DataFrame,
         df2: pd.DataFrame,
-        on: Union[str, List[str]],
+        on: str | list[str],
         how: str = "inner",
     ) -> pd.DataFrame:
-        """
-        Optimized merge operation.
+        """Optimized merge operation.
 
         Args:
             df1, df2: DataFrames to merge
@@ -273,8 +266,7 @@ class CachingOptimizer:
         return hashlib.md5(key_str.encode()).hexdigest()
 
     def cache_result(self, func: Callable) -> Callable:
-        """
-        Decorator to cache function results.
+        """Decorator to cache function results.
 
         Usage:
             @cache_optimizer.cache_result
@@ -334,8 +326,7 @@ class BatchProcessor:
     def process_dataframe_batches(
         df: pd.DataFrame, batch_size: int, processor: Callable
     ) -> pd.DataFrame:
-        """
-        Process DataFrame in batches.
+        """Process DataFrame in batches.
 
         Args:
             df: Input DataFrame
@@ -362,13 +353,12 @@ class BatchProcessor:
 
     @staticmethod
     def parallel_batch_process(
-        data_list: List[Any],
+        data_list: list[Any],
         processor: Callable,
         batch_size: int = 1000,
-        n_workers: Optional[int] = None,
-    ) -> List[Any]:
-        """
-        Process list of items in parallel batches.
+        n_workers: int | None = None,
+    ) -> list[Any]:
+        """Process list of items in parallel batches.
 
         Args:
             data_list: List of items to process
@@ -421,10 +411,9 @@ class VectorizedOperations:
 
     @staticmethod
     def vectorized_conditional_operation(
-        df: pd.DataFrame, conditions: List[Tuple], values: List[Any], default: Any
+        df: pd.DataFrame, conditions: list[tuple], values: list[Any], default: Any
     ) -> pd.Series:
-        """
-        Vectorized conditional operation (replacement for nested if-else).
+        """Vectorized conditional operation (replacement for nested if-else).
 
         Args:
             df: Input DataFrame
@@ -458,7 +447,7 @@ class VectorizedOperations:
 
     @staticmethod
     def vectorized_cumulative_operations(
-        df: pd.DataFrame, column: str, operations: List[str]
+        df: pd.DataFrame, column: str, operations: list[str]
     ) -> pd.DataFrame:
         """Perform multiple cumulative operations efficiently."""
         result = pd.DataFrame(index=df.index)
@@ -477,9 +466,8 @@ class VectorizedOperations:
 
 def optimize_loop_to_vectorized(
     df: pd.DataFrame, loop_func: Callable, vectorized_func: Callable
-) -> Tuple[pd.DataFrame, Dict]:
-    """
-    Compare loop-based vs vectorized implementation.
+) -> tuple[pd.DataFrame, dict]:
+    """Compare loop-based vs vectorized implementation.
 
     Args:
         df: Input DataFrame
@@ -512,7 +500,7 @@ def optimize_loop_to_vectorized(
         ),
     }
 
-    print(f"Performance Comparison:")
+    print("Performance Comparison:")
     print(f"  Loop time: {loop_time:.4f}s")
     print(f"  Vectorized time: {vec_time:.4f}s")
     print(f"  Speedup: {metrics['speedup']:.2f}x")

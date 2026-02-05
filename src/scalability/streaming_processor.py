@@ -1,58 +1,48 @@
-"""
-Streaming Data Processing Module
+"""Streaming Data Processing Module
 Real-time data processing with Kafka, Kinesis, and structured streaming
 """
 
 import json
 import logging
 import time
-import asyncio
-from typing import Dict, Any, Optional, List, Callable, Union
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
 from collections import deque
-import threading
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any
 
 import numpy as np
 import pandas as pd
+import pyspark.sql.functions as F
 
 # Kafka imports
-from kafka import KafkaProducer, KafkaConsumer, KafkaAdminClient
+from kafka import KafkaAdminClient, KafkaConsumer, KafkaProducer
 from kafka.admin import NewTopic
 from kafka.errors import KafkaError
-import confluent_kafka
-from confluent_kafka import Producer, Consumer, KafkaException
-from confluent_kafka.avro import AvroProducer, AvroConsumer
-from confluent_kafka.schema_registry import SchemaRegistryClient
 
 # Stream processing
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
-    col,
-    window,
-    from_json,
-    to_json,
-    udf,
-    pandas_udf,
     avg,
-    sum,
+    col,
     count,
-    stddev,
-    min,
+    from_json,
     max,
-    collect_list,
-)
-from pyspark.sql.types import (
-    StructType,
-    StructField,
-    StringType,
-    DoubleType,
-    IntegerType,
-    TimestampType,
+    min,
+    pandas_udf,
+    stddev,
+    to_json,
+    window,
 )
 from pyspark.sql.streaming import StreamingQuery
-import pyspark.sql.functions as F
+from pyspark.sql.types import (
+    DoubleType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
+)
 
 # AWS Kinesis
 try:
@@ -102,8 +92,8 @@ class StreamConfig:
     max_retries: int = 3
     enable_auto_commit: bool = True
     compression_type: str = "gzip"
-    schema_registry_url: Optional[str] = None
-    aws_region: Optional[str] = "us-east-1"
+    schema_registry_url: str | None = None
+    aws_region: str | None = "us-east-1"
     redis_host: str = "localhost"
     redis_port: int = 6379
 
@@ -114,8 +104,8 @@ class StreamMessage:
 
     message_id: str
     timestamp: datetime
-    data: Dict[str, Any]
-    metadata: Dict[str, Any]
+    data: dict[str, Any]
+    metadata: dict[str, Any]
     message_type: str = "prediction"
     version: str = "1.0"
 
@@ -206,7 +196,7 @@ class KafkaStreamProcessor:
     def consume_messages(
         self,
         process_func: Callable[[StreamMessage], Any],
-        max_messages: Optional[int] = None,
+        max_messages: int | None = None,
     ):
         """Consume messages from Kafka"""
         message_count = 0
@@ -227,7 +217,7 @@ class KafkaStreamProcessor:
         finally:
             self.consumer.close()
 
-    def consume_batch(self, batch_process_func: Callable[[List[StreamMessage]], Any]):
+    def consume_batch(self, batch_process_func: Callable[[list[StreamMessage]], Any]):
         """Consume messages in batches"""
         batch = []
         last_batch_time = time.time()
@@ -457,7 +447,7 @@ class KinesisStreamProcessor:
             logger.error(f"Failed to put record: {e}")
             return False
 
-    def put_records_batch(self, messages: List[StreamMessage]) -> int:
+    def put_records_batch(self, messages: list[StreamMessage]) -> int:
         """Put multiple records to Kinesis"""
         records = [
             {"Data": message.to_json(), "PartitionKey": message.message_id}
@@ -625,7 +615,7 @@ class StreamingMLPipeline:
 
         return feature_array
 
-    def make_prediction(self, features: np.ndarray) -> Dict[str, Any]:
+    def make_prediction(self, features: np.ndarray) -> dict[str, Any]:
         """Make prediction on features"""
         if self.model is None:
             raise ValueError("Model not loaded")

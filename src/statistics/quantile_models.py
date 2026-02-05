@@ -1,11 +1,10 @@
-"""
-Monotone quantile models with cumulative softplus heads.
+"""Monotone quantile models with cumulative softplus heads.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Sequence
 
 import numpy as np
 
@@ -20,8 +19,7 @@ def _sigmoid(x: np.ndarray) -> np.ndarray:
 
 @dataclass
 class MonotoneQuantileHead:
-    """
-    Transform raw network outputs into monotone quantiles.
+    """Transform raw network outputs into monotone quantiles.
 
     The head expects a tensor with shape ``(n_samples, n_quantiles + 1)``
     where the first column is the base prediction and the remaining columns
@@ -85,8 +83,7 @@ def fit_constant_monotone_quantiles(
     epochs: int = 2000,
     lr: float = 0.05,
 ) -> dict[str, np.ndarray]:
-    """
-    Fit constant (featureless) monotone quantiles via gradient descent.
+    """Fit constant (featureless) monotone quantiles via gradient descent.
     """
     data = np.asarray(list(y), dtype=float)
     if data.ndim != 1:

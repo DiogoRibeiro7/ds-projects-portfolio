@@ -1,5 +1,4 @@
-"""
-Fast unit tests for statistical primitives in src.statistics.core.
+"""Fast unit tests for statistical primitives in src.statistics.core.
 """
 
 from __future__ import annotations

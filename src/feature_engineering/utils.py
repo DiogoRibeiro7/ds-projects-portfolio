@@ -1,16 +1,14 @@
-"""
-Feature Engineering Utilities
+"""Feature Engineering Utilities
 
 Helper functions and utilities for feature engineering workflows.
 """
 
-import pandas as pd
-import numpy as np
-from typing import List, Dict, Optional, Union, Tuple, Any, Callable
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.model_selection import KFold, StratifiedKFold
-from sklearn.metrics import make_scorer
 import warnings
+from typing import Any
+
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import KFold, StratifiedKFold
 
 warnings.filterwarnings("ignore")
 import logging
@@ -23,9 +21,8 @@ logger = logging.getLogger(__name__)
 class FeatureValidator:
     """Validate features for quality and consistency."""
 
-    def __init__(self, checks: List[str] = None):
-        """
-        Initialize feature validator.
+    def __init__(self, checks: list[str] = None):
+        """Initialize feature validator.
 
         Args:
             checks: List of checks to perform
@@ -40,9 +37,8 @@ class FeatureValidator:
         ]
         self.validation_report = {}
 
-    def validate(self, df: pd.DataFrame, target: Optional[pd.Series] = None) -> Dict:
-        """
-        Validate features.
+    def validate(self, df: pd.DataFrame, target: pd.Series | None = None) -> dict:
+        """Validate features.
 
         Args:
             df: Feature dataframe
@@ -194,8 +190,7 @@ class FeatureProfiler:
     """Profile features to understand their characteristics."""
 
     def profile(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Create comprehensive feature profile.
+        """Create comprehensive feature profile.
 
         Args:
             df: Feature dataframe
@@ -212,7 +207,7 @@ class FeatureProfiler:
 
         return pd.DataFrame(profile_data)
 
-    def _profile_column(self, series: pd.Series) -> Dict:
+    def _profile_column(self, series: pd.Series) -> dict:
         """Profile a single column."""
         profile = {
             "dtype": str(series.dtype),
@@ -265,8 +260,7 @@ class FeatureMonitor:
         self.drift_history = []
 
     def set_reference(self, df: pd.DataFrame):
-        """
-        Set reference distribution for monitoring.
+        """Set reference distribution for monitoring.
 
         Args:
             df: Reference dataframe
@@ -281,9 +275,8 @@ class FeatureMonitor:
                 "q75": df[col].quantile(0.75),
             }
 
-    def detect_drift(self, df: pd.DataFrame, method: str = "psi") -> Dict:
-        """
-        Detect feature drift.
+    def detect_drift(self, df: pd.DataFrame, method: str = "psi") -> dict:
+        """Detect feature drift.
 
         Args:
             df: Current dataframe
@@ -320,7 +313,7 @@ class FeatureMonitor:
         self.drift_history.append(drift_report)
         return drift_report
 
-    def _calculate_psi(self, reference_stats: Dict, current: pd.Series) -> float:
+    def _calculate_psi(self, reference_stats: dict, current: pd.Series) -> float:
         """Calculate Population Stability Index."""
         # Simplified PSI calculation
         ref_mean = reference_stats["mean"]
@@ -338,7 +331,7 @@ class FeatureMonitor:
 
         return mean_diff + std_diff
 
-    def _calculate_ks(self, reference_stats: Dict, current: pd.Series) -> float:
+    def _calculate_ks(self, reference_stats: dict, current: pd.Series) -> float:
         """Calculate Kolmogorov-Smirnov statistic."""
         from scipy import stats
 
@@ -354,9 +347,8 @@ class FeatureMonitor:
 class FeatureEngineringPipeline:
     """End-to-end feature engineering pipeline."""
 
-    def __init__(self, steps: List[Tuple[str, Any]]):
-        """
-        Initialize pipeline.
+    def __init__(self, steps: list[tuple[str, Any]]):
+        """Initialize pipeline.
 
         Args:
             steps: List of (name, transformer) tuples
@@ -364,7 +356,7 @@ class FeatureEngineringPipeline:
         self.steps = steps
         self.fitted = False
 
-    def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None):
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None):
         """Fit all transformers in pipeline."""
         X_temp = X.copy()
 
@@ -403,7 +395,7 @@ class FeatureEngineringPipeline:
         return X_temp
 
     def fit_transform(
-        self, X: pd.DataFrame, y: Optional[pd.Series] = None
+        self, X: pd.DataFrame, y: pd.Series | None = None
     ) -> pd.DataFrame:
         """Fit and transform in one step."""
         self.fit(X, y)
@@ -414,8 +406,7 @@ class CrossValidationFeatureEngineer:
     """Feature engineering with cross-validation."""
 
     def __init__(self, engineer, cv_folds: int = 5, stratified: bool = True):
-        """
-        Initialize CV feature engineer.
+        """Initialize CV feature engineer.
 
         Args:
             engineer: Feature engineering object
@@ -428,8 +419,7 @@ class CrossValidationFeatureEngineer:
         self.fold_engineers = []
 
     def fit_transform_cv(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
-        """
-        Fit and transform with cross-validation.
+        """Fit and transform with cross-validation.
 
         Args:
             X: Feature dataframe
@@ -480,10 +470,9 @@ class CrossValidationFeatureEngineer:
 def create_feature_engineering_report(
     df_original: pd.DataFrame,
     df_engineered: pd.DataFrame,
-    y: Optional[pd.Series] = None,
+    y: pd.Series | None = None,
 ) -> str:
-    """
-    Create comprehensive feature engineering report.
+    """Create comprehensive feature engineering report.
 
     Args:
         df_original: Original dataframe
@@ -546,9 +535,8 @@ def create_feature_engineering_report(
     return "\n".join(report)
 
 
-def save_feature_engineering_config(config: Dict, filepath: str):
-    """
-    Save feature engineering configuration.
+def save_feature_engineering_config(config: dict, filepath: str):
+    """Save feature engineering configuration.
 
     Args:
         config: Configuration dictionary
@@ -562,9 +550,8 @@ def save_feature_engineering_config(config: Dict, filepath: str):
     logger.info(f"Configuration saved to {filepath}")
 
 
-def load_feature_engineering_config(filepath: str) -> Dict:
-    """
-    Load feature engineering configuration.
+def load_feature_engineering_config(filepath: str) -> dict:
+    """Load feature engineering configuration.
 
     Args:
         filepath: Path to configuration file
@@ -574,7 +561,7 @@ def load_feature_engineering_config(filepath: str) -> Dict:
     """
     import json
 
-    with open(filepath, "r") as f:
+    with open(filepath) as f:
         config = json.load(f)
 
     logger.info(f"Configuration loaded from {filepath}")

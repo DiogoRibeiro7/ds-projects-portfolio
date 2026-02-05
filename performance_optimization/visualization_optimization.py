@@ -1,17 +1,15 @@
-"""
-Visualization optimization utilities for efficient plotting and rendering.
+"""Visualization optimization utilities for efficient plotting and rendering.
 """
 
 import warnings
 from functools import lru_cache
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import datashader as ds
 import datashader.transfer_functions as tf
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 
 warnings.filterwarnings("ignore")
@@ -22,10 +20,9 @@ class VisualizationOptimizer:
 
     @staticmethod
     def sample_for_visualization(
-        df: pd.DataFrame, sample_size: int = 10000, stratify_col: Optional[str] = None
+        df: pd.DataFrame, sample_size: int = 10000, stratify_col: str | None = None
     ) -> pd.DataFrame:
-        """
-        Sample data for exploratory visualization.
+        """Sample data for exploratory visualization.
 
         Args:
             df: Input DataFrame
@@ -53,8 +50,7 @@ class VisualizationOptimizer:
     def adaptive_sampling(
         df: pd.DataFrame, x_col: str, y_col: str, max_points: int = 5000
     ) -> pd.DataFrame:
-        """
-        Adaptive sampling based on data density.
+        """Adaptive sampling based on data density.
 
         Args:
             df: Input DataFrame
@@ -87,8 +83,7 @@ class VisualizationOptimizer:
     def create_aggregated_heatmap(
         df: pd.DataFrame, x_col: str, y_col: str, value_col: str, bins: int = 50
     ) -> go.Figure:
-        """
-        Create heatmap using aggregated data for large datasets.
+        """Create heatmap using aggregated data for large datasets.
 
         Args:
             df: Input DataFrame
@@ -136,12 +131,11 @@ class VisualizationOptimizer:
         df: pd.DataFrame,
         x_col: str,
         y_col: str,
-        category_col: Optional[str] = None,
+        category_col: str | None = None,
         plot_width: int = 800,
         plot_height: int = 600,
     ) -> Any:
-        """
-        Create datashader plot for millions of points.
+        """Create datashader plot for millions of points.
 
         Args:
             df: Input DataFrame
@@ -169,8 +163,7 @@ class VisualizationOptimizer:
     def progressive_loading_plot(
         df: pd.DataFrame, x_col: str, y_col: str, chunk_size: int = 1000
     ) -> go.Figure:
-        """
-        Create plot with progressive data loading.
+        """Create plot with progressive data loading.
 
         Args:
             df: Input DataFrame
@@ -244,8 +237,7 @@ class PlotCaching:
         return str(hash(args))
 
     def get_or_create_plot(self, plot_func: callable, *args, **kwargs) -> Any:
-        """
-        Get plot from cache or create new one.
+        """Get plot from cache or create new one.
 
         Args:
             plot_func: Function to create plot
@@ -258,11 +250,11 @@ class PlotCaching:
         cache_key = self._get_plot_key(str(args), str(kwargs))
 
         if cache_key in self.cache:
-            print(f"[PLOT CACHE HIT] Returning cached plot")
+            print("[PLOT CACHE HIT] Returning cached plot")
             return self.cache[cache_key]
 
         # Create new plot
-        print(f"[PLOT CACHE MISS] Creating new plot")
+        print("[PLOT CACHE MISS] Creating new plot")
         plot = plot_func(*args, **kwargs)
         self.cache[cache_key] = plot
 
@@ -281,8 +273,7 @@ class EfficientPlotting:
     def create_line_plot_decimated(
         df: pd.DataFrame, x_col: str, y_col: str, max_points: int = 1000
     ) -> go.Figure:
-        """
-        Create line plot with decimated data for performance.
+        """Create line plot with decimated data for performance.
 
         Args:
             df: Input DataFrame
@@ -325,8 +316,7 @@ class EfficientPlotting:
     def create_scatter_with_density(
         df: pd.DataFrame, x_col: str, y_col: str, sample_size: int = 5000
     ) -> go.Figure:
-        """
-        Create scatter plot with density contours for large datasets.
+        """Create scatter plot with density contours for large datasets.
 
         Args:
             df: Input DataFrame
@@ -380,8 +370,7 @@ class EfficientPlotting:
     def create_binned_scatter(
         df: pd.DataFrame, x_col: str, y_col: str, bins: int = 100
     ) -> go.Figure:
-        """
-        Create binned scatter plot (hexbin-like) for large datasets.
+        """Create binned scatter plot (hexbin-like) for large datasets.
 
         Args:
             df: Input DataFrame
@@ -436,9 +425,8 @@ class EfficientPlotting:
     @staticmethod
     def create_rasterized_plot(
         df: pd.DataFrame, x_col: str, y_col: str, resolution: int = 500
-    ) -> Tuple[plt.Figure, plt.Axes]:
-        """
-        Create rasterized matplotlib plot for PDF export.
+    ) -> tuple[plt.Figure, plt.Axes]:
+        """Create rasterized matplotlib plot for PDF export.
 
         Args:
             df: Input DataFrame
@@ -469,9 +457,8 @@ class DashboardOptimizer:
     @staticmethod
     def create_lazy_loading_dashboard_data(
         df: pd.DataFrame, page_size: int = 100
-    ) -> Dict[str, Any]:
-        """
-        Prepare data for lazy loading in dashboard.
+    ) -> dict[str, Any]:
+        """Prepare data for lazy loading in dashboard.
 
         Args:
             df: Input DataFrame
@@ -494,10 +481,9 @@ class DashboardOptimizer:
 
     @staticmethod
     def create_aggregated_dashboard_metrics(
-        df: pd.DataFrame, group_cols: List[str], metric_cols: List[str]
+        df: pd.DataFrame, group_cols: list[str], metric_cols: list[str]
     ) -> pd.DataFrame:
-        """
-        Create pre-aggregated metrics for dashboard.
+        """Create pre-aggregated metrics for dashboard.
 
         Args:
             df: Input DataFrame
@@ -518,10 +504,9 @@ class DashboardOptimizer:
 
     @staticmethod
     def optimize_dashboard_queries(
-        df: pd.DataFrame, common_filters: Dict[str, List[Any]]
-    ) -> Dict[str, pd.DataFrame]:
-        """
-        Pre-compute common dashboard queries.
+        df: pd.DataFrame, common_filters: dict[str, list[Any]]
+    ) -> dict[str, pd.DataFrame]:
+        """Pre-compute common dashboard queries.
 
         Args:
             df: Input DataFrame

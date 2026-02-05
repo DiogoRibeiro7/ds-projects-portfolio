@@ -127,7 +127,7 @@ def run_simple_performance_test():
             print(f"  Max time: {max(times):.3f}s")
             print(f"  Requests/sec: {len(successful) / sum(times):.1f}")
         else:
-            print(f"  All requests failed!")
+            print("  All requests failed!")
 
     print("\n" + "=" * 50)
     print("Performance test complete!")

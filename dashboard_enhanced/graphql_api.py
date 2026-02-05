@@ -1,15 +1,11 @@
-"""
-GraphQL API for flexible dashboard data queries.
+"""GraphQL API for flexible dashboard data queries.
 Provides a GraphQL endpoint with schema, resolvers, and subscriptions.
 """
 
 import asyncio
 import json
-from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
 
-import graphene
 import numpy as np
 import pandas as pd
 from flask import Flask, jsonify, request
@@ -27,14 +23,12 @@ from graphene import (
     Schema,
     String,
 )
-from graphql import GraphQLError
 
 # ============== GraphQL Types ==============
 
 
 class MetricType(ObjectType):
-    """
-    GraphQL object describing a single dashboard metric.
+    """GraphQL object describing a single dashboard metric.
 
     Fields
     ------
@@ -51,7 +45,7 @@ class MetricType(ObjectType):
     trend : str
         Qualitative description (``"up"``, ``"down"``, ``"flat"``).
 
-    Examples
+    Examples:
     --------
     >>> query = '''
     ... {
@@ -657,7 +651,6 @@ schema = Schema(
 
 def create_graphql_app():
     """Create Flask app with GraphQL endpoint."""
-    from flask import Flask
     from flask_cors import CORS
 
     app = Flask(__name__)

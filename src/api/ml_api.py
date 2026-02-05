@@ -1,34 +1,32 @@
-"""
-ML API Service
+"""ML API Service
 Production-ready FastAPI service for model serving and inference
 """
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
-from typing import List, Dict, Any, Optional, Union
-import numpy as np
-import pandas as pd
-import pickle
-import joblib
-import json
-import time
-import logging
 import asyncio
-import aioredis
+import hashlib
+import json
+import logging
+import pickle
+import time
+import uuid
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
-import prometheus_client
-from prometheus_client import Counter, Histogram, Gauge
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+import aioredis
 import mlflow
 import mlflow.pyfunc
+import numpy as np
+import pandas as pd
+import prometheus_client
 import shap
-from pathlib import Path
 import uvloop
-import hashlib
-import uuid
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from prometheus_client import Counter, Gauge, Histogram
+from pydantic import BaseModel, Field, validator
 
 # Configure logging
 logging.basicConfig(
@@ -59,10 +57,10 @@ active_models = Gauge("ml_api_active_models", "Number of active models")
 class PredictionRequest(BaseModel):
     """Single prediction request"""
 
-    features: Dict[str, Union[float, int, str]]
-    model_name: Optional[str] = "default"
-    model_version: Optional[str] = "latest"
-    explain: Optional[bool] = False
+    features: dict[str, float | int | str]
+    model_name: str | None = "default"
+    model_version: str | None = "latest"
+    explain: bool | None = False
 
     @validator("features")
     def validate_features(cls, v):
@@ -85,10 +83,10 @@ class PredictionRequest(BaseModel):
 class BatchPredictionRequest(BaseModel):
     """Batch prediction request"""
 
-    instances: List[Dict[str, Union[float, int, str]]]
-    model_name: Optional[str] = "default"
-    model_version: Optional[str] = "latest"
-    batch_size: Optional[int] = Field(100, le=10000)
+    instances: list[dict[str, float | int | str]]
+    model_name: str | None = "default"
+    model_version: str | None = "latest"
+    batch_size: int | None = Field(100, le=10000)
 
     @validator("instances")
     def validate_instances(cls, v):
@@ -115,13 +113,13 @@ class PredictionResponse(BaseModel):
     """Prediction response"""
 
     prediction_id: str
-    prediction: Union[float, int, str, List]
-    probability: Optional[List[float]] = None
+    prediction: float | int | str | list
+    probability: list[float] | None = None
     model_name: str
     model_version: str
     timestamp: datetime
     latency_ms: float
-    explanation: Optional[Dict[str, Any]] = None
+    explanation: dict[str, Any] | None = None
 
 
 class HealthResponse(BaseModel):
@@ -129,7 +127,7 @@ class HealthResponse(BaseModel):
 
     status: str
     timestamp: datetime
-    models: Dict[str, Dict[str, Any]]
+    models: dict[str, dict[str, Any]]
     cache_status: str
     database_status: str
 
@@ -201,7 +199,7 @@ class ModelManager:
             logger.error(f"Error loading model {model_name}:{model_version}: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def predict(self, features: Dict, model_name: str, model_version: str):
+    async def predict(self, features: dict, model_name: str, model_version: str):
         """Make prediction with the specified model"""
         model_key = f"{model_name}:{model_version}"
         model = await self.load_model(model_name, model_version)
@@ -226,7 +224,7 @@ class ModelManager:
             raise HTTPException(status_code=500, detail=str(e))
 
     async def explain_prediction(
-        self, features: Dict, model_name: str, model_version: str
+        self, features: dict, model_name: str, model_version: str
     ):
         """Generate explanation for prediction"""
         model_key = f"{model_name}:{model_version}"
@@ -244,7 +242,7 @@ class ModelManager:
                 "base_value": float(shap_values.base_values[0]),
                 "feature_names": list(features.keys()),
                 "feature_importance": dict(
-                    zip(features.keys(), np.abs(shap_values.values[0]).tolist())
+                    zip(features.keys(), np.abs(shap_values.values[0]).tolist(), strict=False)
                 ),
             }
 
@@ -301,7 +299,7 @@ class CacheManager:
             self.redis.close()
             await self.redis.wait_closed()
 
-    def generate_cache_key(self, features: Dict, model_name: str, model_version: str):
+    def generate_cache_key(self, features: dict, model_name: str, model_version: str):
         """Generate cache key for prediction"""
         feature_str = json.dumps(features, sort_keys=True)
         key_str = f"{model_name}:{model_version}:{feature_str}"

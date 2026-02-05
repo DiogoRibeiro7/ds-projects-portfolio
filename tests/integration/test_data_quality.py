@@ -1,12 +1,13 @@
 """Regression tests for data-quality helpers used in the experimentation stack."""
 
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
+
 from src.data_processing.cleaning import (
+    DataQualityChecker,
     clean_ab_data,
     validate_experiment_data,
-    DataQualityChecker,
 )
 
 pytestmark = pytest.mark.integration

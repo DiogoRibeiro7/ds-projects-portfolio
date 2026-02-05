@@ -1,5 +1,4 @@
-"""
-Example Dashboard Application
+"""Example Dashboard Application
 
 Complete example demonstrating all enhanced dashboard features including
 real-time data, interactive visualizations, export capabilities, and API integration.
@@ -10,20 +9,19 @@ Date: 2024
 
 import logging
 import threading
-import time
 from datetime import datetime, timedelta
-import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
-import plotly.express as px
-from dash import dcc, html, Input, Output, State, callback_context
+
 import dash_bootstrap_components as dbc
-from flask import Flask
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from api_infrastructure import APIConfig, DashboardAPI
+from dash import Input, Output, State, callback_context, dcc, html
 
 # Import our custom components
-from dashboard_framework import EnhancedDashboard, DashboardConfig
+from dashboard_framework import DashboardConfig, EnhancedDashboard
 from visualization_components import InteractiveVisualizations
-from api_infrastructure import DashboardAPI, APIConfig
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,8 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class PortfolioDashboard:
-    """
-    Complete example dashboard showcasing all features:
+    """Complete example dashboard showcasing all features:
     - Real-time streaming data
     - Interactive visualizations
     - Export functionality
@@ -43,7 +40,6 @@ class PortfolioDashboard:
 
     def __init__(self):
         """Initialize the portfolio dashboard."""
-
         # Configure dashboard
         self.dashboard_config = DashboardConfig(
             app_name="Data Science Portfolio Dashboard",
@@ -176,7 +172,6 @@ class PortfolioDashboard:
 
     def _build_custom_layout(self):
         """Build custom dashboard layout."""
-
         # Override the dashboard layout with custom design
         self.dashboard.app.layout = html.Div(
             [
@@ -971,10 +966,10 @@ class PortfolioDashboard:
             # Generate sample activity feed
             activities = [
                 f"🟢 New user registration at {datetime.now().strftime('%H:%M:%S')}",
-                f"📊 Report generated for Q1 2024",
-                f"🚀 Model deployment completed successfully",
-                f"⚠️ Anomaly detected in network traffic",
-                f"✅ Backup completed successfully",
+                "📊 Report generated for Q1 2024",
+                "🚀 Model deployment completed successfully",
+                "⚠️ Anomaly detected in network traffic",
+                "✅ Backup completed successfully",
             ]
 
             feed_items = [
@@ -1041,9 +1036,9 @@ class PortfolioDashboard:
         logger.info("=" * 60)
         logger.info("PORTFOLIO DASHBOARD STARTING")
         logger.info("=" * 60)
-        logger.info(f"Dashboard URL: http://localhost:8050")
-        logger.info(f"API URL: http://localhost:5000")
-        logger.info(f"API Docs: http://localhost:5000/api/docs")
+        logger.info("Dashboard URL: http://localhost:8050")
+        logger.info("API URL: http://localhost:5000")
+        logger.info("API Docs: http://localhost:5000/api/docs")
         logger.info("=" * 60)
 
         self.dashboard.run()

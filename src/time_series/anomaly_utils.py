@@ -1,28 +1,24 @@
-"""
-Anomaly Detection Utilities Module
+"""Anomaly Detection Utilities Module
 
 This module provides utility functions and classes for anomaly detection in time series data.
 """
 
+import warnings
+from dataclasses import dataclass, field
+from typing import Any
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple, Optional, Union, Any
-from dataclasses import dataclass, field
 from scipy import stats
-from scipy.signal import find_peaks
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
     accuracy_score,
+    average_precision_score,
+    confusion_matrix,
+    f1_score,
     precision_score,
     recall_score,
-    f1_score,
-    confusion_matrix,
     roc_auc_score,
-    average_precision_score,
-    precision_recall_curve,
-    roc_curve,
 )
-import warnings
 
 warnings.filterwarnings("ignore")
 
@@ -53,7 +49,7 @@ class AnomalyConfig:
     sensitivity: float = 0.95
     min_anomaly_duration: int = 1
     max_anomaly_duration: int = 100
-    methods: List[str] = field(
+    methods: list[str] = field(
         default_factory=lambda: ["zscore", "iqr", "isolation_forest"]
     )
     ensemble_voting: str = "majority"
@@ -72,9 +68,8 @@ class AnomalyGenerator:
     @staticmethod
     def inject_point_anomalies(
         data: np.ndarray, anomaly_rate: float = 0.05, magnitude: float = 3.0
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Inject point anomalies into time series.
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Inject point anomalies into time series.
 
         Parameters:
         -----------
@@ -110,9 +105,8 @@ class AnomalyGenerator:
         n_segments: int = 3,
         segment_length: int = 10,
         magnitude: float = 2.0,
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Inject collective anomalies (anomalous segments).
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Inject collective anomalies (anomalous segments).
 
         Parameters:
         -----------
@@ -157,9 +151,8 @@ class AnomalyGenerator:
     @staticmethod
     def inject_contextual_anomalies(
         data: np.ndarray, context_window: int = 24, anomaly_rate: float = 0.05
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Inject contextual anomalies based on local context.
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Inject contextual anomalies based on local context.
 
         Parameters:
         -----------
@@ -207,8 +200,7 @@ class StatisticalTests:
 
     @staticmethod
     def dixon_test(data: np.ndarray, alpha: float = 0.05) -> np.ndarray:
-        """
-        Dixon's Q test for outliers.
+        """Dixon's Q test for outliers.
 
         Parameters:
         -----------
@@ -276,8 +268,7 @@ class StatisticalTests:
 
     @staticmethod
     def modified_zscore(data: np.ndarray, threshold: float = 3.5) -> np.ndarray:
-        """
-        Modified Z-score using median absolute deviation.
+        """Modified Z-score using median absolute deviation.
 
         Parameters:
         -----------
@@ -305,8 +296,7 @@ class StatisticalTests:
 
     @staticmethod
     def peirce_criterion(data: np.ndarray, n_outliers: int = None) -> np.ndarray:
-        """
-        Peirce's criterion for outlier detection.
+        """Peirce's criterion for outlier detection.
 
         Parameters:
         -----------
@@ -361,10 +351,9 @@ class AnomalyFeatures:
 
     @staticmethod
     def create_anomaly_features(
-        data: pd.Series, window_sizes: List[int] = [10, 30, 100]
+        data: pd.Series, window_sizes: list[int] = [10, 30, 100]
     ) -> pd.DataFrame:
-        """
-        Create features specifically for anomaly detection.
+        """Create features specifically for anomaly detection.
 
         Parameters:
         -----------
@@ -427,8 +416,7 @@ class AnomalyFeatures:
 
     @staticmethod
     def create_temporal_features(data: pd.Series) -> pd.DataFrame:
-        """
-        Create temporal features for anomaly detection.
+        """Create temporal features for anomaly detection.
 
         Parameters:
         -----------
@@ -476,9 +464,8 @@ class AnomalyMetrics:
     @staticmethod
     def calculate_all_metrics(
         y_true: np.ndarray, y_pred: np.ndarray, y_scores: np.ndarray = None
-    ) -> Dict[str, float]:
-        """
-        Calculate comprehensive metrics for anomaly detection.
+    ) -> dict[str, float]:
+        """Calculate comprehensive metrics for anomaly detection.
 
         Parameters:
         -----------
@@ -538,9 +525,8 @@ class AnomalyMetrics:
     @staticmethod
     def calculate_segment_metrics(
         y_true: np.ndarray, y_pred: np.ndarray
-    ) -> Dict[str, float]:
-        """
-        Calculate segment-based metrics for collective anomalies.
+    ) -> dict[str, float]:
+        """Calculate segment-based metrics for collective anomalies.
 
         Parameters:
         -----------
@@ -616,8 +602,7 @@ class AdaptiveThreshold:
     """Adaptive thresholding for anomaly detection."""
 
     def __init__(self, method: str = "quantile", window_size: int = 100):
-        """
-        Initialize adaptive threshold.
+        """Initialize adaptive threshold.
 
         Parameters:
         -----------
@@ -633,8 +618,7 @@ class AdaptiveThreshold:
     def compute_threshold(
         self, scores: np.ndarray, contamination: float = 0.1
     ) -> float:
-        """
-        Compute adaptive threshold.
+        """Compute adaptive threshold.
 
         Parameters:
         -----------
@@ -672,8 +656,7 @@ class AdaptiveThreshold:
         return threshold
 
     def update(self, new_scores: np.ndarray, contamination: float = 0.1):
-        """
-        Update threshold with new scores.
+        """Update threshold with new scores.
 
         Parameters:
         -----------
@@ -701,9 +684,8 @@ class AnomalyExplainer:
     @staticmethod
     def explain_anomaly(
         data_point: float, context: np.ndarray, features: pd.DataFrame = None
-    ) -> Dict[str, Any]:
-        """
-        Explain why a point is anomalous.
+    ) -> dict[str, Any]:
+        """Explain why a point is anomalous.
 
         Parameters:
         -----------
@@ -753,7 +735,7 @@ class AnomalyExplainer:
         return explanation
 
     @staticmethod
-    def _identify_contributing_features(features: pd.DataFrame) -> List[str]:
+    def _identify_contributing_features(features: pd.DataFrame) -> list[str]:
         """Identify features contributing most to anomaly."""
         contributing = []
 

@@ -1,23 +1,15 @@
-"""
-Comprehensive unit tests for the statistics.core module.
+"""Comprehensive unit tests for the statistics.core module.
 
 This module provides extensive testing for all statistical functions
 with edge cases, error conditions, and proper coverage.
 """
 
-import math
-import warnings
-from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
 import pytest
-from scipy import stats
 
 from src.statistics.core import (
-    DEFAULT_ALPHA,
-    DEFAULT_BOOTSTRAP_SAMPLES,
-    DEFAULT_POWER,
     ExperimentAnalyzer,
     apply_multiple_testing_correction,
     bootstrap_ci_diff,

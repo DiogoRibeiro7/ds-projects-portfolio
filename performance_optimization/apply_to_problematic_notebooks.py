@@ -1,30 +1,22 @@
-"""
-Apply comprehensive optimizations to problematic notebooks in the portfolio.
+"""Apply comprehensive optimizations to problematic notebooks in the portfolio.
 Identifies and fixes performance issues in existing notebooks.
 """
 
-import ast
 import time
 import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import nbformat
-import numpy as np
-import pandas as pd
 
 warnings.filterwarnings("ignore")
 
-from benchmarking import PerformanceBenchmark
 from data_optimization import (
     CachingOptimizer,
     DataProcessingOptimizer,
-    NumbaOptimizations,
-    VectorizedOperations,
 )
-from detailed_reports import DetailedPerformanceReporter, OptimizationAnalyzer
-from distributed_processing import DaskOperations, ParallelProcessor
-from gpu_acceleration import GPUArrayOperations, get_gpu_info
+from detailed_reports import DetailedPerformanceReporter
+from gpu_acceleration import get_gpu_info
 from io_optimization import IOOptimizer
 
 # Import all optimization modules
@@ -45,9 +37,8 @@ class NotebookOptimizationApplier:
         self.cache_optimizer = CachingOptimizer()
         self.reporter = DetailedPerformanceReporter()
 
-    def analyze_notebook(self, notebook_path: str) -> Dict[str, Any]:
-        """
-        Analyze notebook for performance issues.
+    def analyze_notebook(self, notebook_path: str) -> dict[str, Any]:
+        """Analyze notebook for performance issues.
 
         Args:
             notebook_path: Path to notebook
@@ -65,7 +56,7 @@ class NotebookOptimizationApplier:
         }
 
         # Read notebook
-        with open(notebook_path, "r", encoding="utf-8") as f:
+        with open(notebook_path, encoding="utf-8") as f:
             nb = nbformat.read(f, as_version=4)
 
         # Analyze code cells
@@ -166,10 +157,9 @@ class NotebookOptimizationApplier:
         return has_viz and not has_sampling
 
     def apply_optimizations(
-        self, notebook_path: str, output_path: Optional[str] = None
+        self, notebook_path: str, output_path: str | None = None
     ) -> str:
-        """
-        Apply optimizations to notebook.
+        """Apply optimizations to notebook.
 
         Args:
             notebook_path: Path to original notebook
@@ -181,7 +171,7 @@ class NotebookOptimizationApplier:
         print(f"\nApplying optimizations to: {notebook_path}")
 
         # Read notebook
-        with open(notebook_path, "r", encoding="utf-8") as f:
+        with open(notebook_path, encoding="utf-8") as f:
             nb = nbformat.read(f, as_version=4)
 
         # Insert optimization imports at the beginning
@@ -393,7 +383,7 @@ class ProblematicNotebookFixer:
 
                 # Specific fixes for recommendation systems
                 if any("matrix" in str(i) for i in issues["issues_found"]):
-                    print(f"  - Found matrix operations that can use GPU acceleration")
+                    print("  - Found matrix operations that can use GPU acceleration")
 
                 if issues["issues_found"]:
                     optimized_path = self.applier.apply_optimizations(nb_path)
@@ -426,7 +416,7 @@ class ProblematicNotebookFixer:
                     "rolling" in str(i) or "window" in str(i)
                     for i in issues["issues_found"]
                 ):
-                    print(f"  - Found rolling operations that can use Numba")
+                    print("  - Found rolling operations that can use Numba")
 
                 if issues["issues_found"]:
                     optimized_path = self.applier.apply_optimizations(nb_path)
@@ -487,7 +477,7 @@ def main():
     # Check GPU availability
     gpu_info = get_gpu_info()
     if gpu_info["gpu_available"]:
-        print(f"\n[OK] GPU available for acceleration")
+        print("\n[OK] GPU available for acceleration")
         if gpu_info["devices"]:
             for device in gpu_info["devices"]:
                 print(f"  - {device['name']} ({device['memory_gb']:.1f} GB)")

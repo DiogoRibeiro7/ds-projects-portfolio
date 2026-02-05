@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Enhanced analysis script for A/B testing portfolio projects.
+"""Enhanced analysis script for A/B testing portfolio projects.
 
 This script provides a comprehensive command-line interface for running A/B test analyses
 with all TODOs implemented including proper package imports, configuration files,
@@ -10,20 +9,27 @@ batch processing, and professional reporting.
 import argparse
 import json
 import logging
-import os
 import shutil
 import signal
 import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import pandas as pd
 import yaml
 
 # Import our enhanced modules
 try:
+    from src.visualization.plots import (
+        ExperimentDashboard,
+        plot_conversion_funnel,
+        plot_experiment_results,
+        plot_time_series_analysis,
+        set_publication_style,
+    )
+
     from src.data_processing.cleaning import (
         DataQualityChecker,
         apply_cuped,
@@ -37,13 +43,6 @@ try:
         calculate_sample_size,
         two_prop_ztest,
     )
-    from src.visualization.plots import (
-        ExperimentDashboard,
-        plot_conversion_funnel,
-        plot_experiment_results,
-        plot_time_series_analysis,
-        set_publication_style,
-    )
 except ImportError as e:
     print(f"Error importing modules: {e}")
     print(
@@ -52,7 +51,7 @@ except ImportError as e:
     sys.exit(1)
 
 
-def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> None:
+def setup_logging(verbose: bool = False, log_file: str | None = None) -> None:
     """Configure comprehensive logging with structured format and file output.
 
     Implements TODO: Add structured logging with JSON format for better parsing
@@ -168,7 +167,7 @@ def load_experiment_data(file_path: str) -> pd.DataFrame:
     return df
 
 
-def load_configuration(config_file: str) -> Dict[str, Any]:
+def load_configuration(config_file: str) -> dict[str, Any]:
     """Load and validate configuration from YAML or JSON file.
 
     Implements TODO: Implement configuration file loading with support for both formats
@@ -184,7 +183,7 @@ def load_configuration(config_file: str) -> Dict[str, Any]:
     logger.info(f"Loading configuration from {config_file}")
 
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             if config_path.suffix.lower() in [".yaml", ".yml"]:
                 config = yaml.safe_load(f)
             elif config_path.suffix.lower() == ".json":
@@ -204,7 +203,7 @@ def load_configuration(config_file: str) -> Dict[str, Any]:
         raise
 
 
-def validate_configuration(config: Dict[str, Any]) -> Dict[str, Any]:
+def validate_configuration(config: dict[str, Any]) -> dict[str, Any]:
     """Validate and set defaults for configuration.
 
     Implements TODO: Add comprehensive configuration validation
@@ -291,8 +290,8 @@ def validate_configuration(config: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def run_comprehensive_analysis(
-    df: pd.DataFrame, config: Dict[str, Any]
-) -> Dict[str, Any]:
+    df: pd.DataFrame, config: dict[str, Any]
+) -> dict[str, Any]:
     """Run comprehensive A/B test analysis pipeline.
 
     Implements TODOs:
@@ -440,7 +439,7 @@ def run_comprehensive_analysis(
     return results
 
 
-def run_power_analysis(df: pd.DataFrame, config: Dict[str, Any]) -> Dict[str, Any]:
+def run_power_analysis(df: pd.DataFrame, config: dict[str, Any]) -> dict[str, Any]:
     """Run comprehensive power analysis.
 
     Implements TODO: Add statistical power calculation for observed effect sizes
@@ -501,7 +500,7 @@ def run_power_analysis(df: pd.DataFrame, config: Dict[str, Any]) -> Dict[str, An
     return power_results
 
 
-def run_sequential_analysis(df: pd.DataFrame, config: Dict[str, Any]) -> Dict[str, Any]:
+def run_sequential_analysis(df: pd.DataFrame, config: dict[str, Any]) -> dict[str, Any]:
     """Run sequential testing analysis.
 
     Implements TODO: Add support for sequential testing and α-spending functions
@@ -524,8 +523,8 @@ def run_sequential_analysis(df: pd.DataFrame, config: Dict[str, Any]) -> Dict[st
 
 
 def generate_final_recommendations(
-    results: Dict[str, Any], config: Dict[str, Any]
-) -> List[str]:
+    results: dict[str, Any], config: dict[str, Any]
+) -> list[str]:
     """Generate final actionable recommendations based on analysis results.
 
     Implements TODO: Add automated interpretation of results
@@ -586,7 +585,7 @@ def generate_final_recommendations(
 
 
 def generate_comprehensive_report(
-    results: Dict[str, Any], config: Dict[str, Any], output_path: str
+    results: dict[str, Any], config: dict[str, Any], output_path: str
 ) -> None:
     """Generate comprehensive analysis report with multiple formats.
 
@@ -628,7 +627,7 @@ def generate_comprehensive_report(
 
 
 def generate_html_report(
-    results: Dict[str, Any], config: Dict[str, Any], output_path: str
+    results: dict[str, Any], config: dict[str, Any], output_path: str
 ) -> None:
     """Generate professional HTML report.
 
@@ -818,7 +817,7 @@ def generate_html_report(
         f.write(html_content)
 
 
-def generate_executive_summary_html(results: Dict[str, Any]) -> str:
+def generate_executive_summary_html(results: dict[str, Any]) -> str:
     """Generate executive summary section for HTML report."""
     summary_parts = []
 
@@ -868,7 +867,7 @@ def generate_executive_summary_html(results: Dict[str, Any]) -> str:
     )
 
 
-def generate_key_metrics_html(results: Dict[str, Any]) -> str:
+def generate_key_metrics_html(results: dict[str, Any]) -> str:
     """Generate key metrics section for HTML report."""
     if "data_summary" not in results:
         return "<p>No data summary available.</p>"
@@ -899,7 +898,7 @@ def generate_key_metrics_html(results: Dict[str, Any]) -> str:
     return metrics_html
 
 
-def generate_data_quality_html(results: Dict[str, Any]) -> str:
+def generate_data_quality_html(results: dict[str, Any]) -> str:
     """Generate data quality section for HTML report."""
     if "data_quality" not in results:
         return "<p>No data quality assessment available.</p>"
@@ -939,7 +938,7 @@ def generate_data_quality_html(results: Dict[str, Any]) -> str:
     return html
 
 
-def generate_statistical_results_html(results: Dict[str, Any]) -> str:
+def generate_statistical_results_html(results: dict[str, Any]) -> str:
     """Generate statistical results section for HTML report."""
     if "statistical_analysis" not in results:
         return "<p>No statistical analysis results available.</p>"
@@ -994,7 +993,7 @@ def generate_statistical_results_html(results: Dict[str, Any]) -> str:
     return html
 
 
-def generate_recommendations_html(results: Dict[str, Any]) -> str:
+def generate_recommendations_html(results: dict[str, Any]) -> str:
     """Generate recommendations section for HTML report."""
     recommendations = results.get("recommendations", [])
 
@@ -1009,7 +1008,7 @@ def generate_recommendations_html(results: Dict[str, Any]) -> str:
 
 
 def generate_technical_details_html(
-    results: Dict[str, Any], config: Dict[str, Any]
+    results: dict[str, Any], config: dict[str, Any]
 ) -> str:
     """Generate technical details section for HTML report."""
     html = "<h3>Analysis Configuration:</h3>"
@@ -1026,8 +1025,8 @@ def generate_technical_details_html(
 
 
 def create_visualizations(
-    df: pd.DataFrame, config: Dict[str, Any], output_dir: str
-) -> Dict[str, str]:
+    df: pd.DataFrame, config: dict[str, Any], output_dir: str
+) -> dict[str, str]:
     """Create and save visualizations.
 
     Implements TODO: Add diagnostic plots for effectiveness
@@ -1074,8 +1073,8 @@ def create_visualizations(
 
 
 def process_batch_experiments(
-    input_directory: str, config: Dict[str, Any], output_directory: str
-) -> Dict[str, Dict[str, Any]]:
+    input_directory: str, config: dict[str, Any], output_directory: str
+) -> dict[str, dict[str, Any]]:
     """Process multiple experiment files in batch.
 
     Implements TODO: Add support for batch processing multiple experiments
@@ -1139,7 +1138,7 @@ def process_batch_experiments(
 
 
 def generate_batch_summary_report(
-    batch_results: Dict[str, Dict], output_directory: str
+    batch_results: dict[str, dict], output_directory: str
 ) -> None:
     """Generate summary report for batch processing."""
     logger = logging.getLogger(__name__)
@@ -1425,7 +1424,7 @@ Configuration file example (YAML):
             )
             failed = len(batch_results) - successful
 
-            print(f"\nBatch processing completed:")
+            print("\nBatch processing completed:")
             print(f"  Successful: {successful}")
             print(f"  Failed: {failed}")
             print(f"  Results directory: {output_dir}")
@@ -1439,7 +1438,7 @@ Configuration file example (YAML):
                     args.baseline, args.mde, args.alpha, args.power
                 )
 
-                print(f"\nSample Size Calculation Results:")
+                print("\nSample Size Calculation Results:")
                 print(f"  Baseline rate: {args.baseline:.1%}")
                 print(
                     f"  Minimum detectable effect: {args.mde:.3f} ({args.mde / args.baseline:.1%} relative)"

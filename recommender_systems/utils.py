@@ -1,21 +1,20 @@
-"""
-Utility functions for recommendation systems
+"""Utility functions for recommendation systems
 
 This module provides comprehensive utilities for building and evaluating recommendation systems.
 """
 
-import numpy as np
-import pandas as pd
-from typing import Dict, List, Tuple, Optional, Union, Any
-from collections import defaultdict, Counter
-from datetime import datetime, timedelta
-import scipy.sparse as sp
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-import logging
 import hashlib
 import json
+import logging
+from collections import defaultdict
+from datetime import datetime, timedelta
+from typing import Any
+
+import numpy as np
+import pandas as pd
+import scipy.sparse as sp
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.preprocessing import LabelEncoder
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -36,8 +35,7 @@ class DataPreprocessor:
         min_user_interactions: int = 5,
         min_item_interactions: int = 5,
     ) -> pd.DataFrame:
-        """
-        Preprocess interaction data
+        """Preprocess interaction data
 
         Args:
             df: DataFrame with user_id, item_id, rating/interaction columns
@@ -82,9 +80,8 @@ class DataPreprocessor:
 
     def create_interaction_matrix(
         self, df: pd.DataFrame, value_col: str = "rating", sparse: bool = True
-    ) -> Union[np.ndarray, sp.csr_matrix]:
-        """
-        Create user-item interaction matrix
+    ) -> np.ndarray | sp.csr_matrix:
+        """Create user-item interaction matrix
 
         Args:
             df: DataFrame with user_idx, item_idx, and value columns
@@ -110,9 +107,8 @@ class DataPreprocessor:
 
     def train_test_split_temporal(
         self, df: pd.DataFrame, test_size: float = 0.2, timestamp_col: str = "timestamp"
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """
-        Split data temporally for time-aware evaluation
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Split data temporally for time-aware evaluation
 
         Args:
             df: DataFrame with interactions
@@ -145,8 +141,7 @@ class DataPreprocessor:
     def create_negative_samples(
         self, df: pd.DataFrame, n_negative: int = 4
     ) -> pd.DataFrame:
-        """
-        Create negative samples for implicit feedback
+        """Create negative samples for implicit feedback
 
         Args:
             df: DataFrame with positive interactions
@@ -190,8 +185,7 @@ class FeatureEngineering:
         self.feature_stats = {}
 
     def create_user_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Create user features from interaction data
+        """Create user features from interaction data
 
         Args:
             df: Interaction DataFrame
@@ -242,10 +236,9 @@ class FeatureEngineering:
         return pd.DataFrame(user_features)
 
     def create_item_features(
-        self, df: pd.DataFrame, item_metadata: Optional[pd.DataFrame] = None
+        self, df: pd.DataFrame, item_metadata: pd.DataFrame | None = None
     ) -> pd.DataFrame:
-        """
-        Create item features from interaction data and metadata
+        """Create item features from interaction data and metadata
 
         Args:
             df: Interaction DataFrame
@@ -289,8 +282,7 @@ class FeatureEngineering:
         return pd.DataFrame(item_features)
 
     def create_context_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Create contextual features from interaction data
+        """Create contextual features from interaction data
 
         Args:
             df: Interaction DataFrame with timestamp
@@ -334,9 +326,8 @@ class FeatureEngineering:
 
     def create_sequence_features(
         self, df: pd.DataFrame, sequence_length: int = 5
-    ) -> Dict[int, List]:
-        """
-        Create sequence features for sequential recommendation
+    ) -> dict[int, list]:
+        """Create sequence features for sequential recommendation
 
         Args:
             df: Interaction DataFrame
@@ -378,7 +369,7 @@ class EvaluationMetrics:
 
     @staticmethod
     def precision_at_k(
-        recommendations: List[int], relevant: List[int], k: int
+        recommendations: list[int], relevant: list[int], k: int
     ) -> float:
         """Precision@K"""
         if not recommendations or not relevant:
@@ -390,7 +381,7 @@ class EvaluationMetrics:
         return sum(1 for item in recs_at_k if item in relevant_set) / k
 
     @staticmethod
-    def recall_at_k(recommendations: List[int], relevant: List[int], k: int) -> float:
+    def recall_at_k(recommendations: list[int], relevant: list[int], k: int) -> float:
         """Recall@K"""
         if not recommendations or not relevant:
             return 0.0
@@ -404,7 +395,7 @@ class EvaluationMetrics:
         return len(recs_at_k & relevant_set) / len(relevant_set)
 
     @staticmethod
-    def f1_at_k(recommendations: List[int], relevant: List[int], k: int) -> float:
+    def f1_at_k(recommendations: list[int], relevant: list[int], k: int) -> float:
         """F1@K"""
         prec = EvaluationMetrics.precision_at_k(recommendations, relevant, k)
         rec = EvaluationMetrics.recall_at_k(recommendations, relevant, k)
@@ -416,13 +407,12 @@ class EvaluationMetrics:
 
     @staticmethod
     def ndcg_at_k(
-        recommendations: List[int],
-        relevant: List[int],
-        relevance_scores: Optional[Dict[int, float]] = None,
+        recommendations: list[int],
+        relevant: list[int],
+        relevance_scores: dict[int, float] | None = None,
         k: int = 10,
     ) -> float:
-        """
-        Normalized Discounted Cumulative Gain@K
+        """Normalized Discounted Cumulative Gain@K
 
         Args:
             recommendations: List of recommended items
@@ -457,12 +447,11 @@ class EvaluationMetrics:
 
     @staticmethod
     def map_at_k(
-        user_recommendations: Dict[int, List[int]],
-        user_relevant: Dict[int, List[int]],
+        user_recommendations: dict[int, list[int]],
+        user_relevant: dict[int, list[int]],
         k: int = 10,
     ) -> float:
-        """
-        Mean Average Precision@K
+        """Mean Average Precision@K
 
         Args:
             user_recommendations: Dictionary of user recommendations
@@ -501,9 +490,8 @@ class EvaluationMetrics:
         return np.mean(ap_scores) if ap_scores else 0.0
 
     @staticmethod
-    def coverage(recommendations: List[List[int]], catalog_size: int) -> float:
-        """
-        Catalog coverage
+    def coverage(recommendations: list[list[int]], catalog_size: int) -> float:
+        """Catalog coverage
 
         Args:
             recommendations: List of recommendation lists
@@ -519,9 +507,8 @@ class EvaluationMetrics:
         return len(recommended_items) / catalog_size
 
     @staticmethod
-    def diversity(recommendations: List[int], item_similarity: np.ndarray) -> float:
-        """
-        Intra-list diversity
+    def diversity(recommendations: list[int], item_similarity: np.ndarray) -> float:
+        """Intra-list diversity
 
         Args:
             recommendations: List of recommended items
@@ -544,9 +531,8 @@ class EvaluationMetrics:
         return diversity / n_pairs if n_pairs > 0 else 0.0
 
     @staticmethod
-    def novelty(recommendations: List[int], item_popularity: Dict[int, float]) -> float:
-        """
-        Novelty of recommendations
+    def novelty(recommendations: list[int], item_popularity: dict[int, float]) -> float:
+        """Novelty of recommendations
 
         Args:
             recommendations: List of recommended items
@@ -568,10 +554,9 @@ class EvaluationMetrics:
 
     @staticmethod
     def serendipity(
-        recommendations: List[int], expected: List[int], relevant: List[int]
+        recommendations: list[int], expected: list[int], relevant: list[int]
     ) -> float:
-        """
-        Serendipity of recommendations
+        """Serendipity of recommendations
 
         Args:
             recommendations: List of recommended items
@@ -597,8 +582,7 @@ class ColdStartHandler:
         self.default_embeddings = {}
 
     def fit(self, interactions: pd.DataFrame):
-        """
-        Fit cold start handler
+        """Fit cold start handler
 
         Args:
             interactions: Interaction data
@@ -621,10 +605,9 @@ class ColdStartHandler:
         self.default_embeddings["item"] = item_groups.mean()
 
     def handle_cold_user(
-        self, user_features: Optional[Dict] = None, n_recommendations: int = 10
-    ) -> List[int]:
-        """
-        Handle cold start for new users
+        self, user_features: dict | None = None, n_recommendations: int = 10
+    ) -> list[int]:
+        """Handle cold start for new users
 
         Args:
             user_features: Optional user features
@@ -640,9 +623,8 @@ class ColdStartHandler:
             # Return popular items
             return self.popular_items[:n_recommendations]
 
-    def handle_cold_item(self, item_features: Dict, similar_items: List[int]) -> Dict:
-        """
-        Handle cold start for new items
+    def handle_cold_item(self, item_features: dict, similar_items: list[int]) -> dict:
+        """Handle cold start for new items
 
         Args:
             item_features: Item features
@@ -661,8 +643,8 @@ class ColdStartHandler:
         return strategy
 
     def _content_based_cold_start(
-        self, user_features: Dict, n_recommendations: int
-    ) -> List[int]:
+        self, user_features: dict, n_recommendations: int
+    ) -> list[int]:
         """Content-based recommendations for cold start users"""
         # Simplified: return items matching user preferences
         # In practice, would use more sophisticated matching
@@ -678,7 +660,7 @@ class RecommendationCache:
         self.ttl_seconds = ttl_seconds
         self.access_times = {}
 
-    def _create_key(self, user_id: int, context: Optional[Dict] = None) -> str:
+    def _create_key(self, user_id: int, context: dict | None = None) -> str:
         """Create cache key"""
         key_data = {"user_id": user_id}
         if context:
@@ -687,7 +669,7 @@ class RecommendationCache:
         key_str = json.dumps(key_data, sort_keys=True)
         return hashlib.md5(key_str.encode()).hexdigest()
 
-    def get(self, user_id: int, context: Optional[Dict] = None) -> Optional[List]:
+    def get(self, user_id: int, context: dict | None = None) -> list | None:
         """Get cached recommendations"""
         key = self._create_key(user_id, context)
 
@@ -705,7 +687,7 @@ class RecommendationCache:
 
         return None
 
-    def set(self, user_id: int, recommendations: List, context: Optional[Dict] = None):
+    def set(self, user_id: int, recommendations: list, context: dict | None = None):
         """Cache recommendations"""
         key = self._create_key(user_id, context)
 
@@ -724,7 +706,7 @@ class RecommendationCache:
         self.cache.clear()
         self.access_times.clear()
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """Get cache statistics"""
         return {
             "size": len(self.cache),
@@ -753,8 +735,7 @@ class ABTestFramework:
         treatment_model: Any,
         split_ratio: float = 0.5,
     ):
-        """
-        Create new A/B test experiment
+        """Create new A/B test experiment
 
         Args:
             name: Experiment name
@@ -771,8 +752,7 @@ class ABTestFramework:
         }
 
     def assign_variant(self, user_id: int, experiment_name: str) -> str:
-        """
-        Assign user to variant
+        """Assign user to variant
 
         Args:
             user_id: User ID
@@ -792,9 +772,8 @@ class ABTestFramework:
 
     def get_recommendations(
         self, user_id: int, experiment_name: str, n_recommendations: int = 10
-    ) -> Tuple[List, str]:
-        """
-        Get recommendations for user in experiment
+    ) -> tuple[list, str]:
+        """Get recommendations for user in experiment
 
         Args:
             user_id: User ID
@@ -827,9 +806,8 @@ class ABTestFramework:
             }
         )
 
-    def analyze_experiment(self, experiment_name: str) -> Dict:
-        """
-        Analyze experiment results
+    def analyze_experiment(self, experiment_name: str) -> dict:
+        """Analyze experiment results
 
         Args:
             experiment_name: Experiment name
@@ -913,9 +891,8 @@ def create_sample_data(
     return df
 
 
-def evaluate_recommender(recommender, test_data: pd.DataFrame, k: int = 10) -> Dict:
-    """
-    Evaluate a recommender system
+def evaluate_recommender(recommender, test_data: pd.DataFrame, k: int = 10) -> dict:
+    """Evaluate a recommender system
 
     Args:
         recommender: Recommender model with recommend method

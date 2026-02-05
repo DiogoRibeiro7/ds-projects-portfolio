@@ -1,13 +1,9 @@
-"""
-Apply performance optimizations to existing notebooks in the portfolio.
+"""Apply performance optimizations to existing notebooks in the portfolio.
 """
 
-import json
 import sys
-import time
 import warnings
 from pathlib import Path
-from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -17,15 +13,13 @@ warnings.filterwarnings("ignore")
 # Add current directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from benchmarking import PerformanceBenchmark, create_optimization_report
+from benchmarking import PerformanceBenchmark
 from data_optimization import (
-    BatchProcessor,
     CachingOptimizer,
     DataProcessingOptimizer,
     NumbaOptimizations,
-    VectorizedOperations,
 )
-from io_optimization import DataCache, IOOptimizer
+from io_optimization import IOOptimizer
 from profiling_utils import MemoryOptimizer, PerformanceProfiler
 from visualization_optimization import VisualizationOptimizer
 

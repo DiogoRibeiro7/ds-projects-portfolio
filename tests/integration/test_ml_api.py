@@ -1,21 +1,16 @@
-"""
-Test suite for the ML API module.
+"""Test suite for the ML API module.
 """
 
-import pytest
-import json
+from unittest.mock import Mock, patch
+
 import numpy as np
 import pandas as pd
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime
+import pytest
 from fastapi.testclient import TestClient
+
 from src.api.ml_api import (
-    app,
     ModelManager,
-    PredictionRequest,
-    PredictionResponse,
-    ModelMetrics,
-    BatchPredictionRequest,
+    app,
 )
 
 pytestmark = pytest.mark.integration

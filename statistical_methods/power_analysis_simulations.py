@@ -1,5 +1,4 @@
-"""
-Advanced power analysis and simulation tools for experiment design.
+"""Advanced power analysis and simulation tools for experiment design.
 
 This module provides comprehensive power analysis simulations for various
 experimental designs, including adaptive designs, sequential testing,
@@ -8,16 +7,14 @@ and complex effect structures.
 
 import warnings
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-from joblib import Parallel, delayed
 from scipy import stats
-from scipy.optimize import brentq, minimize_scalar
-from statsmodels.stats.power import NormalIndPower, TTestPower
+from scipy.optimize import minimize_scalar
+from statsmodels.stats.power import TTestPower
 
 warnings.filterwarnings("ignore")
 
@@ -31,9 +28,9 @@ class PowerAnalysisResult:
     effect_size: float
     alpha: float
     minimum_detectable_effect: float
-    confidence_interval: Tuple[float, float]
-    simulation_details: Dict[str, Any] = field(default_factory=dict)
-    recommendations: List[str] = field(default_factory=list)
+    confidence_interval: tuple[float, float]
+    simulation_details: dict[str, Any] = field(default_factory=dict)
+    recommendations: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -48,16 +45,15 @@ class SimulationResult:
     mean_squared_error: float
     coverage: float
     average_ci_width: float
-    convergence_time: Optional[int] = None
-    early_stopping_rate: Optional[float] = None
+    convergence_time: int | None = None
+    early_stopping_rate: float | None = None
 
 
 class PowerAnalysisSimulator:
     """Advanced power analysis through simulation."""
 
     def __init__(self, n_simulations: int = 10000, n_jobs: int = -1):
-        """
-        Initialize power analysis simulator.
+        """Initialize power analysis simulator.
 
         Args:
             n_simulations: Number of simulations to run
@@ -69,15 +65,14 @@ class PowerAnalysisSimulator:
     def simulate_ab_test_power(
         self,
         baseline_rate: float,
-        effect_sizes: Union[float, List[float]],
-        sample_sizes: Union[int, List[int]],
+        effect_sizes: float | list[float],
+        sample_sizes: int | list[int],
         alpha: float = 0.05,
         test_type: str = "proportion",
         alternative: str = "two-sided",
         variance_ratio: float = 1.0,
     ) -> pd.DataFrame:
-        """
-        Simulate power for A/B tests across effect sizes and sample sizes.
+        """Simulate power for A/B tests across effect sizes and sample sizes.
 
         Args:
             baseline_rate: Baseline conversion/mean
@@ -197,13 +192,12 @@ class PowerAnalysisSimulator:
         self,
         true_effect: float,
         max_sample_size: int,
-        check_points: List[int],
+        check_points: list[int],
         alpha: float = 0.05,
         spending_function: str = "obrien_fleming",
         futility_bounds: bool = True,
     ) -> SimulationResult:
-        """
-        Simulate sequential testing with alpha spending.
+        """Simulate sequential testing with alpha spending.
 
         Args:
             true_effect: True treatment effect
@@ -309,8 +303,8 @@ class PowerAnalysisSimulator:
         )
 
     def _calculate_alpha_spending(
-        self, check_points: List[int], max_n: int, alpha: float, method: str
-    ) -> List[float]:
+        self, check_points: list[int], max_n: int, alpha: float, method: str
+    ) -> list[float]:
         """Calculate alpha spending at each checkpoint."""
         info_fractions = [n / max_n for n in check_points]
         alpha_spent = []
@@ -372,12 +366,11 @@ class PowerAnalysisSimulator:
         self,
         initial_sample: int,
         max_sample: int,
-        true_effects: Dict[str, float],
+        true_effects: dict[str, float],
         adaptation_rule: str = "thompson_sampling",
         n_arms: int = 3,
-    ) -> Dict[str, Any]:
-        """
-        Simulate adaptive randomization design.
+    ) -> dict[str, Any]:
+        """Simulate adaptive randomization design.
 
         Args:
             initial_sample: Initial equal randomization phase
@@ -478,7 +471,7 @@ class PowerAnalysisSimulator:
             },
         }
 
-    def _check_convergence(self, results: List[Dict]) -> Dict[str, Any]:
+    def _check_convergence(self, results: list[dict]) -> dict[str, Any]:
         """Check if adaptive design has converged."""
         if len(results) < 100:
             return {"converged": False, "reason": "Too few simulations"}
@@ -509,8 +502,7 @@ class PowerAnalysisSimulator:
         baseline: float = 0.1,
         method: str = "analytical",
     ) -> PowerAnalysisResult:
-        """
-        Calculate required sample size for desired power.
+        """Calculate required sample size for desired power.
 
         Args:
             power: Desired statistical power
@@ -626,8 +618,7 @@ class PowerAnalysisSimulator:
         test_type: str = "proportion",
         baseline: float = 0.1,
     ) -> float:
-        """
-        Calculate minimum detectable effect given sample size.
+        """Calculate minimum detectable effect given sample size.
 
         Args:
             sample_size: Sample size per group
@@ -670,7 +661,7 @@ class PowerAnalysisSimulator:
 
     def _generate_recommendations(
         self, sample_size: int, power: float, effect_size: float, test_type: str
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate recommendations based on power analysis."""
         recommendations = []
 
@@ -714,8 +705,7 @@ class PowerAnalysisSimulator:
     def plot_power_curves(
         self, results_df: pd.DataFrame, variable: str = "sample_size"
     ):
-        """
-        Plot power curves from simulation results.
+        """Plot power curves from simulation results.
 
         Args:
             results_df: DataFrame from simulate_ab_test_power
@@ -822,11 +812,10 @@ class SensitivityAnalysis:
         self,
         base_effect: float,
         base_se: float,
-        assumptions: Dict[str, Tuple[float, float]],
+        assumptions: dict[str, tuple[float, float]],
         n_simulations: int = 1000,
     ) -> pd.DataFrame:
-        """
-        Analyze sensitivity to assumption violations.
+        """Analyze sensitivity to assumption violations.
 
         Args:
             base_effect: Base treatment effect estimate
@@ -885,10 +874,9 @@ class SensitivityAnalysis:
         n_control: int,
         attrition_treated: float,
         attrition_control: float,
-        outcome_range: Tuple[float, float],
-    ) -> Dict[str, Tuple[float, float]]:
-        """
-        Calculate bounds for treatment effects under missing data.
+        outcome_range: tuple[float, float],
+    ) -> dict[str, tuple[float, float]]:
+        """Calculate bounds for treatment effects under missing data.
 
         Args:
             observed_effect: Observed treatment effect

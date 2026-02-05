@@ -1,23 +1,16 @@
-"""
-I/O and caching optimization utilities for efficient data handling.
+"""I/O and caching optimization utilities for efficient data handling.
 """
 
-import asyncio
-import functools
 import hashlib
 import json
-import pickle
 import sqlite3
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import aiofiles
-import h5py
-import joblib
-import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -28,8 +21,7 @@ class IOOptimizer:
 
     @staticmethod
     def read_csv_optimized(filepath: str, **kwargs) -> pd.DataFrame:
-        """
-        Optimized CSV reading with automatic dtype inference.
+        """Optimized CSV reading with automatic dtype inference.
 
         Args:
             filepath: Path to CSV file
@@ -69,8 +61,7 @@ class IOOptimizer:
     def to_parquet_compressed(
         df: pd.DataFrame, filepath: str, compression: str = "snappy"
     ) -> None:
-        """
-        Save DataFrame to Parquet with compression.
+        """Save DataFrame to Parquet with compression.
 
         Args:
             df: DataFrame to save
@@ -85,15 +76,14 @@ class IOOptimizer:
         compressed_size = Path(filepath).stat().st_size / 1024 / 1024
         compression_ratio = original_size / compressed_size
 
-        print(f"Parquet compression stats:")
+        print("Parquet compression stats:")
         print(f"  Original size: {original_size:.2f} MB")
         print(f"  Compressed size: {compressed_size:.2f} MB")
         print(f"  Compression ratio: {compression_ratio:.2f}x")
 
     @staticmethod
-    def read_parquet_columns(filepath: str, columns: List[str]) -> pd.DataFrame:
-        """
-        Read specific columns from Parquet file.
+    def read_parquet_columns(filepath: str, columns: list[str]) -> pd.DataFrame:
+        """Read specific columns from Parquet file.
 
         Args:
             filepath: Path to Parquet file
@@ -108,8 +98,7 @@ class IOOptimizer:
     def chunked_csv_writer(
         df: pd.DataFrame, filepath: str, chunk_size: int = 10000
     ) -> None:
-        """
-        Write large DataFrame to CSV in chunks.
+        """Write large DataFrame to CSV in chunks.
 
         Args:
             df: DataFrame to write
@@ -133,8 +122,7 @@ class IOOptimizer:
 
     @staticmethod
     async def async_read_file(filepath: str) -> str:
-        """
-        Asynchronously read file contents.
+        """Asynchronously read file contents.
 
         Args:
             filepath: Path to file
@@ -142,14 +130,13 @@ class IOOptimizer:
         Returns:
             File contents
         """
-        async with aiofiles.open(filepath, mode="r") as f:
+        async with aiofiles.open(filepath) as f:
             contents = await f.read()
         return contents
 
     @staticmethod
     async def async_write_file(filepath: str, content: str) -> None:
-        """
-        Asynchronously write content to file.
+        """Asynchronously write content to file.
 
         Args:
             filepath: Path to file
@@ -160,10 +147,9 @@ class IOOptimizer:
 
     @staticmethod
     def parallel_file_reader(
-        filepaths: List[str], reader_func: callable, n_workers: Optional[int] = None
-    ) -> List[pd.DataFrame]:
-        """
-        Read multiple files in parallel.
+        filepaths: list[str], reader_func: callable, n_workers: int | None = None
+    ) -> list[pd.DataFrame]:
+        """Read multiple files in parallel.
 
         Args:
             filepaths: List of file paths
@@ -186,8 +172,7 @@ class DataCache:
     """Advanced caching system for data operations."""
 
     def __init__(self, cache_dir: str = ".cache", max_cache_size_mb: int = 1000):
-        """
-        Initialize data cache.
+        """Initialize data cache.
 
         Args:
             cache_dir: Directory for cache files
@@ -198,11 +183,11 @@ class DataCache:
         self.max_cache_size = max_cache_size_mb * 1024 * 1024  # Convert to bytes
         self.cache_metadata = self._load_metadata()
 
-    def _load_metadata(self) -> Dict[str, Any]:
+    def _load_metadata(self) -> dict[str, Any]:
         """Load cache metadata."""
         metadata_file = self.cache_dir / "cache_metadata.json"
         if metadata_file.exists():
-            with open(metadata_file, "r") as f:
+            with open(metadata_file) as f:
                 return json.load(f)
         return {}
 
@@ -218,10 +203,9 @@ class DataCache:
         return hashlib.md5(key_str.encode()).hexdigest()
 
     def cache_dataframe(
-        self, df: pd.DataFrame, key: str, ttl_hours: Optional[int] = None
+        self, df: pd.DataFrame, key: str, ttl_hours: int | None = None
     ) -> None:
-        """
-        Cache DataFrame with optional TTL.
+        """Cache DataFrame with optional TTL.
 
         Args:
             df: DataFrame to cache
@@ -248,9 +232,8 @@ class DataCache:
         # Check cache size and evict if necessary
         self._evict_if_needed()
 
-    def get_cached_dataframe(self, key: str) -> Optional[pd.DataFrame]:
-        """
-        Retrieve cached DataFrame.
+    def get_cached_dataframe(self, key: str) -> pd.DataFrame | None:
+        """Retrieve cached DataFrame.
 
         Args:
             key: Cache key
@@ -326,10 +309,9 @@ class DatabaseOptimizer:
         self.conn = sqlite3.connect(db_path)
 
     def create_indexed_table(
-        self, df: pd.DataFrame, table_name: str, index_columns: List[str]
+        self, df: pd.DataFrame, table_name: str, index_columns: list[str]
     ) -> None:
-        """
-        Create database table with indexes for fast queries.
+        """Create database table with indexes for fast queries.
 
         Args:
             df: DataFrame to store
@@ -351,10 +333,9 @@ class DatabaseOptimizer:
         print(f"Created table '{table_name}' with indexes on {index_columns}")
 
     def batch_insert(
-        self, data: List[Dict], table_name: str, batch_size: int = 1000
+        self, data: list[dict], table_name: str, batch_size: int = 1000
     ) -> None:
-        """
-        Insert data in batches for better performance.
+        """Insert data in batches for better performance.
 
         Args:
             data: List of dictionaries to insert
@@ -376,8 +357,7 @@ class DatabaseOptimizer:
         self.conn.commit()
 
     def cached_query(self, query: str, cache_key: str) -> pd.DataFrame:
-        """
-        Execute query with caching.
+        """Execute query with caching.
 
         Args:
             query: SQL query
@@ -420,8 +400,7 @@ class HDF5Storage:
     def store_dataframe(
         self, df: pd.DataFrame, key: str, compress: bool = True
     ) -> None:
-        """
-        Store DataFrame in HDF5 format.
+        """Store DataFrame in HDF5 format.
 
         Args:
             df: DataFrame to store
@@ -436,10 +415,9 @@ class HDF5Storage:
         print(f"Stored DataFrame with key '{key}' ({df.shape})")
 
     def read_dataframe(
-        self, key: str, columns: Optional[List[str]] = None, where: Optional[str] = None
+        self, key: str, columns: list[str] | None = None, where: str | None = None
     ) -> pd.DataFrame:
-        """
-        Read DataFrame from HDF5 storage.
+        """Read DataFrame from HDF5 storage.
 
         Args:
             key: Storage key
@@ -455,8 +433,7 @@ class HDF5Storage:
             return self.store.select(key, where=where)
 
     def append_dataframe(self, df: pd.DataFrame, key: str) -> None:
-        """
-        Append DataFrame to existing HDF5 table.
+        """Append DataFrame to existing HDF5 table.
 
         Args:
             df: DataFrame to append
@@ -465,11 +442,11 @@ class HDF5Storage:
         self.store.append(key, df, format="table")
         print(f"Appended {len(df)} rows to key '{key}'")
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         """List all keys in HDF5 store."""
         return list(self.store.keys())
 
-    def get_info(self, key: str) -> Dict[str, Any]:
+    def get_info(self, key: str) -> dict[str, Any]:
         """Get information about stored data."""
         storer = self.store.get_storer(key)
         return {
@@ -486,11 +463,10 @@ class HDF5Storage:
 def create_data_pipeline(
     input_file: str,
     output_file: str,
-    transformations: List[callable],
+    transformations: list[callable],
     chunk_size: int = 10000,
 ) -> None:
-    """
-    Create efficient data pipeline with chunking.
+    """Create efficient data pipeline with chunking.
 
     Args:
         input_file: Input file path
@@ -516,8 +492,7 @@ def create_data_pipeline(
 
 
 def benchmark_io_methods(df: pd.DataFrame, filepath_base: str) -> pd.DataFrame:
-    """
-    Benchmark different I/O methods.
+    """Benchmark different I/O methods.
 
     Args:
         df: DataFrame to test

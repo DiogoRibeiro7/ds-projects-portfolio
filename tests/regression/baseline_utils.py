@@ -1,5 +1,4 @@
-"""
-Shared helpers for regression baselines.
+"""Shared helpers for regression baselines.
 """
 
 from __future__ import annotations
@@ -9,8 +8,7 @@ import pandas as pd
 
 
 def build_conversion_dataset(seed: int = 202401) -> pd.DataFrame:
-    """
-    Create a deterministic two-arm experiment DataFrame.
+    """Create a deterministic two-arm experiment DataFrame.
 
     Args:
         seed: Random seed for reproducibility.

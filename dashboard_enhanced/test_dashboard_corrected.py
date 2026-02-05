@@ -5,8 +5,6 @@ import os
 import sys
 import tempfile
 import unittest
-from datetime import datetime
-from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -211,7 +209,7 @@ class TestExportManager(unittest.TestCase):
                 images, titles, output_path
             )
             self.assertEqual(result_path, output_path)
-        except Exception as e:
+        except Exception:
             # Expected if pptx operations fail
             pass
         finally:

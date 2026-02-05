@@ -1,38 +1,27 @@
-"""
-Data Quality Framework
+"""Data Quality Framework
 Comprehensive data validation, quality checks, and monitoring
 """
 
 import json
 import logging
-from typing import Dict, List, Any, Optional, Union, Tuple, Callable
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timedelta
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
 from enum import Enum
-import hashlib
-import warnings
+from typing import Any
 
+import jsonschema
 import numpy as np
 import pandas as pd
-from scipy import stats
-from scipy.stats import kstest, normaltest, chi2_contingency
-import great_expectations as ge
-from great_expectations.core import ExpectationSuite, ExpectationConfiguration
-from great_expectations.data_context import DataContext
 import pandera as pa
-from pandera import Column, Check, DataFrameSchema
-import pydantic
-from pydantic import BaseModel, Field, validator
-import jsonschema
-from typing_extensions import Literal
+from pandera import Check, Column, DataFrameSchema
+from scipy import stats
+from scipy.stats import kstest, normaltest
+from sklearn.ensemble import IsolationForest
+from sklearn.neighbors import LocalOutlierFactor
 
 # Statistical libraries
 from statsmodels.stats.outliers_influence import variance_inflation_factor
-from statsmodels.stats.stattools import jarque_bera
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import IsolationForest
-from sklearn.neighbors import LocalOutlierFactor
-from sklearn.cluster import DBSCAN
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -68,9 +57,9 @@ class DataQualityRule:
     rule_type: str  # schema, statistical, business, referential
     severity: DataQualityLevel
     check_function: Callable
-    parameters: Dict[str, Any] = field(default_factory=dict)
+    parameters: dict[str, Any] = field(default_factory=dict)
     enabled: bool = True
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -82,10 +71,10 @@ class ValidationResult:
     status: ValidationStatus
     message: str
     severity: DataQualityLevel
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
-    affected_columns: List[str] = field(default_factory=list)
-    affected_rows: Optional[List[int]] = None
+    affected_columns: list[str] = field(default_factory=list)
+    affected_rows: list[int] | None = None
 
 
 @dataclass
@@ -96,11 +85,11 @@ class DataQualityReport:
     timestamp: datetime
     total_records: int
     total_columns: int
-    validation_results: List[ValidationResult]
+    validation_results: list[ValidationResult]
     quality_score: float
-    summary: Dict[str, Any]
-    recommendations: List[str]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    summary: dict[str, Any]
+    recommendations: list[str]
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class SchemaValidator:
@@ -111,7 +100,7 @@ class SchemaValidator:
         self.pandera_schemas = {}
 
     def register_schema(
-        self, schema_name: str, schema: Union[Dict, pa.DataFrameSchema]
+        self, schema_name: str, schema: dict | pa.DataFrameSchema
     ):
         """Register a schema for validation"""
         if isinstance(schema, dict):
@@ -121,7 +110,7 @@ class SchemaValidator:
         else:
             raise ValueError("Schema must be dict or pandera.DataFrameSchema")
 
-    def validate_json_schema(self, data: Dict, schema_name: str) -> ValidationResult:
+    def validate_json_schema(self, data: dict, schema_name: str) -> ValidationResult:
         """Validate JSON data against schema"""
         if schema_name not in self.schemas:
             return ValidationResult(
@@ -456,7 +445,7 @@ class DataIntegrityValidator:
         self.referential_rules[rule.rule_id] = rule
 
     def check_uniqueness(
-        self, df: pd.DataFrame, columns: List[str]
+        self, df: pd.DataFrame, columns: list[str]
     ) -> ValidationResult:
         """Check uniqueness constraint"""
         duplicates = df.duplicated(subset=columns, keep=False)
@@ -520,7 +509,7 @@ class DataIntegrityValidator:
                 severity=DataQualityLevel.CRITICAL,
             )
 
-    def validate_business_rules(self, df: pd.DataFrame) -> List[ValidationResult]:
+    def validate_business_rules(self, df: pd.DataFrame) -> list[ValidationResult]:
         """Validate all registered business rules"""
         results = []
 
@@ -638,7 +627,7 @@ class DataQualityFramework:
             )
 
     def validate_data_types(
-        self, df: pd.DataFrame, expected_types: Dict[str, type]
+        self, df: pd.DataFrame, expected_types: dict[str, type]
     ) -> ValidationResult:
         """Validate data types"""
         type_mismatches = []
@@ -731,7 +720,7 @@ class DataQualityFramework:
         self,
         df: pd.DataFrame,
         dataset_name: str = "dataset",
-        rules: Optional[List[DataQualityRule]] = None,
+        rules: list[DataQualityRule] | None = None,
     ) -> DataQualityReport:
         """Run comprehensive data validation"""
         validation_results = []
@@ -819,7 +808,7 @@ class DataQualityFramework:
 
         return report
 
-    def _generate_recommendations(self, results: List[ValidationResult]) -> List[str]:
+    def _generate_recommendations(self, results: list[ValidationResult]) -> list[str]:
         """Generate recommendations based on validation results"""
         recommendations = []
 

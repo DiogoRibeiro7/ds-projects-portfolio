@@ -1,5 +1,4 @@
-"""
-Unit tests for pure helpers in src.data_processing.cleaning.
+"""Unit tests for pure helpers in src.data_processing.cleaning.
 """
 
 from __future__ import annotations

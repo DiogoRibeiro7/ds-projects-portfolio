@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-Prepare METR-LA traffic data for spatio-temporal GNN models.
+"""Prepare METR-LA traffic data for spatio-temporal GNN models.
 
 This script:
 - Loads traffic time series from `metr-la.h5`.
@@ -26,22 +25,20 @@ from __future__ import annotations
 import argparse
 import pickle
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 import h5py
 import numpy as np
 
 
-def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
-    """
-    Parse command-line arguments for data preparation.
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse command-line arguments for data preparation.
 
     Parameters
     ----------
     argv : list[str] | None, default=None
         Optional argument vector (for testing). ``None`` means use ``sys.argv``.
 
-    Returns
+    Returns:
     -------
     argparse.Namespace
         Parsed arguments with attributes:
@@ -49,7 +46,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         - output_path: where to write graph_traffic.npz.
         - h5_dataset_name: optional name of dataset inside metr-la.h5.
 
-    Examples
+    Examples:
     --------
     >>> args = parse_args([
     ...     "--input-dir", "raw_data",
@@ -97,17 +94,17 @@ def discover_h5_dataset_name(h5_file: h5py.File) -> str:
     h5_file : h5py.File
         Open HDF5 file handle.
 
-    Returns
+    Returns:
     -------
     str
         Chosen dataset name.
 
-    Raises
+    Raises:
     ------
     RuntimeError
         If no suitable dataset is found.
     """
-    candidates: List[str] = list(h5_file.keys())
+    candidates: list[str] = list(h5_file.keys())
     if not candidates:
         raise RuntimeError("No datasets found inside metr-la.h5.")
 
@@ -128,7 +125,7 @@ def discover_h5_dataset_name(h5_file: h5py.File) -> str:
 
 
 def load_traffic_from_h5(
-    h5_path: Path, dataset_name: Optional[str] = None
+    h5_path: Path, dataset_name: str | None = None
 ) -> np.ndarray:
     """Load METR-LA traffic tensor from an HDF5 file.
 
@@ -140,12 +137,12 @@ def load_traffic_from_h5(
         If provided, use this dataset name explicitly.
         If None, try to discover it automatically.
 
-    Returns
+    Returns:
     -------
     np.ndarray
         Traffic array of shape (T, N) or (T, N, 1) as float32.
 
-    Raises
+    Raises:
     ------
     FileNotFoundError
         If the HDF5 file does not exist.
@@ -186,12 +183,12 @@ def load_adjacency_from_pkl(pkl_path: Path) -> np.ndarray:
     pkl_path : Path
         Path to adj_mx.pkl.
 
-    Returns
+    Returns:
     -------
     np.ndarray
         Adjacency matrix of shape (N, N) as float32.
 
-    Raises
+    Raises:
     ------
     FileNotFoundError
         If the pickle file does not exist.
@@ -230,7 +227,7 @@ def ensure_traffic_2d(traffic: np.ndarray) -> np.ndarray:
     traffic : np.ndarray
         Raw traffic array, typically (T, N) or (T, N, 1).
 
-    Returns
+    Returns:
     -------
     np.ndarray
         Traffic array of shape (T, N).
@@ -279,7 +276,7 @@ def main() -> None:
 
     input_dir = Path(args.input_dir)
     output_path = Path(args.output_path)
-    h5_dataset_name: Optional[str] = args.h5_dataset_name
+    h5_dataset_name: str | None = args.h5_dataset_name
 
     h5_path = input_dir / "metr-la.h5"
     adj_pkl_path = input_dir / "adj_mx.pkl"

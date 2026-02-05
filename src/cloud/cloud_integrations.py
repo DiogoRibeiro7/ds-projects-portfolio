@@ -1,35 +1,28 @@
-"""
-Cloud Provider Integrations
+"""Cloud Provider Integrations
 Support for AWS, GCP, and Azure ML services
 """
 
-import os
-import json
 import logging
-from typing import Dict, Any, List, Optional, Union, Tuple
+import os
 from dataclasses import dataclass
-from pathlib import Path
-import tempfile
-import hashlib
-from datetime import datetime, timedelta
-import pickle
-import joblib
+from datetime import datetime
+from typing import Any
 
 # AWS imports
 try:
     import boto3
-    from botocore.exceptions import ClientError, NoCredentialsError
     import sagemaker
+    from botocore.exceptions import ClientError, NoCredentialsError
     from sagemaker.estimator import Estimator
-    from sagemaker.predictor import Predictor
     from sagemaker.model import Model
+    from sagemaker.predictor import Predictor
     from sagemaker.processing import ProcessingInput, ProcessingOutput, ScriptProcessor
+    from sagemaker.sklearn import SKLearn, SKLearnProcessor
     from sagemaker.tuner import (
+        ContinuousParameter,
         HyperparameterTuner,
         IntegerParameter,
-        ContinuousParameter,
     )
-    from sagemaker.sklearn import SKLearn, SKLearnProcessor
     from sagemaker.xgboost import XGBoost, XGBoostProcessor
 
     AWS_AVAILABLE = True
@@ -39,10 +32,10 @@ except ImportError:
 
 # GCP imports
 try:
-    from google.cloud import storage, aiplatform, bigquery
+    import google.auth
+    from google.cloud import aiplatform, bigquery, storage
     from google.cloud.aiplatform import gapic as aip
     from google.oauth2 import service_account
-    import google.auth
 
     GCP_AVAILABLE = True
 except ImportError:
@@ -51,22 +44,24 @@ except ImportError:
 
 # Azure imports
 try:
-    from azure.storage.blob import BlobServiceClient, BlobClient
+    import azureml.core
     from azure.ai.ml import MLClient
+    from azure.ai.ml.constants import AssetTypes
+    from azure.ai.ml.entities import (
+        CodeConfiguration,
+        Environment,
+        ManagedOnlineDeployment,
+        ManagedOnlineEndpoint,
+    )
     from azure.ai.ml.entities import (
         Model as AzureModel,
-        Environment,
-        ManagedOnlineEndpoint,
-        ManagedOnlineDeployment,
-        CodeConfiguration,
     )
     from azure.identity import DefaultAzureCredential
-    from azure.ai.ml.constants import AssetTypes
-    import azureml.core
-    from azureml.core import Workspace, Dataset, Experiment, Run
-    from azureml.core.compute import ComputeTarget, AmlCompute
-    from azureml.train.automl import AutoMLConfig
+    from azure.storage.blob import BlobClient, BlobServiceClient
+    from azureml.core import Dataset, Experiment, Run, Workspace
+    from azureml.core.compute import AmlCompute, ComputeTarget
     from azureml.core.model import Model as AzureMLModel
+    from azureml.train.automl import AutoMLConfig
 
     AZURE_AVAILABLE = True
 except ImportError:
@@ -84,12 +79,12 @@ class CloudConfig:
 
     provider: str  # "aws", "gcp", "azure"
     region: str
-    project_id: Optional[str] = None
-    bucket_name: Optional[str] = None
-    credentials_path: Optional[str] = None
-    resource_group: Optional[str] = None
-    subscription_id: Optional[str] = None
-    workspace_name: Optional[str] = None
+    project_id: str | None = None
+    bucket_name: str | None = None
+    credentials_path: str | None = None
+    resource_group: str | None = None
+    subscription_id: str | None = None
+    workspace_name: str | None = None
 
 
 class CloudStorageInterface:
@@ -103,7 +98,7 @@ class CloudStorageInterface:
         """Download a remote artifact into ``local_path`` and return the path."""
         raise NotImplementedError
 
-    def list_files(self, prefix: str = "") -> List[str]:
+    def list_files(self, prefix: str = "") -> list[str]:
         """List available objects matching ``prefix``."""
         raise NotImplementedError
 
@@ -160,7 +155,7 @@ class AWSIntegration(CloudStorageInterface):
             logger.error(f"Failed to download file: {e}")
             raise
 
-    def list_files(self, prefix: str = "") -> List[str]:
+    def list_files(self, prefix: str = "") -> list[str]:
         """List files in S3 bucket"""
         try:
             response = self.s3_client.list_objects_v2(
@@ -189,7 +184,7 @@ class AWSIntegration(CloudStorageInterface):
         train_data_s3: str,
         val_data_s3: str,
         algorithm: str = "xgboost",
-        hyperparameters: Dict[str, Any] = None,
+        hyperparameters: dict[str, Any] = None,
     ) -> str:
         """Train model using SageMaker"""
         if algorithm == "xgboost":
@@ -224,8 +219,8 @@ class AWSIntegration(CloudStorageInterface):
         return estimator.model_data
 
     def hyperparameter_tuning(
-        self, train_data_s3: str, val_data_s3: str, param_ranges: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, train_data_s3: str, val_data_s3: str, param_ranges: dict[str, Any]
+    ) -> dict[str, Any]:
         """Perform hyperparameter tuning with SageMaker"""
         # Create base estimator
         xgb_estimator = XGBoost(
@@ -354,7 +349,7 @@ class GCPIntegration(CloudStorageInterface):
         logger.info(f"Downloaded to {local_path}")
         return local_path
 
-    def list_files(self, prefix: str = "") -> List[str]:
+    def list_files(self, prefix: str = "") -> list[str]:
         """List files in GCS bucket"""
         blobs = self.bucket.list_blobs(prefix=prefix)
         return [blob.name for blob in blobs]
@@ -376,7 +371,7 @@ class GCPIntegration(CloudStorageInterface):
         train_data_gcs: str,
         model_display_name: str,
         machine_type: str = "n1-standard-4",
-        accelerator_type: Optional[str] = None,
+        accelerator_type: str | None = None,
     ) -> str:
         """Train model using Vertex AI"""
         # Create custom training job
@@ -543,7 +538,7 @@ class AzureIntegration(CloudStorageInterface):
         logger.info(f"Downloaded to {local_path}")
         return local_path
 
-    def list_files(self, prefix: str = "") -> List[str]:
+    def list_files(self, prefix: str = "") -> list[str]:
         """List files in Azure Blob Storage"""
         container_name = prefix.split("/")[0] if "/" in prefix else "default"
         container_client = self.blob_service_client.get_container_client(container_name)
@@ -717,7 +712,7 @@ class CloudMLPlatform:
         """Download model from cloud storage"""
         return self.provider.download_file(model_uri, local_path)
 
-    def list_models(self, prefix: str = "models/") -> List[str]:
+    def list_models(self, prefix: str = "models/") -> list[str]:
         """List available models"""
         return self.provider.list_files(prefix)
 

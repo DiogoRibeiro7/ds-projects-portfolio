@@ -1,11 +1,8 @@
-"""
-Optimization templates and code generators for creating optimized notebooks.
+"""Optimization templates and code generators for creating optimized notebooks.
 """
 
-import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 import nbformat
 from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
@@ -557,8 +554,7 @@ class NotebookGenerator:
     def create_optimized_notebook(
         self, notebook_type: str, title: str = "Optimized Notebook"
     ) -> str:
-        """
-        Create an optimized notebook for specific use case.
+        """Create an optimized notebook for specific use case.
 
         Args:
             notebook_type: Type of notebook ('eda', 'ml', 'timeseries', 'ab_testing')
@@ -633,7 +629,7 @@ print(f"Memory usage: {process.memory_info().rss / 1024 / 1024:.2f} MB")"""
         print(f"Created optimized notebook: {filepath}")
         return str(filepath)
 
-    def create_all_templates(self) -> List[str]:
+    def create_all_templates(self) -> list[str]:
         """Create all template notebooks."""
         templates = ["eda", "ml", "timeseries", "batch"]
         created = []

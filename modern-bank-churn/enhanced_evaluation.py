@@ -1,36 +1,20 @@
-"""
-Enhanced Evaluation for Bank Churn Prediction.
+"""Enhanced Evaluation for Bank Churn Prediction.
 Custom business metrics, fairness evaluation, statistical testing,
 and ROI-based model assessment.
 """
 
 import warnings
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from dataclasses import dataclass
+from typing import Any
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from scipy import stats
 from sklearn.metrics import (
-    accuracy_score,
     auc,
-    average_precision_score,
-    brier_score_loss,
-    classification_report,
-    cohen_kappa_score,
     confusion_matrix,
-    f1_score,
-    log_loss,
-    matthews_corrcoef,
-    precision_recall_curve,
-    precision_score,
-    recall_score,
     roc_auc_score,
-    roc_curve,
 )
-from sklearn.model_selection import permutation_test_score
 from sklearn.utils import resample
 
 warnings.filterwarnings("ignore")
@@ -54,10 +38,10 @@ class BusinessMetrics:
 class FairnessMetrics:
     """Container for fairness and bias metrics."""
 
-    demographic_parity_difference: Dict[str, float]
-    equal_opportunity_difference: Dict[str, float]
-    disparate_impact_ratio: Dict[str, float]
-    average_odds_difference: Dict[str, float]
+    demographic_parity_difference: dict[str, float]
+    equal_opportunity_difference: dict[str, float]
+    disparate_impact_ratio: dict[str, float]
+    average_odds_difference: dict[str, float]
     individual_fairness_score: float
     group_fairness_score: float
 
@@ -70,12 +54,11 @@ class ModelComparisonResult:
     statistical_significance: pd.DataFrame
     pairwise_differences: pd.DataFrame
     best_model: str
-    confidence_intervals: Dict[str, Tuple[float, float]]
+    confidence_intervals: dict[str, tuple[float, float]]
 
 
 class BusinessMetricsCalculator:
-    """
-    Calculate business-oriented metrics for churn models.
+    """Calculate business-oriented metrics for churn models.
     """
 
     def __init__(
@@ -86,8 +69,7 @@ class BusinessMetricsCalculator:
         discount_rate: float = 0.1,
         time_horizon: int = 12,
     ):
-        """
-        Initialize business metrics calculator.
+        """Initialize business metrics calculator.
 
         Args:
             customer_value: Average customer lifetime value
@@ -109,8 +91,7 @@ class BusinessMetricsCalculator:
         y_prob: np.ndarray,
         customer_values: np.ndarray = None,
     ) -> BusinessMetrics:
-        """
-        Calculate comprehensive business metrics.
+        """Calculate comprehensive business metrics.
 
         Args:
             y_true: True labels (1 = churned)
@@ -212,7 +193,6 @@ class BusinessMetricsCalculator:
         normalized_profit = np.array(cumulative_profit) / (max_profit + 0.001)
 
         # Calculate AUC
-        from sklearn.metrics import auc
 
         percentages = np.array(cumulative_cost) / len(y_true)
         profit_auc = auc(percentages, normalized_profit)
@@ -251,10 +231,9 @@ class BusinessMetricsCalculator:
         self,
         y_true: np.ndarray,
         y_prob: np.ndarray,
-        thresholds: List[float] = None,
+        thresholds: list[float] = None,
     ) -> pd.DataFrame:
-        """
-        Calculate ROI metrics at different thresholds.
+        """Calculate ROI metrics at different thresholds.
 
         Args:
             y_true: True labels
@@ -298,13 +277,11 @@ class BusinessMetricsCalculator:
 
 
 class FairnessEvaluator:
-    """
-    Evaluate model fairness across different demographic groups.
+    """Evaluate model fairness across different demographic groups.
     """
 
-    def __init__(self, sensitive_attributes: List[str]):
-        """
-        Initialize fairness evaluator.
+    def __init__(self, sensitive_attributes: list[str]):
+        """Initialize fairness evaluator.
 
         Args:
             sensitive_attributes: List of sensitive attribute names
@@ -319,8 +296,7 @@ class FairnessEvaluator:
         y_pred: np.ndarray,
         y_prob: np.ndarray = None,
     ) -> FairnessMetrics:
-        """
-        Evaluate model fairness across sensitive attributes.
+        """Evaluate model fairness across sensitive attributes.
 
         Args:
             X: Features including sensitive attributes
@@ -531,9 +507,9 @@ class FairnessEvaluator:
 
     def _calculate_group_fairness(
         self,
-        demographic_parity: Dict[str, float],
-        equal_opportunity: Dict[str, float],
-        disparate_impact: Dict[str, float],
+        demographic_parity: dict[str, float],
+        equal_opportunity: dict[str, float],
+        disparate_impact: dict[str, float],
     ) -> float:
         """Calculate overall group fairness score."""
         scores = []
@@ -557,18 +533,16 @@ class FairnessEvaluator:
 
 
 class ModelComparisonFramework:
-    """
-    Framework for comparing multiple models with statistical significance testing.
+    """Framework for comparing multiple models with statistical significance testing.
     """
 
     def __init__(
         self,
-        metrics: List[str] = None,
+        metrics: list[str] = None,
         n_bootstrap: int = 1000,
         confidence_level: float = 0.95,
     ):
-        """
-        Initialize model comparison framework.
+        """Initialize model comparison framework.
 
         Args:
             metrics: List of metrics to compare
@@ -584,13 +558,12 @@ class ModelComparisonFramework:
 
     def compare_models(
         self,
-        models: Dict[str, Any],
+        models: dict[str, Any],
         X: pd.DataFrame,
         y: pd.Series,
         cv_folds: int = 5,
     ) -> ModelComparisonResult:
-        """
-        Compare multiple models with statistical tests.
+        """Compare multiple models with statistical tests.
 
         Args:
             models: Dictionary of model_name: model pairs
@@ -633,7 +606,7 @@ class ModelComparisonFramework:
 
     def _evaluate_model(
         self, model: Any, X: pd.DataFrame, y: pd.Series, cv_folds: int
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Evaluate model on multiple metrics."""
         from sklearn.model_selection import cross_validate
 
@@ -665,7 +638,7 @@ class ModelComparisonFramework:
         return scores
 
     def _create_rankings(
-        self, model_scores: Dict[str, Dict[str, float]]
+        self, model_scores: dict[str, dict[str, float]]
     ) -> pd.DataFrame:
         """Create model rankings based on average rank across metrics."""
         rankings_data = []
@@ -699,7 +672,7 @@ class ModelComparisonFramework:
         return rankings_df
 
     def _test_statistical_significance(
-        self, models: Dict[str, Any], X: pd.DataFrame, y: pd.Series
+        self, models: dict[str, Any], X: pd.DataFrame, y: pd.Series
     ) -> pd.DataFrame:
         """Test statistical significance between models."""
         model_names = list(models.keys())
@@ -726,8 +699,7 @@ class ModelComparisonFramework:
     def _delongs_test(
         self, model1: Any, model2: Any, X: pd.DataFrame, y: pd.Series
     ) -> float:
-        """
-        Perform DeLong's test for comparing AUC scores.
+        """Perform DeLong's test for comparing AUC scores.
         Simplified version using bootstrap.
         """
         # Get predictions
@@ -756,7 +728,7 @@ class ModelComparisonFramework:
         return p_value
 
     def _calculate_pairwise_differences(
-        self, model_scores: Dict[str, Dict[str, float]]
+        self, model_scores: dict[str, dict[str, float]]
     ) -> pd.DataFrame:
         """Calculate pairwise differences in metrics."""
         model_names = list(model_scores.keys())
@@ -779,8 +751,8 @@ class ModelComparisonFramework:
         return differences
 
     def _calculate_confidence_intervals(
-        self, model_scores: Dict[str, Dict[str, float]]
-    ) -> Dict[str, Tuple[float, float]]:
+        self, model_scores: dict[str, dict[str, float]]
+    ) -> dict[str, tuple[float, float]]:
         """Calculate confidence intervals for model scores."""
         confidence_intervals = {}
 

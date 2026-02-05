@@ -2,7 +2,6 @@ import streamlit as st
 
 from src.statistics.core import calculate_power, calculate_sample_size
 
-
 st.set_page_config(page_title="A/B Test Calculator", layout="centered")
 
 st.title("A/B Test Sample Size & Power Calculator")

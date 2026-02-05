@@ -1,55 +1,51 @@
-"""
-Observability Module
+"""Observability Module
 Comprehensive monitoring, logging, and tracing for ML systems
 """
 
-import logging
-import time
-import json
-import sys
-import os
-from typing import Dict, Any, Optional, List, Callable
-from functools import wraps
-from contextlib import contextmanager
-from datetime import datetime, timedelta
-import threading
-import asyncio
-from dataclasses import dataclass, asdict
-
-# OpenTelemetry imports
-from opentelemetry import trace, metrics, baggage
-from opentelemetry.exporter.prometheus import PrometheusMetricReader
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
-
-# Structured logging
-import structlog
-from pythonjsonlogger import jsonlogger
-
-# Metrics
-from prometheus_client import Counter, Histogram, Gauge, Summary, Info
-from prometheus_client import generate_latest, REGISTRY
-
-# Distributed tracing correlation
-import uuid
 import contextvars
 
 # Performance profiling
 import cProfile
-import pstats
 import io
+import logging
+import os
+import pstats
+import threading
+import time
 import tracemalloc
+from collections.abc import Callable
+
+# Distributed tracing correlation
+from contextlib import contextmanager
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from functools import wraps
+from typing import Any
+
 import psutil
 
+# Structured logging
+import structlog
+
+# OpenTelemetry imports
+from opentelemetry import metrics, trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.prometheus import PrometheusMetricReader
+from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
+from opentelemetry.instrumentation.redis import RedisInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+# Metrics
+from prometheus_client import (
+    Counter,
+    Gauge,
+    Histogram,
+)
+from pythonjsonlogger import jsonlogger
 
 # Context variables for tracing
 trace_id_var = contextvars.ContextVar("trace_id", default=None)
@@ -225,7 +221,7 @@ class ObservabilityManager:
         # Note: FastAPI and SQLAlchemy instrumentors should be called with instances
 
     @contextmanager
-    def trace_span(self, name: str, attributes: Optional[Dict[str, Any]] = None):
+    def trace_span(self, name: str, attributes: dict[str, Any] | None = None):
         """Create a trace span"""
         with self.tracer.start_as_current_span(name) as span:
             # Set trace context
@@ -359,7 +355,7 @@ class MetricsCollector:
         model_name: str,
         model_version: str,
         latency_ms: float,
-        features: Dict[str, Any],
+        features: dict[str, Any],
     ):
         """Collect prediction metrics"""
         metrics = MLMetrics(
@@ -423,11 +419,11 @@ class AlertManager:
         self.alert_rules = []
         self.alert_history = []
 
-    def add_rule(self, rule: Dict[str, Any]):
+    def add_rule(self, rule: dict[str, Any]):
         """Add alert rule"""
         self.alert_rules.append(rule)
 
-    def check_alerts(self, metrics: Dict[str, float]):
+    def check_alerts(self, metrics: dict[str, float]):
         """Check metrics against alert rules"""
         for rule in self.alert_rules:
             metric_value = metrics.get(rule["metric"])
@@ -444,7 +440,7 @@ class AlertManager:
             if triggered:
                 self._trigger_alert(rule, metric_value)
 
-    def _trigger_alert(self, rule: Dict[str, Any], value: float):
+    def _trigger_alert(self, rule: dict[str, Any], value: float):
         """Trigger an alert"""
         alert = {
             "timestamp": datetime.now().isoformat(),
@@ -478,7 +474,7 @@ if __name__ == "__main__":
 
     # Example: Trace a function
     @obs.trace_function
-    def process_data(data: List[float]) -> float:
+    def process_data(data: list[float]) -> float:
         """Example computation used to illustrate tracing behavior."""
         time.sleep(0.1)  # Simulate processing
         return sum(data) / len(data)

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-Generate regression baseline artifacts.
+"""Generate regression baseline artifacts.
 
 Usage:
     python scripts/generate_regression_baselines.py

@@ -3,7 +3,6 @@ import pandas as pd
 import streamlit as st
 from statsmodels.tsa.arima.model import ARIMA
 
-
 st.set_page_config(page_title="Sales Forecast Explorer", layout="wide")
 
 st.title("Sales Forecast Explorer")

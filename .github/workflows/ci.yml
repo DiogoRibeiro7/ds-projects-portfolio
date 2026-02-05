@@ -35,7 +35,7 @@ jobs:
             echo "requirements-dev.txt not found; falling back to requirements.txt"
             pip install -r "${{ github.workspace }}/requirements.txt"
           fi
-          python -m pip install ruff
+          python -m pip install ruff==0.14.0
       - name: Check formatting
         run: ruff format --check .
       - name: Lint
@@ -61,7 +61,7 @@ jobs:
             echo "requirements-dev.txt not found; falling back to requirements.txt"
             pip install -r "${{ github.workspace }}/requirements.txt"
           fi
-          python -m pip install ruff
+          python -m pip install ruff==0.14.0
       - name: Run mypy
         run: make typecheck
 
@@ -89,7 +89,7 @@ jobs:
             echo "requirements-dev.txt not found; falling back to requirements.txt"
             pip install -r "${{ github.workspace }}/requirements.txt"
           fi
-          python -m pip install ruff
+          python -m pip install ruff==0.14.0
       - name: Run tests
         env:
           PYTHONHASHSEED: "0"
@@ -128,7 +128,7 @@ jobs:
             echo "requirements-dev.txt not found; falling back to requirements.txt"
             pip install -r "${{ github.workspace }}/requirements.txt"
           fi
-          python -m pip install ruff
+          python -m pip install ruff==0.14.0
       - name: Build docs
         run: |
           mkdir -p docs/_build

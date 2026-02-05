@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""Quick fixes for notebook execution issues identified in testing.
-"""
+"""Quick fixes for notebook execution issues identified in testing."""
 
 from pathlib import Path
 

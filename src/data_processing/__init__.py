@@ -1,5 +1,4 @@
-"""Data processing utilities for A/B testing and experimental analysis.
-"""
+"""Data processing utilities for A/B testing and experimental analysis."""
 
 from .cleaning import (
     DataQualityChecker,

@@ -587,10 +587,12 @@ def plot_conversion_funnel(
 
         # Add confidence intervals as error bars (TODO implemented)
         error_lower = [
-            rate - ci_low for rate, ci_low in zip(data["rates"], data["ci_lower"], strict=False)
+            rate - ci_low
+            for rate, ci_low in zip(data["rates"], data["ci_lower"], strict=False)
         ]
         error_upper = [
-            ci_high - rate for rate, ci_high in zip(data["rates"], data["ci_upper"], strict=False)
+            ci_high - rate
+            for rate, ci_high in zip(data["rates"], data["ci_upper"], strict=False)
         ]
 
         axes[0].errorbar(

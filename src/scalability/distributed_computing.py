@@ -412,9 +412,7 @@ class GPUAccelerator:
         self.device_count = cp.cuda.runtime.getDeviceCount()
         logger.info(f"GPU Accelerator initialized with {self.device_count} devices")
 
-    def to_gpu(
-        self, data: pd.DataFrame | np.ndarray
-    ) -> cudf.DataFrame | cp.ndarray:
+    def to_gpu(self, data: pd.DataFrame | np.ndarray) -> cudf.DataFrame | cp.ndarray:
         """Transfer data to GPU"""
         if isinstance(data, pd.DataFrame):
             return cudf.from_pandas(data)
@@ -423,9 +421,7 @@ class GPUAccelerator:
         else:
             raise TypeError(f"Unsupported data type: {type(data)}")
 
-    def to_cpu(
-        self, data: cudf.DataFrame | cp.ndarray
-    ) -> pd.DataFrame | np.ndarray:
+    def to_cpu(self, data: cudf.DataFrame | cp.ndarray) -> pd.DataFrame | np.ndarray:
         """Transfer data from GPU to CPU"""
         if isinstance(data, cudf.DataFrame):
             return data.to_pandas()

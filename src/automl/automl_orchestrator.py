@@ -1,5 +1,4 @@
-"""AutoML Orchestrator with support for multiple frameworks and automated pipeline generation.
-"""
+"""AutoML Orchestrator with support for multiple frameworks and automated pipeline generation."""
 
 import logging
 import os
@@ -105,8 +104,7 @@ class AutoMLConfig:
 
 
 class AutoMLOrchestrator:
-    """Advanced AutoML orchestrator with multiple framework support.
-    """
+    """Advanced AutoML orchestrator with multiple framework support."""
 
     def __init__(self, config: AutoMLConfig):
         """Initialize AutoML orchestrator."""

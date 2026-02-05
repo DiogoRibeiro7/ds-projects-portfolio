@@ -1,5 +1,4 @@
-"""Comprehensive Audit Logging System
-"""
+"""Comprehensive Audit Logging System"""
 
 import base64
 import gzip

@@ -242,7 +242,11 @@ class ModelManager:
                 "base_value": float(shap_values.base_values[0]),
                 "feature_names": list(features.keys()),
                 "feature_importance": dict(
-                    zip(features.keys(), np.abs(shap_values.values[0]).tolist(), strict=False)
+                    zip(
+                        features.keys(),
+                        np.abs(shap_values.values[0]).tolist(),
+                        strict=False,
+                    )
                 ),
             }
 

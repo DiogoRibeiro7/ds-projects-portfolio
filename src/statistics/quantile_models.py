@@ -1,5 +1,4 @@
-"""Monotone quantile models with cumulative softplus heads.
-"""
+"""Monotone quantile models with cumulative softplus heads."""
 
 from __future__ import annotations
 
@@ -83,8 +82,7 @@ def fit_constant_monotone_quantiles(
     epochs: int = 2000,
     lr: float = 0.05,
 ) -> dict[str, np.ndarray]:
-    """Fit constant (featureless) monotone quantiles via gradient descent.
-    """
+    """Fit constant (featureless) monotone quantiles via gradient descent."""
     data = np.asarray(list(y), dtype=float)
     if data.ndim != 1:
         raise ValueError("y must be 1D")

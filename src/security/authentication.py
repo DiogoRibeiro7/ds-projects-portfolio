@@ -1,5 +1,4 @@
-"""Authentication and Authorization System
-"""
+"""Authentication and Authorization System"""
 
 import base64
 import hashlib

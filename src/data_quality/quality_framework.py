@@ -99,9 +99,7 @@ class SchemaValidator:
         self.schemas = {}
         self.pandera_schemas = {}
 
-    def register_schema(
-        self, schema_name: str, schema: dict | pa.DataFrameSchema
-    ):
+    def register_schema(self, schema_name: str, schema: dict | pa.DataFrameSchema):
         """Register a schema for validation"""
         if isinstance(schema, dict):
             self.schemas[schema_name] = schema

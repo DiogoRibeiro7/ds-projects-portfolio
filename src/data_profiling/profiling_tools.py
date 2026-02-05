@@ -823,9 +823,7 @@ class DataVersionManager:
             return pd.read_parquet(file_path)
         return None
 
-    def get_version(
-        self, dataset_id: str, version_number: str
-    ) -> DataVersion | None:
+    def get_version(self, dataset_id: str, version_number: str) -> DataVersion | None:
         """Get specific version"""
         return self.versions.get(f"{dataset_id}_{version_number}")
 

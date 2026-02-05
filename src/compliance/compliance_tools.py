@@ -1,5 +1,4 @@
-"""Compliance Tools - Model governance, fairness testing, and regulatory compliance
-"""
+"""Compliance Tools - Model governance, fairness testing, and regulatory compliance"""
 
 import hashlib
 import json

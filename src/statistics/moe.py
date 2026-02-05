@@ -1,5 +1,4 @@
-"""Mixture-of-Experts models with Gaussian experts.
-"""
+"""Mixture-of-Experts models with Gaussian experts."""
 
 from __future__ import annotations
 

@@ -755,4 +755,7 @@ class FeatureStabilityAnalyzer:
         return temporal_df
 
 
-class FeatureEngineering
+class FeatureEngineering:
+    """Placeholder feature engineering pipeline."""
+
+    pass

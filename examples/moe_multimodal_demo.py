@@ -37,5 +37,5 @@ def main() -> None:
         print("⚠️ MoE did not improve; consider adjusting hyperparameters.")
 
 
-+if __name__ == "__main__":
-+    main()
+if __name__ == "__main__":
+    main()

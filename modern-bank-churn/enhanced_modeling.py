@@ -111,78 +111,74 @@ class StratifiedCrossValidator:
 
         # Initialize results
         results = {
-            'scores': {},
-            'predictions': None,
-            'prediction_probas': None,
-            'feature_importance': []
+            "scores": {},
+            "predictions": None,
+            "prediction_probas": None,
+            "feature_importance": [],
         }
 
         # Get cross-validator
         if self.validation_strategy == "stratified_kfold":
             cv = StratifiedKFold(
-                n_splits=self.n_splits,
-                shuffle=True,
-                random_state=self.random_state
+                n_splits=self.n_splits, shuffle=True, random_state=self.random_state
             )
         elif self.validation_strategy == "repeated_stratified_kfold":
             from sklearn.model_selection import RepeatedStratifiedKFold
+
             cv = RepeatedStratifiedKFold(
-                n_splits=self.n_splits,
-                n_repeats=3,
-                random_state=self.random_state
+                n_splits=self.n_splits, n_repeats=3, random_state=self.random_state
             )
         elif self.validation_strategy == "time_series_split":
             from sklearn.model_selection import TimeSeriesSplit
+
             cv = TimeSeriesSplit(n_splits=self.n_splits)
         else:
             raise ValueError(f"Unknown validation strategy: {self.validation_strategy}")
 
         # Perform cross-validation for each metric
         for metric in scoring:
-            scores = cross_val_score(
-                model, X, y, cv=cv, scoring=metric, n_jobs=-1
-            )
-            results['scores'][metric] = {
-                'mean': np.mean(scores),
-                'std': np.std(scores),
-                'values': scores,
-                'ci_lower': np.percentile(scores, 2.5),
-                'ci_upper': np.percentile(scores, 97.5)
+            scores = cross_val_score(model, X, y, cv=cv, scoring=metric, n_jobs=-1)
+            results["scores"][metric] = {
+                "mean": np.mean(scores),
+                "std": np.std(scores),
+                "values": scores,
+                "ci_lower": np.percentile(scores, 2.5),
+                "ci_upper": np.percentile(scores, 97.5),
             }
 
         # Get out-of-fold predictions if requested
         if return_predictions:
-            results['predictions'] = cross_val_predict(
-                clone(model), X, y, cv=cv, method='predict', n_jobs=-1
+            results["predictions"] = cross_val_predict(
+                clone(model), X, y, cv=cv, method="predict", n_jobs=-1
             )
 
-            if hasattr(model, 'predict_proba'):
-                results['prediction_probas'] = cross_val_predict(
-                    clone(model), X, y, cv=cv, method='predict_proba', n_jobs=-1
+            if hasattr(model, "predict_proba"):
+                results["prediction_probas"] = cross_val_predict(
+                    clone(model), X, y, cv=cv, method="predict_proba", n_jobs=-1
                 )
 
         # Get feature importance from each fold
-        if hasattr(model, 'feature_importances_') or hasattr(model, 'coef_'):
+        if hasattr(model, "feature_importances_") or hasattr(model, "coef_"):
             for fold, (train_idx, val_idx) in enumerate(cv.split(X, y)):
                 X_train, y_train = X.iloc[train_idx], y.iloc[train_idx]
                 fold_model = clone(model)
                 fold_model.fit(X_train, y_train)
 
-                if hasattr(fold_model, 'feature_importances_'):
+                if hasattr(fold_model, "feature_importances_"):
                     importance = fold_model.feature_importances_
-                elif hasattr(fold_model, 'coef_'):
+                elif hasattr(fold_model, "coef_"):
                     importance = np.abs(fold_model.coef_.flatten())
                 else:
                     importance = np.zeros(X.shape[1])
 
-                results['feature_importance'].append(importance)
+                results["feature_importance"].append(importance)
 
             # Average feature importance across folds
-            results['feature_importance'] = pd.DataFrame(
-                np.mean(results['feature_importance'], axis=0),
+            results["feature_importance"] = pd.DataFrame(
+                np.mean(results["feature_importance"], axis=0),
                 index=X.columns,
-                columns=['importance']
-            ).sort_values('importance', ascending=False)
+                columns=["importance"],
+            ).sort_values("importance", ascending=False)
 
         return results
 
@@ -211,11 +207,16 @@ class EnhancedEnsembleMethods:
     def _get_default_base_models(self) -> List[Tuple[str, BaseEstimator]]:
         """Get default base models for ensemble."""
         return [
-            ('rf', RandomForestClassifier(n_estimators=100, random_state=42)),
-            ('gb', GradientBoostingClassifier(n_estimators=100, random_state=42)),
-            ('lgb', lgb.LGBMClassifier(n_estimators=100, random_state=42, verbose=-1)),
-            ('xgb', xgb.XGBClassifier(n_estimators=100, random_state=42, use_label_encoder=False)),
-            ('lr', LogisticRegression(max_iter=1000, random_state=42))
+            ("rf", RandomForestClassifier(n_estimators=100, random_state=42)),
+            ("gb", GradientBoostingClassifier(n_estimators=100, random_state=42)),
+            ("lgb", lgb.LGBMClassifier(n_estimators=100, random_state=42, verbose=-1)),
+            (
+                "xgb",
+                xgb.XGBClassifier(
+                    n_estimators=100, random_state=42, use_label_encoder=False
+                ),
+            ),
+            ("lr", LogisticRegression(max_iter=1000, random_state=42)),
         ]
 
     def create_stacking_ensemble(
@@ -249,8 +250,8 @@ class EnhancedEnsembleMethods:
             estimators=self.base_models,
             final_estimator=meta_model,
             cv=StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=42),
-            stack_method='predict_proba' if use_probas else 'predict',
-            n_jobs=-1
+            stack_method="predict_proba" if use_probas else "predict",
+            n_jobs=-1,
         )
 
         # Fit stacking ensemble
@@ -291,7 +292,7 @@ class EnhancedEnsembleMethods:
             model.fit(X_train, y_train)
 
             # Get predictions on validation set
-            if hasattr(model, 'predict_proba'):
+            if hasattr(model, "predict_proba"):
                 val_preds = model.predict_proba(X_val)[:, 1]
                 train_preds = model.predict_proba(X_train)[:, 1]
             else:
@@ -318,7 +319,7 @@ class EnhancedEnsembleMethods:
         self,
         X: pd.DataFrame,
         y: pd.Series,
-        optimization_metric: str = 'roc_auc',
+        optimization_metric: str = "roc_auc",
         cv_folds: int = 5,
     ) -> VotingClassifier:
         """
@@ -338,13 +339,13 @@ class EnhancedEnsembleMethods:
         oof_predictions = []
 
         for name, model in self.base_models:
-            if hasattr(model, 'predict_proba'):
+            if hasattr(model, "predict_proba"):
                 oof_pred = cross_val_predict(
-                    clone(model), X, y, cv=cv, method='predict_proba', n_jobs=-1
+                    clone(model), X, y, cv=cv, method="predict_proba", n_jobs=-1
                 )[:, 1]
             else:
                 oof_pred = cross_val_predict(
-                    clone(model), X, y, cv=cv, method='predict', n_jobs=-1
+                    clone(model), X, y, cv=cv, method="predict", n_jobs=-1
                 )
 
             oof_predictions.append(oof_pred)
@@ -357,9 +358,9 @@ class EnhancedEnsembleMethods:
         # Create weighted voting classifier
         weighted_ensemble = VotingClassifier(
             estimators=self.base_models,
-            voting='soft',
+            voting="soft",
             weights=self.ensemble_weights_,
-            n_jobs=-1
+            n_jobs=-1,
         )
 
         weighted_ensemble.fit(X, y)
@@ -367,10 +368,7 @@ class EnhancedEnsembleMethods:
         return weighted_ensemble
 
     def _optimize_weights(
-        self,
-        predictions: List[np.ndarray],
-        y_true: np.ndarray,
-        metric: str = 'roc_auc'
+        self, predictions: List[np.ndarray], y_true: np.ndarray, metric: str = "roc_auc"
     ) -> List[float]:
         """Optimize ensemble weights using Optuna."""
 
@@ -378,7 +376,7 @@ class EnhancedEnsembleMethods:
             # Sample weights
             weights = []
             for i in range(len(predictions)):
-                weights.append(trial.suggest_float(f'weight_{i}', 0.0, 1.0))
+                weights.append(trial.suggest_float(f"weight_{i}", 0.0, 1.0))
 
             # Normalize weights
             weights = np.array(weights)
@@ -390,21 +388,21 @@ class EnhancedEnsembleMethods:
                 weighted_pred += weights[i] * pred
 
             # Calculate metric
-            if metric == 'roc_auc':
+            if metric == "roc_auc":
                 return roc_auc_score(y_true, weighted_pred)
-            elif metric == 'log_loss':
+            elif metric == "log_loss":
                 return -log_loss(y_true, weighted_pred)
             else:
                 raise ValueError(f"Unknown metric: {metric}")
 
         # Optimize
-        study = optuna.create_study(direction='maximize')
+        study = optuna.create_study(direction="maximize")
         study.optimize(objective, n_trials=100, show_progress_bar=False)
 
         # Get best weights
         best_weights = []
         for i in range(len(predictions)):
-            best_weights.append(study.best_params[f'weight_{i}'])
+            best_weights.append(study.best_params[f"weight_{i}"])
 
         # Normalize
         best_weights = np.array(best_weights)
@@ -421,10 +419,10 @@ class HyperparameterOptimizer:
 
     def __init__(
         self,
-        optimization_strategy: str = 'bayesian',
+        optimization_strategy: str = "bayesian",
         n_trials: int = 100,
         cv_folds: int = 5,
-        scoring: str = 'roc_auc',
+        scoring: str = "roc_auc",
         random_state: int = 42,
     ):
         """
@@ -472,24 +470,23 @@ class HyperparameterOptimizer:
             # Sample parameters
             params = {}
             for param_name, param_config in param_space.items():
-                if param_config['type'] == 'int':
+                if param_config["type"] == "int":
                     params[param_name] = trial.suggest_int(
                         param_name,
-                        param_config['low'],
-                        param_config['high'],
-                        step=param_config.get('step', 1)
+                        param_config["low"],
+                        param_config["high"],
+                        step=param_config.get("step", 1),
                     )
-                elif param_config['type'] == 'float':
+                elif param_config["type"] == "float":
                     params[param_name] = trial.suggest_float(
                         param_name,
-                        param_config['low'],
-                        param_config['high'],
-                        log=param_config.get('log', False)
+                        param_config["low"],
+                        param_config["high"],
+                        log=param_config.get("log", False),
                     )
-                elif param_config['type'] == 'categorical':
+                elif param_config["type"] == "categorical":
                     params[param_name] = trial.suggest_categorical(
-                        param_name,
-                        param_config['choices']
+                        param_name, param_config["choices"]
                     )
 
             # Create model
@@ -497,9 +494,7 @@ class HyperparameterOptimizer:
 
             # Cross-validation
             cv = StratifiedKFold(
-                n_splits=self.cv_folds,
-                shuffle=True,
-                random_state=self.random_state
+                n_splits=self.cv_folds, shuffle=True, random_state=self.random_state
             )
 
             scores = cross_val_score(
@@ -509,26 +504,21 @@ class HyperparameterOptimizer:
             return np.mean(scores)
 
         # Create study with appropriate sampler
-        if self.optimization_strategy == 'bayesian':
+        if self.optimization_strategy == "bayesian":
             sampler = optuna.samplers.TPESampler(seed=self.random_state)
-        elif self.optimization_strategy == 'random':
+        elif self.optimization_strategy == "random":
             sampler = optuna.samplers.RandomSampler(seed=self.random_state)
-        elif self.optimization_strategy == 'grid':
+        elif self.optimization_strategy == "grid":
             sampler = optuna.samplers.GridSampler(param_space)
         else:
-            raise ValueError(f"Unknown optimization strategy: {self.optimization_strategy}")
+            raise ValueError(
+                f"Unknown optimization strategy: {self.optimization_strategy}"
+            )
 
-        study = optuna.create_study(
-            direction='maximize',
-            sampler=sampler
-        )
+        study = optuna.create_study(direction="maximize", sampler=sampler)
 
         # Optimize
-        study.optimize(
-            objective,
-            n_trials=self.n_trials,
-            show_progress_bar=True
-        )
+        study.optimize(objective, n_trials=self.n_trials, show_progress_bar=True)
 
         # Get best parameters
         self.best_params_ = study.best_params
@@ -542,45 +532,64 @@ class HyperparameterOptimizer:
 
     def _get_default_param_space(self, model_class: str) -> Dict[str, Any]:
         """Get default parameter space for model class."""
-        if model_class == 'rf':
+        if model_class == "rf":
             return {
-                'n_estimators': {'type': 'int', 'low': 50, 'high': 300, 'step': 50},
-                'max_depth': {'type': 'int', 'low': 3, 'high': 20},
-                'min_samples_split': {'type': 'int', 'low': 2, 'high': 20},
-                'min_samples_leaf': {'type': 'int', 'low': 1, 'high': 10},
-                'max_features': {'type': 'categorical', 'choices': ['sqrt', 'log2', None]},
+                "n_estimators": {"type": "int", "low": 50, "high": 300, "step": 50},
+                "max_depth": {"type": "int", "low": 3, "high": 20},
+                "min_samples_split": {"type": "int", "low": 2, "high": 20},
+                "min_samples_leaf": {"type": "int", "low": 1, "high": 10},
+                "max_features": {
+                    "type": "categorical",
+                    "choices": ["sqrt", "log2", None],
+                },
             }
-        elif model_class == 'lgb':
+        elif model_class == "lgb":
             return {
-                'n_estimators': {'type': 'int', 'low': 50, 'high': 500, 'step': 50},
-                'max_depth': {'type': 'int', 'low': 3, 'high': 15},
-                'learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.3, 'log': True},
-                'num_leaves': {'type': 'int', 'low': 20, 'high': 300},
-                'min_child_samples': {'type': 'int', 'low': 10, 'high': 100},
-                'subsample': {'type': 'float', 'low': 0.5, 'high': 1.0},
-                'colsample_bytree': {'type': 'float', 'low': 0.5, 'high': 1.0},
+                "n_estimators": {"type": "int", "low": 50, "high": 500, "step": 50},
+                "max_depth": {"type": "int", "low": 3, "high": 15},
+                "learning_rate": {
+                    "type": "float",
+                    "low": 0.01,
+                    "high": 0.3,
+                    "log": True,
+                },
+                "num_leaves": {"type": "int", "low": 20, "high": 300},
+                "min_child_samples": {"type": "int", "low": 10, "high": 100},
+                "subsample": {"type": "float", "low": 0.5, "high": 1.0},
+                "colsample_bytree": {"type": "float", "low": 0.5, "high": 1.0},
             }
-        elif model_class == 'xgb':
+        elif model_class == "xgb":
             return {
-                'n_estimators': {'type': 'int', 'low': 50, 'high': 500, 'step': 50},
-                'max_depth': {'type': 'int', 'low': 3, 'high': 15},
-                'learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.3, 'log': True},
-                'subsample': {'type': 'float', 'low': 0.5, 'high': 1.0},
-                'colsample_bytree': {'type': 'float', 'low': 0.5, 'high': 1.0},
-                'gamma': {'type': 'float', 'low': 0, 'high': 5},
-                'min_child_weight': {'type': 'int', 'low': 1, 'high': 10},
+                "n_estimators": {"type": "int", "low": 50, "high": 500, "step": 50},
+                "max_depth": {"type": "int", "low": 3, "high": 15},
+                "learning_rate": {
+                    "type": "float",
+                    "low": 0.01,
+                    "high": 0.3,
+                    "log": True,
+                },
+                "subsample": {"type": "float", "low": 0.5, "high": 1.0},
+                "colsample_bytree": {"type": "float", "low": 0.5, "high": 1.0},
+                "gamma": {"type": "float", "low": 0, "high": 5},
+                "min_child_weight": {"type": "int", "low": 1, "high": 10},
             }
         else:
             raise ValueError(f"Unknown model class: {model_class}")
 
     def _create_model(self, model_class: str, params: Dict[str, Any]) -> BaseEstimator:
         """Create model instance with given parameters."""
-        if model_class == 'rf':
-            return RandomForestClassifier(**params, random_state=self.random_state, n_jobs=-1)
-        elif model_class == 'lgb':
-            return lgb.LGBMClassifier(**params, random_state=self.random_state, verbose=-1)
-        elif model_class == 'xgb':
-            return xgb.XGBClassifier(**params, random_state=self.random_state, use_label_encoder=False)
+        if model_class == "rf":
+            return RandomForestClassifier(
+                **params, random_state=self.random_state, n_jobs=-1
+            )
+        elif model_class == "lgb":
+            return lgb.LGBMClassifier(
+                **params, random_state=self.random_state, verbose=-1
+            )
+        elif model_class == "xgb":
+            return xgb.XGBClassifier(
+                **params, random_state=self.random_state, use_label_encoder=False
+            )
         else:
             raise ValueError(f"Unknown model class: {model_class}")
 
@@ -592,7 +601,7 @@ class ModelCalibrator:
 
     def __init__(
         self,
-        method: str = 'isotonic',
+        method: str = "isotonic",
         cv_folds: int = 3,
     ):
         """
@@ -629,7 +638,7 @@ class ModelCalibrator:
             model,
             method=self.method,
             cv=StratifiedKFold(n_splits=self.cv_folds, shuffle=True, random_state=42),
-            n_jobs=-1
+            n_jobs=-1,
         )
 
         # Fit calibrated model
@@ -654,13 +663,11 @@ class ModelCalibrator:
         # Maximum Calibration Error (MCE)
         mce = self._calculate_mce(y, y_prob)
 
-        self.calibration_metrics_ = {
-            'brier_score': brier,
-            'ece': ece,
-            'mce': mce
-        }
+        self.calibration_metrics_ = {"brier_score": brier, "ece": ece, "mce": mce}
 
-    def _calculate_ece(self, y_true: np.ndarray, y_prob: np.ndarray, n_bins: int = 10) -> float:
+    def _calculate_ece(
+        self, y_true: np.ndarray, y_prob: np.ndarray, n_bins: int = 10
+    ) -> float:
         """Calculate Expected Calibration Error."""
         bin_boundaries = np.linspace(0, 1, n_bins + 1)
         ece = 0
@@ -674,7 +681,9 @@ class ModelCalibrator:
 
         return ece / len(y_true)
 
-    def _calculate_mce(self, y_true: np.ndarray, y_prob: np.ndarray, n_bins: int = 10) -> float:
+    def _calculate_mce(
+        self, y_true: np.ndarray, y_prob: np.ndarray, n_bins: int = 10
+    ) -> float:
         """Calculate Maximum Calibration Error."""
         bin_boundaries = np.linspace(0, 1, n_bins + 1)
         mce = 0
@@ -696,7 +705,7 @@ class UncertaintyQuantifier:
 
     def __init__(
         self,
-        method: str = 'bootstrap',
+        method: str = "bootstrap",
         n_estimators: int = 100,
         confidence_level: float = 0.95,
     ):
@@ -722,11 +731,11 @@ class UncertaintyQuantifier:
             X: Training features
             y: Training target
         """
-        if self.method == 'bootstrap':
+        if self.method == "bootstrap":
             self._fit_bootstrap(model_class, X, y)
-        elif self.method == 'dropout':
+        elif self.method == "dropout":
             self._fit_dropout(model_class, X, y)
-        elif self.method == 'ensemble':
+        elif self.method == "ensemble":
             self._fit_ensemble(model_class, X, y)
         else:
             raise ValueError(f"Unknown method: {self.method}")
@@ -751,7 +760,7 @@ class UncertaintyQuantifier:
         for i in range(self.n_estimators):
             # Clone model with different random state
             model = clone(model_class)
-            if hasattr(model, 'random_state'):
+            if hasattr(model, "random_state"):
                 model.random_state = i
 
             model.fit(X, y)
@@ -779,7 +788,7 @@ class UncertaintyQuantifier:
         predictions = []
 
         for model in self.models_:
-            if hasattr(model, 'predict_proba'):
+            if hasattr(model, "predict_proba"):
                 pred = model.predict_proba(X)[:, 1]
             else:
                 pred = model.predict(X)
@@ -793,14 +802,12 @@ class UncertaintyQuantifier:
 
         # Calculate confidence intervals
         alpha = 1 - self.confidence_level
-        lower_bound = np.percentile(predictions, alpha/2 * 100, axis=0)
-        upper_bound = np.percentile(predictions, (1 - alpha/2) * 100, axis=0)
+        lower_bound = np.percentile(predictions, alpha / 2 * 100, axis=0)
+        upper_bound = np.percentile(predictions, (1 - alpha / 2) * 100, axis=0)
 
         return mean_pred, lower_bound, upper_bound
 
-    def get_prediction_intervals(
-        self, X: pd.DataFrame
-    ) -> pd.DataFrame:
+    def get_prediction_intervals(self, X: pd.DataFrame) -> pd.DataFrame:
         """
         Get prediction intervals as DataFrame.
 
@@ -812,12 +819,14 @@ class UncertaintyQuantifier:
         """
         mean_pred, lower_bound, upper_bound = self.predict_with_uncertainty(X)
 
-        return pd.DataFrame({
-            'prediction': mean_pred,
-            'lower_bound': lower_bound,
-            'upper_bound': upper_bound,
-            'uncertainty': upper_bound - lower_bound
-        })
+        return pd.DataFrame(
+            {
+                "prediction": mean_pred,
+                "lower_bound": lower_bound,
+                "upper_bound": upper_bound,
+                "uncertainty": upper_bound - lower_bound,
+            }
+        )
 
 
 if __name__ == "__main__":

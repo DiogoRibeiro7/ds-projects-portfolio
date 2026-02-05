@@ -17,13 +17,19 @@ import sqlite3
 
 # Import our quality modules
 from src.data_quality.quality_framework import (
-    DataQualityFramework, ValidationStatus, DataQualityLevel
+    DataQualityFramework,
+    ValidationStatus,
+    DataQualityLevel,
 )
 from src.data_profiling.profiling_tools import (
-    DataProfiler, DataLineageTracker, DataVersionManager, DataCatalog
+    DataProfiler,
+    DataLineageTracker,
+    DataVersionManager,
+    DataCatalog,
 )
 from src.data_preprocessing.preprocessing_pipelines import (
-    PreprocessingPipeline, PreprocessingConfig
+    PreprocessingPipeline,
+    PreprocessingConfig,
 )
 
 # Configure Streamlit
@@ -31,11 +37,12 @@ st.set_page_config(
     page_title="Data Quality Dashboard",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 # Custom CSS
-st.markdown("""
+st.markdown(
+    """
 <style>
     .stMetric {
         background-color: #f0f2f6;
@@ -58,7 +65,9 @@ st.markdown("""
         background-color: #f8f9fa;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 class DataQualityDashboard:
@@ -72,11 +81,11 @@ class DataQualityDashboard:
         self.catalog = DataCatalog()
 
         # Initialize session state
-        if 'current_dataset' not in st.session_state:
+        if "current_dataset" not in st.session_state:
             st.session_state.current_dataset = None
-        if 'quality_reports' not in st.session_state:
+        if "quality_reports" not in st.session_state:
             st.session_state.quality_reports = []
-        if 'profiles' not in st.session_state:
+        if "profiles" not in st.session_state:
             st.session_state.profiles = []
 
     def run(self):
@@ -89,15 +98,21 @@ class DataQualityDashboard:
             st.header("Navigation")
             page = st.selectbox(
                 "Select Module",
-                ["Overview", "Data Profiling", "Quality Validation",
-                 "Data Lineage", "Preprocessing", "Data Catalog", "Real-time Monitor"]
+                [
+                    "Overview",
+                    "Data Profiling",
+                    "Quality Validation",
+                    "Data Lineage",
+                    "Preprocessing",
+                    "Data Catalog",
+                    "Real-time Monitor",
+                ],
             )
 
             # Dataset selection
             st.header("Dataset")
             uploaded_file = st.file_uploader(
-                "Upload Dataset",
-                type=['csv', 'xlsx', 'parquet', 'json']
+                "Upload Dataset", type=["csv", "xlsx", "parquet", "json"]
             )
 
             if uploaded_file:
@@ -122,13 +137,13 @@ class DataQualityDashboard:
     def load_dataset(self, uploaded_file):
         """Load dataset from uploaded file"""
         try:
-            if uploaded_file.name.endswith('.csv'):
+            if uploaded_file.name.endswith(".csv"):
                 df = pd.read_csv(uploaded_file)
-            elif uploaded_file.name.endswith('.xlsx'):
+            elif uploaded_file.name.endswith(".xlsx"):
                 df = pd.read_excel(uploaded_file)
-            elif uploaded_file.name.endswith('.parquet'):
+            elif uploaded_file.name.endswith(".parquet"):
                 df = pd.read_parquet(uploaded_file)
-            elif uploaded_file.name.endswith('.json'):
+            elif uploaded_file.name.endswith(".json"):
                 df = pd.read_json(uploaded_file)
             else:
                 st.error("Unsupported file format")
@@ -161,15 +176,21 @@ class DataQualityDashboard:
             st.metric("Total Features", f"{df.shape[1]}")
 
         with col3:
-            missing_pct = (df.isnull().sum().sum() / (df.shape[0] * df.shape[1]) * 100)
-            st.metric("Missing Data", f"{missing_pct:.1f}%",
-                     delta=f"{missing_pct - 5:.1f}%" if missing_pct > 5 else "Good")
+            missing_pct = df.isnull().sum().sum() / (df.shape[0] * df.shape[1]) * 100
+            st.metric(
+                "Missing Data",
+                f"{missing_pct:.1f}%",
+                delta=f"{missing_pct - 5:.1f}%" if missing_pct > 5 else "Good",
+            )
 
         with col4:
             # Calculate quality score
             quality_score = 100 - missing_pct
-            st.metric("Quality Score", f"{quality_score:.1f}%",
-                     delta="Good" if quality_score > 80 else "Needs Improvement")
+            st.metric(
+                "Quality Score",
+                f"{quality_score:.1f}%",
+                delta="Good" if quality_score > 80 else "Needs Improvement",
+            )
 
         # Data type distribution
         st.subheader("Data Type Distribution")
@@ -178,7 +199,7 @@ class DataQualityDashboard:
         fig = px.pie(
             values=type_dist.values,
             names=type_dist.index.astype(str),
-            title="Column Data Types"
+            title="Column Data Types",
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -191,9 +212,9 @@ class DataQualityDashboard:
             fig = px.bar(
                 x=missing_data.values,
                 y=missing_data.index,
-                orientation='h',
+                orientation="h",
                 title="Missing Values by Column",
-                labels={'x': 'Missing Count', 'y': 'Column'}
+                labels={"x": "Missing Count", "y": "Column"},
             )
             st.plotly_chart(fig, use_container_width=True)
         else:
@@ -210,10 +231,7 @@ class DataQualityDashboard:
             corr_matrix = df[numeric_cols].corr()
 
             fig = px.imshow(
-                corr_matrix,
-                text_auto=True,
-                aspect="auto",
-                title="Correlation Matrix"
+                corr_matrix, text_auto=True, aspect="auto", title="Correlation Matrix"
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -233,7 +251,12 @@ class DataQualityDashboard:
         with col1:
             profile_type = st.selectbox(
                 "Profile Type",
-                ["Quick Profile", "Detailed Profile", "Column Analysis", "Distribution Analysis"]
+                [
+                    "Quick Profile",
+                    "Detailed Profile",
+                    "Column Analysis",
+                    "Distribution Analysis",
+                ],
             )
 
         with col2:
@@ -248,7 +271,7 @@ class DataQualityDashboard:
                 profile = self.profiler.profile_dataset(
                     df,
                     st.session_state.dataset_name,
-                    detailed=(profile_type == "Detailed Profile")
+                    detailed=(profile_type == "Detailed Profile"),
                 )
                 st.session_state.profiles.append(profile)
 
@@ -262,7 +285,9 @@ class DataQualityDashboard:
                     st.metric("Shape", f"{profile.shape[0]} × {profile.shape[1]}")
 
                 with col2:
-                    st.metric("Memory Usage", f"{profile.memory_usage / 1024 / 1024:.2f} MB")
+                    st.metric(
+                        "Memory Usage", f"{profile.memory_usage / 1024 / 1024:.2f} MB"
+                    )
 
                 with col3:
                     unique_avg = np.mean(list(profile.unique_values.values()))
@@ -288,12 +313,16 @@ class DataQualityDashboard:
                         with col1:
                             st.write("**Basic Statistics**")
                             st.write(f"- Type: {profile.dtypes[selected_col]}")
-                            st.write(f"- Missing: {profile.missing_values[selected_col] * 100:.1f}%")
+                            st.write(
+                                f"- Missing: {profile.missing_values[selected_col] * 100:.1f}%"
+                            )
                             st.write(f"- Unique: {profile.unique_values[selected_col]}")
-                            st.write(f"- Outliers: {profile.outliers.get(selected_col, 0)}")
+                            st.write(
+                                f"- Outliers: {profile.outliers.get(selected_col, 0)}"
+                            )
 
                         with col2:
-                            if 'mean' in col_stats:
+                            if "mean" in col_stats:
                                 st.write("**Numeric Statistics**")
                                 st.write(f"- Mean: {col_stats['mean']:.2f}")
                                 st.write(f"- Std: {col_stats['std']:.2f}")
@@ -301,7 +330,7 @@ class DataQualityDashboard:
                                 st.write(f"- Max: {col_stats['max']:.2f}")
 
                         with col3:
-                            if 'top' in col_stats:
+                            if "top" in col_stats:
                                 st.write("**Categorical Statistics**")
                                 st.write(f"- Top Value: {col_stats['top']}")
                                 st.write(f"- Frequency: {col_stats['freq']}")
@@ -311,7 +340,7 @@ class DataQualityDashboard:
                             fig = px.histogram(
                                 col_data,
                                 nbins=30,
-                                title=f"Distribution of {selected_col}"
+                                title=f"Distribution of {selected_col}",
                             )
                             st.plotly_chart(fig, use_container_width=True)
                         else:
@@ -319,7 +348,7 @@ class DataQualityDashboard:
                             fig = px.bar(
                                 x=value_counts.index,
                                 y=value_counts.values,
-                                title=f"Top Values in {selected_col}"
+                                title=f"Top Values in {selected_col}",
                             )
                             st.plotly_chart(fig, use_container_width=True)
 
@@ -340,15 +369,14 @@ class DataQualityDashboard:
 
         with col1:
             completeness_threshold = st.slider(
-                "Completeness Threshold (%)",
-                min_value=0, max_value=100, value=95
+                "Completeness Threshold (%)", min_value=0, max_value=100, value=95
             )
 
             check_outliers = st.checkbox("Check for Outliers", value=True)
             outlier_method = st.selectbox(
                 "Outlier Detection Method",
                 ["IQR", "Z-Score", "Isolation Forest"],
-                disabled=not check_outliers
+                disabled=not check_outliers,
             )
 
         with col2:
@@ -356,8 +384,10 @@ class DataQualityDashboard:
             check_correlations = st.checkbox("Check High Correlations", value=True)
             correlation_threshold = st.slider(
                 "Correlation Threshold",
-                min_value=0.0, max_value=1.0, value=0.95,
-                disabled=not check_correlations
+                min_value=0.0,
+                max_value=1.0,
+                value=0.95,
+                disabled=not check_correlations,
             )
 
         # Run validation
@@ -376,17 +406,20 @@ class DataQualityDashboard:
                 col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
-                    st.metric("Total Checks", report.summary['total_checks'])
+                    st.metric("Total Checks", report.summary["total_checks"])
 
                 with col2:
-                    st.metric("Passed", report.summary['passed'],
-                             delta=f"{report.summary['passed'] / report.summary['total_checks'] * 100:.0f}%")
+                    st.metric(
+                        "Passed",
+                        report.summary["passed"],
+                        delta=f"{report.summary['passed'] / report.summary['total_checks'] * 100:.0f}%",
+                    )
 
                 with col3:
-                    st.metric("Failed", report.summary['failed'])
+                    st.metric("Failed", report.summary["failed"])
 
                 with col4:
-                    st.metric("Warnings", report.summary['warnings'])
+                    st.metric("Warnings", report.summary["warnings"])
 
                 # Detailed results
                 st.subheader("Validation Results")
@@ -394,25 +427,27 @@ class DataQualityDashboard:
                 # Create results DataFrame
                 results_data = []
                 for result in report.validation_results:
-                    results_data.append({
-                        'Check': result.rule_name,
-                        'Status': result.status.value,
-                        'Severity': result.severity.value,
-                        'Message': result.message
-                    })
+                    results_data.append(
+                        {
+                            "Check": result.rule_name,
+                            "Status": result.status.value,
+                            "Severity": result.severity.value,
+                            "Message": result.message,
+                        }
+                    )
 
                 results_df = pd.DataFrame(results_data)
 
                 # Add status colors
                 def highlight_status(row):
-                    if row['Status'] == 'passed':
-                        return ['background-color: #d4edda'] * len(row)
-                    elif row['Status'] == 'failed':
-                        return ['background-color: #f8d7da'] * len(row)
-                    elif row['Status'] == 'warning':
-                        return ['background-color: #fff3cd'] * len(row)
+                    if row["Status"] == "passed":
+                        return ["background-color: #d4edda"] * len(row)
+                    elif row["Status"] == "failed":
+                        return ["background-color: #f8d7da"] * len(row)
+                    elif row["Status"] == "warning":
+                        return ["background-color: #fff3cd"] * len(row)
                     else:
-                        return [''] * len(row)
+                        return [""] * len(row)
 
                 styled_df = results_df.style.apply(highlight_status, axis=1)
                 st.dataframe(styled_df, use_container_width=True)
@@ -429,32 +464,38 @@ class DataQualityDashboard:
 
                 with col1:
                     if st.button("Export as HTML"):
-                        html_report = self.quality_framework.export_report(report, "html")
+                        html_report = self.quality_framework.export_report(
+                            report, "html"
+                        )
                         st.download_button(
                             "Download HTML Report",
                             html_report,
                             file_name="quality_report.html",
-                            mime="text/html"
+                            mime="text/html",
                         )
 
                 with col2:
                     if st.button("Export as JSON"):
-                        json_report = self.quality_framework.export_report(report, "json")
+                        json_report = self.quality_framework.export_report(
+                            report, "json"
+                        )
                         st.download_button(
                             "Download JSON Report",
                             json_report,
                             file_name="quality_report.json",
-                            mime="application/json"
+                            mime="application/json",
                         )
 
                 with col3:
                     if st.button("Export as Markdown"):
-                        md_report = self.quality_framework.export_report(report, "markdown")
+                        md_report = self.quality_framework.export_report(
+                            report, "markdown"
+                        )
                         st.download_button(
                             "Download Markdown Report",
                             md_report,
                             file_name="quality_report.md",
-                            mime="text/markdown"
+                            mime="text/markdown",
                         )
 
     def show_lineage(self):
@@ -469,12 +510,12 @@ class DataQualityDashboard:
 
             source_datasets = st.multiselect(
                 "Source Datasets",
-                ["raw_data", "external_api", "database_table", "file_upload"]
+                ["raw_data", "external_api", "database_table", "file_upload"],
             )
 
             transformation_type = st.selectbox(
                 "Transformation Type",
-                ["Join", "Filter", "Aggregate", "Clean", "Transform", "Merge"]
+                ["Join", "Filter", "Aggregate", "Clean", "Transform", "Merge"],
             )
 
             output_name = st.text_input("Output Dataset Name")
@@ -484,8 +525,14 @@ class DataQualityDashboard:
 
             operations = st.multiselect(
                 "Operations Applied",
-                ["Remove Duplicates", "Handle Missing", "Scale Features",
-                 "Encode Categories", "Filter Rows", "Join Tables"]
+                [
+                    "Remove Duplicates",
+                    "Handle Missing",
+                    "Scale Features",
+                    "Encode Categories",
+                    "Filter Rows",
+                    "Join Tables",
+                ],
             )
 
             created_by = st.text_input("Created By", value="Data Team")
@@ -497,10 +544,10 @@ class DataQualityDashboard:
                     input_datasets=source_datasets,
                     output_dataset=output_name,
                     transformation={
-                        'type': transformation_type,
-                        'operations': operations
+                        "type": transformation_type,
+                        "operations": operations,
                     },
-                    created_by=created_by
+                    created_by=created_by,
                 )
 
                 st.success(f"Lineage tracked: {lineage.lineage_id}")
@@ -517,38 +564,42 @@ class DataQualityDashboard:
             ("raw_data", "cleaned_data"),
             ("cleaned_data", "features"),
             ("features", "model_input"),
-            ("model_input", "predictions")
+            ("model_input", "predictions"),
         ]
 
         # Add nodes
         for i, node in enumerate(nodes):
-            fig.add_trace(go.Scatter(
-                x=[i],
-                y=[0],
-                mode='markers+text',
-                marker=dict(size=30, color='lightblue', line=dict(width=2)),
-                text=[node],
-                textposition="bottom center"
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=[i],
+                    y=[0],
+                    mode="markers+text",
+                    marker=dict(size=30, color="lightblue", line=dict(width=2)),
+                    text=[node],
+                    textposition="bottom center",
+                )
+            )
 
         # Add edges
         for edge in edges:
             start_idx = nodes.index(edge[0])
             end_idx = nodes.index(edge[1])
-            fig.add_trace(go.Scatter(
-                x=[start_idx, end_idx],
-                y=[0, 0],
-                mode='lines',
-                line=dict(width=2, color='gray'),
-                showlegend=False
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=[start_idx, end_idx],
+                    y=[0, 0],
+                    mode="lines",
+                    line=dict(width=2, color="gray"),
+                    showlegend=False,
+                )
+            )
 
         fig.update_layout(
             title="Data Lineage Graph",
             showlegend=False,
             xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-            height=300
+            height=300,
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -571,26 +622,22 @@ class DataQualityDashboard:
         with col1:
             st.write("**Outlier Detection**")
             outlier_method = st.selectbox(
-                "Method",
-                ["isolation_forest", "iqr", "zscore", "lof", "dbscan"]
+                "Method", ["isolation_forest", "iqr", "zscore", "lof", "dbscan"]
             )
             outlier_threshold = st.slider(
-                "Contamination",
-                min_value=0.01, max_value=0.2, value=0.05
+                "Contamination", min_value=0.01, max_value=0.2, value=0.05
             )
 
         with col2:
             st.write("**Missing Data**")
             imputation_strategy = st.selectbox(
-                "Strategy",
-                ["knn", "simple", "iterative", "matrix", "forward_fill"]
+                "Strategy", ["knn", "simple", "iterative", "matrix", "forward_fill"]
             )
 
         with col3:
             st.write("**Scaling**")
             scaling_method = st.selectbox(
-                "Method",
-                ["standard", "minmax", "robust", "quantile", "power"]
+                "Method", ["standard", "minmax", "robust", "quantile", "power"]
             )
 
         # Additional options
@@ -603,8 +650,7 @@ class DataQualityDashboard:
         with col2:
             if handle_imbalance:
                 imbalance_strategy = st.selectbox(
-                    "Balancing Strategy",
-                    ["smote", "adasyn", "random_under", "tomek"]
+                    "Balancing Strategy", ["smote", "adasyn", "random_under", "tomek"]
                 )
             else:
                 imbalance_strategy = "smote"
@@ -620,16 +666,16 @@ class DataQualityDashboard:
                     scaling_method=scaling_method,
                     feature_engineering=feature_engineering,
                     handle_imbalance=handle_imbalance,
-                    imbalance_strategy=imbalance_strategy
+                    imbalance_strategy=imbalance_strategy,
                 )
 
                 # Create pipeline
                 pipeline = PreprocessingPipeline(config)
 
                 # Separate features and target if target column exists
-                if 'target' in df.columns:
-                    X = df.drop('target', axis=1)
-                    y = df['target']
+                if "target" in df.columns:
+                    X = df.drop("target", axis=1)
+                    y = df["target"]
                 else:
                     X = df
                     y = None
@@ -647,18 +693,22 @@ class DataQualityDashboard:
                     st.write("**Original Data**")
                     st.write(f"- Shape: {X.shape}")
                     st.write(f"- Missing: {X.isnull().sum().sum()}")
-                    st.write(f"- Memory: {X.memory_usage(deep=True).sum() / 1024 / 1024:.2f} MB")
+                    st.write(
+                        f"- Memory: {X.memory_usage(deep=True).sum() / 1024 / 1024:.2f} MB"
+                    )
 
                 with col2:
                     st.write("**Processed Data**")
                     st.write(f"- Shape: {X_processed.shape}")
                     st.write(f"- Missing: {X_processed.isnull().sum().sum()}")
-                    st.write(f"- Memory: {X_processed.memory_usage(deep=True).sum() / 1024 / 1024:.2f} MB")
+                    st.write(
+                        f"- Memory: {X_processed.memory_usage(deep=True).sum() / 1024 / 1024:.2f} MB"
+                    )
 
                 # Pipeline summary
                 st.subheader("Pipeline Steps")
                 summary = pipeline.get_pipeline_summary()
-                for step in summary['steps']:
+                for step in summary["steps"]:
                     st.write(f"- {step[0]}: {step[1]}")
 
                 # Download processed data
@@ -668,7 +718,7 @@ class DataQualityDashboard:
                     "Download Processed Data",
                     csv,
                     file_name="processed_data.csv",
-                    mime="text/csv"
+                    mime="text/csv",
                 )
 
     def show_catalog(self):
@@ -688,7 +738,15 @@ class DataQualityDashboard:
         with col2:
             tags = st.multiselect(
                 "Tags",
-                ["production", "staging", "test", "ml", "analytics", "raw", "processed"]
+                [
+                    "production",
+                    "staging",
+                    "test",
+                    "ml",
+                    "analytics",
+                    "raw",
+                    "processed",
+                ],
             )
 
         if st.button("Register Dataset", type="primary"):
@@ -698,7 +756,7 @@ class DataQualityDashboard:
                     name=dataset_name,
                     description=dataset_desc,
                     owner=owner,
-                    tags=tags
+                    tags=tags,
                 )
                 st.success(f"Dataset '{dataset_name}' registered successfully!")
 
@@ -706,7 +764,9 @@ class DataQualityDashboard:
         st.subheader("Search Catalog")
 
         search_query = st.text_input("Search datasets...")
-        search_tags = st.multiselect("Filter by tags", ["production", "ml", "analytics"])
+        search_tags = st.multiselect(
+            "Filter by tags", ["production", "ml", "analytics"]
+        )
 
         if st.button("Search"):
             results = self.catalog.search_datasets(query=search_query, tags=search_tags)
@@ -737,62 +797,84 @@ class DataQualityDashboard:
         while True:
             with placeholder.container():
                 # Current timestamp
-                st.write(f"**Last Updated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                st.write(
+                    f"**Last Updated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                )
 
                 # Real-time metrics
                 col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
                     incoming_rate = np.random.randint(100, 1000)
-                    st.metric("Records/sec", incoming_rate,
-                             delta=f"{np.random.randint(-50, 50)}")
+                    st.metric(
+                        "Records/sec",
+                        incoming_rate,
+                        delta=f"{np.random.randint(-50, 50)}",
+                    )
 
                 with col2:
                     quality_score = np.random.uniform(85, 99)
-                    st.metric("Quality Score", f"{quality_score:.1f}%",
-                             delta=f"{np.random.uniform(-2, 2):.1f}%")
+                    st.metric(
+                        "Quality Score",
+                        f"{quality_score:.1f}%",
+                        delta=f"{np.random.uniform(-2, 2):.1f}%",
+                    )
 
                 with col3:
                     anomalies = np.random.randint(0, 10)
-                    st.metric("Anomalies Detected", anomalies,
-                             delta=f"{np.random.randint(-3, 3)}")
+                    st.metric(
+                        "Anomalies Detected",
+                        anomalies,
+                        delta=f"{np.random.randint(-3, 3)}",
+                    )
 
                 with col4:
                     processing_time = np.random.uniform(10, 50)
-                    st.metric("Avg Processing (ms)", f"{processing_time:.1f}",
-                             delta=f"{np.random.uniform(-5, 5):.1f}")
+                    st.metric(
+                        "Avg Processing (ms)",
+                        f"{processing_time:.1f}",
+                        delta=f"{np.random.uniform(-5, 5):.1f}",
+                    )
 
                 # Real-time charts
                 st.subheader("Live Metrics")
 
                 # Generate sample time series data
-                time_points = pd.date_range(
-                    end=datetime.now(),
-                    periods=50,
-                    freq='1min'
-                )
+                time_points = pd.date_range(end=datetime.now(), periods=50, freq="1min")
 
                 quality_scores = np.random.uniform(85, 99, 50)
                 record_counts = np.random.randint(100, 1000, 50)
 
                 # Create subplots
                 fig = make_subplots(
-                    rows=2, cols=1,
-                    subplot_titles=("Data Quality Score", "Incoming Records Rate")
+                    rows=2,
+                    cols=1,
+                    subplot_titles=("Data Quality Score", "Incoming Records Rate"),
                 )
 
                 # Quality score line
                 fig.add_trace(
-                    go.Scatter(x=time_points, y=quality_scores, mode='lines+markers',
-                             name='Quality Score', line=dict(color='green')),
-                    row=1, col=1
+                    go.Scatter(
+                        x=time_points,
+                        y=quality_scores,
+                        mode="lines+markers",
+                        name="Quality Score",
+                        line=dict(color="green"),
+                    ),
+                    row=1,
+                    col=1,
                 )
 
                 # Record count bars
                 fig.add_trace(
-                    go.Bar(x=time_points, y=record_counts, name='Records',
-                          marker=dict(color='blue')),
-                    row=2, col=1
+                    go.Bar(
+                        x=time_points,
+                        y=record_counts,
+                        name="Records",
+                        marker=dict(color="blue"),
+                    ),
+                    row=2,
+                    col=1,
                 )
 
                 fig.update_layout(height=600, showlegend=False)
@@ -802,15 +884,27 @@ class DataQualityDashboard:
                 st.subheader("Active Alerts")
 
                 alerts = [
-                    {"level": "warning", "message": "Missing data rate increased by 5%", "time": "2 mins ago"},
-                    {"level": "info", "message": "New data source connected", "time": "5 mins ago"},
-                    {"level": "error", "message": "Schema validation failed for column 'amount'", "time": "10 mins ago"}
+                    {
+                        "level": "warning",
+                        "message": "Missing data rate increased by 5%",
+                        "time": "2 mins ago",
+                    },
+                    {
+                        "level": "info",
+                        "message": "New data source connected",
+                        "time": "5 mins ago",
+                    },
+                    {
+                        "level": "error",
+                        "message": "Schema validation failed for column 'amount'",
+                        "time": "10 mins ago",
+                    },
                 ]
 
                 for alert in alerts:
-                    if alert['level'] == 'error':
+                    if alert["level"] == "error":
                         st.error(f"🔴 {alert['message']} ({alert['time']})")
-                    elif alert['level'] == 'warning':
+                    elif alert["level"] == "warning":
                         st.warning(f"🟡 {alert['message']} ({alert['time']})")
                     else:
                         st.info(f"🔵 {alert['message']} ({alert['time']})")

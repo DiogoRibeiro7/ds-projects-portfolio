@@ -18,8 +18,8 @@ import logging
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
 
@@ -58,9 +58,10 @@ class TestRunner:
         logger.info("Running performance tests...")
         cmd = [
             "pytest",
-            "-m", "performance",
+            "-m",
+            "performance",
             "--benchmark-only",
-            "--benchmark-json=benchmark.json"
+            "--benchmark-json=benchmark.json",
         ]
         return self._run_command(cmd)
 
@@ -71,7 +72,7 @@ class TestRunner:
             "pytest",
             "tests/notebook_tests",
             "--nbval-lax",
-            "--nbval-cell-timeout=300"
+            "--nbval-cell-timeout=300",
         ]
         return self._run_command(cmd)
 
@@ -100,21 +101,26 @@ class TestRunner:
             cmd.extend(["-n", "auto"])
 
         if coverage:
-            cmd.extend([
-                "--cov=src",
-                "--cov=ab_testing",
-                "--cov=dashboard_enhanced",
-                "--cov=time_series",
-                "--cov-report=html:" + str(self.reports_dir / f"coverage_{self.timestamp}"),
-                "--cov-report=term",
-                "--cov-report=xml"
-            ])
+            cmd.extend(
+                [
+                    "--cov=src",
+                    "--cov=ab_testing",
+                    "--cov=dashboard_enhanced",
+                    "--cov=time_series",
+                    "--cov-report=html:"
+                    + str(self.reports_dir / f"coverage_{self.timestamp}"),
+                    "--cov-report=term",
+                    "--cov-report=xml",
+                ]
+            )
 
         # Add HTML report
-        cmd.extend([
-            "--html=" + str(self.reports_dir / f"report_{self.timestamp}.html"),
-            "--self-contained-html"
-        ])
+        cmd.extend(
+            [
+                "--html=" + str(self.reports_dir / f"report_{self.timestamp}.html"),
+                "--self-contained-html",
+            ]
+        )
 
         return self._run_command(cmd)
 
@@ -158,13 +164,16 @@ class TestRunner:
         """Generate Allure test report."""
         logger.info("Generating Allure report...")
         allure_dir = self.reports_dir / "allure"
-        cmd = [
-            "pytest",
-            "--alluredir=" + str(allure_dir)
-        ]
+        cmd = ["pytest", "--alluredir=" + str(allure_dir)]
         if self._run_command(cmd):
             # Generate HTML report
-            allure_cmd = ["allure", "generate", str(allure_dir), "-o", str(allure_dir / "html")]
+            allure_cmd = [
+                "allure",
+                "generate",
+                str(allure_dir),
+                "-o",
+                str(allure_dir / "html"),
+            ]
             self._run_command(allure_cmd, check=False)
             logger.info(f"Allure report generated at: {allure_dir / 'html'}")
         return True
@@ -183,7 +192,13 @@ class TestRunner:
     def run_type_checks(self):
         """Run type checking with mypy."""
         logger.info("Running type checks with mypy...")
-        cmd = ["mypy", "src", "--ignore-missing-imports", "--html-report", str(self.reports_dir / "mypy")]
+        cmd = [
+            "mypy",
+            "src",
+            "--ignore-missing-imports",
+            "--html-report",
+            str(self.reports_dir / "mypy"),
+        ]
         return self._run_command(cmd, check=False)
 
     def run_linting(self):
@@ -192,7 +207,12 @@ class TestRunner:
 
         # Run flake8
         logger.info("Running flake8...")
-        flake8_cmd = ["flake8", "src", "tests", "--output-file=" + str(self.reports_dir / "flake8.txt")]
+        flake8_cmd = [
+            "flake8",
+            "src",
+            "tests",
+            "--output-file=" + str(self.reports_dir / "flake8.txt"),
+        ]
         self._run_command(flake8_cmd, check=False)
 
         # Run pylint
@@ -216,32 +236,36 @@ class TestRunner:
             "reports_directory": str(self.reports_dir),
             "test_results": {},
             "coverage": {},
-            "quality_metrics": {}
+            "quality_metrics": {},
         }
 
         # Parse pytest results if available
         junit_file = Path("junit.xml")
         if junit_file.exists():
             import xml.etree.ElementTree as ET
+
             tree = ET.parse(junit_file)
             root = tree.getroot()
             summary["test_results"] = {
                 "total": int(root.get("tests", 0)),
-                "passed": int(root.get("tests", 0)) - int(root.get("failures", 0)) - int(root.get("errors", 0)),
+                "passed": int(root.get("tests", 0))
+                - int(root.get("failures", 0))
+                - int(root.get("errors", 0)),
                 "failed": int(root.get("failures", 0)),
                 "errors": int(root.get("errors", 0)),
-                "time": float(root.get("time", 0))
+                "time": float(root.get("time", 0)),
             }
 
         # Parse coverage results if available
         coverage_file = Path("coverage.xml")
         if coverage_file.exists():
             import xml.etree.ElementTree as ET
+
             tree = ET.parse(coverage_file)
             root = tree.getroot()
             summary["coverage"] = {
                 "line_rate": float(root.get("line-rate", 0)) * 100,
-                "branch_rate": float(root.get("branch-rate", 0)) * 100
+                "branch_rate": float(root.get("branch-rate", 0)) * 100,
             }
 
         # Save summary
@@ -256,12 +280,7 @@ class TestRunner:
         """Run a command and handle errors."""
         try:
             logger.debug(f"Running command: {' '.join(cmd)}")
-            result = subprocess.run(
-                cmd,
-                check=check,
-                capture_output=True,
-                text=True
-            )
+            result = subprocess.run(cmd, check=check, capture_output=True, text=True)
 
             if result.stdout:
                 print(result.stdout)
@@ -287,21 +306,38 @@ def main():
 
     parser.add_argument(
         "--type",
-        choices=["all", "unit", "integration", "performance", "notebook", "security", "smoke", "regression"],
+        choices=[
+            "all",
+            "unit",
+            "integration",
+            "performance",
+            "notebook",
+            "security",
+            "smoke",
+            "regression",
+        ],
         default="all",
-        help="Type of tests to run"
+        help="Type of tests to run",
     )
     parser.add_argument("--module", help="Run tests for specific module")
     parser.add_argument("--markers", help="Run tests with specific markers")
     parser.add_argument("--parallel", action="store_true", help="Run tests in parallel")
-    parser.add_argument("--coverage", action="store_true", default=True, help="Generate coverage report")
+    parser.add_argument(
+        "--coverage", action="store_true", default=True, help="Generate coverage report"
+    )
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
-    parser.add_argument("--failed", action="store_true", help="Re-run failed tests only")
+    parser.add_argument(
+        "--failed", action="store_true", help="Re-run failed tests only"
+    )
     parser.add_argument("--allure", action="store_true", help="Generate Allure report")
     parser.add_argument("--mutation", action="store_true", help="Run mutation tests")
     parser.add_argument("--type-check", action="store_true", help="Run type checking")
     parser.add_argument("--lint", action="store_true", help="Run linting")
-    parser.add_argument("--full-suite", action="store_true", help="Run complete test suite with all checks")
+    parser.add_argument(
+        "--full-suite",
+        action="store_true",
+        help="Run complete test suite with all checks",
+    )
 
     args = parser.parse_args()
 
@@ -350,7 +386,7 @@ def main():
                 "notebook": runner.run_notebook_tests,
                 "security": runner.run_security_tests,
                 "smoke": runner.run_smoke_tests,
-                "regression": runner.run_regression_tests
+                "regression": runner.run_regression_tests,
             }
 
             test_method = test_methods.get(args.type)

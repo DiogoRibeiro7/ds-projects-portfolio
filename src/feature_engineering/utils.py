@@ -11,7 +11,8 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.metrics import make_scorer
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 import logging
 
 # Configure logging
@@ -30,8 +31,12 @@ class FeatureValidator:
             checks: List of checks to perform
         """
         self.checks = checks or [
-            'missing_values', 'constant_features', 'duplicate_features',
-            'high_correlation', 'infinite_values', 'data_types'
+            "missing_values",
+            "constant_features",
+            "duplicate_features",
+            "high_correlation",
+            "infinite_values",
+            "data_types",
         ]
         self.validation_report = {}
 
@@ -47,25 +52,25 @@ class FeatureValidator:
             Validation report
         """
         self.validation_report = {
-            'n_samples': len(df),
-            'n_features': len(df.columns),
-            'checks': {}
+            "n_samples": len(df),
+            "n_features": len(df.columns),
+            "checks": {},
         }
 
         for check in self.checks:
-            if check == 'missing_values':
+            if check == "missing_values":
                 self._check_missing_values(df)
-            elif check == 'constant_features':
+            elif check == "constant_features":
                 self._check_constant_features(df)
-            elif check == 'duplicate_features':
+            elif check == "duplicate_features":
                 self._check_duplicate_features(df)
-            elif check == 'high_correlation':
+            elif check == "high_correlation":
                 self._check_high_correlation(df)
-            elif check == 'infinite_values':
+            elif check == "infinite_values":
                 self._check_infinite_values(df)
-            elif check == 'data_types':
+            elif check == "data_types":
                 self._check_data_types(df)
-            elif check == 'target_leakage' and target is not None:
+            elif check == "target_leakage" and target is not None:
                 self._check_target_leakage(df, target)
 
         return self.validation_report
@@ -77,11 +82,11 @@ class FeatureValidator:
 
         problematic = missing_pct[missing_pct > 50]
 
-        self.validation_report['checks']['missing_values'] = {
-            'total_missing': int(missing_counts.sum()),
-            'features_with_missing': int((missing_counts > 0).sum()),
-            'high_missing_features': problematic.to_dict(),
-            'status': 'warning' if len(problematic) > 0 else 'ok'
+        self.validation_report["checks"]["missing_values"] = {
+            "total_missing": int(missing_counts.sum()),
+            "features_with_missing": int((missing_counts > 0).sum()),
+            "high_missing_features": problematic.to_dict(),
+            "status": "warning" if len(problematic) > 0 else "ok",
         }
 
     def _check_constant_features(self, df: pd.DataFrame):
@@ -92,10 +97,10 @@ class FeatureValidator:
             if df[col].nunique() <= 1:
                 constant_features.append(col)
 
-        self.validation_report['checks']['constant_features'] = {
-            'n_constant': len(constant_features),
-            'constant_features': constant_features,
-            'status': 'warning' if len(constant_features) > 0 else 'ok'
+        self.validation_report["checks"]["constant_features"] = {
+            "n_constant": len(constant_features),
+            "constant_features": constant_features,
+            "status": "warning" if len(constant_features) > 0 else "ok",
         }
 
     def _check_duplicate_features(self, df: pd.DataFrame):
@@ -103,14 +108,14 @@ class FeatureValidator:
         duplicates = []
 
         for i, col1 in enumerate(df.columns):
-            for col2 in df.columns[i+1:]:
+            for col2 in df.columns[i + 1 :]:
                 if df[col1].equals(df[col2]):
                     duplicates.append((col1, col2))
 
-        self.validation_report['checks']['duplicate_features'] = {
-            'n_duplicates': len(duplicates),
-            'duplicate_pairs': duplicates,
-            'status': 'warning' if len(duplicates) > 0 else 'ok'
+        self.validation_report["checks"]["duplicate_features"] = {
+            "n_duplicates": len(duplicates),
+            "duplicate_pairs": duplicates,
+            "status": "warning" if len(duplicates) > 0 else "ok",
         }
 
     def _check_high_correlation(self, df: pd.DataFrame, threshold: float = 0.95):
@@ -118,9 +123,9 @@ class FeatureValidator:
         numeric_df = df.select_dtypes(include=[np.number])
 
         if len(numeric_df.columns) < 2:
-            self.validation_report['checks']['high_correlation'] = {
-                'status': 'skip',
-                'message': 'Not enough numeric features'
+            self.validation_report["checks"]["high_correlation"] = {
+                "status": "skip",
+                "message": "Not enough numeric features",
             }
             return
 
@@ -129,19 +134,21 @@ class FeatureValidator:
 
         high_corr_pairs = []
         for i in range(len(corr_matrix.columns)):
-            for j in range(i+1, len(corr_matrix.columns)):
+            for j in range(i + 1, len(corr_matrix.columns)):
                 if upper_tri[i, j] and corr_matrix.iloc[i, j] > threshold:
-                    high_corr_pairs.append({
-                        'feature1': corr_matrix.columns[i],
-                        'feature2': corr_matrix.columns[j],
-                        'correlation': corr_matrix.iloc[i, j]
-                    })
+                    high_corr_pairs.append(
+                        {
+                            "feature1": corr_matrix.columns[i],
+                            "feature2": corr_matrix.columns[j],
+                            "correlation": corr_matrix.iloc[i, j],
+                        }
+                    )
 
-        self.validation_report['checks']['high_correlation'] = {
-            'n_high_corr': len(high_corr_pairs),
-            'high_corr_pairs': high_corr_pairs[:10],  # Limit output
-            'threshold': threshold,
-            'status': 'warning' if len(high_corr_pairs) > 0 else 'ok'
+        self.validation_report["checks"]["high_correlation"] = {
+            "n_high_corr": len(high_corr_pairs),
+            "high_corr_pairs": high_corr_pairs[:10],  # Limit output
+            "threshold": threshold,
+            "status": "warning" if len(high_corr_pairs) > 0 else "ok",
         }
 
     def _check_infinite_values(self, df: pd.DataFrame):
@@ -150,10 +157,10 @@ class FeatureValidator:
         inf_counts = np.isinf(numeric_df).sum()
         features_with_inf = inf_counts[inf_counts > 0].to_dict()
 
-        self.validation_report['checks']['infinite_values'] = {
-            'total_infinite': int(inf_counts.sum()),
-            'features_with_infinite': features_with_inf,
-            'status': 'error' if len(features_with_inf) > 0 else 'ok'
+        self.validation_report["checks"]["infinite_values"] = {
+            "total_infinite": int(inf_counts.sum()),
+            "features_with_infinite": features_with_inf,
+            "status": "error" if len(features_with_inf) > 0 else "ok",
         }
 
     def _check_data_types(self, df: pd.DataFrame):
@@ -161,11 +168,11 @@ class FeatureValidator:
         type_counts = df.dtypes.value_counts().to_dict()
         type_counts = {str(k): v for k, v in type_counts.items()}
 
-        self.validation_report['checks']['data_types'] = {
-            'type_distribution': type_counts,
-            'numeric_features': len(df.select_dtypes(include=[np.number]).columns),
-            'categorical_features': len(df.select_dtypes(include=['object']).columns),
-            'status': 'ok'
+        self.validation_report["checks"]["data_types"] = {
+            "type_distribution": type_counts,
+            "numeric_features": len(df.select_dtypes(include=[np.number]).columns),
+            "categorical_features": len(df.select_dtypes(include=["object"]).columns),
+            "status": "ok",
         }
 
     def _check_target_leakage(self, df: pd.DataFrame, target: pd.Series):
@@ -175,14 +182,11 @@ class FeatureValidator:
         for col in df.select_dtypes(include=[np.number]).columns:
             correlation = df[col].corr(target)
             if abs(correlation) > 0.99:  # Nearly perfect correlation
-                suspicious_features.append({
-                    'feature': col,
-                    'correlation': correlation
-                })
+                suspicious_features.append({"feature": col, "correlation": correlation})
 
-        self.validation_report['checks']['target_leakage'] = {
-            'suspicious_features': suspicious_features,
-            'status': 'error' if len(suspicious_features) > 0 else 'ok'
+        self.validation_report["checks"]["target_leakage"] = {
+            "suspicious_features": suspicious_features,
+            "status": "error" if len(suspicious_features) > 0 else "ok",
         }
 
 
@@ -203,7 +207,7 @@ class FeatureProfiler:
 
         for col in df.columns:
             profile = self._profile_column(df[col])
-            profile['feature'] = col
+            profile["feature"] = col
             profile_data.append(profile)
 
         return pd.DataFrame(profile_data)
@@ -211,34 +215,44 @@ class FeatureProfiler:
     def _profile_column(self, series: pd.Series) -> Dict:
         """Profile a single column."""
         profile = {
-            'dtype': str(series.dtype),
-            'n_unique': series.nunique(),
-            'n_missing': series.isnull().sum(),
-            'missing_pct': (series.isnull().sum() / len(series)) * 100
+            "dtype": str(series.dtype),
+            "n_unique": series.nunique(),
+            "n_missing": series.isnull().sum(),
+            "missing_pct": (series.isnull().sum() / len(series)) * 100,
         }
 
         if pd.api.types.is_numeric_dtype(series):
-            profile.update({
-                'mean': series.mean(),
-                'std': series.std(),
-                'min': series.min(),
-                'max': series.max(),
-                'q25': series.quantile(0.25),
-                'median': series.median(),
-                'q75': series.quantile(0.75),
-                'skew': series.skew(),
-                'kurtosis': series.kurtosis(),
-                'n_zeros': (series == 0).sum(),
-                'n_negative': (series < 0).sum() if pd.api.types.is_numeric_dtype(series) else 0
-            })
+            profile.update(
+                {
+                    "mean": series.mean(),
+                    "std": series.std(),
+                    "min": series.min(),
+                    "max": series.max(),
+                    "q25": series.quantile(0.25),
+                    "median": series.median(),
+                    "q75": series.quantile(0.75),
+                    "skew": series.skew(),
+                    "kurtosis": series.kurtosis(),
+                    "n_zeros": (series == 0).sum(),
+                    "n_negative": (series < 0).sum()
+                    if pd.api.types.is_numeric_dtype(series)
+                    else 0,
+                }
+            )
         else:
             # Categorical features
             top_values = series.value_counts().head(3)
-            profile.update({
-                'most_frequent': top_values.index[0] if len(top_values) > 0 else None,
-                'most_frequent_count': top_values.iloc[0] if len(top_values) > 0 else 0,
-                'category_counts': len(series.value_counts())
-            })
+            profile.update(
+                {
+                    "most_frequent": top_values.index[0]
+                    if len(top_values) > 0
+                    else None,
+                    "most_frequent_count": top_values.iloc[0]
+                    if len(top_values) > 0
+                    else 0,
+                    "category_counts": len(series.value_counts()),
+                }
+            )
 
         return profile
 
@@ -259,15 +273,15 @@ class FeatureMonitor:
         """
         for col in df.select_dtypes(include=[np.number]).columns:
             self.reference_stats[col] = {
-                'mean': df[col].mean(),
-                'std': df[col].std(),
-                'min': df[col].min(),
-                'max': df[col].max(),
-                'q25': df[col].quantile(0.25),
-                'q75': df[col].quantile(0.75)
+                "mean": df[col].mean(),
+                "std": df[col].std(),
+                "min": df[col].min(),
+                "max": df[col].max(),
+                "q25": df[col].quantile(0.25),
+                "q75": df[col].quantile(0.75),
             }
 
-    def detect_drift(self, df: pd.DataFrame, method: str = 'psi') -> Dict:
+    def detect_drift(self, df: pd.DataFrame, method: str = "psi") -> Dict:
         """
         Detect feature drift.
 
@@ -279,37 +293,29 @@ class FeatureMonitor:
             Drift report
         """
         drift_report = {
-            'timestamp': pd.Timestamp.now(),
-            'method': method,
-            'drifted_features': []
+            "timestamp": pd.Timestamp.now(),
+            "method": method,
+            "drifted_features": [],
         }
 
         for col in df.select_dtypes(include=[np.number]).columns:
             if col not in self.reference_stats:
                 continue
 
-            if method == 'psi':
-                drift_score = self._calculate_psi(
-                    self.reference_stats[col],
-                    df[col]
-                )
+            if method == "psi":
+                drift_score = self._calculate_psi(self.reference_stats[col], df[col])
                 threshold = 0.2
-            elif method == 'ks':
-                drift_score = self._calculate_ks(
-                    self.reference_stats[col],
-                    df[col]
-                )
+            elif method == "ks":
+                drift_score = self._calculate_ks(self.reference_stats[col], df[col])
                 threshold = 0.05
             else:
                 drift_score = 0
                 threshold = 0
 
             if drift_score > threshold:
-                drift_report['drifted_features'].append({
-                    'feature': col,
-                    'score': drift_score,
-                    'threshold': threshold
-                })
+                drift_report["drifted_features"].append(
+                    {"feature": col, "score": drift_score, "threshold": threshold}
+                )
 
         self.drift_history.append(drift_report)
         return drift_report
@@ -317,8 +323,8 @@ class FeatureMonitor:
     def _calculate_psi(self, reference_stats: Dict, current: pd.Series) -> float:
         """Calculate Population Stability Index."""
         # Simplified PSI calculation
-        ref_mean = reference_stats['mean']
-        ref_std = reference_stats['std']
+        ref_mean = reference_stats["mean"]
+        ref_std = reference_stats["std"]
 
         current_mean = current.mean()
         current_std = current.std()
@@ -338,9 +344,7 @@ class FeatureMonitor:
 
         # Create synthetic reference distribution
         ref_samples = np.random.normal(
-            reference_stats['mean'],
-            reference_stats['std'],
-            len(current)
+            reference_stats["mean"], reference_stats["std"], len(current)
         )
 
         ks_stat, p_value = stats.ks_2samp(ref_samples, current.values)
@@ -367,11 +371,11 @@ class FeatureEngineringPipeline:
         for name, transformer in self.steps:
             logger.info(f"Fitting {name}...")
 
-            if hasattr(transformer, 'fit_transform'):
+            if hasattr(transformer, "fit_transform"):
                 X_temp = transformer.fit_transform(X_temp, y)
-            elif hasattr(transformer, 'fit'):
+            elif hasattr(transformer, "fit"):
                 transformer.fit(X_temp, y)
-                if hasattr(transformer, 'transform'):
+                if hasattr(transformer, "transform"):
                     X_temp = transformer.transform(X_temp)
             else:
                 raise ValueError(f"Transformer {name} must have fit method")
@@ -389,7 +393,7 @@ class FeatureEngineringPipeline:
         for name, transformer in self.steps:
             logger.info(f"Transforming with {name}...")
 
-            if hasattr(transformer, 'transform'):
+            if hasattr(transformer, "transform"):
                 X_temp = transformer.transform(X_temp)
             elif callable(transformer):
                 X_temp = transformer(X_temp)
@@ -398,7 +402,9 @@ class FeatureEngineringPipeline:
 
         return X_temp
 
-    def fit_transform(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> pd.DataFrame:
+    def fit_transform(
+        self, X: pd.DataFrame, y: Optional[pd.Series] = None
+    ) -> pd.DataFrame:
         """Fit and transform in one step."""
         self.fit(X, y)
         return self.transform(X)
@@ -432,7 +438,7 @@ class CrossValidationFeatureEngineer:
         Returns:
             Transformed dataframe with CV-based features
         """
-        if self.stratified and y.dtype == 'object':
+        if self.stratified and y.dtype == "object":
             kf = StratifiedKFold(n_splits=self.cv_folds, shuffle=True, random_state=42)
         else:
             kf = KFold(n_splits=self.cv_folds, shuffle=True, random_state=42)
@@ -467,12 +473,15 @@ class CrossValidationFeatureEngineer:
     def _clone_engineer(self):
         """Clone the feature engineer."""
         from copy import deepcopy
+
         return deepcopy(self.engineer)
 
 
-def create_feature_engineering_report(df_original: pd.DataFrame,
-                                      df_engineered: pd.DataFrame,
-                                      y: Optional[pd.Series] = None) -> str:
+def create_feature_engineering_report(
+    df_original: pd.DataFrame,
+    df_engineered: pd.DataFrame,
+    y: Optional[pd.Series] = None,
+) -> str:
     """
     Create comprehensive feature engineering report.
 
@@ -491,27 +500,41 @@ def create_feature_engineering_report(df_original: pd.DataFrame,
     report.append("<h2>Dataset Overview</h2>")
     report.append(f"<p>Original shape: {df_original.shape}</p>")
     report.append(f"<p>Engineered shape: {df_engineered.shape}</p>")
-    report.append(f"<p>Features added: {df_engineered.shape[1] - df_original.shape[1]}</p>")
+    report.append(
+        f"<p>Features added: {df_engineered.shape[1] - df_original.shape[1]}</p>"
+    )
 
     # Feature types
     report.append("<h2>Feature Types</h2>")
     report.append("<h3>Original</h3>")
-    report.append(f"<p>Numeric: {len(df_original.select_dtypes(include=[np.number]).columns)}</p>")
-    report.append(f"<p>Categorical: {len(df_original.select_dtypes(include=['object']).columns)}</p>")
+    report.append(
+        f"<p>Numeric: {len(df_original.select_dtypes(include=[np.number]).columns)}</p>"
+    )
+    report.append(
+        f"<p>Categorical: {len(df_original.select_dtypes(include=['object']).columns)}</p>"
+    )
 
     report.append("<h3>Engineered</h3>")
-    report.append(f"<p>Numeric: {len(df_engineered.select_dtypes(include=[np.number]).columns)}</p>")
-    report.append(f"<p>Categorical: {len(df_engineered.select_dtypes(include=['object']).columns)}</p>")
+    report.append(
+        f"<p>Numeric: {len(df_engineered.select_dtypes(include=[np.number]).columns)}</p>"
+    )
+    report.append(
+        f"<p>Categorical: {len(df_engineered.select_dtypes(include=['object']).columns)}</p>"
+    )
 
     # Validation
     validator = FeatureValidator()
     validation_report = validator.validate(df_engineered, y)
 
     report.append("<h2>Validation Results</h2>")
-    for check_name, check_result in validation_report['checks'].items():
-        status = check_result.get('status', 'unknown')
-        color = 'green' if status == 'ok' else 'orange' if status == 'warning' else 'red'
-        report.append(f"<p><span style='color:{color}'>{check_name}: {status}</span></p>")
+    for check_name, check_result in validation_report["checks"].items():
+        status = check_result.get("status", "unknown")
+        color = (
+            "green" if status == "ok" else "orange" if status == "warning" else "red"
+        )
+        report.append(
+            f"<p><span style='color:{color}'>{check_name}: {status}</span></p>"
+        )
 
     # Feature profile sample
     profiler = FeatureProfiler()
@@ -533,7 +556,7 @@ def save_feature_engineering_config(config: Dict, filepath: str):
     """
     import json
 
-    with open(filepath, 'w') as f:
+    with open(filepath, "w") as f:
         json.dump(config, f, indent=2, default=str)
 
     logger.info(f"Configuration saved to {filepath}")
@@ -551,7 +574,7 @@ def load_feature_engineering_config(filepath: str) -> Dict:
     """
     import json
 
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         config = json.load(f)
 
     logger.info(f"Configuration loaded from {filepath}")

@@ -50,13 +50,16 @@ logger = logging.getLogger(__name__)
 @dataclass
 class SecurityConfig:
     """Security configuration"""
+
     enable_input_sanitization: bool = True
     enable_sql_injection_prevention: bool = True
     enable_xss_protection: bool = True
     enable_csrf_protection: bool = True
     enable_rate_limiting: bool = True
     max_request_size: int = 10 * 1024 * 1024  # 10MB
-    allowed_file_types: List[str] = field(default_factory=lambda: ['.csv', '.json', '.xlsx', '.parquet'])
+    allowed_file_types: List[str] = field(
+        default_factory=lambda: [".csv", ".json", ".xlsx", ".parquet"]
+    )
     password_min_length: int = 12
     password_require_special: bool = True
     password_require_numbers: bool = True
@@ -72,17 +75,28 @@ class InputSanitizer:
 
     def __init__(self, config: SecurityConfig = None):
         self.config = config or SecurityConfig()
-        self.sql_keywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE',
-                             'ALTER', 'EXEC', 'EXECUTE', 'UNION', 'SCRIPT']
+        self.sql_keywords = [
+            "SELECT",
+            "INSERT",
+            "UPDATE",
+            "DELETE",
+            "DROP",
+            "CREATE",
+            "ALTER",
+            "EXEC",
+            "EXECUTE",
+            "UNION",
+            "SCRIPT",
+        ]
 
         # XSS patterns
         self.xss_patterns = [
-            re.compile(r'<script[^>]*>.*?</script>', re.IGNORECASE | re.DOTALL),
-            re.compile(r'javascript:', re.IGNORECASE),
-            re.compile(r'on\w+\s*=', re.IGNORECASE),  # Event handlers
-            re.compile(r'<iframe[^>]*>', re.IGNORECASE),
-            re.compile(r'<object[^>]*>', re.IGNORECASE),
-            re.compile(r'<embed[^>]*>', re.IGNORECASE),
+            re.compile(r"<script[^>]*>.*?</script>", re.IGNORECASE | re.DOTALL),
+            re.compile(r"javascript:", re.IGNORECASE),
+            re.compile(r"on\w+\s*=", re.IGNORECASE),  # Event handlers
+            re.compile(r"<iframe[^>]*>", re.IGNORECASE),
+            re.compile(r"<object[^>]*>", re.IGNORECASE),
+            re.compile(r"<embed[^>]*>", re.IGNORECASE),
         ]
 
     def sanitize_string(self, input_str: str, context: str = "general") -> str:
@@ -91,7 +105,7 @@ class InputSanitizer:
             input_str = str(input_str)
 
         # Remove null bytes
-        input_str = input_str.replace('\x00', '')
+        input_str = input_str.replace("\x00", "")
 
         # Context-specific sanitization
         if context == "html":
@@ -111,7 +125,9 @@ class InputSanitizer:
     def sanitize_general(self, input_str: str) -> str:
         """General string sanitization"""
         # Remove control characters
-        input_str = ''.join(char for char in input_str if ord(char) >= 32 or char in '\n\r\t')
+        input_str = "".join(
+            char for char in input_str if ord(char) >= 32 or char in "\n\r\t"
+        )
 
         # HTML escape
         input_str = html.escape(input_str)
@@ -126,28 +142,42 @@ class InputSanitizer:
     def sanitize_html(self, html_str: str) -> str:
         """Sanitize HTML content"""
         # Use bleach for HTML sanitization
-        allowed_tags = ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                       'ul', 'ol', 'li', 'blockquote', 'a', 'img']
-        allowed_attributes = {'a': ['href', 'title'], 'img': ['src', 'alt']}
+        allowed_tags = [
+            "p",
+            "br",
+            "strong",
+            "em",
+            "u",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+            "ul",
+            "ol",
+            "li",
+            "blockquote",
+            "a",
+            "img",
+        ]
+        allowed_attributes = {"a": ["href", "title"], "img": ["src", "alt"]}
 
         cleaned = bleach.clean(
-            html_str,
-            tags=allowed_tags,
-            attributes=allowed_attributes,
-            strip=True
+            html_str, tags=allowed_tags, attributes=allowed_attributes, strip=True
         )
 
         # Additional XSS prevention
         for pattern in self.xss_patterns:
-            cleaned = pattern.sub('', cleaned)
+            cleaned = pattern.sub("", cleaned)
 
         return cleaned
 
     def sanitize_sql(self, sql_str: str) -> str:
         """Sanitize SQL input to prevent injection"""
         # Remove SQL comments
-        sql_str = re.sub(r'--.*', '', sql_str)
-        sql_str = re.sub(r'/\*.*?\*/', '', sql_str, flags=re.DOTALL)
+        sql_str = re.sub(r"--.*", "", sql_str)
+        sql_str = re.sub(r"/\*.*?\*/", "", sql_str, flags=re.DOTALL)
 
         # Escape special characters
         sql_str = sql_str.replace("'", "''")
@@ -171,18 +201,18 @@ class InputSanitizer:
         filename = os.path.basename(filename)
 
         # Remove dangerous characters
-        filename = re.sub(r'[^a-zA-Z0-9._-]', '_', filename)
+        filename = re.sub(r"[^a-zA-Z0-9._-]", "_", filename)
 
         # Prevent directory traversal
-        filename = filename.replace('..', '')
-        filename = filename.replace('/', '')
-        filename = filename.replace('\\', '')
+        filename = filename.replace("..", "")
+        filename = filename.replace("/", "")
+        filename = filename.replace("\\", "")
 
         # Limit length
         max_length = 255
         if len(filename) > max_length:
             name, ext = os.path.splitext(filename)
-            filename = name[:max_length - len(ext)] + ext
+            filename = name[: max_length - len(ext)] + ext
 
         return filename
 
@@ -191,7 +221,7 @@ class InputSanitizer:
         email = email.strip().lower()
 
         # Basic email validation
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         if not re.match(email_pattern, email):
             return None
 
@@ -211,12 +241,12 @@ class InputSanitizer:
         parsed = urlparse(url)
 
         # Check for allowed schemes
-        allowed_schemes = ['http', 'https']
+        allowed_schemes = ["http", "https"]
         if parsed.scheme not in allowed_schemes:
             return None
 
         # Prevent javascript: and data: URIs
-        if parsed.scheme in ['javascript', 'data', 'vbscript']:
+        if parsed.scheme in ["javascript", "data", "vbscript"]:
             return None
 
         return url
@@ -260,10 +290,7 @@ class SQLInjectionPrevention:
         """Create a safe database connection"""
         # Use SQLAlchemy for safe connections
         engine = create_engine(
-            connection_string,
-            pool_pre_ping=True,
-            pool_recycle=3600,
-            echo=False
+            connection_string, pool_pre_ping=True, pool_recycle=3600, echo=False
         )
         Session = sessionmaker(bind=engine)
         return Session()
@@ -277,16 +304,17 @@ class SQLInjectionPrevention:
             result = session.execute(text(query))
         return result
 
-    def build_safe_query(self, table: str, columns: List[str],
-                         conditions: Dict = None) -> tuple:
+    def build_safe_query(
+        self, table: str, columns: List[str], conditions: Dict = None
+    ) -> tuple:
         """Build safe SQL query with parameters"""
         # Validate table name
-        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', table):
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", table):
             raise ValueError("Invalid table name")
 
         # Validate column names
         for col in columns:
-            if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', col):
+            if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", col):
                 raise ValueError(f"Invalid column name: {col}")
 
         # Build query
@@ -296,7 +324,7 @@ class SQLInjectionPrevention:
         if conditions:
             where_clauses = []
             for key, value in conditions.items():
-                if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', key):
+                if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", key):
                     raise ValueError(f"Invalid condition key: {key}")
                 param_name = f"param_{key}"
                 where_clauses.append(f"{key} = :{param_name}")
@@ -309,15 +337,15 @@ class SQLInjectionPrevention:
     def sanitize_identifier(self, identifier: str) -> str:
         """Sanitize SQL identifier (table/column name)"""
         # Only allow alphanumeric and underscore
-        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', identifier):
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", identifier):
             raise ValueError(f"Invalid SQL identifier: {identifier}")
         return identifier
 
     def escape_like_pattern(self, pattern: str) -> str:
         """Escape special characters in LIKE patterns"""
-        pattern = pattern.replace('\\', '\\\\')
-        pattern = pattern.replace('%', '\\%')
-        pattern = pattern.replace('_', '\\_')
+        pattern = pattern.replace("\\", "\\\\")
+        pattern = pattern.replace("%", "\\%")
+        pattern = pattern.replace("_", "\\_")
         return pattern
 
 
@@ -326,15 +354,15 @@ class XSSProtection:
 
     def __init__(self):
         self.csp_policy = {
-            'default-src': ["'self'"],
-            'script-src': ["'self'", "'unsafe-inline'"],
-            'style-src': ["'self'", "'unsafe-inline'"],
-            'img-src': ["'self'", 'data:', 'https:'],
-            'font-src': ["'self'"],
-            'connect-src': ["'self'"],
-            'frame-ancestors': ["'none'"],
-            'base-uri': ["'self'"],
-            'form-action': ["'self'"]
+            "default-src": ["'self'"],
+            "script-src": ["'self'", "'unsafe-inline'"],
+            "style-src": ["'self'", "'unsafe-inline'"],
+            "img-src": ["'self'", "data:", "https:"],
+            "font-src": ["'self'"],
+            "connect-src": ["'self'"],
+            "frame-ancestors": ["'none'"],
+            "base-uri": ["'self'"],
+            "form-action": ["'self'"],
         }
 
     def get_csp_header(self) -> str:
@@ -348,25 +376,22 @@ class XSSProtection:
     def add_security_headers(self) -> Dict[str, str]:
         """Get security headers for HTTP responses"""
         return {
-            'Content-Security-Policy': self.get_csp_header(),
-            'X-Content-Type-Options': 'nosniff',
-            'X-Frame-Options': 'DENY',
-            'X-XSS-Protection': '1; mode=block',
-            'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-            'Referrer-Policy': 'strict-origin-when-cross-origin'
+            "Content-Security-Policy": self.get_csp_header(),
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "X-XSS-Protection": "1; mode=block",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
         }
 
     def sanitize_user_content(self, content: str) -> str:
         """Sanitize user-generated content for display"""
         # Use bleach for comprehensive sanitization
-        allowed_tags = ['p', 'br', 'strong', 'em', 'u', 'li', 'ul', 'ol']
+        allowed_tags = ["p", "br", "strong", "em", "u", "li", "ul", "ol"]
         allowed_attributes = {}
 
         sanitized = bleach.clean(
-            content,
-            tags=allowed_tags,
-            attributes=allowed_attributes,
-            strip=True
+            content, tags=allowed_tags, attributes=allowed_attributes, strip=True
         )
 
         # Additional encoding
@@ -376,7 +401,7 @@ class XSSProtection:
 
     def generate_nonce(self) -> str:
         """Generate nonce for inline scripts"""
-        return base64.b64encode(secrets.token_bytes(16)).decode('utf-8')
+        return base64.b64encode(secrets.token_bytes(16)).decode("utf-8")
 
 
 class SecretManager:
@@ -394,7 +419,7 @@ class SecretManager:
     def _get_or_create_master_key(self) -> bytes:
         """Get or create master key from environment or file"""
         # Try environment variable first
-        env_key = os.environ.get('MASTER_KEY')
+        env_key = os.environ.get("MASTER_KEY")
         if env_key:
             return env_key.encode()
 
@@ -414,9 +439,9 @@ class SecretManager:
         kdf = PBKDF2(
             algorithm=hashes.SHA256(),
             length=32,
-            salt=b'stable_salt',  # In production, use random salt
+            salt=b"stable_salt",  # In production, use random salt
             iterations=100000,
-            backend=default_backend()
+            backend=default_backend(),
         )
         key = base64.urlsafe_b64encode(kdf.derive(password))
         return key
@@ -449,12 +474,12 @@ class SecretManager:
         if not self.secrets_file.exists():
             return {}
 
-        with open(self.secrets_file, 'r') as f:
+        with open(self.secrets_file, "r") as f:
             return json.load(f)
 
     def _save_secrets(self, secrets: Dict[str, str]) -> None:
         """Save secrets to file"""
-        with open(self.secrets_file, 'w') as f:
+        with open(self.secrets_file, "w") as f:
             json.dump(secrets, f)
 
         # Restrict file permissions
@@ -495,10 +520,14 @@ class PasswordValidator:
 
         # Check length
         if len(password) < self.config.password_min_length:
-            errors.append(f"Password must be at least {self.config.password_min_length} characters")
+            errors.append(
+                f"Password must be at least {self.config.password_min_length} characters"
+            )
 
         # Check for uppercase
-        if self.config.password_require_uppercase and not any(c.isupper() for c in password):
+        if self.config.password_require_uppercase and not any(
+            c.isupper() for c in password
+        ):
             errors.append("Password must contain at least one uppercase letter")
 
         # Check for lowercase
@@ -506,12 +535,16 @@ class PasswordValidator:
             errors.append("Password must contain at least one lowercase letter")
 
         # Check for numbers
-        if self.config.password_require_numbers and not any(c.isdigit() for c in password):
+        if self.config.password_require_numbers and not any(
+            c.isdigit() for c in password
+        ):
             errors.append("Password must contain at least one number")
 
         # Check for special characters
         special_chars = "!@#$%^&*()_+-=[]{}|;:,.<>?"
-        if self.config.password_require_special and not any(c in special_chars for c in password):
+        if self.config.password_require_special and not any(
+            c in special_chars for c in password
+        ):
             errors.append("Password must contain at least one special character")
 
         # Check against common passwords
@@ -527,33 +560,45 @@ class PasswordValidator:
     def _is_common_password(self, password: str) -> bool:
         """Check if password is in common passwords list"""
         common_passwords = [
-            'password', '123456', '12345678', 'qwerty', 'abc123',
-            'password123', 'admin', 'letmein', 'welcome', 'monkey'
+            "password",
+            "123456",
+            "12345678",
+            "qwerty",
+            "abc123",
+            "password123",
+            "admin",
+            "letmein",
+            "welcome",
+            "monkey",
         ]
         return password.lower() in common_passwords
 
     def _has_pattern(self, password: str) -> bool:
         """Check for keyboard patterns"""
-        patterns = ['qwerty', 'asdf', 'zxcv', '1234', '4321']
+        patterns = ["qwerty", "asdf", "zxcv", "1234", "4321"]
         password_lower = password.lower()
         return any(pattern in password_lower for pattern in patterns)
 
     def hash_password(self, password: str) -> str:
         """Hash password using bcrypt"""
         import bcrypt
+
         salt = bcrypt.gensalt()
-        hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
-        return hashed.decode('utf-8')
+        hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
+        return hashed.decode("utf-8")
 
     def verify_password(self, password: str, hashed: str) -> bool:
         """Verify password against hash"""
         import bcrypt
-        return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+        return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
     def generate_secure_password(self, length: int = 16) -> str:
         """Generate secure random password"""
-        alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
-        password = ''.join(secrets.choice(alphabet) for _ in range(length))
+        alphabet = (
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+        )
+        password = "".join(secrets.choice(alphabet) for _ in range(length))
         return password
 
 
@@ -564,8 +609,9 @@ class RateLimiter:
         self.requests = defaultdict(lambda: deque(maxlen=100))
         self.blocked_ips = set()
 
-    def check_rate_limit(self, identifier: str, max_requests: int = 100,
-                        window_seconds: int = 60) -> bool:
+    def check_rate_limit(
+        self, identifier: str, max_requests: int = 100, window_seconds: int = 60
+    ) -> bool:
         """Check if request should be rate limited"""
         if identifier in self.blocked_ips:
             return False
@@ -589,11 +635,14 @@ class RateLimiter:
     def block_identifier(self, identifier: str, duration_seconds: int = 3600):
         """Temporarily block an identifier"""
         self.blocked_ips.add(identifier)
+
         # Schedule unblock (in production, use proper scheduling)
         def unblock():
             time.sleep(duration_seconds)
             self.blocked_ips.discard(identifier)
+
         import threading
+
         threading.Thread(target=unblock, daemon=True).start()
 
 
@@ -607,9 +656,7 @@ class CSRFProtection:
         """Generate CSRF token"""
         message = f"{session_id}:{time.time()}"
         signature = hmac.new(
-            self.secret_key.encode(),
-            message.encode(),
-            hashlib.sha256
+            self.secret_key.encode(), message.encode(), hashlib.sha256
         ).hexdigest()
         token = base64.b64encode(f"{message}:{signature}".encode()).decode()
         return token
@@ -618,8 +665,8 @@ class CSRFProtection:
         """Verify CSRF token"""
         try:
             decoded = base64.b64decode(token).decode()
-            message, signature = decoded.rsplit(':', 1)
-            stored_session_id, timestamp = message.split(':', 1)
+            message, signature = decoded.rsplit(":", 1)
+            stored_session_id, timestamp = message.split(":", 1)
 
             # Check session ID
             if stored_session_id != session_id:
@@ -631,9 +678,7 @@ class CSRFProtection:
 
             # Verify signature
             expected_signature = hmac.new(
-                self.secret_key.encode(),
-                message.encode(),
-                hashlib.sha256
+                self.secret_key.encode(), message.encode(), hashlib.sha256
             ).hexdigest()
 
             return hmac.compare_digest(signature, expected_signature)
@@ -649,10 +694,10 @@ class FileUploadValidator:
 
         # MIME type mappings
         self.allowed_mimes = {
-            '.csv': 'text/csv',
-            '.json': 'application/json',
-            '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            '.parquet': 'application/octet-stream'
+            ".csv": "text/csv",
+            ".json": "application/json",
+            ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".parquet": "application/octet-stream",
         }
 
     def validate_file(self, filename: str, content: bytes) -> tuple[bool, str]:
@@ -664,7 +709,10 @@ class FileUploadValidator:
 
         # Check file size
         if len(content) > self.config.max_request_size:
-            return False, f"File size exceeds maximum of {self.config.max_request_size} bytes"
+            return (
+                False,
+                f"File size exceeds maximum of {self.config.max_request_size} bytes",
+            )
 
         # Check for malicious content
         if self._contains_malicious_content(content):
@@ -680,10 +728,10 @@ class FileUploadValidator:
         """Check for malicious patterns in file content"""
         # Check for executable signatures
         executable_signatures = [
-            b'MZ',  # PE executable
-            b'\x7fELF',  # ELF executable
-            b'#!/bin/',  # Shell script
-            b'#!/usr/bin/python',  # Python script
+            b"MZ",  # PE executable
+            b"\x7fELF",  # ELF executable
+            b"#!/bin/",  # Shell script
+            b"#!/usr/bin/python",  # Python script
         ]
 
         for sig in executable_signatures:
@@ -691,8 +739,8 @@ class FileUploadValidator:
                 return True
 
         # Check for embedded scripts in CSV/JSON
-        content_str = content.decode('utf-8', errors='ignore')
-        dangerous_patterns = ['<script', 'javascript:', 'eval(', 'exec(']
+        content_str = content.decode("utf-8", errors="ignore")
+        dangerous_patterns = ["<script", "javascript:", "eval(", "exec("]
         for pattern in dangerous_patterns:
             if pattern.lower() in content_str.lower():
                 return True
@@ -702,10 +750,10 @@ class FileUploadValidator:
     def _validate_file_signature(self, content: bytes, extension: str) -> bool:
         """Validate file signature matches extension"""
         signatures = {
-            '.xlsx': b'PK\x03\x04',  # ZIP archive (Excel uses ZIP)
-            '.json': [b'{', b'['],  # JSON starts with { or [
-            '.csv': None,  # CSV has no specific signature
-            '.parquet': b'PAR1'  # Parquet signature
+            ".xlsx": b"PK\x03\x04",  # ZIP archive (Excel uses ZIP)
+            ".json": [b"{", b"["],  # JSON starts with { or [
+            ".csv": None,  # CSV has no specific signature
+            ".parquet": b"PAR1",  # Parquet signature
         }
 
         expected_sig = signatures.get(extension.lower())
@@ -748,7 +796,9 @@ class SecurityFramework:
                 sanitized[clean_key] = self.sanitize_request(value)
             elif isinstance(value, list):
                 sanitized[clean_key] = [
-                    self.input_sanitizer.sanitize_string(item) if isinstance(item, str) else item
+                    self.input_sanitizer.sanitize_string(item)
+                    if isinstance(item, str)
+                    else item
                     for item in value
                 ]
             else:
@@ -756,7 +806,9 @@ class SecurityFramework:
 
         return sanitized
 
-    def validate_api_request(self, request: Dict, schema: BaseModel) -> tuple[bool, Any]:
+    def validate_api_request(
+        self, request: Dict, schema: BaseModel
+    ) -> tuple[bool, Any]:
         """Validate API request against schema"""
         try:
             # Sanitize input first
@@ -769,7 +821,9 @@ class SecurityFramework:
             logger.warning(f"Request validation failed: {e}")
             return False, str(e)
 
-    def secure_database_query(self, query: str, params: Dict = None) -> tuple[str, Dict]:
+    def secure_database_query(
+        self, query: str, params: Dict = None
+    ) -> tuple[str, Dict]:
         """Create secure database query"""
         # Sanitize parameters
         safe_params = {}
@@ -805,22 +859,25 @@ def rate_limit(max_requests: int = 100, window: int = 60):
         @wraps(func)
         def wrapper(*args, **kwargs):
             # Get identifier (e.g., IP address, user ID)
-            identifier = kwargs.get('identifier', 'unknown')
+            identifier = kwargs.get("identifier", "unknown")
 
             if not limiter.check_rate_limit(identifier, max_requests, window):
                 raise Exception("Rate limit exceeded")
 
             return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
 def require_auth(func):
     """Authentication requirement decorator"""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Check for authentication token
-        token = kwargs.get('auth_token')
+        token = kwargs.get("auth_token")
         if not token:
             raise Exception("Authentication required")
 
@@ -830,6 +887,7 @@ def require_auth(func):
             raise Exception("Invalid authentication token")
 
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -856,6 +914,7 @@ def sanitize_inputs(func):
                 sanitized_kwargs[key] = value
 
         return func(*sanitized_args, **sanitized_kwargs)
+
     return wrapper
 
 

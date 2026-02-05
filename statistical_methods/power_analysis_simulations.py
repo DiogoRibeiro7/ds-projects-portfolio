@@ -72,8 +72,8 @@ class PowerAnalysisSimulator:
         effect_sizes: Union[float, List[float]],
         sample_sizes: Union[int, List[int]],
         alpha: float = 0.05,
-        test_type: str = 'proportion',
-        alternative: str = 'two-sided',
+        test_type: str = "proportion",
+        alternative: str = "two-sided",
         variance_ratio: float = 1.0,
     ) -> pd.DataFrame:
         """
@@ -100,34 +100,35 @@ class PowerAnalysisSimulator:
 
         for effect_size in effect_sizes:
             for sample_size in sample_sizes:
-                if test_type == 'proportion':
+                if test_type == "proportion":
                     power = self._simulate_proportion_test(
                         baseline_rate, effect_size, sample_size, alpha, alternative
                     )
                 else:
                     power = self._simulate_continuous_test(
-                        baseline_rate, effect_size, sample_size, alpha,
-                        alternative, variance_ratio
+                        baseline_rate,
+                        effect_size,
+                        sample_size,
+                        alpha,
+                        alternative,
+                        variance_ratio,
                     )
 
-                results.append({
-                    'effect_size': effect_size,
-                    'sample_size': sample_size,
-                    'power': power,
-                    'alpha': alpha,
-                    'test_type': test_type,
-                    'alternative': alternative
-                })
+                results.append(
+                    {
+                        "effect_size": effect_size,
+                        "sample_size": sample_size,
+                        "power": power,
+                        "alpha": alpha,
+                        "test_type": test_type,
+                        "alternative": alternative,
+                    }
+                )
 
         return pd.DataFrame(results)
 
     def _simulate_proportion_test(
-        self,
-        p1: float,
-        effect_size: float,
-        n: int,
-        alpha: float,
-        alternative: str
+        self, p1: float, effect_size: float, n: int, alpha: float, alternative: str
     ) -> float:
         """Simulate power for proportion test."""
         p2 = p1 + effect_size
@@ -151,9 +152,9 @@ class PowerAnalysisSimulator:
             z = (p2_hat - p1_hat) / se if se > 0 else 0
 
             # Determine significance
-            if alternative == 'two-sided':
+            if alternative == "two-sided":
                 p_value = 2 * (1 - stats.norm.cdf(abs(z)))
-            elif alternative == 'greater':
+            elif alternative == "greater":
                 p_value = 1 - stats.norm.cdf(z)
             else:  # less
                 p_value = stats.norm.cdf(z)
@@ -170,7 +171,7 @@ class PowerAnalysisSimulator:
         n: int,
         alpha: float,
         alternative: str,
-        variance_ratio: float
+        variance_ratio: float,
     ) -> float:
         """Simulate power for continuous test."""
         mean2 = mean1 + effect_size
@@ -198,7 +199,7 @@ class PowerAnalysisSimulator:
         max_sample_size: int,
         check_points: List[int],
         alpha: float = 0.05,
-        spending_function: str = 'obrien_fleming',
+        spending_function: str = "obrien_fleming",
         futility_bounds: bool = True,
     ) -> SimulationResult:
         """
@@ -231,7 +232,9 @@ class PowerAnalysisSimulator:
             # Generate all data upfront
             if true_effect > 0:
                 all_data_control = np.random.binomial(1, 0.1, max_sample_size)
-                all_data_treatment = np.random.binomial(1, 0.1 + true_effect, max_sample_size)
+                all_data_treatment = np.random.binomial(
+                    1, 0.1 + true_effect, max_sample_size
+                )
             else:
                 all_data_control = np.random.binomial(1, 0.1, max_sample_size)
                 all_data_treatment = np.random.binomial(1, 0.1, max_sample_size)
@@ -249,14 +252,18 @@ class PowerAnalysisSimulator:
                 p_t = data_t.mean()
                 p_pooled = (data_c.sum() + data_t.sum()) / (2 * n)
 
-                se = np.sqrt(p_pooled * (1 - p_pooled) * 2 / n) if p_pooled > 0 else 1e-10
+                se = (
+                    np.sqrt(p_pooled * (1 - p_pooled) * 2 / n)
+                    if p_pooled > 0
+                    else 1e-10
+                )
                 z = (p_t - p_c) / se
 
                 # Check efficacy boundary
                 z_boundary = stats.norm.ppf(1 - alpha_spent[i])
                 if abs(z) > z_boundary:
                     stopped = True
-                    decision = 'reject'
+                    decision = "reject"
                     stopping_n = n
 
                 # Check futility boundary
@@ -266,20 +273,26 @@ class PowerAnalysisSimulator:
                     )
                     if conditional_power < 0.2:  # Futility threshold
                         stopped = True
-                        decision = 'futile'
+                        decision = "futile"
                         stopping_n = n
 
             if decision is None:
-                decision = 'fail_to_reject'
+                decision = "fail_to_reject"
 
             decisions.append(decision)
             stopping_times.append(stopping_n)
 
         # Calculate metrics
-        power = sum(d == 'reject' for d in decisions) / len(decisions)
-        type_i = sum(d == 'reject' for d in decisions) / len(decisions) if true_effect == 0 else None
+        power = sum(d == "reject" for d in decisions) / len(decisions)
+        type_i = (
+            sum(d == "reject" for d in decisions) / len(decisions)
+            if true_effect == 0
+            else None
+        )
         type_ii = 1 - power if true_effect > 0 else None
-        early_stop_rate = sum(s < max_sample_size for s in stopping_times) / len(stopping_times)
+        early_stop_rate = sum(s < max_sample_size for s in stopping_times) / len(
+            stopping_times
+        )
         avg_stopping_time = np.mean(stopping_times)
 
         return SimulationResult(
@@ -292,29 +305,34 @@ class PowerAnalysisSimulator:
             coverage=0,  # Not calculated for sequential
             average_ci_width=0,  # Not calculated for sequential
             convergence_time=int(avg_stopping_time),
-            early_stopping_rate=early_stop_rate
+            early_stopping_rate=early_stop_rate,
         )
 
     def _calculate_alpha_spending(
-        self,
-        check_points: List[int],
-        max_n: int,
-        alpha: float,
-        method: str
+        self, check_points: List[int], max_n: int, alpha: float, method: str
     ) -> List[float]:
         """Calculate alpha spending at each checkpoint."""
         info_fractions = [n / max_n for n in check_points]
         alpha_spent = []
 
         for i, t in enumerate(info_fractions):
-            if method == 'obrien_fleming':
+            if method == "obrien_fleming":
                 # O'Brien-Fleming spending function
                 if i == 0:
-                    spent = 2 * (1 - stats.norm.cdf(stats.norm.ppf(1 - alpha/2) / np.sqrt(t)))
+                    spent = 2 * (
+                        1 - stats.norm.cdf(stats.norm.ppf(1 - alpha / 2) / np.sqrt(t))
+                    )
                 else:
-                    prev_t = info_fractions[i-1]
-                    spent = 2 * (1 - stats.norm.cdf(stats.norm.ppf(1 - alpha/2) / np.sqrt(t)))
-                    spent -= 2 * (1 - stats.norm.cdf(stats.norm.ppf(1 - alpha/2) / np.sqrt(prev_t)))
+                    prev_t = info_fractions[i - 1]
+                    spent = 2 * (
+                        1 - stats.norm.cdf(stats.norm.ppf(1 - alpha / 2) / np.sqrt(t))
+                    )
+                    spent -= 2 * (
+                        1
+                        - stats.norm.cdf(
+                            stats.norm.ppf(1 - alpha / 2) / np.sqrt(prev_t)
+                        )
+                    )
             else:  # Pocock
                 spent = alpha * t
 
@@ -323,11 +341,7 @@ class PowerAnalysisSimulator:
         return alpha_spent
 
     def _calculate_conditional_power(
-        self,
-        current_z: float,
-        current_n: int,
-        max_n: int,
-        assumed_effect: float
+        self, current_z: float, current_n: int, max_n: int, assumed_effect: float
     ) -> float:
         """Calculate conditional power for futility assessment."""
         remaining_n = max_n - current_n
@@ -342,8 +356,9 @@ class PowerAnalysisSimulator:
         future_z_mean = assumed_effect * np.sqrt(remaining_n)
 
         # Combined z-score
-        combined_z_mean = (current_z * np.sqrt(info_current) +
-                          future_z_mean * np.sqrt(info_remaining))
+        combined_z_mean = current_z * np.sqrt(info_current) + future_z_mean * np.sqrt(
+            info_remaining
+        )
 
         # Critical value at final analysis
         z_critical = stats.norm.ppf(0.975)  # Two-sided test
@@ -358,7 +373,7 @@ class PowerAnalysisSimulator:
         initial_sample: int,
         max_sample: int,
         true_effects: Dict[str, float],
-        adaptation_rule: str = 'thompson_sampling',
+        adaptation_rule: str = "thompson_sampling",
         n_arms: int = 3,
     ) -> Dict[str, Any]:
         """
@@ -391,7 +406,7 @@ class PowerAnalysisSimulator:
 
             # Adaptive phase
             for _ in range(initial_sample, max_sample):
-                if adaptation_rule == 'thompson_sampling':
+                if adaptation_rule == "thompson_sampling":
                     # Thompson sampling for arm selection
                     samples = {}
                     for arm in arm_names:
@@ -432,55 +447,57 @@ class PowerAnalysisSimulator:
             best_arm_true = max(true_effects, key=true_effects.get)
             best_arm_selected = max(estimates, key=estimates.get)
 
-            results.append({
-                'correct_selection': best_arm_selected == best_arm_true,
-                'allocation_proportions': {
-                    arm: arm_counts[arm] / max_sample for arm in arm_names
-                },
-                'estimates': estimates,
-                'sample_sizes': arm_counts
-            })
+            results.append(
+                {
+                    "correct_selection": best_arm_selected == best_arm_true,
+                    "allocation_proportions": {
+                        arm: arm_counts[arm] / max_sample for arm in arm_names
+                    },
+                    "estimates": estimates,
+                    "sample_sizes": arm_counts,
+                }
+            )
 
         # Aggregate results
-        correct_selection_rate = np.mean([r['correct_selection'] for r in results])
+        correct_selection_rate = np.mean([r["correct_selection"] for r in results])
         avg_allocations = {
-            arm: np.mean([r['allocation_proportions'][arm] for r in results])
+            arm: np.mean([r["allocation_proportions"][arm] for r in results])
             for arm in arm_names
         }
 
         return {
-            'correct_selection_probability': correct_selection_rate,
-            'average_allocations': avg_allocations,
-            'adaptation_rule': adaptation_rule,
-            'initial_sample': initial_sample,
-            'max_sample': max_sample,
-            'true_effects': true_effects,
-            'simulation_details': {
-                'n_simulations': len(results),
-                'convergence': self._check_convergence(results)
-            }
+            "correct_selection_probability": correct_selection_rate,
+            "average_allocations": avg_allocations,
+            "adaptation_rule": adaptation_rule,
+            "initial_sample": initial_sample,
+            "max_sample": max_sample,
+            "true_effects": true_effects,
+            "simulation_details": {
+                "n_simulations": len(results),
+                "convergence": self._check_convergence(results),
+            },
         }
 
     def _check_convergence(self, results: List[Dict]) -> Dict[str, Any]:
         """Check if adaptive design has converged."""
         if len(results) < 100:
-            return {'converged': False, 'reason': 'Too few simulations'}
+            return {"converged": False, "reason": "Too few simulations"}
 
         # Check if correct selection rate has stabilized
-        selection_rates = [r['correct_selection'] for r in results]
+        selection_rates = [r["correct_selection"] for r in results]
         window_size = min(50, len(results) // 4)
 
         recent_rate = np.mean(selection_rates[-window_size:])
-        previous_rate = np.mean(selection_rates[-2*window_size:-window_size])
+        previous_rate = np.mean(selection_rates[-2 * window_size : -window_size])
 
         rate_change = abs(recent_rate - previous_rate)
 
         converged = rate_change < 0.01
 
         return {
-            'converged': converged,
-            'recent_rate': recent_rate,
-            'rate_change': rate_change
+            "converged": converged,
+            "recent_rate": recent_rate,
+            "rate_change": rate_change,
         }
 
     def calculate_sample_size(
@@ -488,9 +505,9 @@ class PowerAnalysisSimulator:
         power: float,
         effect_size: float,
         alpha: float = 0.05,
-        test_type: str = 'proportion',
+        test_type: str = "proportion",
         baseline: float = 0.1,
-        method: str = 'analytical',
+        method: str = "analytical",
     ) -> PowerAnalysisResult:
         """
         Calculate required sample size for desired power.
@@ -506,15 +523,13 @@ class PowerAnalysisSimulator:
         Returns:
             PowerAnalysisResult with sample size calculation
         """
-        if method == 'analytical':
-            if test_type == 'proportion':
+        if method == "analytical":
+            if test_type == "proportion":
                 n = self._analytical_sample_size_proportion(
                     baseline, effect_size, alpha, power
                 )
             else:
-                n = self._analytical_sample_size_continuous(
-                    effect_size, alpha, power
-                )
+                n = self._analytical_sample_size_continuous(effect_size, alpha, power)
         else:
             # Simulation-based sample size calculation
             n = self._simulation_sample_size(
@@ -541,25 +556,21 @@ class PowerAnalysisSimulator:
             minimum_detectable_effect=mde,
             confidence_interval=ci_power,
             simulation_details={
-                'method': method,
-                'test_type': test_type,
-                'baseline': baseline
+                "method": method,
+                "test_type": test_type,
+                "baseline": baseline,
             },
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
     def _analytical_sample_size_proportion(
-        self,
-        p1: float,
-        effect_size: float,
-        alpha: float,
-        power: float
+        self, p1: float, effect_size: float, alpha: float, power: float
     ) -> int:
         """Analytical sample size for proportion test."""
         p2 = p1 + effect_size
         p2 = np.clip(p2, 0.001, 0.999)
 
-        z_alpha = stats.norm.ppf(1 - alpha/2)
+        z_alpha = stats.norm.ppf(1 - alpha / 2)
         z_beta = stats.norm.ppf(power)
 
         p_bar = (p1 + p2) / 2
@@ -568,18 +579,12 @@ class PowerAnalysisSimulator:
         return int(np.ceil(n))
 
     def _analytical_sample_size_continuous(
-        self,
-        effect_size: float,
-        alpha: float,
-        power: float
+        self, effect_size: float, alpha: float, power: float
     ) -> int:
         """Analytical sample size for continuous test."""
         power_analysis = TTestPower()
         n = power_analysis.solve_power(
-            effect_size=effect_size,
-            power=power,
-            alpha=alpha,
-            alternative='two-sided'
+            effect_size=effect_size, power=power, alpha=alpha, alternative="two-sided"
         )
         return int(np.ceil(n))
 
@@ -589,14 +594,15 @@ class PowerAnalysisSimulator:
         effect_size: float,
         alpha: float,
         test_type: str,
-        baseline: float
+        baseline: float,
     ) -> int:
         """Find sample size through binary search with simulation."""
+
         def power_at_n(n):
             df = self.simulate_ab_test_power(
                 baseline, effect_size, int(n), alpha, test_type
             )
-            return df['power'].iloc[0]
+            return df["power"].iloc[0]
 
         # Binary search
         n_min, n_max = 10, 100000
@@ -617,8 +623,8 @@ class PowerAnalysisSimulator:
         sample_size: int,
         power: float,
         alpha: float = 0.05,
-        test_type: str = 'proportion',
-        baseline: float = 0.1
+        test_type: str = "proportion",
+        baseline: float = 0.1,
     ) -> float:
         """
         Calculate minimum detectable effect given sample size.
@@ -633,8 +639,8 @@ class PowerAnalysisSimulator:
         Returns:
             Minimum detectable effect
         """
-        if test_type == 'proportion':
-            z_alpha = stats.norm.ppf(1 - alpha/2)
+        if test_type == "proportion":
+            z_alpha = stats.norm.ppf(1 - alpha / 2)
             z_beta = stats.norm.ppf(power)
 
             # Solve for effect size
@@ -648,27 +654,22 @@ class PowerAnalysisSimulator:
                 return abs((z_alpha + z_beta) * se - abs(delta))
 
             try:
-                mde = minimize_scalar(mde_equation, bounds=(0.001, 1-baseline), method='bounded').x
+                mde = minimize_scalar(
+                    mde_equation, bounds=(0.001, 1 - baseline), method="bounded"
+                ).x
             except:
                 mde = 0.1  # Default if optimization fails
 
         else:
             power_analysis = TTestPower()
             mde = power_analysis.solve_power(
-                nobs=sample_size,
-                power=power,
-                alpha=alpha,
-                alternative='two-sided'
+                nobs=sample_size, power=power, alpha=alpha, alternative="two-sided"
             )
 
         return mde
 
     def _generate_recommendations(
-        self,
-        sample_size: int,
-        power: float,
-        effect_size: float,
-        test_type: str
+        self, sample_size: int, power: float, effect_size: float, test_type: str
     ) -> List[str]:
         """Generate recommendations based on power analysis."""
         recommendations = []
@@ -683,9 +684,7 @@ class PowerAnalysisSimulator:
             recommendations.append("  - Using more efficient test designs")
 
         if sample_size < 100:
-            recommendations.append(
-                f"Small sample size (n={sample_size}) may lead to:"
-            )
+            recommendations.append(f"Small sample size (n={sample_size}) may lead to:")
             recommendations.append("  - High variance in estimates")
             recommendations.append("  - Sensitivity to outliers")
             recommendations.append("  - Consider exact tests for small samples")
@@ -699,7 +698,7 @@ class PowerAnalysisSimulator:
             recommendations.append("  - Or accept larger effect sizes")
 
         # Effect size recommendations
-        if test_type == 'proportion' and effect_size < 0.01:
+        if test_type == "proportion" and effect_size < 0.01:
             recommendations.append(
                 "Very small effect size (<1%). Consider practical significance."
             )
@@ -713,9 +712,7 @@ class PowerAnalysisSimulator:
         return recommendations
 
     def plot_power_curves(
-        self,
-        results_df: pd.DataFrame,
-        variable: str = 'sample_size'
+        self, results_df: pd.DataFrame, variable: str = "sample_size"
     ):
         """
         Plot power curves from simulation results.
@@ -728,82 +725,87 @@ class PowerAnalysisSimulator:
 
         # Power curve
         ax = axes[0, 0]
-        if variable == 'sample_size':
-            for effect in results_df['effect_size'].unique():
-                data = results_df[results_df['effect_size'] == effect]
-                ax.plot(data['sample_size'], data['power'], marker='o', label=f'Effect={effect}')
-            ax.set_xlabel('Sample Size per Group')
+        if variable == "sample_size":
+            for effect in results_df["effect_size"].unique():
+                data = results_df[results_df["effect_size"] == effect]
+                ax.plot(
+                    data["sample_size"],
+                    data["power"],
+                    marker="o",
+                    label=f"Effect={effect}",
+                )
+            ax.set_xlabel("Sample Size per Group")
         else:
-            for n in results_df['sample_size'].unique():
-                data = results_df[results_df['sample_size'] == n]
-                ax.plot(data['effect_size'], data['power'], marker='o', label=f'n={n}')
-            ax.set_xlabel('Effect Size')
+            for n in results_df["sample_size"].unique():
+                data = results_df[results_df["sample_size"] == n]
+                ax.plot(data["effect_size"], data["power"], marker="o", label=f"n={n}")
+            ax.set_xlabel("Effect Size")
 
-        ax.set_ylabel('Statistical Power')
-        ax.set_title('Power Curves')
-        ax.axhline(0.8, color='red', linestyle='--', alpha=0.5, label='80% power')
+        ax.set_ylabel("Statistical Power")
+        ax.set_title("Power Curves")
+        ax.axhline(0.8, color="red", linestyle="--", alpha=0.5, label="80% power")
         ax.legend()
         ax.grid(True, alpha=0.3)
 
         # Sample size requirements
         ax = axes[0, 1]
-        effect_sizes = results_df['effect_size'].unique()
+        effect_sizes = results_df["effect_size"].unique()
         required_n = []
 
         for effect in effect_sizes:
-            data = results_df[results_df['effect_size'] == effect]
+            data = results_df[results_df["effect_size"] == effect]
             # Find minimum n for 80% power
-            high_power = data[data['power'] >= 0.8]
+            high_power = data[data["power"] >= 0.8]
             if not high_power.empty:
-                required_n.append(high_power['sample_size'].min())
+                required_n.append(high_power["sample_size"].min())
             else:
                 required_n.append(np.nan)
 
         ax.bar(range(len(effect_sizes)), required_n)
         ax.set_xticks(range(len(effect_sizes)))
-        ax.set_xticklabels([f'{e:.3f}' for e in effect_sizes], rotation=45)
-        ax.set_xlabel('Effect Size')
-        ax.set_ylabel('Required Sample Size (80% power)')
-        ax.set_title('Sample Size Requirements')
-        ax.grid(True, alpha=0.3, axis='y')
+        ax.set_xticklabels([f"{e:.3f}" for e in effect_sizes], rotation=45)
+        ax.set_xlabel("Effect Size")
+        ax.set_ylabel("Required Sample Size (80% power)")
+        ax.set_title("Sample Size Requirements")
+        ax.grid(True, alpha=0.3, axis="y")
 
         # MDE curve
         ax = axes[1, 0]
-        sample_sizes = results_df['sample_size'].unique()
+        sample_sizes = results_df["sample_size"].unique()
         mdes = []
 
         for n in sample_sizes:
-            mde = self.calculate_mde(n, 0.8, 0.05, results_df['test_type'].iloc[0], 0.1)
+            mde = self.calculate_mde(n, 0.8, 0.05, results_df["test_type"].iloc[0], 0.1)
             mdes.append(mde)
 
-        ax.plot(sample_sizes, mdes, 'g-', marker='s')
-        ax.set_xlabel('Sample Size per Group')
-        ax.set_ylabel('Minimum Detectable Effect')
-        ax.set_title('MDE vs Sample Size')
+        ax.plot(sample_sizes, mdes, "g-", marker="s")
+        ax.set_xlabel("Sample Size per Group")
+        ax.set_ylabel("Minimum Detectable Effect")
+        ax.set_title("MDE vs Sample Size")
         ax.grid(True, alpha=0.3)
 
         # Summary statistics
         ax = axes[1, 1]
-        ax.axis('off')
+        ax.axis("off")
 
         summary_text = f"""
         Power Analysis Summary
         =====================
 
-        Test Type: {results_df['test_type'].iloc[0]}
-        Alpha: {results_df['alpha'].iloc[0]}
-        Alternative: {results_df['alternative'].iloc[0]}
+        Test Type: {results_df["test_type"].iloc[0]}
+        Alpha: {results_df["alpha"].iloc[0]}
+        Alternative: {results_df["alternative"].iloc[0]}
 
-        Effect Sizes Tested: {len(results_df['effect_size'].unique())}
-        Sample Sizes Tested: {len(results_df['sample_size'].unique())}
+        Effect Sizes Tested: {len(results_df["effect_size"].unique())}
+        Sample Sizes Tested: {len(results_df["sample_size"].unique())}
 
         Key Findings:
         - Min sample for 80% power: {min(n for n in required_n if not np.isnan(n)):.0f}
-        - Max power achieved: {results_df['power'].max():.3f}
-        - Min MDE at n=1000: {self.calculate_mde(1000, 0.8, 0.05, results_df['test_type'].iloc[0], 0.1):.4f}
+        - Max power achieved: {results_df["power"].max():.3f}
+        - Min MDE at n=1000: {self.calculate_mde(1000, 0.8, 0.05, results_df["test_type"].iloc[0], 0.1):.4f}
         """
 
-        ax.text(0.1, 0.5, summary_text, fontsize=10, family='monospace', va='center')
+        ax.text(0.1, 0.5, summary_text, fontsize=10, family="monospace", va="center")
 
         plt.tight_layout()
         plt.show()
@@ -821,7 +823,7 @@ class SensitivityAnalysis:
         base_effect: float,
         base_se: float,
         assumptions: Dict[str, Tuple[float, float]],
-        n_simulations: int = 1000
+        n_simulations: int = 1000,
     ) -> pd.DataFrame:
         """
         Analyze sensitivity to assumption violations.
@@ -848,30 +850,30 @@ class SensitivityAnalysis:
                 z_score = adjusted_effect / base_se
                 p_value = 2 * (1 - stats.norm.cdf(abs(z_score)))
 
-                results.append({
-                    'assumption': assumption,
-                    'violation_level': value,
-                    'adjusted_effect': adjusted_effect,
-                    'p_value': p_value,
-                    'significant': p_value < 0.05,
-                    'relative_change': (adjusted_effect - base_effect) / base_effect
-                })
+                results.append(
+                    {
+                        "assumption": assumption,
+                        "violation_level": value,
+                        "adjusted_effect": adjusted_effect,
+                        "p_value": p_value,
+                        "significant": p_value < 0.05,
+                        "relative_change": (adjusted_effect - base_effect)
+                        / base_effect,
+                    }
+                )
 
         return pd.DataFrame(results)
 
     def _adjust_for_assumption(
-        self,
-        base_effect: float,
-        assumption: str,
-        violation_level: float
+        self, base_effect: float, assumption: str, violation_level: float
     ) -> float:
         """Adjust effect estimate for assumption violation."""
         adjustments = {
-            'spillover': base_effect * (1 - violation_level),  # Reduce by spillover
-            'non_compliance': base_effect * (1 - violation_level),  # ITT dilution
-            'attrition_bias': base_effect + violation_level,  # Bias from attrition
-            'measurement_error': base_effect * (1 - violation_level ** 2),  # Attenuation
-            'selection_bias': base_effect + violation_level,  # Confounding
+            "spillover": base_effect * (1 - violation_level),  # Reduce by spillover
+            "non_compliance": base_effect * (1 - violation_level),  # ITT dilution
+            "attrition_bias": base_effect + violation_level,  # Bias from attrition
+            "measurement_error": base_effect * (1 - violation_level**2),  # Attenuation
+            "selection_bias": base_effect + violation_level,  # Confounding
         }
 
         return adjustments.get(assumption, base_effect)
@@ -883,7 +885,7 @@ class SensitivityAnalysis:
         n_control: int,
         attrition_treated: float,
         attrition_control: float,
-        outcome_range: Tuple[float, float]
+        outcome_range: Tuple[float, float],
     ) -> Dict[str, Tuple[float, float]]:
         """
         Calculate bounds for treatment effects under missing data.
@@ -904,28 +906,40 @@ class SensitivityAnalysis:
         # Lee bounds (for differential attrition)
         if attrition_treated > attrition_control:
             # Trim from treatment group
-            trim_fraction = (attrition_treated - attrition_control) / (1 - attrition_control)
+            trim_fraction = (attrition_treated - attrition_control) / (
+                1 - attrition_control
+            )
             lee_lower = observed_effect - trim_fraction * (y_max - y_min)
             lee_upper = observed_effect
         else:
             # Trim from control group
-            trim_fraction = (attrition_control - attrition_treated) / (1 - attrition_treated)
+            trim_fraction = (attrition_control - attrition_treated) / (
+                1 - attrition_treated
+            )
             lee_lower = observed_effect
             lee_upper = observed_effect + trim_fraction * (y_max - y_min)
 
         # Manski bounds (worst-case)
-        manski_lower = observed_effect - max(attrition_treated, attrition_control) * (y_max - y_min)
-        manski_upper = observed_effect + max(attrition_treated, attrition_control) * (y_max - y_min)
+        manski_lower = observed_effect - max(attrition_treated, attrition_control) * (
+            y_max - y_min
+        )
+        manski_upper = observed_effect + max(attrition_treated, attrition_control) * (
+            y_max - y_min
+        )
 
         # Horowitz-Manski bounds (tighter worst-case)
-        hm_lower = observed_effect - (attrition_treated * y_max - attrition_control * y_min)
-        hm_upper = observed_effect + (attrition_control * y_max - attrition_treated * y_min)
+        hm_lower = observed_effect - (
+            attrition_treated * y_max - attrition_control * y_min
+        )
+        hm_upper = observed_effect + (
+            attrition_control * y_max - attrition_treated * y_min
+        )
 
         return {
-            'lee_bounds': (lee_lower, lee_upper),
-            'manski_bounds': (manski_lower, manski_upper),
-            'horowitz_manski_bounds': (hm_lower, hm_upper),
-            'point_estimate': (observed_effect, observed_effect)
+            "lee_bounds": (lee_lower, lee_upper),
+            "manski_bounds": (manski_lower, manski_upper),
+            "horowitz_manski_bounds": (hm_lower, hm_upper),
+            "point_estimate": (observed_effect, observed_effect),
         }
 
 
@@ -944,7 +958,7 @@ if __name__ == "__main__":
         effect_sizes=[0.01, 0.02, 0.03, 0.05],
         sample_sizes=[500, 1000, 2000, 5000],
         alpha=0.05,
-        test_type='proportion'
+        test_type="proportion",
     )
 
     print(power_results.head(10))
@@ -952,11 +966,7 @@ if __name__ == "__main__":
     # Calculate required sample size
     print("\nSample Size Calculation:")
     sample_result = simulator.calculate_sample_size(
-        power=0.8,
-        effect_size=0.02,
-        alpha=0.05,
-        test_type='proportion',
-        baseline=0.1
+        power=0.8, effect_size=0.02, alpha=0.05, test_type="proportion", baseline=0.1
     )
 
     print(f"  Required sample size: {sample_result.sample_size}")
@@ -971,7 +981,7 @@ if __name__ == "__main__":
         true_effect=0.02,
         max_sample_size=2000,
         check_points=[500, 1000, 1500, 2000],
-        alpha=0.05
+        alpha=0.05,
     )
 
     print(f"  Power: {seq_result.observed_power:.3f}")
@@ -983,13 +993,15 @@ if __name__ == "__main__":
     adaptive_result = simulator.simulate_adaptive_design(
         initial_sample=100,
         max_sample=1000,
-        true_effects={'control': 0.1, 'treatment_a': 0.12, 'treatment_b': 0.15},
-        adaptation_rule='thompson_sampling'
+        true_effects={"control": 0.1, "treatment_a": 0.12, "treatment_b": 0.15},
+        adaptation_rule="thompson_sampling",
     )
 
-    print(f"  Correct selection probability: {adaptive_result['correct_selection_probability']:.3f}")
+    print(
+        f"  Correct selection probability: {adaptive_result['correct_selection_probability']:.3f}"
+    )
     print("  Average allocations:")
-    for arm, prop in adaptive_result['average_allocations'].items():
+    for arm, prop in adaptive_result["average_allocations"].items():
         print(f"    {arm}: {prop:.3f}")
 
     # Sensitivity analysis
@@ -1002,7 +1014,7 @@ if __name__ == "__main__":
         n_control=1000,
         attrition_treated=0.1,
         attrition_control=0.05,
-        outcome_range=(0, 1)
+        outcome_range=(0, 1),
     )
 
     print("  Effect bounds under missing data:")

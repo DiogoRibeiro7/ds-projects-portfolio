@@ -20,15 +20,17 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime, timedelta
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 
 # ============================================================================
 # Data Preprocessing Utilities
 # ============================================================================
 
-def validate_time_series(data: Union[pd.Series, pd.DataFrame],
-                         date_column: Optional[str] = None) -> pd.DataFrame:
+
+def validate_time_series(
+    data: Union[pd.Series, pd.DataFrame], date_column: Optional[str] = None
+) -> pd.DataFrame:
     """
     Validate and prepare time series data.
 
@@ -45,7 +47,7 @@ def validate_time_series(data: Union[pd.Series, pd.DataFrame],
     """
     # Convert to DataFrame if Series
     if isinstance(data, pd.Series):
-        df = data.to_frame(name='value')
+        df = data.to_frame(name="value")
     else:
         df = data.copy()
 
@@ -59,8 +61,10 @@ def validate_time_series(data: Union[pd.Series, pd.DataFrame],
             df.index = pd.to_datetime(df.index)
         except:
             # Create a default datetime index
-            df.index = pd.date_range(start='2020-01-01', periods=len(df), freq='D')
-            warnings.warn("Could not parse datetime index. Using default daily frequency.")
+            df.index = pd.date_range(start="2020-01-01", periods=len(df), freq="D")
+            warnings.warn(
+                "Could not parse datetime index. Using default daily frequency."
+            )
 
     # Sort by index
     df.sort_index(inplace=True)
@@ -68,14 +72,14 @@ def validate_time_series(data: Union[pd.Series, pd.DataFrame],
     # Check for duplicates
     if df.index.duplicated().any():
         warnings.warn("Duplicate timestamps found. Keeping first occurrence.")
-        df = df[~df.index.duplicated(keep='first')]
+        df = df[~df.index.duplicated(keep="first")]
 
     return df
 
 
-def handle_missing_values(data: pd.DataFrame,
-                         method: str = 'interpolate',
-                         **kwargs) -> pd.DataFrame:
+def handle_missing_values(
+    data: pd.DataFrame, method: str = "interpolate", **kwargs
+) -> pd.DataFrame:
     """
     Handle missing values in time series data.
 
@@ -94,17 +98,17 @@ def handle_missing_values(data: pd.DataFrame,
     """
     df = data.copy()
 
-    if method == 'interpolate':
-        df = df.interpolate(method='time', **kwargs)
-    elif method == 'forward_fill':
-        df = df.fillna(method='ffill', **kwargs)
-    elif method == 'backward_fill':
-        df = df.fillna(method='bfill', **kwargs)
-    elif method == 'mean':
+    if method == "interpolate":
+        df = df.interpolate(method="time", **kwargs)
+    elif method == "forward_fill":
+        df = df.fillna(method="ffill", **kwargs)
+    elif method == "backward_fill":
+        df = df.fillna(method="bfill", **kwargs)
+    elif method == "mean":
         df = df.fillna(df.mean(), **kwargs)
-    elif method == 'median':
+    elif method == "median":
         df = df.fillna(df.median(), **kwargs)
-    elif method == 'drop':
+    elif method == "drop":
         df = df.dropna(**kwargs)
     else:
         raise ValueError(f"Unknown method: {method}")
@@ -112,9 +116,9 @@ def handle_missing_values(data: pd.DataFrame,
     return df
 
 
-def remove_outliers(data: pd.DataFrame,
-                   method: str = 'iqr',
-                   threshold: float = 1.5) -> pd.DataFrame:
+def remove_outliers(
+    data: pd.DataFrame, method: str = "iqr", threshold: float = 1.5
+) -> pd.DataFrame:
     """
     Remove outliers from time series data.
 
@@ -134,7 +138,7 @@ def remove_outliers(data: pd.DataFrame,
     df = data.copy()
 
     for column in df.select_dtypes(include=[np.number]).columns:
-        if method == 'iqr':
+        if method == "iqr":
             Q1 = df[column].quantile(0.25)
             Q3 = df[column].quantile(0.75)
             IQR = Q3 - Q1
@@ -142,12 +146,13 @@ def remove_outliers(data: pd.DataFrame,
             upper_bound = Q3 + threshold * IQR
             df = df[(df[column] >= lower_bound) & (df[column] <= upper_bound)]
 
-        elif method == 'zscore':
+        elif method == "zscore":
             z_scores = np.abs(stats.zscore(df[column].dropna()))
             df = df[z_scores < threshold]
 
-        elif method == 'isolation_forest':
+        elif method == "isolation_forest":
             from sklearn.ensemble import IsolationForest
+
             iso_forest = IsolationForest(contamination=0.1, random_state=42)
             outliers = iso_forest.fit_predict(df[column].values.reshape(-1, 1))
             df = df[outliers == 1]
@@ -155,9 +160,9 @@ def remove_outliers(data: pd.DataFrame,
     return df
 
 
-def resample_time_series(data: pd.DataFrame,
-                        freq: str,
-                        agg_func: str = 'mean') -> pd.DataFrame:
+def resample_time_series(
+    data: pd.DataFrame, freq: str, agg_func: str = "mean"
+) -> pd.DataFrame:
     """
     Resample time series to a different frequency.
 
@@ -175,11 +180,11 @@ def resample_time_series(data: pd.DataFrame,
     pd.DataFrame : Resampled time series
     """
     agg_funcs = {
-        'mean': np.mean,
-        'sum': np.sum,
-        'max': np.max,
-        'min': np.min,
-        'median': np.median
+        "mean": np.mean,
+        "sum": np.sum,
+        "max": np.max,
+        "min": np.min,
+        "median": np.median,
     }
 
     if agg_func not in agg_funcs:
@@ -191,6 +196,7 @@ def resample_time_series(data: pd.DataFrame,
 # ============================================================================
 # Feature Engineering Utilities
 # ============================================================================
+
 
 def create_time_features(data: pd.DataFrame) -> pd.DataFrame:
     """
@@ -208,35 +214,35 @@ def create_time_features(data: pd.DataFrame) -> pd.DataFrame:
     df = data.copy()
 
     # Basic time features
-    df['year'] = df.index.year
-    df['month'] = df.index.month
-    df['day'] = df.index.day
-    df['dayofweek'] = df.index.dayofweek
-    df['quarter'] = df.index.quarter
-    df['dayofyear'] = df.index.dayofyear
-    df['weekofyear'] = df.index.isocalendar().week
+    df["year"] = df.index.year
+    df["month"] = df.index.month
+    df["day"] = df.index.day
+    df["dayofweek"] = df.index.dayofweek
+    df["quarter"] = df.index.quarter
+    df["dayofyear"] = df.index.dayofyear
+    df["weekofyear"] = df.index.isocalendar().week
 
     # Cyclical features
-    df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
-    df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
-    df['day_sin'] = np.sin(2 * np.pi * df['day'] / 31)
-    df['day_cos'] = np.cos(2 * np.pi * df['day'] / 31)
-    df['dayofweek_sin'] = np.sin(2 * np.pi * df['dayofweek'] / 7)
-    df['dayofweek_cos'] = np.cos(2 * np.pi * df['dayofweek'] / 7)
+    df["month_sin"] = np.sin(2 * np.pi * df["month"] / 12)
+    df["month_cos"] = np.cos(2 * np.pi * df["month"] / 12)
+    df["day_sin"] = np.sin(2 * np.pi * df["day"] / 31)
+    df["day_cos"] = np.cos(2 * np.pi * df["day"] / 31)
+    df["dayofweek_sin"] = np.sin(2 * np.pi * df["dayofweek"] / 7)
+    df["dayofweek_cos"] = np.cos(2 * np.pi * df["dayofweek"] / 7)
 
     # Binary features
-    df['is_weekend'] = (df['dayofweek'] >= 5).astype(int)
-    df['is_month_start'] = df.index.is_month_start.astype(int)
-    df['is_month_end'] = df.index.is_month_end.astype(int)
-    df['is_quarter_start'] = df.index.is_quarter_start.astype(int)
-    df['is_quarter_end'] = df.index.is_quarter_end.astype(int)
+    df["is_weekend"] = (df["dayofweek"] >= 5).astype(int)
+    df["is_month_start"] = df.index.is_month_start.astype(int)
+    df["is_month_end"] = df.index.is_month_end.astype(int)
+    df["is_quarter_start"] = df.index.is_quarter_start.astype(int)
+    df["is_quarter_end"] = df.index.is_quarter_end.astype(int)
 
     return df
 
 
-def create_lag_features(data: pd.DataFrame,
-                       target_col: str,
-                       lags: List[int]) -> pd.DataFrame:
+def create_lag_features(
+    data: pd.DataFrame, target_col: str, lags: List[int]
+) -> pd.DataFrame:
     """
     Create lag features for time series.
 
@@ -256,15 +262,17 @@ def create_lag_features(data: pd.DataFrame,
     df = data.copy()
 
     for lag in lags:
-        df[f'{target_col}_lag_{lag}'] = df[target_col].shift(lag)
+        df[f"{target_col}_lag_{lag}"] = df[target_col].shift(lag)
 
     return df
 
 
-def create_rolling_features(data: pd.DataFrame,
-                          target_col: str,
-                          windows: List[int],
-                          functions: List[str] = ['mean', 'std']) -> pd.DataFrame:
+def create_rolling_features(
+    data: pd.DataFrame,
+    target_col: str,
+    windows: List[int],
+    functions: List[str] = ["mean", "std"],
+) -> pd.DataFrame:
     """
     Create rolling window features.
 
@@ -287,23 +295,33 @@ def create_rolling_features(data: pd.DataFrame,
 
     for window in windows:
         for func in functions:
-            if func == 'mean':
-                df[f'{target_col}_rolling_mean_{window}'] = df[target_col].rolling(window).mean()
-            elif func == 'std':
-                df[f'{target_col}_rolling_std_{window}'] = df[target_col].rolling(window).std()
-            elif func == 'min':
-                df[f'{target_col}_rolling_min_{window}'] = df[target_col].rolling(window).min()
-            elif func == 'max':
-                df[f'{target_col}_rolling_max_{window}'] = df[target_col].rolling(window).max()
-            elif func == 'sum':
-                df[f'{target_col}_rolling_sum_{window}'] = df[target_col].rolling(window).sum()
+            if func == "mean":
+                df[f"{target_col}_rolling_mean_{window}"] = (
+                    df[target_col].rolling(window).mean()
+                )
+            elif func == "std":
+                df[f"{target_col}_rolling_std_{window}"] = (
+                    df[target_col].rolling(window).std()
+                )
+            elif func == "min":
+                df[f"{target_col}_rolling_min_{window}"] = (
+                    df[target_col].rolling(window).min()
+                )
+            elif func == "max":
+                df[f"{target_col}_rolling_max_{window}"] = (
+                    df[target_col].rolling(window).max()
+                )
+            elif func == "sum":
+                df[f"{target_col}_rolling_sum_{window}"] = (
+                    df[target_col].rolling(window).sum()
+                )
 
     return df
 
 
-def create_expanding_features(data: pd.DataFrame,
-                             target_col: str,
-                             functions: List[str] = ['mean', 'std']) -> pd.DataFrame:
+def create_expanding_features(
+    data: pd.DataFrame, target_col: str, functions: List[str] = ["mean", "std"]
+) -> pd.DataFrame:
     """
     Create expanding window features.
 
@@ -323,16 +341,16 @@ def create_expanding_features(data: pd.DataFrame,
     df = data.copy()
 
     for func in functions:
-        if func == 'mean':
-            df[f'{target_col}_expanding_mean'] = df[target_col].expanding().mean()
-        elif func == 'std':
-            df[f'{target_col}_expanding_std'] = df[target_col].expanding().std()
-        elif func == 'min':
-            df[f'{target_col}_expanding_min'] = df[target_col].expanding().min()
-        elif func == 'max':
-            df[f'{target_col}_expanding_max'] = df[target_col].expanding().max()
-        elif func == 'sum':
-            df[f'{target_col}_expanding_sum'] = df[target_col].expanding().sum()
+        if func == "mean":
+            df[f"{target_col}_expanding_mean"] = df[target_col].expanding().mean()
+        elif func == "std":
+            df[f"{target_col}_expanding_std"] = df[target_col].expanding().std()
+        elif func == "min":
+            df[f"{target_col}_expanding_min"] = df[target_col].expanding().min()
+        elif func == "max":
+            df[f"{target_col}_expanding_max"] = df[target_col].expanding().max()
+        elif func == "sum":
+            df[f"{target_col}_expanding_sum"] = df[target_col].expanding().sum()
 
     return df
 
@@ -341,8 +359,10 @@ def create_expanding_features(data: pd.DataFrame,
 # Statistical Test Utilities
 # ============================================================================
 
-def test_stationarity(data: pd.Series,
-                     significance_level: float = 0.05) -> Dict[str, Any]:
+
+def test_stationarity(
+    data: pd.Series, significance_level: float = 0.05
+) -> Dict[str, Any]:
     """
     Test for stationarity using multiple tests.
 
@@ -361,34 +381,35 @@ def test_stationarity(data: pd.Series,
 
     # ADF Test
     adf_result = adfuller(data.dropna())
-    results['adf'] = {
-        'statistic': adf_result[0],
-        'p_value': adf_result[1],
-        'critical_values': adf_result[4],
-        'is_stationary': adf_result[1] < significance_level
+    results["adf"] = {
+        "statistic": adf_result[0],
+        "p_value": adf_result[1],
+        "critical_values": adf_result[4],
+        "is_stationary": adf_result[1] < significance_level,
     }
 
     # KPSS Test
     kpss_result = kpss(data.dropna())
-    results['kpss'] = {
-        'statistic': kpss_result[0],
-        'p_value': kpss_result[1],
-        'critical_values': kpss_result[3],
-        'is_stationary': kpss_result[1] > significance_level
+    results["kpss"] = {
+        "statistic": kpss_result[0],
+        "p_value": kpss_result[1],
+        "critical_values": kpss_result[3],
+        "is_stationary": kpss_result[1] > significance_level,
     }
 
     # Overall conclusion
-    results['conclusion'] = {
-        'is_stationary': results['adf']['is_stationary'] and results['kpss']['is_stationary'],
-        'recommendation': 'Data is stationary' if results['adf']['is_stationary'] and results['kpss']['is_stationary']
-                         else 'Data is non-stationary, consider differencing'
+    results["conclusion"] = {
+        "is_stationary": results["adf"]["is_stationary"]
+        and results["kpss"]["is_stationary"],
+        "recommendation": "Data is stationary"
+        if results["adf"]["is_stationary"] and results["kpss"]["is_stationary"]
+        else "Data is non-stationary, consider differencing",
     }
 
     return results
 
 
-def test_white_noise(data: pd.Series,
-                     lags: int = 10) -> Dict[str, Any]:
+def test_white_noise(data: pd.Series, lags: int = 10) -> Dict[str, Any]:
     """
     Test if time series is white noise using Ljung-Box test.
 
@@ -406,11 +427,12 @@ def test_white_noise(data: pd.Series,
     lb_test = acorr_ljungbox(data.dropna(), lags=lags, return_df=True)
 
     return {
-        'statistics': lb_test['lb_stat'].tolist(),
-        'p_values': lb_test['lb_pvalue'].tolist(),
-        'is_white_noise': all(lb_test['lb_pvalue'] > 0.05),
-        'recommendation': 'Series appears to be white noise' if all(lb_test['lb_pvalue'] > 0.05)
-                         else 'Series has significant autocorrelation'
+        "statistics": lb_test["lb_stat"].tolist(),
+        "p_values": lb_test["lb_pvalue"].tolist(),
+        "is_white_noise": all(lb_test["lb_pvalue"] > 0.05),
+        "recommendation": "Series appears to be white noise"
+        if all(lb_test["lb_pvalue"] > 0.05)
+        else "Series has significant autocorrelation",
     }
 
 
@@ -431,29 +453,31 @@ def test_normality(data: pd.Series) -> Dict[str, Any]:
 
     # Shapiro-Wilk test
     shapiro_stat, shapiro_p = stats.shapiro(data.dropna())
-    results['shapiro'] = {
-        'statistic': shapiro_stat,
-        'p_value': shapiro_p,
-        'is_normal': shapiro_p > 0.05
+    results["shapiro"] = {
+        "statistic": shapiro_stat,
+        "p_value": shapiro_p,
+        "is_normal": shapiro_p > 0.05,
     }
 
     # Jarque-Bera test
     jb_stat, jb_p = stats.jarque_bera(data.dropna())
-    results['jarque_bera'] = {
-        'statistic': jb_stat,
-        'p_value': jb_p,
-        'is_normal': jb_p > 0.05
+    results["jarque_bera"] = {
+        "statistic": jb_stat,
+        "p_value": jb_p,
+        "is_normal": jb_p > 0.05,
     }
 
     # Skewness and Kurtosis
-    results['skewness'] = stats.skew(data.dropna())
-    results['kurtosis'] = stats.kurtosis(data.dropna())
+    results["skewness"] = stats.skew(data.dropna())
+    results["kurtosis"] = stats.kurtosis(data.dropna())
 
     # Overall conclusion
-    results['conclusion'] = {
-        'is_normal': results['shapiro']['is_normal'] and results['jarque_bera']['is_normal'],
-        'recommendation': 'Data appears normally distributed' if results['shapiro']['is_normal'] and results['jarque_bera']['is_normal']
-                         else 'Data is not normally distributed, consider transformation'
+    results["conclusion"] = {
+        "is_normal": results["shapiro"]["is_normal"]
+        and results["jarque_bera"]["is_normal"],
+        "recommendation": "Data appears normally distributed"
+        if results["shapiro"]["is_normal"] and results["jarque_bera"]["is_normal"]
+        else "Data is not normally distributed, consider transformation",
     }
 
     return results
@@ -463,8 +487,8 @@ def test_normality(data: pd.Series) -> Dict[str, Any]:
 # Model Evaluation Metrics
 # ============================================================================
 
-def calculate_metrics(actual: np.ndarray,
-                     predicted: np.ndarray) -> Dict[str, float]:
+
+def calculate_metrics(actual: np.ndarray, predicted: np.ndarray) -> Dict[str, float]:
     """
     Calculate comprehensive evaluation metrics.
 
@@ -491,7 +515,10 @@ def calculate_metrics(actual: np.ndarray,
 
     # Percentage errors
     mape = np.mean(np.abs((actual - predicted) / actual)) * 100
-    smape = np.mean(2 * np.abs(actual - predicted) / (np.abs(actual) + np.abs(predicted))) * 100
+    smape = (
+        np.mean(2 * np.abs(actual - predicted) / (np.abs(actual) + np.abs(predicted)))
+        * 100
+    )
 
     # Directional accuracy
     direction_actual = np.diff(actual) > 0
@@ -509,14 +536,14 @@ def calculate_metrics(actual: np.ndarray,
     mase = mae / np.mean(np.abs(naive_errors))
 
     return {
-        'mae': mae,
-        'mse': mse,
-        'rmse': rmse,
-        'mape': mape,
-        'smape': smape,
-        'directional_accuracy': directional_accuracy,
-        'r2': r2,
-        'mase': mase
+        "mae": mae,
+        "mse": mse,
+        "rmse": rmse,
+        "mape": mape,
+        "smape": smape,
+        "directional_accuracy": directional_accuracy,
+        "r2": r2,
+        "mase": mase,
     }
 
 
@@ -536,23 +563,23 @@ def calculate_residual_diagnostics(residuals: np.ndarray) -> Dict[str, Any]:
     results = {}
 
     # Basic statistics
-    results['mean'] = np.mean(residuals)
-    results['std'] = np.std(residuals)
-    results['skewness'] = stats.skew(residuals)
-    results['kurtosis'] = stats.kurtosis(residuals)
+    results["mean"] = np.mean(residuals)
+    results["std"] = np.std(residuals)
+    results["skewness"] = stats.skew(residuals)
+    results["kurtosis"] = stats.kurtosis(residuals)
 
     # Normality test
-    results['normality'] = test_normality(pd.Series(residuals))
+    results["normality"] = test_normality(pd.Series(residuals))
 
     # Autocorrelation
-    results['autocorrelation'] = test_white_noise(pd.Series(residuals))
+    results["autocorrelation"] = test_white_noise(pd.Series(residuals))
 
     # Heteroscedasticity (simplified Breusch-Pagan test concept)
     x = np.arange(len(residuals))
     correlation = np.corrcoef(x, residuals**2)[0, 1]
-    results['heteroscedasticity'] = {
-        'correlation': correlation,
-        'appears_heteroscedastic': abs(correlation) > 0.3
+    results["heteroscedasticity"] = {
+        "correlation": correlation,
+        "appears_heteroscedastic": abs(correlation) > 0.3,
     }
 
     return results
@@ -562,9 +589,10 @@ def calculate_residual_diagnostics(residuals: np.ndarray) -> Dict[str, Any]:
 # Visualization Utilities
 # ============================================================================
 
-def plot_time_series_decomposition(data: pd.Series,
-                                   period: Optional[int] = None,
-                                   model: str = 'additive'):
+
+def plot_time_series_decomposition(
+    data: pd.Series, period: Optional[int] = None, model: str = "additive"
+):
     """
     Plot time series decomposition.
 
@@ -581,10 +609,10 @@ def plot_time_series_decomposition(data: pd.Series,
 
     if period is None:
         # Try to infer period
-        if hasattr(data.index, 'freq'):
-            if data.index.freq == 'D':
+        if hasattr(data.index, "freq"):
+            if data.index.freq == "D":
                 period = 7  # Weekly seasonality for daily data
-            elif data.index.freq == 'M':
+            elif data.index.freq == "M":
                 period = 12  # Yearly seasonality for monthly data
             else:
                 period = 4  # Default
@@ -595,10 +623,10 @@ def plot_time_series_decomposition(data: pd.Series,
 
     fig, axes = plt.subplots(4, 1, figsize=(12, 10))
 
-    data.plot(ax=axes[0], title='Original Time Series')
-    decomposition.trend.plot(ax=axes[1], title='Trend')
-    decomposition.seasonal.plot(ax=axes[2], title='Seasonal')
-    decomposition.resid.plot(ax=axes[3], title='Residual')
+    data.plot(ax=axes[0], title="Original Time Series")
+    decomposition.trend.plot(ax=axes[1], title="Trend")
+    decomposition.seasonal.plot(ax=axes[2], title="Seasonal")
+    decomposition.resid.plot(ax=axes[3], title="Residual")
 
     plt.tight_layout()
     return fig
@@ -620,32 +648,42 @@ def plot_acf_pacf(data: pd.Series, lags: int = 40):
     # ACF
     acf_values = acf(data.dropna(), nlags=lags)
     axes[0].bar(range(len(acf_values)), acf_values)
-    axes[0].axhline(y=0, color='black', linestyle='-', linewidth=0.5)
-    axes[0].axhline(y=1.96/np.sqrt(len(data)), color='r', linestyle='--', linewidth=0.5)
-    axes[0].axhline(y=-1.96/np.sqrt(len(data)), color='r', linestyle='--', linewidth=0.5)
-    axes[0].set_title('Autocorrelation Function (ACF)')
-    axes[0].set_xlabel('Lag')
-    axes[0].set_ylabel('Correlation')
+    axes[0].axhline(y=0, color="black", linestyle="-", linewidth=0.5)
+    axes[0].axhline(
+        y=1.96 / np.sqrt(len(data)), color="r", linestyle="--", linewidth=0.5
+    )
+    axes[0].axhline(
+        y=-1.96 / np.sqrt(len(data)), color="r", linestyle="--", linewidth=0.5
+    )
+    axes[0].set_title("Autocorrelation Function (ACF)")
+    axes[0].set_xlabel("Lag")
+    axes[0].set_ylabel("Correlation")
 
     # PACF
     pacf_values = pacf(data.dropna(), nlags=lags)
     axes[1].bar(range(len(pacf_values)), pacf_values)
-    axes[1].axhline(y=0, color='black', linestyle='-', linewidth=0.5)
-    axes[1].axhline(y=1.96/np.sqrt(len(data)), color='r', linestyle='--', linewidth=0.5)
-    axes[1].axhline(y=-1.96/np.sqrt(len(data)), color='r', linestyle='--', linewidth=0.5)
-    axes[1].set_title('Partial Autocorrelation Function (PACF)')
-    axes[1].set_xlabel('Lag')
-    axes[1].set_ylabel('Correlation')
+    axes[1].axhline(y=0, color="black", linestyle="-", linewidth=0.5)
+    axes[1].axhline(
+        y=1.96 / np.sqrt(len(data)), color="r", linestyle="--", linewidth=0.5
+    )
+    axes[1].axhline(
+        y=-1.96 / np.sqrt(len(data)), color="r", linestyle="--", linewidth=0.5
+    )
+    axes[1].set_title("Partial Autocorrelation Function (PACF)")
+    axes[1].set_xlabel("Lag")
+    axes[1].set_ylabel("Correlation")
 
     plt.tight_layout()
     return fig
 
 
-def plot_forecast_with_intervals(actual: pd.Series,
-                                forecast: pd.Series,
-                                lower_bound: Optional[pd.Series] = None,
-                                upper_bound: Optional[pd.Series] = None,
-                                title: str = 'Forecast vs Actual'):
+def plot_forecast_with_intervals(
+    actual: pd.Series,
+    forecast: pd.Series,
+    lower_bound: Optional[pd.Series] = None,
+    upper_bound: Optional[pd.Series] = None,
+    title: str = "Forecast vs Actual",
+):
     """
     Plot forecast with confidence intervals.
 
@@ -665,19 +703,25 @@ def plot_forecast_with_intervals(actual: pd.Series,
     fig, ax = plt.subplots(figsize=(12, 6))
 
     # Plot actual values
-    actual.plot(ax=ax, label='Actual', color='blue', linewidth=2)
+    actual.plot(ax=ax, label="Actual", color="blue", linewidth=2)
 
     # Plot forecast
-    forecast.plot(ax=ax, label='Forecast', color='red', linewidth=2)
+    forecast.plot(ax=ax, label="Forecast", color="red", linewidth=2)
 
     # Plot confidence intervals if provided
     if lower_bound is not None and upper_bound is not None:
-        ax.fill_between(forecast.index, lower_bound, upper_bound,
-                       color='red', alpha=0.2, label='Confidence Interval')
+        ax.fill_between(
+            forecast.index,
+            lower_bound,
+            upper_bound,
+            color="red",
+            alpha=0.2,
+            label="Confidence Interval",
+        )
 
     ax.set_title(title)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Value')
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Value")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
@@ -689,9 +733,10 @@ def plot_forecast_with_intervals(actual: pd.Series,
 # Cross-Validation Utilities
 # ============================================================================
 
-def time_series_split(data: pd.DataFrame,
-                     n_splits: int = 5,
-                     test_size: Optional[int] = None) -> List[Tuple[pd.DataFrame, pd.DataFrame]]:
+
+def time_series_split(
+    data: pd.DataFrame, n_splits: int = 5, test_size: Optional[int] = None
+) -> List[Tuple[pd.DataFrame, pd.DataFrame]]:
     """
     Create time series train/test splits for cross-validation.
 
@@ -719,17 +764,19 @@ def time_series_split(data: pd.DataFrame,
 
         if split_point > test_size:  # Ensure we have enough training data
             train = data.iloc[:split_point]
-            test = data.iloc[split_point:split_point + test_size]
+            test = data.iloc[split_point : split_point + test_size]
             splits.append((train, test))
 
     return splits
 
 
-def walk_forward_validation(data: pd.DataFrame,
-                           model_func,
-                           initial_train_size: int,
-                           step_size: int = 1,
-                           horizon: int = 1) -> Dict[str, Any]:
+def walk_forward_validation(
+    data: pd.DataFrame,
+    model_func,
+    initial_train_size: int,
+    step_size: int = 1,
+    horizon: int = 1,
+) -> Dict[str, Any]:
     """
     Perform walk-forward validation.
 
@@ -756,7 +803,7 @@ def walk_forward_validation(data: pd.DataFrame,
     for i in range(initial_train_size, len(data) - horizon + 1, step_size):
         # Split data
         train = data.iloc[:i]
-        test = data.iloc[i:i + horizon]
+        test = data.iloc[i : i + horizon]
 
         # Make prediction
         pred = model_func(train, horizon)
@@ -770,16 +817,13 @@ def walk_forward_validation(data: pd.DataFrame,
 
     metrics = calculate_metrics(actuals, predictions)
 
-    return {
-        'predictions': predictions,
-        'actuals': actuals,
-        'metrics': metrics
-    }
+    return {"predictions": predictions, "actuals": actuals, "metrics": metrics}
 
 
 # ============================================================================
 # Transformation Utilities
 # ============================================================================
+
 
 def box_cox_transform(data: pd.Series) -> Tuple[pd.Series, float]:
     """
@@ -864,9 +908,12 @@ def inverse_difference(data: pd.Series, original_value: float) -> pd.Series:
 # Forecasting Utilities
 # ============================================================================
 
-def combine_forecasts(forecasts: Dict[str, np.ndarray],
-                     weights: Optional[Dict[str, float]] = None,
-                     method: str = 'average') -> np.ndarray:
+
+def combine_forecasts(
+    forecasts: Dict[str, np.ndarray],
+    weights: Optional[Dict[str, float]] = None,
+    method: str = "average",
+) -> np.ndarray:
     """
     Combine multiple forecasts.
 
@@ -885,12 +932,12 @@ def combine_forecasts(forecasts: Dict[str, np.ndarray],
     """
     forecast_arrays = list(forecasts.values())
 
-    if method == 'average':
+    if method == "average":
         return np.mean(forecast_arrays, axis=0)
 
-    elif method == 'weighted':
+    elif method == "weighted":
         if weights is None:
-            weights = {name: 1/len(forecasts) for name in forecasts.keys()}
+            weights = {name: 1 / len(forecasts) for name in forecasts.keys()}
 
         weighted_sum = np.zeros_like(forecast_arrays[0])
         for name, forecast in forecasts.items():
@@ -898,10 +945,10 @@ def combine_forecasts(forecasts: Dict[str, np.ndarray],
 
         return weighted_sum
 
-    elif method == 'median':
+    elif method == "median":
         return np.median(forecast_arrays, axis=0)
 
-    elif method == 'trimmed_mean':
+    elif method == "trimmed_mean":
         # Remove highest and lowest, then average
         sorted_forecasts = np.sort(forecast_arrays, axis=0)
         if len(sorted_forecasts) > 2:
@@ -913,9 +960,9 @@ def combine_forecasts(forecasts: Dict[str, np.ndarray],
         raise ValueError(f"Unknown method: {method}")
 
 
-def calculate_prediction_intervals(point_forecast: np.ndarray,
-                                  residuals: np.ndarray,
-                                  confidence_level: float = 0.95) -> Tuple[np.ndarray, np.ndarray]:
+def calculate_prediction_intervals(
+    point_forecast: np.ndarray, residuals: np.ndarray, confidence_level: float = 0.95
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Calculate prediction intervals.
 
@@ -950,9 +997,10 @@ def calculate_prediction_intervals(point_forecast: np.ndarray,
 # Utility Functions for Specific Models
 # ============================================================================
 
-def suggest_arima_order(data: pd.Series,
-                       max_p: int = 5,
-                       max_q: int = 5) -> Tuple[int, int, int]:
+
+def suggest_arima_order(
+    data: pd.Series, max_p: int = 5, max_q: int = 5
+) -> Tuple[int, int, int]:
     """
     Suggest ARIMA order based on ACF and PACF analysis.
 
@@ -975,7 +1023,7 @@ def suggest_arima_order(data: pd.Series,
     # Determine d (differencing order)
     d = 0
     diff_data = data.copy()
-    while not stationarity['adf']['is_stationary'] and d < 2:
+    while not stationarity["adf"]["is_stationary"] and d < 2:
         d += 1
         diff_data = diff_data.diff().dropna()
         stationarity = test_stationarity(diff_data)
@@ -1003,8 +1051,7 @@ def suggest_arima_order(data: pd.Series,
     return (p, d, q)
 
 
-def detect_seasonality(data: pd.Series,
-                      max_lag: int = 50) -> Dict[str, Any]:
+def detect_seasonality(data: pd.Series, max_lag: int = 50) -> Dict[str, Any]:
     """
     Detect seasonality in time series.
 
@@ -1024,23 +1071,26 @@ def detect_seasonality(data: pd.Series,
 
     # Find peaks in ACF (potential seasonal periods)
     from scipy.signal import find_peaks
+
     peaks, properties = find_peaks(acf_values[1:], height=0.3, distance=2)
     peaks = peaks + 1  # Adjust for removed first element
 
     results = {
-        'has_seasonality': len(peaks) > 0,
-        'seasonal_periods': peaks.tolist(),
-        'seasonal_strength': properties['peak_heights'].tolist() if len(peaks) > 0 else []
+        "has_seasonality": len(peaks) > 0,
+        "seasonal_periods": peaks.tolist(),
+        "seasonal_strength": properties["peak_heights"].tolist()
+        if len(peaks) > 0
+        else [],
     }
 
     # Determine primary seasonal period
     if len(peaks) > 0:
-        primary_idx = np.argmax(properties['peak_heights'])
-        results['primary_period'] = peaks[primary_idx]
-        results['primary_strength'] = properties['peak_heights'][primary_idx]
+        primary_idx = np.argmax(properties["peak_heights"])
+        results["primary_period"] = peaks[primary_idx]
+        results["primary_strength"] = properties["peak_heights"][primary_idx]
     else:
-        results['primary_period'] = None
-        results['primary_strength'] = 0
+        results["primary_period"] = None
+        results["primary_strength"] = 0
 
     return results
 
@@ -1051,44 +1101,37 @@ def detect_seasonality(data: pd.Series,
 
 __all__ = [
     # Data Preprocessing
-    'validate_time_series',
-    'handle_missing_values',
-    'remove_outliers',
-    'resample_time_series',
-
+    "validate_time_series",
+    "handle_missing_values",
+    "remove_outliers",
+    "resample_time_series",
     # Feature Engineering
-    'create_time_features',
-    'create_lag_features',
-    'create_rolling_features',
-    'create_expanding_features',
-
+    "create_time_features",
+    "create_lag_features",
+    "create_rolling_features",
+    "create_expanding_features",
     # Statistical Tests
-    'test_stationarity',
-    'test_white_noise',
-    'test_normality',
-
+    "test_stationarity",
+    "test_white_noise",
+    "test_normality",
     # Model Evaluation
-    'calculate_metrics',
-    'calculate_residual_diagnostics',
-
+    "calculate_metrics",
+    "calculate_residual_diagnostics",
     # Visualization
-    'plot_time_series_decomposition',
-    'plot_acf_pacf',
-    'plot_forecast_with_intervals',
-
+    "plot_time_series_decomposition",
+    "plot_acf_pacf",
+    "plot_forecast_with_intervals",
     # Cross-Validation
-    'time_series_split',
-    'walk_forward_validation',
-
+    "time_series_split",
+    "walk_forward_validation",
     # Transformations
-    'box_cox_transform',
-    'inverse_box_cox',
-    'difference_series',
-    'inverse_difference',
-
+    "box_cox_transform",
+    "inverse_box_cox",
+    "difference_series",
+    "inverse_difference",
     # Forecasting
-    'combine_forecasts',
-    'calculate_prediction_intervals',
-    'suggest_arima_order',
-    'detect_seasonality'
+    "combine_forecasts",
+    "calculate_prediction_intervals",
+    "suggest_arima_order",
+    "detect_seasonality",
 ]

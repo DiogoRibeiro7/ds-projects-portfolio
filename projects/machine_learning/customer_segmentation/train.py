@@ -4,7 +4,9 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
 
-def make_synthetic_customers(n_samples: int = 1200, random_state: int = 42) -> pd.DataFrame:
+def make_synthetic_customers(
+    n_samples: int = 1200, random_state: int = 42
+) -> pd.DataFrame:
     rng = np.random.default_rng(random_state)
     segments = [
         # high value, low frequency
@@ -45,7 +47,9 @@ def make_synthetic_customers(n_samples: int = 1200, random_state: int = 42) -> p
     return df.sample(frac=1.0, random_state=random_state).reset_index(drop=True)
 
 
-def cluster_customers(df: pd.DataFrame, n_clusters: int = 3) -> tuple[pd.DataFrame, float]:
+def cluster_customers(
+    df: pd.DataFrame, n_clusters: int = 3
+) -> tuple[pd.DataFrame, float]:
     scaler = StandardScaler()
     features = scaler.fit_transform(df)
 

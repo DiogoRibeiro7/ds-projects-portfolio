@@ -47,6 +47,7 @@ warnings.filterwarnings("ignore", category=PrivacyLeakWarning)
 
 class PIIType(Enum):
     """Types of Personally Identifiable Information"""
+
     NAME = "name"
     EMAIL = "email"
     PHONE = "phone"
@@ -65,6 +66,7 @@ class PIIType(Enum):
 @dataclass
 class PrivacyConfig:
     """Privacy configuration"""
+
     # Differential privacy
     epsilon: float = 1.0  # Privacy budget
     delta: float = 1e-5  # Privacy parameter
@@ -75,7 +77,9 @@ class PrivacyConfig:
     pii_confidence_threshold: float = 0.8
 
     # Anonymization
-    anonymization_method: str = "generalization"  # generalization, suppression, masking, encryption
+    anonymization_method: str = (
+        "generalization"  # generalization, suppression, masking, encryption
+    )
     preserve_format: bool = True
 
     # GDPR
@@ -93,6 +97,7 @@ class PrivacyConfig:
 @dataclass
 class PIIDetectionResult:
     """Result of PII detection"""
+
     column: str
     pii_type: PIIType
     confidence: float
@@ -103,6 +108,7 @@ class PIIDetectionResult:
 @dataclass
 class AnonymizationResult:
     """Result of data anonymization"""
+
     original_shape: Tuple[int, int]
     anonymized_shape: Tuple[int, int]
     pii_columns_found: List[str]
@@ -120,7 +126,9 @@ class DifferentialPrivacy:
         self.privacy_budget = config.epsilon
         self.used_budget = 0.0
 
-    def add_laplace_noise(self, data: np.ndarray, sensitivity: float = None) -> np.ndarray:
+    def add_laplace_noise(
+        self, data: np.ndarray, sensitivity: float = None
+    ) -> np.ndarray:
         """Add Laplace noise for differential privacy"""
         if sensitivity is None:
             sensitivity = self.config.sensitivity
@@ -129,7 +137,9 @@ class DifferentialPrivacy:
         scale = sensitivity / self.config.epsilon
 
         # Add Laplace noise
-        mechanism = mechanisms.Laplace(epsilon=self.config.epsilon, sensitivity=sensitivity)
+        mechanism = mechanisms.Laplace(
+            epsilon=self.config.epsilon, sensitivity=sensitivity
+        )
         noisy_data = mechanism.randomise(data)
 
         # Update used budget
@@ -137,7 +147,9 @@ class DifferentialPrivacy:
 
         return noisy_data
 
-    def add_gaussian_noise(self, data: np.ndarray, sensitivity: float = None) -> np.ndarray:
+    def add_gaussian_noise(
+        self, data: np.ndarray, sensitivity: float = None
+    ) -> np.ndarray:
         """Add Gaussian noise for differential privacy"""
         if sensitivity is None:
             sensitivity = self.config.sensitivity
@@ -145,7 +157,7 @@ class DifferentialPrivacy:
         mechanism = mechanisms.Gaussian(
             epsilon=self.config.epsilon,
             delta=self.config.delta,
-            sensitivity=sensitivity
+            sensitivity=sensitivity,
         )
 
         noisy_data = mechanism.randomise(data)
@@ -153,7 +165,9 @@ class DifferentialPrivacy:
 
         return noisy_data
 
-    def private_mean(self, data: np.ndarray, bounds: Tuple[float, float] = None) -> float:
+    def private_mean(
+        self, data: np.ndarray, bounds: Tuple[float, float] = None
+    ) -> float:
         """Calculate differentially private mean"""
         if bounds is None:
             bounds = (data.min(), data.max())
@@ -163,7 +177,9 @@ class DifferentialPrivacy:
 
         return dp_mean
 
-    def private_median(self, data: np.ndarray, bounds: Tuple[float, float] = None) -> float:
+    def private_median(
+        self, data: np.ndarray, bounds: Tuple[float, float] = None
+    ) -> float:
         """Calculate differentially private median"""
         if bounds is None:
             bounds = (data.min(), data.max())
@@ -173,7 +189,9 @@ class DifferentialPrivacy:
 
         return dp_median
 
-    def private_histogram(self, data: np.ndarray, bins: int = 10) -> Tuple[np.ndarray, np.ndarray]:
+    def private_histogram(
+        self, data: np.ndarray, bins: int = 10
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Create differentially private histogram"""
         # Get histogram
         counts, bin_edges = np.histogram(data, bins=bins)
@@ -186,7 +204,9 @@ class DifferentialPrivacy:
 
         return noisy_counts, bin_edges
 
-    def private_query(self, query_func: Callable, data: Any, sensitivity: float = None) -> Any:
+    def private_query(
+        self, query_func: Callable, data: Any, sensitivity: float = None
+    ) -> Any:
         """Execute differentially private query"""
         result = query_func(data)
 
@@ -197,8 +217,9 @@ class DifferentialPrivacy:
 
         return result
 
-    def train_private_model(self, X: np.ndarray, y: np.ndarray,
-                          model_type: str = "logistic") -> Any:
+    def train_private_model(
+        self, X: np.ndarray, y: np.ndarray, model_type: str = "logistic"
+    ) -> Any:
         """Train differentially private ML model"""
         if model_type == "logistic":
             model = DPLogisticRegression(epsilon=self.config.epsilon)
@@ -215,10 +236,12 @@ class DifferentialPrivacy:
     def get_privacy_budget_status(self) -> Dict[str, float]:
         """Get privacy budget status"""
         return {
-            'total_budget': self.privacy_budget,
-            'used_budget': self.used_budget,
-            'remaining_budget': self.privacy_budget - self.used_budget,
-            'usage_percentage': (self.used_budget / self.privacy_budget * 100) if self.privacy_budget > 0 else 0
+            "total_budget": self.privacy_budget,
+            "used_budget": self.used_budget,
+            "remaining_budget": self.privacy_budget - self.used_budget,
+            "usage_percentage": (self.used_budget / self.privacy_budget * 100)
+            if self.privacy_budget > 0
+            else 0,
         }
 
 
@@ -233,16 +256,24 @@ class PIIDetector:
             self.nlp = spacy.load("en_core_web_sm")
         except:
             self.nlp = None
-            logger.warning("spaCy model not loaded. Some PII detection features disabled.")
+            logger.warning(
+                "spaCy model not loaded. Some PII detection features disabled."
+            )
 
         # Regex patterns for PII
         self.patterns = {
-            PIIType.EMAIL: re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'),
-            PIIType.PHONE: re.compile(r'(\+\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}'),
-            PIIType.SSN: re.compile(r'\b\d{3}-\d{2}-\d{4}\b|\b\d{9}\b'),
-            PIIType.CREDIT_CARD: re.compile(r'\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b'),
-            PIIType.IP_ADDRESS: re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b'),
-            PIIType.DATE_OF_BIRTH: re.compile(r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b'),
+            PIIType.EMAIL: re.compile(
+                r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
+            ),
+            PIIType.PHONE: re.compile(
+                r"(\+\d{1,3}[-.\s]?)?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
+            ),
+            PIIType.SSN: re.compile(r"\b\d{3}-\d{2}-\d{4}\b|\b\d{9}\b"),
+            PIIType.CREDIT_CARD: re.compile(
+                r"\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b"
+            ),
+            PIIType.IP_ADDRESS: re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
+            PIIType.DATE_OF_BIRTH: re.compile(r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b"),
         }
 
     def detect_pii(self, df: pd.DataFrame) -> List[PIIDetectionResult]:
@@ -263,13 +294,15 @@ class PIIDetector:
                 match_ratio = matches.sum() / len(matches)
 
                 if match_ratio > 0.5:  # More than 50% match
-                    results.append(PIIDetectionResult(
-                        column=column,
-                        pii_type=pii_type,
-                        confidence=match_ratio,
-                        sample_values=sample_values[matches].head(3).tolist(),
-                        detection_method="regex"
-                    ))
+                    results.append(
+                        PIIDetectionResult(
+                            column=column,
+                            pii_type=pii_type,
+                            confidence=match_ratio,
+                            sample_values=sample_values[matches].head(3).tolist(),
+                            detection_method="regex",
+                        )
+                    )
 
             # NER-based detection
             if self.nlp:
@@ -277,12 +310,14 @@ class PIIDetector:
 
         return results
 
-    def _detect_with_ner(self, column: str, sample_values: pd.Series) -> List[PIIDetectionResult]:
+    def _detect_with_ner(
+        self, column: str, sample_values: pd.Series
+    ) -> List[PIIDetectionResult]:
         """Detect PII using Named Entity Recognition"""
         results = []
 
         # Concatenate sample values
-        text = ' '.join(sample_values.head(20))
+        text = " ".join(sample_values.head(20))
         doc = self.nlp(text)
 
         # Count entity types
@@ -292,21 +327,25 @@ class PIIDetector:
 
         # Map spaCy labels to PII types
         label_mapping = {
-            'PERSON': PIIType.NAME,
-            'GPE': PIIType.ADDRESS,
-            'LOC': PIIType.ADDRESS,
-            'ORG': PIIType.CUSTOM
+            "PERSON": PIIType.NAME,
+            "GPE": PIIType.ADDRESS,
+            "LOC": PIIType.ADDRESS,
+            "ORG": PIIType.CUSTOM,
         }
 
         for label, count in entity_counts.items():
             if label in label_mapping and count > 3:
-                results.append(PIIDetectionResult(
-                    column=column,
-                    pii_type=label_mapping[label],
-                    confidence=min(count / 20, 1.0),
-                    sample_values=[ent.text for ent in doc.ents if ent.label_ == label][:3],
-                    detection_method="NER"
-                ))
+                results.append(
+                    PIIDetectionResult(
+                        column=column,
+                        pii_type=label_mapping[label],
+                        confidence=min(count / 20, 1.0),
+                        sample_values=[
+                            ent.text for ent in doc.ents if ent.label_ == label
+                        ][:3],
+                        detection_method="NER",
+                    )
+                )
 
         return results
 
@@ -337,8 +376,9 @@ class DataAnonymizer:
         self.fernet = Fernet(self.encryption_key)
         self.mapping_tables = {}
 
-    def anonymize_dataframe(self, df: pd.DataFrame,
-                          pii_columns: Optional[List[str]] = None) -> Tuple[pd.DataFrame, AnonymizationResult]:
+    def anonymize_dataframe(
+        self, df: pd.DataFrame, pii_columns: Optional[List[str]] = None
+    ) -> Tuple[pd.DataFrame, AnonymizationResult]:
         """Anonymize entire DataFrame"""
         # Detect PII if not specified
         if pii_columns is None:
@@ -382,7 +422,7 @@ class DataAnonymizer:
             anonymization_methods_used=methods_used,
             k_anonymity=k_anon,
             l_diversity=l_div,
-            t_closeness=t_close
+            t_closeness=t_close,
         )
 
         return df_anon, result
@@ -391,61 +431,65 @@ class DataAnonymizer:
         """Generalize data to broader categories"""
         if pd.api.types.is_numeric_dtype(series):
             # Generalize numeric data to ranges
-            bins = pd.qcut(series, q=5, duplicates='drop')
+            bins = pd.qcut(series, q=5, duplicates="drop")
             return bins.astype(str)
         else:
             # Generalize text data
-            return series.apply(lambda x: self._generalize_text(x) if pd.notna(x) else x)
+            return series.apply(
+                lambda x: self._generalize_text(x) if pd.notna(x) else x
+            )
 
     def _generalize_text(self, text: str) -> str:
         """Generalize text value"""
         text = str(text)
 
         # Email: keep domain only
-        if '@' in text:
-            return text.split('@')[1] if '@' in text else 'email'
+        if "@" in text:
+            return text.split("@")[1] if "@" in text else "email"
 
         # Phone: keep area code only
-        if re.match(r'[\d\s\-\(\)]+', text):
-            return text[:3] + 'XXXX'
+        if re.match(r"[\d\s\-\(\)]+", text):
+            return text[:3] + "XXXX"
 
         # Default: keep first letter
-        return text[0] + '***' if text else ''
+        return text[0] + "***" if text else ""
 
     def suppress(self, series: pd.Series) -> pd.Series:
         """Suppress (remove) sensitive data"""
-        return pd.Series(['*SUPPRESSED*'] * len(series), index=series.index)
+        return pd.Series(["*SUPPRESSED*"] * len(series), index=series.index)
 
     def mask(self, series: pd.Series) -> pd.Series:
         """Mask sensitive data"""
+
         def mask_value(val):
             if pd.isna(val):
                 return val
 
             val_str = str(val)
             if len(val_str) <= 4:
-                return '*' * len(val_str)
+                return "*" * len(val_str)
 
             # Keep first and last characters
-            return val_str[0] + '*' * (len(val_str) - 2) + val_str[-1]
+            return val_str[0] + "*" * (len(val_str) - 2) + val_str[-1]
 
         return series.apply(mask_value)
 
     def encrypt(self, series: pd.Series) -> pd.Series:
         """Encrypt sensitive data"""
+
         def encrypt_value(val):
             if pd.isna(val):
                 return val
 
             encrypted = self.fernet.encrypt(str(val).encode())
-            return base64.b64encode(encrypted).decode()[:20] + '...'
+            return base64.b64encode(encrypted).decode()[:20] + "..."
 
         return series.apply(encrypt_value)
 
     def pseudonymize(self, series: pd.Series) -> pd.Series:
         """Replace with consistent pseudonyms"""
         # Create mapping table if not exists
-        col_name = series.name or 'default'
+        col_name = series.name or "default"
         if col_name not in self.mapping_tables:
             self.mapping_tables[col_name] = {}
 
@@ -458,9 +502,9 @@ class DataAnonymizer:
             val_str = str(val)
             if val_str not in mapping:
                 # Generate consistent pseudonym
-                if '@' in val_str:  # Email
+                if "@" in val_str:  # Email
                     mapping[val_str] = self.fake.email()
-                elif re.match(r'[\d\s\-\(\)]+', val_str):  # Phone
+                elif re.match(r"[\d\s\-\(\)]+", val_str):  # Phone
                     mapping[val_str] = self.fake.phone_number()
                 else:  # Name or other
                     mapping[val_str] = self.fake.name()
@@ -469,7 +513,9 @@ class DataAnonymizer:
 
         return series.apply(get_pseudonym)
 
-    def synthetic_data_generation(self, df: pd.DataFrame, n_samples: int = None) -> pd.DataFrame:
+    def synthetic_data_generation(
+        self, df: pd.DataFrame, n_samples: int = None
+    ) -> pd.DataFrame:
         """Generate synthetic data preserving statistical properties"""
         if n_samples is None:
             n_samples = len(df)
@@ -489,11 +535,15 @@ class DataAnonymizer:
 
         return pd.DataFrame(synthetic_data)
 
-    def calculate_k_anonymity(self, df: pd.DataFrame, quasi_identifiers: List[str] = None) -> int:
+    def calculate_k_anonymity(
+        self, df: pd.DataFrame, quasi_identifiers: List[str] = None
+    ) -> int:
         """Calculate k-anonymity value"""
         if quasi_identifiers is None:
             # Use all non-unique columns as quasi-identifiers
-            quasi_identifiers = [col for col in df.columns if df[col].nunique() < len(df) * 0.9]
+            quasi_identifiers = [
+                col for col in df.columns if df[col].nunique() < len(df) * 0.9
+            ]
 
         if not quasi_identifiers:
             return 1
@@ -504,22 +554,30 @@ class DataAnonymizer:
         # k-anonymity is the minimum group size
         return int(groups.min()) if len(groups) > 0 else 1
 
-    def calculate_l_diversity(self, df: pd.DataFrame,
-                            quasi_identifiers: List[str] = None,
-                            sensitive_attribute: str = None) -> Optional[int]:
+    def calculate_l_diversity(
+        self,
+        df: pd.DataFrame,
+        quasi_identifiers: List[str] = None,
+        sensitive_attribute: str = None,
+    ) -> Optional[int]:
         """Calculate l-diversity value"""
         if quasi_identifiers is None or sensitive_attribute is None:
             return None
 
         # Group by quasi-identifiers
-        groups = df.groupby(quasi_identifiers)[sensitive_attribute].apply(lambda x: x.nunique())
+        groups = df.groupby(quasi_identifiers)[sensitive_attribute].apply(
+            lambda x: x.nunique()
+        )
 
         # l-diversity is the minimum number of distinct sensitive values
         return int(groups.min()) if len(groups) > 0 else None
 
-    def calculate_t_closeness(self, df: pd.DataFrame,
-                            quasi_identifiers: List[str] = None,
-                            sensitive_attribute: str = None) -> Optional[float]:
+    def calculate_t_closeness(
+        self,
+        df: pd.DataFrame,
+        quasi_identifiers: List[str] = None,
+        sensitive_attribute: str = None,
+    ) -> Optional[float]:
         """Calculate t-closeness value"""
         if quasi_identifiers is None or sensitive_attribute is None:
             return None
@@ -547,41 +605,48 @@ class GDPRCompliance:
         self.data_subjects = {}
         self.audit_log = []
 
-    def record_consent(self, subject_id: str, purposes: List[str],
-                      granted: bool = True) -> str:
+    def record_consent(
+        self, subject_id: str, purposes: List[str], granted: bool = True
+    ) -> str:
         """Record user consent"""
-        consent_id = hashlib.sha256(f"{subject_id}{datetime.now()}".encode()).hexdigest()[:16]
+        consent_id = hashlib.sha256(
+            f"{subject_id}{datetime.now()}".encode()
+        ).hexdigest()[:16]
 
         self.consent_records[consent_id] = {
-            'subject_id': subject_id,
-            'purposes': purposes,
-            'granted': granted,
-            'timestamp': datetime.now(),
-            'expires': datetime.now() + timedelta(days=365)
+            "subject_id": subject_id,
+            "purposes": purposes,
+            "granted": granted,
+            "timestamp": datetime.now(),
+            "expires": datetime.now() + timedelta(days=365),
         }
 
-        self._log_activity('consent_recorded', subject_id, {'consent_id': consent_id})
+        self._log_activity("consent_recorded", subject_id, {"consent_id": consent_id})
 
         return consent_id
 
     def check_consent(self, subject_id: str, purpose: str) -> bool:
         """Check if consent is granted for purpose"""
         for consent in self.consent_records.values():
-            if (consent['subject_id'] == subject_id and
-                purpose in consent['purposes'] and
-                consent['granted'] and
-                consent['expires'] > datetime.now()):
+            if (
+                consent["subject_id"] == subject_id
+                and purpose in consent["purposes"]
+                and consent["granted"]
+                and consent["expires"] > datetime.now()
+            ):
                 return True
         return False
 
     def withdraw_consent(self, consent_id: str) -> bool:
         """Withdraw consent"""
         if consent_id in self.consent_records:
-            self.consent_records[consent_id]['granted'] = False
-            self.consent_records[consent_id]['withdrawn_at'] = datetime.now()
+            self.consent_records[consent_id]["granted"] = False
+            self.consent_records[consent_id]["withdrawn_at"] = datetime.now()
 
-            subject_id = self.consent_records[consent_id]['subject_id']
-            self._log_activity('consent_withdrawn', subject_id, {'consent_id': consent_id})
+            subject_id = self.consent_records[consent_id]["subject_id"]
+            self._log_activity(
+                "consent_withdrawn", subject_id, {"consent_id": consent_id}
+            )
 
             return True
         return False
@@ -591,16 +656,22 @@ class GDPRCompliance:
         if subject_id not in self.data_subjects:
             return {}
 
-        self._log_activity('data_accessed', subject_id, {})
+        self._log_activity("data_accessed", subject_id, {})
 
         return {
-            'subject_id': subject_id,
-            'data': self.data_subjects[subject_id],
-            'consents': [c for c in self.consent_records.values() if c['subject_id'] == subject_id],
-            'export_date': datetime.now().isoformat()
+            "subject_id": subject_id,
+            "data": self.data_subjects[subject_id],
+            "consents": [
+                c
+                for c in self.consent_records.values()
+                if c["subject_id"] == subject_id
+            ],
+            "export_date": datetime.now().isoformat(),
         }
 
-    def right_to_rectification(self, subject_id: str, corrections: Dict[str, Any]) -> bool:
+    def right_to_rectification(
+        self, subject_id: str, corrections: Dict[str, Any]
+    ) -> bool:
         """Implement right to rectification (correct data)"""
         if subject_id not in self.data_subjects:
             return False
@@ -611,10 +682,11 @@ class GDPRCompliance:
         # Apply corrections
         self.data_subjects[subject_id].update(corrections)
 
-        self._log_activity('data_rectified', subject_id, {
-            'original': original_data,
-            'corrections': corrections
-        })
+        self._log_activity(
+            "data_rectified",
+            subject_id,
+            {"original": original_data, "corrections": corrections},
+        )
 
         return True
 
@@ -624,31 +696,34 @@ class GDPRCompliance:
             return False
 
         # Log before deletion
-        self._log_activity('data_erased', subject_id, {
-            'data_categories': list(self.data_subjects[subject_id].keys())
-        })
+        self._log_activity(
+            "data_erased",
+            subject_id,
+            {"data_categories": list(self.data_subjects[subject_id].keys())},
+        )
 
         # Delete data
         del self.data_subjects[subject_id]
 
         # Delete consents
         consent_ids_to_delete = [
-            cid for cid, consent in self.consent_records.items()
-            if consent['subject_id'] == subject_id
+            cid
+            for cid, consent in self.consent_records.items()
+            if consent["subject_id"] == subject_id
         ]
         for cid in consent_ids_to_delete:
             del self.consent_records[cid]
 
         return True
 
-    def data_portability_export(self, subject_id: str, format: str = 'json') -> str:
+    def data_portability_export(self, subject_id: str, format: str = "json") -> str:
         """Export data in portable format"""
         data = self.right_to_access(subject_id)
 
-        if format == 'json':
+        if format == "json":
             return json.dumps(data, default=str, indent=2)
-        elif format == 'csv':
-            df = pd.DataFrame([data['data']])
+        elif format == "csv":
+            df = pd.DataFrame([data["data"]])
             return df.to_csv(index=False)
         else:
             raise ValueError(f"Unsupported format: {format}")
@@ -659,8 +734,8 @@ class GDPRCompliance:
         current_time = datetime.now()
 
         for subject_id, data in self.data_subjects.items():
-            if 'created_at' in data:
-                created_at = data['created_at']
+            if "created_at" in data:
+                created_at = data["created_at"]
                 if isinstance(created_at, str):
                     created_at = datetime.fromisoformat(created_at)
 
@@ -677,10 +752,10 @@ class GDPRCompliance:
     def _log_activity(self, action: str, subject_id: str, details: Dict[str, Any]):
         """Log GDPR-related activity"""
         log_entry = {
-            'timestamp': datetime.now(),
-            'action': action,
-            'subject_id': subject_id,
-            'details': details
+            "timestamp": datetime.now(),
+            "action": action,
+            "subject_id": subject_id,
+            "details": details,
         }
 
         self.audit_log.append(log_entry)
@@ -692,7 +767,9 @@ class GDPRCompliance:
     def get_audit_log(self, subject_id: Optional[str] = None) -> List[Dict]:
         """Get audit log entries"""
         if subject_id:
-            return [entry for entry in self.audit_log if entry['subject_id'] == subject_id]
+            return [
+                entry for entry in self.audit_log if entry["subject_id"] == subject_id
+            ]
         return self.audit_log
 
 
@@ -706,29 +783,30 @@ class PrivacyFramework:
         self.anonymizer = DataAnonymizer(config)
         self.gdpr_compliance = GDPRCompliance(config)
 
-    def apply_privacy_protection(self, df: pd.DataFrame,
-                                subject_id: Optional[str] = None) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    def apply_privacy_protection(
+        self, df: pd.DataFrame, subject_id: Optional[str] = None
+    ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
         """Apply comprehensive privacy protection"""
         report = {
-            'timestamp': datetime.now(),
-            'original_shape': df.shape,
-            'privacy_methods_applied': []
+            "timestamp": datetime.now(),
+            "original_shape": df.shape,
+            "privacy_methods_applied": [],
         }
 
         # Check GDPR consent if required
         if self.config.enable_gdpr_compliance and subject_id:
-            if not self.gdpr_compliance.check_consent(subject_id, 'data_processing'):
+            if not self.gdpr_compliance.check_consent(subject_id, "data_processing"):
                 raise PermissionError("No consent for data processing")
 
         # Detect PII
         pii_results = self.pii_detector.detect_pii(df)
-        report['pii_detected'] = [asdict(r) for r in pii_results]
+        report["pii_detected"] = [asdict(r) for r in pii_results]
 
         # Anonymize PII columns
         pii_columns = list(set([r.column for r in pii_results]))
         df_anon, anon_result = self.anonymizer.anonymize_dataframe(df, pii_columns)
-        report['anonymization'] = asdict(anon_result)
-        report['privacy_methods_applied'].append('anonymization')
+        report["anonymization"] = asdict(anon_result)
+        report["privacy_methods_applied"].append("anonymization")
 
         # Apply differential privacy to numeric columns
         numeric_cols = df_anon.select_dtypes(include=[np.number]).columns
@@ -738,51 +816,51 @@ class PrivacyFramework:
                     df_anon[col].values
                 )
 
-        report['privacy_methods_applied'].append('differential_privacy')
-        report['privacy_budget'] = self.differential_privacy.get_privacy_budget_status()
+        report["privacy_methods_applied"].append("differential_privacy")
+        report["privacy_budget"] = self.differential_privacy.get_privacy_budget_status()
 
         # Log activity if GDPR enabled
         if self.config.enable_gdpr_compliance and subject_id:
-            self.gdpr_compliance._log_activity('data_processed', subject_id, report)
+            self.gdpr_compliance._log_activity("data_processed", subject_id, report)
 
-        report['final_shape'] = df_anon.shape
+        report["final_shape"] = df_anon.shape
 
         return df_anon, report
 
     def generate_privacy_report(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Generate comprehensive privacy report"""
         report = {
-            'timestamp': datetime.now(),
-            'dataset_shape': df.shape,
-            'privacy_analysis': {}
+            "timestamp": datetime.now(),
+            "dataset_shape": df.shape,
+            "privacy_analysis": {},
         }
 
         # PII detection
         pii_results = self.pii_detector.detect_pii(df)
-        report['privacy_analysis']['pii'] = {
-            'columns_with_pii': len(set([r.column for r in pii_results])),
-            'pii_types_found': list(set([r.pii_type.value for r in pii_results])),
-            'details': [asdict(r) for r in pii_results]
+        report["privacy_analysis"]["pii"] = {
+            "columns_with_pii": len(set([r.column for r in pii_results])),
+            "pii_types_found": list(set([r.pii_type.value for r in pii_results])),
+            "details": [asdict(r) for r in pii_results],
         }
 
         # Calculate privacy metrics
         k_anon = self.anonymizer.calculate_k_anonymity(df)
-        report['privacy_analysis']['k_anonymity'] = k_anon
+        report["privacy_analysis"]["k_anonymity"] = k_anon
 
         # Estimate required privacy budget
         numeric_cols = df.select_dtypes(include=[np.number]).columns
-        report['privacy_analysis']['differential_privacy'] = {
-            'numeric_columns': len(numeric_cols),
-            'recommended_epsilon': 1.0,
-            'recommended_delta': 1e-5
+        report["privacy_analysis"]["differential_privacy"] = {
+            "numeric_columns": len(numeric_cols),
+            "recommended_epsilon": 1.0,
+            "recommended_delta": 1e-5,
         }
 
         # GDPR compliance status
         if self.config.enable_gdpr_compliance:
-            report['gdpr_compliance'] = {
-                'consent_records': len(self.gdpr_compliance.consent_records),
-                'data_subjects': len(self.gdpr_compliance.data_subjects),
-                'audit_log_entries': len(self.gdpr_compliance.audit_log)
+            report["gdpr_compliance"] = {
+                "consent_records": len(self.gdpr_compliance.consent_records),
+                "data_subjects": len(self.gdpr_compliance.data_subjects),
+                "audit_log_entries": len(self.gdpr_compliance.audit_log),
             }
 
         return report
@@ -791,20 +869,22 @@ class PrivacyFramework:
 # Example usage
 if __name__ == "__main__":
     # Create sample data with PII
-    df = pd.DataFrame({
-        'name': ['John Doe', 'Jane Smith', 'Bob Johnson'],
-        'email': ['john@example.com', 'jane@example.com', 'bob@example.com'],
-        'phone': ['555-123-4567', '555-987-6543', '555-456-7890'],
-        'age': [25, 30, 35],
-        'salary': [50000, 60000, 70000],
-        'ssn': ['123-45-6789', '987-65-4321', '456-78-9012']
-    })
+    df = pd.DataFrame(
+        {
+            "name": ["John Doe", "Jane Smith", "Bob Johnson"],
+            "email": ["john@example.com", "jane@example.com", "bob@example.com"],
+            "phone": ["555-123-4567", "555-987-6543", "555-456-7890"],
+            "age": [25, 30, 35],
+            "salary": [50000, 60000, 70000],
+            "ssn": ["123-45-6789", "987-65-4321", "456-78-9012"],
+        }
+    )
 
     # Initialize privacy framework
     config = PrivacyConfig(
         epsilon=1.0,
         anonymization_method="pseudonymization",
-        enable_gdpr_compliance=True
+        enable_gdpr_compliance=True,
     )
     privacy = PrivacyFramework(config)
 

@@ -14,7 +14,9 @@ from tests.regression.baseline_utils import build_conversion_dataset
 
 pytestmark = pytest.mark.regression
 
-BASELINE_PATH = Path(__file__).parent / "baselines" / "experiment_conversion_report.json"
+BASELINE_PATH = (
+    Path(__file__).parent / "baselines" / "experiment_conversion_report.json"
+)
 
 
 def _load_baseline():
@@ -32,11 +34,23 @@ def test_conversion_snapshot_matches_baseline():
     snap = baseline["snapshot"]
 
     for group, expected_rate in snap["conversion_rates"].items():
-        assert report["conversion_rates"][group] == pytest.approx(expected_rate, rel=1e-6)
+        assert report["conversion_rates"][group] == pytest.approx(
+            expected_rate, rel=1e-6
+        )
 
-    for key in ("absolute_lift", "relative_lift", "z_statistic", "p_value", "statistical_power"):
+    for key in (
+        "absolute_lift",
+        "relative_lift",
+        "z_statistic",
+        "p_value",
+        "statistical_power",
+    ):
         assert report[key] == pytest.approx(snap[key], rel=1e-6)
 
     assert report["sample_sizes"] == snap["sample_sizes"]
-    assert report["confidence_interval"][0] == pytest.approx(snap["confidence_interval"][0], rel=1e-6)
-    assert report["confidence_interval"][1] == pytest.approx(snap["confidence_interval"][1], rel=1e-6)
+    assert report["confidence_interval"][0] == pytest.approx(
+        snap["confidence_interval"][0], rel=1e-6
+    )
+    assert report["confidence_interval"][1] == pytest.approx(
+        snap["confidence_interval"][1], rel=1e-6
+    )

@@ -23,6 +23,7 @@ from ray.tune.suggest.optuna import OptunaSearch
 try:
     import autogluon.tabular as ag
     from autogluon.tabular import TabularDataset, TabularPredictor
+
     AUTOGLUON_AVAILABLE = True
 except ImportError:
     AUTOGLUON_AVAILABLE = False
@@ -30,6 +31,7 @@ except ImportError:
 try:
     import h2o
     from h2o.automl import H2OAutoML
+
     H2O_AVAILABLE = True
 except ImportError:
     H2O_AVAILABLE = False
@@ -37,6 +39,7 @@ except ImportError:
 try:
     import flaml
     from flaml import AutoML as FLAMLAutoML
+
     FLAML_AVAILABLE = True
 except ImportError:
     FLAML_AVAILABLE = False
@@ -44,6 +47,7 @@ except ImportError:
 try:
     from pycaret.classification import *
     from pycaret.regression import *
+
     PYCARET_AVAILABLE = True
 except ImportError:
     PYCARET_AVAILABLE = False
@@ -52,6 +56,7 @@ except ImportError:
 try:
     import nni
     from nni.experiment import Experiment
+
     NNI_AVAILABLE = True
 except ImportError:
     NNI_AVAILABLE = False
@@ -59,7 +64,12 @@ except ImportError:
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, roc_auc_score, mean_squared_error, r2_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.ensemble import VotingClassifier, VotingRegressor, StackingClassifier, StackingRegressor
+from sklearn.ensemble import (
+    VotingClassifier,
+    VotingRegressor,
+    StackingClassifier,
+    StackingRegressor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,16 +78,16 @@ logger = logging.getLogger(__name__)
 class AutoMLConfig:
     """Configuration for AutoML orchestrator."""
 
-    task_type: str = 'classification'  # 'classification' or 'regression'
-    frameworks: List[str] = field(default_factory=lambda: ['autogluon', 'h2o', 'flaml'])
+    task_type: str = "classification"  # 'classification' or 'regression'
+    frameworks: List[str] = field(default_factory=lambda: ["autogluon", "h2o", "flaml"])
     time_limit: int = 3600  # seconds
-    optimization_metric: str = 'auto'
-    ensemble_strategy: str = 'auto'  # 'voting', 'stacking', 'blending', 'auto'
+    optimization_metric: str = "auto"
+    ensemble_strategy: str = "auto"  # 'voting', 'stacking', 'blending', 'auto'
     use_gpu: bool = False
     n_jobs: int = -1
     verbosity: int = 2
-    save_path: str = './automl_models'
-    experiment_name: str = 'automl_experiment'
+    save_path: str = "./automl_models"
+    experiment_name: str = "automl_experiment"
 
     # Neural architecture search
     enable_nas: bool = False
@@ -86,11 +96,11 @@ class AutoMLConfig:
 
     # Feature engineering
     auto_feature_engineering: bool = True
-    feature_selection_method: str = 'auto'
+    feature_selection_method: str = "auto"
     max_features: Optional[int] = None
 
     # Hyperparameter optimization
-    hpo_method: str = 'bayesian'  # 'grid', 'random', 'bayesian', 'hyperband'
+    hpo_method: str = "bayesian"  # 'grid', 'random', 'bayesian', 'hyperband'
     n_trials: int = 100
 
     # Distributed computing
@@ -130,12 +140,16 @@ class AutoMLOrchestrator:
         """Setup logging configuration."""
         logging.basicConfig(
             level=logging.INFO if self.config.verbosity > 0 else logging.WARNING,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
 
-    def fit(self, X: pd.DataFrame, y: pd.Series,
-            X_valid: Optional[pd.DataFrame] = None,
-            y_valid: Optional[pd.Series] = None) -> 'AutoMLOrchestrator':
+    def fit(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        X_valid: Optional[pd.DataFrame] = None,
+        y_valid: Optional[pd.Series] = None,
+    ) -> "AutoMLOrchestrator":
         """
         Fit AutoML models using multiple frameworks.
 
@@ -163,8 +177,11 @@ class AutoMLOrchestrator:
         # Split validation set if not provided
         if X_valid is None:
             X_train, X_valid, y_train, y_valid = train_test_split(
-                X_train, y_train, test_size=0.2, random_state=42,
-                stratify=y_train if self.config.task_type == 'classification' else None
+                X_train,
+                y_train,
+                test_size=0.2,
+                random_state=42,
+                stratify=y_train if self.config.task_type == "classification" else None,
             )
 
         # Run AutoML frameworks
@@ -172,39 +189,41 @@ class AutoMLOrchestrator:
 
         if self.config.use_ray:
             # Distributed training with Ray
-            framework_results = self._fit_distributed(X_train, y_train, X_valid, y_valid)
+            framework_results = self._fit_distributed(
+                X_train, y_train, X_valid, y_valid
+            )
         else:
             # Sequential or parallel training
-            if 'autogluon' in self.config.frameworks and AUTOGLUON_AVAILABLE:
-                framework_results['autogluon'] = self._fit_autogluon(
+            if "autogluon" in self.config.frameworks and AUTOGLUON_AVAILABLE:
+                framework_results["autogluon"] = self._fit_autogluon(
                     X_train, y_train, X_valid, y_valid
                 )
 
-            if 'h2o' in self.config.frameworks and H2O_AVAILABLE:
-                framework_results['h2o'] = self._fit_h2o(
+            if "h2o" in self.config.frameworks and H2O_AVAILABLE:
+                framework_results["h2o"] = self._fit_h2o(
                     X_train, y_train, X_valid, y_valid
                 )
 
-            if 'flaml' in self.config.frameworks and FLAML_AVAILABLE:
-                framework_results['flaml'] = self._fit_flaml(
+            if "flaml" in self.config.frameworks and FLAML_AVAILABLE:
+                framework_results["flaml"] = self._fit_flaml(
                     X_train, y_train, X_valid, y_valid
                 )
 
-            if 'pycaret' in self.config.frameworks and PYCARET_AVAILABLE:
-                framework_results['pycaret'] = self._fit_pycaret(
+            if "pycaret" in self.config.frameworks and PYCARET_AVAILABLE:
+                framework_results["pycaret"] = self._fit_pycaret(
                     X_train, y_train, X_valid, y_valid
                 )
 
         # Neural Architecture Search if enabled
         if self.config.enable_nas and NNI_AVAILABLE:
-            framework_results['nas'] = self._run_nas(X_train, y_train, X_valid, y_valid)
+            framework_results["nas"] = self._run_nas(X_train, y_train, X_valid, y_valid)
 
         # Select best model
         self.results = framework_results
         self.best_model = self._select_best_model(framework_results, X_valid, y_valid)
 
         # Create ensemble if specified
-        if self.config.ensemble_strategy != 'none':
+        if self.config.ensemble_strategy != "none":
             self.ensemble = self._create_ensemble(framework_results, X_train, y_train)
 
         # Generate feature importance
@@ -214,15 +233,17 @@ class AutoMLOrchestrator:
         logger.info("AutoML training completed")
         return self
 
-    def _prepare_data(self, X: pd.DataFrame, y: pd.Series) -> Tuple[pd.DataFrame, pd.Series]:
+    def _prepare_data(
+        self, X: pd.DataFrame, y: pd.Series
+    ) -> Tuple[pd.DataFrame, pd.Series]:
         """Prepare data for AutoML."""
         X_prepared = X.copy()
         y_prepared = y.copy()
 
         # Handle categorical variables
-        for col in X_prepared.select_dtypes(include=['object']).columns:
+        for col in X_prepared.select_dtypes(include=["object"]).columns:
             le = LabelEncoder()
-            X_prepared[col] = le.fit_transform(X_prepared[col].fillna('missing'))
+            X_prepared[col] = le.fit_transform(X_prepared[col].fillna("missing"))
 
         # Handle missing values
         X_prepared = X_prepared.fillna(X_prepared.mean())
@@ -237,8 +258,15 @@ class AutoMLOrchestrator:
         """Automated feature engineering."""
         import featuretools as ft
         from featuretools.primitives import (
-            Sum, Mean, Max, Min, Std, Count,
-            PercentTrue, Mode, NumUnique
+            Sum,
+            Mean,
+            Max,
+            Min,
+            Std,
+            Count,
+            PercentTrue,
+            Mode,
+            NumUnique,
         )
 
         # Create entity set
@@ -246,10 +274,7 @@ class AutoMLOrchestrator:
 
         # Add dataframe as entity
         es = es.add_dataframe(
-            dataframe_name="data",
-            dataframe=X,
-            index="index",
-            make_index=True
+            dataframe_name="data", dataframe=X, index="index", make_index=True
         )
 
         # Generate features
@@ -259,13 +284,18 @@ class AutoMLOrchestrator:
             agg_primitives=[Sum, Mean, Max, Min, Std],
             trans_primitives=[],
             max_depth=2,
-            n_jobs=self.config.n_jobs
+            n_jobs=self.config.n_jobs,
         )
 
         return feature_matrix
 
-    def _fit_autogluon(self, X_train: pd.DataFrame, y_train: pd.Series,
-                       X_valid: pd.DataFrame, y_valid: pd.Series) -> Dict:
+    def _fit_autogluon(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_valid: pd.DataFrame,
+        y_valid: pd.Series,
+    ) -> Dict:
         """Fit AutoGluon model."""
         logger.info("Training AutoGluon model...")
 
@@ -277,8 +307,10 @@ class AutoMLOrchestrator:
         predictor = TabularPredictor(
             label=y_train.name,
             problem_type=self.config.task_type,
-            eval_metric=self.config.optimization_metric if self.config.optimization_metric != 'auto' else None,
-            path=os.path.join(self.config.save_path, 'autogluon')
+            eval_metric=self.config.optimization_metric
+            if self.config.optimization_metric != "auto"
+            else None,
+            path=os.path.join(self.config.save_path, "autogluon"),
         )
 
         # Train
@@ -286,29 +318,34 @@ class AutoMLOrchestrator:
             train_data,
             tuning_data=valid_data,
             time_limit=self.config.time_limit,
-            presets='best_quality',
+            presets="best_quality",
             num_gpus=1 if self.config.use_gpu else 0,
-            verbosity=self.config.verbosity
+            verbosity=self.config.verbosity,
         )
 
         # Get results
         leaderboard = predictor.leaderboard(valid_data, silent=True)
-        best_model_name = leaderboard.iloc[0]['model']
+        best_model_name = leaderboard.iloc[0]["model"]
 
         return {
-            'model': predictor,
-            'score': leaderboard.iloc[0]['score_val'],
-            'leaderboard': leaderboard,
-            'best_model': best_model_name
+            "model": predictor,
+            "score": leaderboard.iloc[0]["score_val"],
+            "leaderboard": leaderboard,
+            "best_model": best_model_name,
         }
 
-    def _fit_h2o(self, X_train: pd.DataFrame, y_train: pd.Series,
-                 X_valid: pd.DataFrame, y_valid: pd.Series) -> Dict:
+    def _fit_h2o(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_valid: pd.DataFrame,
+        y_valid: pd.Series,
+    ) -> Dict:
         """Fit H2O AutoML model."""
         logger.info("Training H2O AutoML model...")
 
         # Initialize H2O
-        h2o.init(nthreads=self.config.n_jobs, max_mem_size='4G')
+        h2o.init(nthreads=self.config.n_jobs, max_mem_size="4G")
 
         # Convert to H2O frames
         train = h2o.H2OFrame(pd.concat([X_train, y_train], axis=1))
@@ -319,7 +356,7 @@ class AutoMLOrchestrator:
         y = y_train.name
 
         # For classification, convert target to factor
-        if self.config.task_type == 'classification':
+        if self.config.task_type == "classification":
             train[y] = train[y].asfactor()
             valid[y] = valid[y].asfactor()
 
@@ -328,11 +365,13 @@ class AutoMLOrchestrator:
             max_runtime_secs=self.config.time_limit,
             max_models=20,
             seed=42,
-            verbosity='info' if self.config.verbosity > 0 else 'warn',
+            verbosity="info" if self.config.verbosity > 0 else "warn",
             nfolds=5,
-            balance_classes=True if self.config.task_type == 'classification' else False,
-            stopping_metric='AUTO',
-            sort_metric='AUTO'
+            balance_classes=True
+            if self.config.task_type == "classification"
+            else False,
+            stopping_metric="AUTO",
+            sort_metric="AUTO",
         )
 
         aml.train(x=x, y=y, training_frame=train, validation_frame=valid)
@@ -342,15 +381,21 @@ class AutoMLOrchestrator:
         best_model = aml.leader
 
         return {
-            'model': aml,
-            'score': best_model.model_performance(valid).auc() if self.config.task_type == 'classification'
-                    else best_model.model_performance(valid).rmse(),
-            'leaderboard': lb,
-            'best_model': best_model
+            "model": aml,
+            "score": best_model.model_performance(valid).auc()
+            if self.config.task_type == "classification"
+            else best_model.model_performance(valid).rmse(),
+            "leaderboard": lb,
+            "best_model": best_model,
         }
 
-    def _fit_flaml(self, X_train: pd.DataFrame, y_train: pd.Series,
-                   X_valid: pd.DataFrame, y_valid: pd.Series) -> Dict:
+    def _fit_flaml(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_valid: pd.DataFrame,
+        y_valid: pd.Series,
+    ) -> Dict:
         """Fit FLAML AutoML model."""
         logger.info("Training FLAML AutoML model...")
 
@@ -359,14 +404,15 @@ class AutoMLOrchestrator:
         # Configure settings
         settings = {
             "time_budget": self.config.time_limit,
-            "metric": self.config.optimization_metric if self.config.optimization_metric != 'auto'
-                     else ('roc_auc' if self.config.task_type == 'classification' else 'r2'),
+            "metric": self.config.optimization_metric
+            if self.config.optimization_metric != "auto"
+            else ("roc_auc" if self.config.task_type == "classification" else "r2"),
             "task": self.config.task_type,
             "n_jobs": self.config.n_jobs,
             "eval_method": "cv",
             "n_splits": 5,
             "verbose": self.config.verbosity,
-            "seed": 42
+            "seed": 42,
         }
 
         # Train
@@ -376,22 +422,27 @@ class AutoMLOrchestrator:
         score = automl.score(X_valid, y_valid)
 
         return {
-            'model': automl,
-            'score': score,
-            'best_model': automl.best_model_for_estimator(automl.best_estimator),
-            'best_config': automl.best_config,
-            'best_loss': automl.best_loss
+            "model": automl,
+            "score": score,
+            "best_model": automl.best_model_for_estimator(automl.best_estimator),
+            "best_config": automl.best_config,
+            "best_loss": automl.best_loss,
         }
 
-    def _fit_pycaret(self, X_train: pd.DataFrame, y_train: pd.Series,
-                     X_valid: pd.DataFrame, y_valid: pd.Series) -> Dict:
+    def _fit_pycaret(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_valid: pd.DataFrame,
+        y_valid: pd.Series,
+    ) -> Dict:
         """Fit PyCaret AutoML model."""
         logger.info("Training PyCaret AutoML model...")
 
         # Combine features and target
         train_data = pd.concat([X_train, y_train], axis=1)
 
-        if self.config.task_type == 'classification':
+        if self.config.task_type == "classification":
             from pycaret.classification import setup, compare_models, finalize_model
         else:
             from pycaret.regression import setup, compare_models, finalize_model
@@ -404,13 +455,13 @@ class AutoMLOrchestrator:
             session_id=42,
             use_gpu=self.config.use_gpu,
             silent=self.config.verbosity == 0,
-            n_jobs=self.config.n_jobs
+            n_jobs=self.config.n_jobs,
         )
 
         # Compare models
         best_model = compare_models(
             budget_time=self.config.time_limit / 60,  # Convert to minutes
-            fold=5
+            fold=5,
         )
 
         # Finalize model
@@ -419,38 +470,39 @@ class AutoMLOrchestrator:
         # Score on validation set
         predictions = final_model.predict(X_valid)
 
-        if self.config.task_type == 'classification':
+        if self.config.task_type == "classification":
             score = accuracy_score(y_valid, predictions)
         else:
             score = r2_score(y_valid, predictions)
 
-        return {
-            'model': final_model,
-            'score': score,
-            'best_model': best_model
-        }
+        return {"model": final_model, "score": score, "best_model": best_model}
 
-    def _run_nas(self, X_train: pd.DataFrame, y_train: pd.Series,
-                 X_valid: pd.DataFrame, y_valid: pd.Series) -> Dict:
+    def _run_nas(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_valid: pd.DataFrame,
+        y_valid: pd.Series,
+    ) -> Dict:
         """Run Neural Architecture Search."""
         logger.info("Running Neural Architecture Search...")
 
         # Define search space
         search_space = self.config.nas_search_space or {
-            'n_layers': {'_type': 'choice', '_value': [2, 3, 4, 5]},
-            'n_units': {'_type': 'choice', '_value': [32, 64, 128, 256]},
-            'dropout_rate': {'_type': 'uniform', '_value': [0.0, 0.5]},
-            'learning_rate': {'_type': 'loguniform', '_value': [0.0001, 0.1]},
-            'batch_size': {'_type': 'choice', '_value': [16, 32, 64, 128]}
+            "n_layers": {"_type": "choice", "_value": [2, 3, 4, 5]},
+            "n_units": {"_type": "choice", "_value": [32, 64, 128, 256]},
+            "dropout_rate": {"_type": "uniform", "_value": [0.0, 0.5]},
+            "learning_rate": {"_type": "loguniform", "_value": [0.0001, 0.1]},
+            "batch_size": {"_type": "choice", "_value": [16, 32, 64, 128]},
         }
 
         # Create experiment
-        experiment = Experiment('local')
-        experiment.config.trial_command = 'python nas_trial.py'
-        experiment.config.trial_code_directory = '.'
+        experiment = Experiment("local")
+        experiment.config.trial_command = "python nas_trial.py"
+        experiment.config.trial_code_directory = "."
         experiment.config.search_space = search_space
-        experiment.config.tuner.name = 'TPE'
-        experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
+        experiment.config.tuner.name = "TPE"
+        experiment.config.tuner.class_args["optimize_mode"] = "maximize"
         experiment.config.max_trial_number = self.config.n_trials
         experiment.config.trial_concurrency = self.config.n_jobs
 
@@ -460,13 +512,15 @@ class AutoMLOrchestrator:
         # Get best architecture
         best_params = experiment.get_job_statistics()
 
-        return {
-            'best_params': best_params,
-            'experiment_id': experiment.id
-        }
+        return {"best_params": best_params, "experiment_id": experiment.id}
 
-    def _fit_distributed(self, X_train: pd.DataFrame, y_train: pd.Series,
-                        X_valid: pd.DataFrame, y_valid: pd.Series) -> Dict:
+    def _fit_distributed(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_valid: pd.DataFrame,
+        y_valid: pd.Series,
+    ) -> Dict:
         """Distributed training using Ray."""
         logger.info("Running distributed training with Ray...")
 
@@ -475,11 +529,11 @@ class AutoMLOrchestrator:
             """Train a single framework in distributed manner."""
             orchestrator = AutoMLOrchestrator(config)
 
-            if framework == 'autogluon' and AUTOGLUON_AVAILABLE:
+            if framework == "autogluon" and AUTOGLUON_AVAILABLE:
                 return orchestrator._fit_autogluon(X_train, y_train, X_valid, y_valid)
-            elif framework == 'h2o' and H2O_AVAILABLE:
+            elif framework == "h2o" and H2O_AVAILABLE:
                 return orchestrator._fit_h2o(X_train, y_train, X_valid, y_valid)
-            elif framework == 'flaml' and FLAML_AVAILABLE:
+            elif framework == "flaml" and FLAML_AVAILABLE:
                 return orchestrator._fit_flaml(X_train, y_train, X_valid, y_valid)
             else:
                 return None
@@ -501,58 +555,56 @@ class AutoMLOrchestrator:
 
         return results
 
-    def _select_best_model(self, framework_results: Dict,
-                          X_valid: pd.DataFrame, y_valid: pd.Series) -> Any:
+    def _select_best_model(
+        self, framework_results: Dict, X_valid: pd.DataFrame, y_valid: pd.Series
+    ) -> Any:
         """Select the best model from all frameworks."""
-        best_score = -np.inf if self.config.task_type == 'classification' else np.inf
+        best_score = -np.inf if self.config.task_type == "classification" else np.inf
         best_model = None
         best_framework = None
 
         for framework, result in framework_results.items():
-            score = result.get('score', 0)
+            score = result.get("score", 0)
 
-            if self.config.task_type == 'classification':
+            if self.config.task_type == "classification":
                 if score > best_score:
                     best_score = score
-                    best_model = result['model']
+                    best_model = result["model"]
                     best_framework = framework
             else:
                 if score < best_score:
                     best_score = score
-                    best_model = result['model']
+                    best_model = result["model"]
                     best_framework = framework
 
         logger.info(f"Best model: {best_framework} with score: {best_score}")
         return best_model
 
-    def _create_ensemble(self, framework_results: Dict,
-                        X_train: pd.DataFrame, y_train: pd.Series) -> Any:
+    def _create_ensemble(
+        self, framework_results: Dict, X_train: pd.DataFrame, y_train: pd.Series
+    ) -> Any:
         """Create ensemble from multiple models."""
         logger.info(f"Creating ensemble with strategy: {self.config.ensemble_strategy}")
 
-        models = [(name, result['model']) for name, result in framework_results.items()]
+        models = [(name, result["model"]) for name, result in framework_results.items()]
 
-        if self.config.ensemble_strategy == 'voting':
-            if self.config.task_type == 'classification':
-                ensemble = VotingClassifier(estimators=models, voting='soft')
+        if self.config.ensemble_strategy == "voting":
+            if self.config.task_type == "classification":
+                ensemble = VotingClassifier(estimators=models, voting="soft")
             else:
                 ensemble = VotingRegressor(estimators=models)
 
-        elif self.config.ensemble_strategy == 'stacking':
+        elif self.config.ensemble_strategy == "stacking":
             from sklearn.linear_model import LogisticRegression, Ridge
 
-            if self.config.task_type == 'classification':
+            if self.config.task_type == "classification":
                 ensemble = StackingClassifier(
-                    estimators=models,
-                    final_estimator=LogisticRegression()
+                    estimators=models, final_estimator=LogisticRegression()
                 )
             else:
-                ensemble = StackingRegressor(
-                    estimators=models,
-                    final_estimator=Ridge()
-                )
+                ensemble = StackingRegressor(estimators=models, final_estimator=Ridge())
 
-        elif self.config.ensemble_strategy == 'blending':
+        elif self.config.ensemble_strategy == "blending":
             # Custom blending implementation
             ensemble = self._create_blending_ensemble(models, X_train, y_train)
 
@@ -565,8 +617,9 @@ class AutoMLOrchestrator:
 
         return ensemble
 
-    def _create_blending_ensemble(self, models: List,
-                                 X_train: pd.DataFrame, y_train: pd.Series) -> Any:
+    def _create_blending_ensemble(
+        self, models: List, X_train: pd.DataFrame, y_train: pd.Series
+    ) -> Any:
         """Create blending ensemble."""
         from sklearn.model_selection import KFold
         from sklearn.linear_model import LogisticRegression, Ridge
@@ -585,13 +638,13 @@ class AutoMLOrchestrator:
 
                 model.fit(X_fold_train, y_fold_train)
 
-                if self.config.task_type == 'classification':
+                if self.config.task_type == "classification":
                     blend_features[val_idx, i] = model.predict_proba(X_fold_val)[:, 1]
                 else:
                     blend_features[val_idx, i] = model.predict(X_fold_val)
 
         # Train meta-model
-        if self.config.task_type == 'classification':
+        if self.config.task_type == "classification":
             meta_model = LogisticRegression()
         else:
             meta_model = Ridge()
@@ -600,8 +653,9 @@ class AutoMLOrchestrator:
 
         return meta_model
 
-    def _auto_select_ensemble(self, models: List,
-                             X_train: pd.DataFrame, y_train: pd.Series) -> Any:
+    def _auto_select_ensemble(
+        self, models: List, X_train: pd.DataFrame, y_train: pd.Series
+    ) -> Any:
         """Automatically select ensemble strategy."""
         # Evaluate model diversity
         predictions = []
@@ -617,24 +671,20 @@ class AutoMLOrchestrator:
         # Low correlation -> voting, high correlation -> stacking
         if avg_corr < 0.7:
             logger.info("Models are diverse, using voting ensemble")
-            if self.config.task_type == 'classification':
-                return VotingClassifier(estimators=models, voting='soft')
+            if self.config.task_type == "classification":
+                return VotingClassifier(estimators=models, voting="soft")
             else:
                 return VotingRegressor(estimators=models)
         else:
             logger.info("Models are similar, using stacking ensemble")
             from sklearn.linear_model import LogisticRegression, Ridge
 
-            if self.config.task_type == 'classification':
+            if self.config.task_type == "classification":
                 return StackingClassifier(
-                    estimators=models,
-                    final_estimator=LogisticRegression()
+                    estimators=models, final_estimator=LogisticRegression()
                 )
             else:
-                return StackingRegressor(
-                    estimators=models,
-                    final_estimator=Ridge()
-                )
+                return StackingRegressor(estimators=models, final_estimator=Ridge())
 
     def _calculate_feature_importance(self, X_train: pd.DataFrame) -> pd.DataFrame:
         """Calculate feature importance using SHAP."""
@@ -643,15 +693,19 @@ class AutoMLOrchestrator:
         logger.info("Calculating feature importance...")
 
         # Use SHAP for interpretability
-        if hasattr(self.best_model, 'predict'):
+        if hasattr(self.best_model, "predict"):
             explainer = shap.Explainer(self.best_model.predict, X_train)
-            shap_values = explainer(X_train.sample(min(self.config.shap_samples, len(X_train))))
+            shap_values = explainer(
+                X_train.sample(min(self.config.shap_samples, len(X_train)))
+            )
 
             # Calculate mean absolute SHAP values
-            importance = pd.DataFrame({
-                'feature': X_train.columns,
-                'importance': np.abs(shap_values.values).mean(axis=0)
-            }).sort_values('importance', ascending=False)
+            importance = pd.DataFrame(
+                {
+                    "feature": X_train.columns,
+                    "importance": np.abs(shap_values.values).mean(axis=0),
+                }
+            ).sort_values("importance", ascending=False)
 
             return importance
 
@@ -668,7 +722,7 @@ class AutoMLOrchestrator:
 
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         """Predict probabilities."""
-        if self.config.task_type != 'classification':
+        if self.config.task_type != "classification":
             raise ValueError("predict_proba is only available for classification")
 
         if self.ensemble is not None:
@@ -681,26 +735,26 @@ class AutoMLOrchestrator:
     def save(self, path: str):
         """Save the AutoML model."""
         save_dict = {
-            'config': self.config,
-            'best_model': self.best_model,
-            'ensemble': self.ensemble,
-            'results': self.results,
-            'feature_importance': self.feature_importance
+            "config": self.config,
+            "best_model": self.best_model,
+            "ensemble": self.ensemble,
+            "results": self.results,
+            "feature_importance": self.feature_importance,
         }
 
         joblib.dump(save_dict, path)
         logger.info(f"Model saved to {path}")
 
     @classmethod
-    def load(cls, path: str) -> 'AutoMLOrchestrator':
+    def load(cls, path: str) -> "AutoMLOrchestrator":
         """Load a saved AutoML model."""
         save_dict = joblib.load(path)
 
-        orchestrator = cls(save_dict['config'])
-        orchestrator.best_model = save_dict['best_model']
-        orchestrator.ensemble = save_dict['ensemble']
-        orchestrator.results = save_dict['results']
-        orchestrator.feature_importance = save_dict['feature_importance']
+        orchestrator = cls(save_dict["config"])
+        orchestrator.best_model = save_dict["best_model"]
+        orchestrator.ensemble = save_dict["ensemble"]
+        orchestrator.results = save_dict["results"]
+        orchestrator.feature_importance = save_dict["feature_importance"]
 
         return orchestrator
 

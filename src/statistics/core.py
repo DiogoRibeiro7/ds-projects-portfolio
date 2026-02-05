@@ -25,8 +25,7 @@ CHI_SQUARE_SIGNIFICANCE = 0.05
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -513,9 +512,7 @@ class ExperimentAnalyzer:
         data = df[[group_col, conversion_col]].copy()
 
         if robust and trim_fraction > 0:
-            data = self._trim_by_group(
-                data, group_col, conversion_col, trim_fraction
-            )
+            data = self._trim_by_group(data, group_col, conversion_col, trim_fraction)
 
         # Calculate conversion rates by group
         conv_stats = (
@@ -675,13 +672,15 @@ class ExperimentAnalyzer:
                         trim_fraction=trim_fraction,
                     )
                 else:
-                    analysis["metrics_analysis"][metric] = self._analyze_continuous_metric(
-                        df,
-                        metric,
-                        group_col,
-                        robust=robust,
-                        trim_fraction=trim_fraction,
-                        huber_delta=huber_delta,
+                    analysis["metrics_analysis"][metric] = (
+                        self._analyze_continuous_metric(
+                            df,
+                            metric,
+                            group_col,
+                            robust=robust,
+                            trim_fraction=trim_fraction,
+                            huber_delta=huber_delta,
+                        )
                     )
 
         # Generate recommendations

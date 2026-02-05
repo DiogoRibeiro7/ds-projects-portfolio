@@ -115,7 +115,9 @@ class GaussianMixtureOfExperts:
         # Initialize experts
         betas = rng.normal(scale=0.1, size=(self.n_experts, n_features))
         sigmas = np.full(self.n_experts, np.std(y) + 1e-3)
-        self.experts = [GaussianExpert(betas[k], sigmas[k]) for k in range(self.n_experts)]
+        self.experts = [
+            GaussianExpert(betas[k], sigmas[k]) for k in range(self.n_experts)
+        ]
 
         for _ in range(self.max_iters):
             probs = self.gating.probabilities(x)

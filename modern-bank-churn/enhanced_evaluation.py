@@ -154,7 +154,9 @@ class BusinessMetricsCalculator:
         # Customer Lifetime Value impact
         retention_rate_with_model = tp / (tp + fn) if (tp + fn) > 0 else 0
         retention_rate_without = 0  # Assuming no intervention
-        clv_impact = (retention_rate_with_model - retention_rate_without) * self.customer_value
+        clv_impact = (
+            retention_rate_with_model - retention_rate_without
+        ) * self.customer_value
 
         # Retention rate improvement
         retention_improvement = retention_rate_with_model
@@ -163,7 +165,9 @@ class BusinessMetricsCalculator:
         profit_auc = self._calculate_profit_curve_auc(y_true, y_prob, customer_values)
 
         # Cost-benefit threshold
-        cb_threshold = self._find_cost_benefit_threshold(y_true, y_prob, customer_values)
+        cb_threshold = self._find_cost_benefit_threshold(
+            y_true, y_prob, customer_values
+        )
 
         return BusinessMetrics(
             revenue_impact=revenue_impact,
@@ -202,11 +206,14 @@ class BusinessMetricsCalculator:
             cumulative_cost.append(i)
 
         # Normalize and calculate AUC
-        max_profit = sum(customer_values[y_true == 1]) - sum(y_true == 1) * self.retention_cost
+        max_profit = (
+            sum(customer_values[y_true == 1]) - sum(y_true == 1) * self.retention_cost
+        )
         normalized_profit = np.array(cumulative_profit) / (max_profit + 0.001)
 
         # Calculate AUC
         from sklearn.metrics import auc
+
         percentages = np.array(cumulative_cost) / len(y_true)
         profit_auc = auc(percentages, normalized_profit)
 
@@ -275,15 +282,17 @@ class BusinessMetricsCalculator:
             cost = (tp + fp) * self.retention_cost
             roi = ((revenue - cost) / cost * 100) if cost > 0 else 0
 
-            roi_metrics.append({
-                'threshold': threshold,
-                'precision': precision,
-                'recall': recall,
-                'revenue': revenue,
-                'cost': cost,
-                'roi': roi,
-                'profit': revenue - cost,
-            })
+            roi_metrics.append(
+                {
+                    "threshold": threshold,
+                    "precision": precision,
+                    "recall": recall,
+                    "revenue": revenue,
+                    "cost": cost,
+                    "roi": roi,
+                    "profit": revenue - cost,
+                }
+            )
 
         return pd.DataFrame(roi_metrics)
 
@@ -347,8 +356,10 @@ class FairnessEvaluator:
 
                 # Equal opportunity difference
                 eo_diff = self._calculate_equal_opportunity(
-                    y_true[group_0_mask], y_pred[group_0_mask],
-                    y_true[group_1_mask], y_pred[group_1_mask]
+                    y_true[group_0_mask],
+                    y_pred[group_0_mask],
+                    y_true[group_1_mask],
+                    y_pred[group_1_mask],
                 )
                 equal_opportunity[attr] = eo_diff
 
@@ -360,8 +371,10 @@ class FairnessEvaluator:
 
                 # Average odds difference
                 ao_diff = self._calculate_average_odds(
-                    y_true[group_0_mask], y_pred[group_0_mask],
-                    y_true[group_1_mask], y_pred[group_1_mask]
+                    y_true[group_0_mask],
+                    y_pred[group_0_mask],
+                    y_true[group_1_mask],
+                    y_pred[group_1_mask],
                 )
                 average_odds[attr] = ao_diff
 
@@ -374,19 +387,25 @@ class FairnessEvaluator:
                 max_ao = 0
 
                 for i, group_i in enumerate(groups):
-                    for j, group_j in enumerate(groups[i+1:], i+1):
+                    for j, group_j in enumerate(groups[i + 1 :], i + 1):
                         mask_i = X[attr] == group_i
                         mask_j = X[attr] == group_j
 
-                        dp = abs(self._calculate_demographic_parity(
-                            y_pred[mask_i], y_pred[mask_j]
-                        ))
+                        dp = abs(
+                            self._calculate_demographic_parity(
+                                y_pred[mask_i], y_pred[mask_j]
+                            )
+                        )
                         max_dp = max(max_dp, dp)
 
-                        eo = abs(self._calculate_equal_opportunity(
-                            y_true[mask_i], y_pred[mask_i],
-                            y_true[mask_j], y_pred[mask_j]
-                        ))
+                        eo = abs(
+                            self._calculate_equal_opportunity(
+                                y_true[mask_i],
+                                y_pred[mask_i],
+                                y_true[mask_j],
+                                y_pred[mask_j],
+                            )
+                        )
                         max_eo = max(max_eo, eo)
 
                         di = self._calculate_disparate_impact(
@@ -394,10 +413,14 @@ class FairnessEvaluator:
                         )
                         min_di = min(min_di, di)
 
-                        ao = abs(self._calculate_average_odds(
-                            y_true[mask_i], y_pred[mask_i],
-                            y_true[mask_j], y_pred[mask_j]
-                        ))
+                        ao = abs(
+                            self._calculate_average_odds(
+                                y_true[mask_i],
+                                y_pred[mask_i],
+                                y_true[mask_j],
+                                y_pred[mask_j],
+                            )
+                        )
                         max_ao = max(max_ao, ao)
 
                 demographic_parity[attr] = max_dp
@@ -428,8 +451,10 @@ class FairnessEvaluator:
 
     def _calculate_equal_opportunity(
         self,
-        y_true_0: np.ndarray, y_pred_0: np.ndarray,
-        y_true_1: np.ndarray, y_pred_1: np.ndarray
+        y_true_0: np.ndarray,
+        y_pred_0: np.ndarray,
+        y_true_1: np.ndarray,
+        y_pred_1: np.ndarray,
     ) -> float:
         """Calculate equal opportunity difference."""
         # True positive rate for each group
@@ -452,8 +477,10 @@ class FairnessEvaluator:
 
     def _calculate_average_odds(
         self,
-        y_true_0: np.ndarray, y_pred_0: np.ndarray,
-        y_true_1: np.ndarray, y_pred_1: np.ndarray
+        y_true_0: np.ndarray,
+        y_pred_0: np.ndarray,
+        y_true_1: np.ndarray,
+        y_pred_1: np.ndarray,
     ) -> float:
         """Calculate average odds difference."""
         # TPR difference
@@ -467,10 +494,7 @@ class FairnessEvaluator:
         return (abs(tpr_0 - tpr_1) + abs(fpr_0 - fpr_1)) / 2
 
     def _calculate_individual_fairness(
-        self,
-        X: pd.DataFrame,
-        y_pred: np.ndarray,
-        y_prob: np.ndarray = None
+        self, X: pd.DataFrame, y_pred: np.ndarray, y_prob: np.ndarray = None
     ) -> float:
         """Calculate individual fairness score."""
         # Simplified: check consistency for similar individuals
@@ -552,7 +576,7 @@ class ModelComparisonFramework:
             confidence_level: Confidence level for intervals
         """
         if metrics is None:
-            metrics = ['roc_auc', 'f1', 'precision', 'recall', 'log_loss']
+            metrics = ["roc_auc", "f1", "precision", "recall", "log_loss"]
 
         self.metrics = metrics
         self.n_bootstrap = n_bootstrap
@@ -594,7 +618,7 @@ class ModelComparisonFramework:
         pairwise_diff = self._calculate_pairwise_differences(model_scores)
 
         # Determine best model
-        best_model = rankings.iloc[0]['model']
+        best_model = rankings.iloc[0]["model"]
 
         # Calculate confidence intervals
         confidence_intervals = self._calculate_confidence_intervals(model_scores)
@@ -608,77 +632,74 @@ class ModelComparisonFramework:
         )
 
     def _evaluate_model(
-        self,
-        model: Any,
-        X: pd.DataFrame,
-        y: pd.Series,
-        cv_folds: int
+        self, model: Any, X: pd.DataFrame, y: pd.Series, cv_folds: int
     ) -> Dict[str, float]:
         """Evaluate model on multiple metrics."""
         from sklearn.model_selection import cross_validate
 
         scoring = {
-            'roc_auc': 'roc_auc',
-            'f1': 'f1',
-            'precision': 'precision',
-            'recall': 'recall',
-            'neg_log_loss': 'neg_log_loss',
+            "roc_auc": "roc_auc",
+            "f1": "f1",
+            "precision": "precision",
+            "recall": "recall",
+            "neg_log_loss": "neg_log_loss",
         }
 
         cv_results = cross_validate(
-            model, X, y,
+            model,
+            X,
+            y,
             cv=cv_folds,
             scoring=scoring,
             return_train_score=False,
-            n_jobs=-1
+            n_jobs=-1,
         )
 
         scores = {}
         for metric in self.metrics:
-            if metric == 'log_loss':
-                scores[metric] = -np.mean(cv_results['test_neg_log_loss'])
+            if metric == "log_loss":
+                scores[metric] = -np.mean(cv_results["test_neg_log_loss"])
             else:
-                scores[metric] = np.mean(cv_results[f'test_{metric}'])
+                scores[metric] = np.mean(cv_results[f"test_{metric}"])
 
         return scores
 
-    def _create_rankings(self, model_scores: Dict[str, Dict[str, float]]) -> pd.DataFrame:
+    def _create_rankings(
+        self, model_scores: Dict[str, Dict[str, float]]
+    ) -> pd.DataFrame:
         """Create model rankings based on average rank across metrics."""
         rankings_data = []
 
         for model_name, scores in model_scores.items():
             avg_score = np.mean(list(scores.values()))
-            rankings_data.append({
-                'model': model_name,
-                'avg_score': avg_score,
-                **scores
-            })
+            rankings_data.append(
+                {"model": model_name, "avg_score": avg_score, **scores}
+            )
 
         rankings_df = pd.DataFrame(rankings_data)
 
         # Calculate rank for each metric
         for metric in self.metrics:
-            if metric == 'log_loss':
+            if metric == "log_loss":
                 # Lower is better for log_loss
-                rankings_df[f'{metric}_rank'] = rankings_df[metric].rank(ascending=True)
+                rankings_df[f"{metric}_rank"] = rankings_df[metric].rank(ascending=True)
             else:
                 # Higher is better for other metrics
-                rankings_df[f'{metric}_rank'] = rankings_df[metric].rank(ascending=False)
+                rankings_df[f"{metric}_rank"] = rankings_df[metric].rank(
+                    ascending=False
+                )
 
         # Calculate average rank
-        rank_columns = [f'{m}_rank' for m in self.metrics]
-        rankings_df['avg_rank'] = rankings_df[rank_columns].mean(axis=1)
+        rank_columns = [f"{m}_rank" for m in self.metrics]
+        rankings_df["avg_rank"] = rankings_df[rank_columns].mean(axis=1)
 
         # Sort by average rank
-        rankings_df = rankings_df.sort_values('avg_rank')
+        rankings_df = rankings_df.sort_values("avg_rank")
 
         return rankings_df
 
     def _test_statistical_significance(
-        self,
-        models: Dict[str, Any],
-        X: pd.DataFrame,
-        y: pd.Series
+        self, models: Dict[str, Any], X: pd.DataFrame, y: pd.Series
     ) -> pd.DataFrame:
         """Test statistical significance between models."""
         model_names = list(models.keys())
@@ -686,9 +707,7 @@ class ModelComparisonFramework:
 
         # Initialize significance matrix
         sig_matrix = pd.DataFrame(
-            np.zeros((n_models, n_models)),
-            index=model_names,
-            columns=model_names
+            np.zeros((n_models, n_models)), index=model_names, columns=model_names
         )
 
         for i, model1_name in enumerate(model_names):
@@ -696,9 +715,7 @@ class ModelComparisonFramework:
                 if i < j:
                     # Perform DeLong test or permutation test
                     p_value = self._delongs_test(
-                        models[model1_name],
-                        models[model2_name],
-                        X, y
+                        models[model1_name], models[model2_name], X, y
                     )
 
                     sig_matrix.loc[model1_name, model2_name] = p_value
@@ -707,11 +724,7 @@ class ModelComparisonFramework:
         return sig_matrix
 
     def _delongs_test(
-        self,
-        model1: Any,
-        model2: Any,
-        X: pd.DataFrame,
-        y: pd.Series
+        self, model1: Any, model2: Any, X: pd.DataFrame, y: pd.Series
     ) -> float:
         """
         Perform DeLong's test for comparing AUC scores.
@@ -721,10 +734,10 @@ class ModelComparisonFramework:
         from sklearn.model_selection import cross_val_predict
 
         y_prob1 = cross_val_predict(
-            model1, X, y, cv=3, method='predict_proba', n_jobs=-1
+            model1, X, y, cv=3, method="predict_proba", n_jobs=-1
         )[:, 1]
         y_prob2 = cross_val_predict(
-            model2, X, y, cv=3, method='predict_proba', n_jobs=-1
+            model2, X, y, cv=3, method="predict_proba", n_jobs=-1
         )[:, 1]
 
         # Bootstrap test
@@ -738,16 +751,12 @@ class ModelComparisonFramework:
 
         # Calculate p-value
         differences = np.array(differences)
-        p_value = 2 * min(
-            (differences > 0).mean(),
-            (differences < 0).mean()
-        )
+        p_value = 2 * min((differences > 0).mean(), (differences < 0).mean())
 
         return p_value
 
     def _calculate_pairwise_differences(
-        self,
-        model_scores: Dict[str, Dict[str, float]]
+        self, model_scores: Dict[str, Dict[str, float]]
     ) -> pd.DataFrame:
         """Calculate pairwise differences in metrics."""
         model_names = list(model_scores.keys())
@@ -757,9 +766,7 @@ class ModelComparisonFramework:
 
         for metric in self.metrics:
             diff_matrix = pd.DataFrame(
-                np.zeros((n_models, n_models)),
-                index=model_names,
-                columns=model_names
+                np.zeros((n_models, n_models)), index=model_names, columns=model_names
             )
 
             for i, model1 in enumerate(model_names):
@@ -772,8 +779,7 @@ class ModelComparisonFramework:
         return differences
 
     def _calculate_confidence_intervals(
-        self,
-        model_scores: Dict[str, Dict[str, float]]
+        self, model_scores: Dict[str, Dict[str, float]]
     ) -> Dict[str, Tuple[float, float]]:
         """Calculate confidence intervals for model scores."""
         confidence_intervals = {}
@@ -787,10 +793,7 @@ class ModelComparisonFramework:
             z_score = stats.norm.ppf((1 + self.confidence_level) / 2)
             margin = z_score * std_score
 
-            confidence_intervals[model_name] = (
-                avg_score - margin,
-                avg_score + margin
-            )
+            confidence_intervals[model_name] = (avg_score - margin, avg_score + margin)
 
         return confidence_intervals
 

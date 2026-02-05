@@ -51,7 +51,9 @@ class TestTwoPropZTest:
         z_no_correction, _ = two_prop_ztest(10, 50, 20, 50, continuity_correction=False)
 
         # With continuity correction
-        z_with_correction, _ = two_prop_ztest(10, 50, 20, 50, continuity_correction=True)
+        z_with_correction, _ = two_prop_ztest(
+            10, 50, 20, 50, continuity_correction=True
+        )
 
         # Continuity correction should reduce the absolute z-statistic
         assert abs(z_with_correction) < abs(z_no_correction)
@@ -94,7 +96,9 @@ class TestTwoPropZTest:
             two_prop_ztest(-10, 100, 20, 100)
 
         # Success count > sample size
-        with pytest.raises(ValueError, match="Success counts cannot exceed sample sizes"):
+        with pytest.raises(
+            ValueError, match="Success counts cannot exceed sample sizes"
+        ):
             two_prop_ztest(150, 100, 50, 100)
 
     def test_extreme_difference(self):
@@ -166,7 +170,9 @@ class TestBootstrapCI:
             bootstrap_ci_diff(0.5, 0.5, -100, 100)
 
         # Invalid bootstrap samples
-        with pytest.raises(ValueError, match="Number of bootstrap samples must be positive"):
+        with pytest.raises(
+            ValueError, match="Number of bootstrap samples must be positive"
+        ):
             bootstrap_ci_diff(0.5, 0.5, 100, 100, B=0)
 
     def test_different_alpha_levels(self):
@@ -191,12 +197,7 @@ class TestSampleSizeCalculation:
 
     def test_basic_calculation(self):
         """Test basic sample size calculation."""
-        n = calculate_sample_size(
-            baseline_rate=0.1,
-            mde=0.02,
-            alpha=0.05,
-            power=0.8
-        )
+        n = calculate_sample_size(baseline_rate=0.1, mde=0.02, alpha=0.05, power=0.8)
 
         assert isinstance(n, int)
         assert n > 0
@@ -218,12 +219,8 @@ class TestSampleSizeCalculation:
 
     def test_one_sided_vs_two_sided(self):
         """Test one-sided vs two-sided tests."""
-        n_two_sided = calculate_sample_size(
-            0.1, 0.02, alternative="two-sided"
-        )
-        n_one_sided = calculate_sample_size(
-            0.1, 0.02, alternative="one-sided"
-        )
+        n_two_sided = calculate_sample_size(0.1, 0.02, alternative="two-sided")
+        n_one_sided = calculate_sample_size(0.1, 0.02, alternative="one-sided")
 
         # One-sided tests require smaller samples
         assert n_one_sided < n_two_sided
@@ -243,7 +240,9 @@ class TestSampleSizeCalculation:
             calculate_sample_size(-0.1, 0.02)
 
         # Invalid MDE
-        with pytest.raises(ValueError, match="Minimum detectable effect must be positive"):
+        with pytest.raises(
+            ValueError, match="Minimum detectable effect must be positive"
+        ):
             calculate_sample_size(0.1, -0.02)
 
         # Baseline + MDE > 1
@@ -265,10 +264,7 @@ class TestPowerCalculation:
     def test_basic_power(self):
         """Test basic power calculation."""
         power = calculate_power(
-            n_control=1000,
-            n_treatment=1000,
-            baseline_rate=0.1,
-            effect_size=0.02
+            n_control=1000, n_treatment=1000, baseline_rate=0.1, effect_size=0.02
         )
 
         assert 0 <= power <= 1
@@ -297,12 +293,8 @@ class TestPowerCalculation:
 
     def test_one_sided_vs_two_sided_power(self):
         """Test power for one-sided vs two-sided tests."""
-        power_two = calculate_power(
-            500, 500, 0.1, 0.02, alternative="two-sided"
-        )
-        power_one = calculate_power(
-            500, 500, 0.1, 0.02, alternative="one-sided"
-        )
+        power_two = calculate_power(500, 500, 0.1, 0.02, alternative="two-sided")
+        power_one = calculate_power(500, 500, 0.1, 0.02, alternative="one-sided")
 
         # One-sided tests have higher power
         assert power_one > power_two
@@ -318,18 +310,24 @@ class TestExperimentAnalyzer:
         n_control = 1000
         n_treatment = 1000
 
-        data = pd.DataFrame({
-            'user_id': range(n_control + n_treatment),
-            'group': ['control'] * n_control + ['treatment'] * n_treatment,
-            'converted': np.concatenate([
-                np.random.binomial(1, 0.1, n_control),
-                np.random.binomial(1, 0.12, n_treatment)
-            ]),
-            'revenue': np.concatenate([
-                np.random.exponential(10, n_control),
-                np.random.exponential(11, n_treatment)
-            ])
-        })
+        data = pd.DataFrame(
+            {
+                "user_id": range(n_control + n_treatment),
+                "group": ["control"] * n_control + ["treatment"] * n_treatment,
+                "converted": np.concatenate(
+                    [
+                        np.random.binomial(1, 0.1, n_control),
+                        np.random.binomial(1, 0.12, n_treatment),
+                    ]
+                ),
+                "revenue": np.concatenate(
+                    [
+                        np.random.exponential(10, n_control),
+                        np.random.exponential(11, n_treatment),
+                    ]
+                ),
+            }
+        )
         return data
 
     def test_initialization(self):
@@ -345,102 +343,96 @@ class TestExperimentAnalyzer:
         analyzer = ExperimentAnalyzer()
         results = analyzer.check_srm(sample_data)
 
-        assert 'chi2_statistic' in results
-        assert 'p_value' in results
-        assert 'is_srm' in results
-        assert not results['is_srm']  # Should not detect SRM in balanced data
+        assert "chi2_statistic" in results
+        assert "p_value" in results
+        assert "is_srm" in results
+        assert not results["is_srm"]  # Should not detect SRM in balanced data
 
     def test_srm_check_imbalanced(self):
         """Test SRM check for imbalanced groups."""
         # Create imbalanced data
-        data = pd.DataFrame({
-            'group': ['control'] * 800 + ['treatment'] * 200
-        })
+        data = pd.DataFrame({"group": ["control"] * 800 + ["treatment"] * 200})
 
         analyzer = ExperimentAnalyzer()
         results = analyzer.check_srm(data)
 
-        assert results['is_srm']  # Should detect SRM
+        assert results["is_srm"]  # Should detect SRM
 
     def test_srm_check_custom_ratio(self):
         """Test SRM check with custom expected ratio."""
         # Create 2:1 ratio data
-        data = pd.DataFrame({
-            'group': ['control'] * 667 + ['treatment'] * 333
-        })
+        data = pd.DataFrame({"group": ["control"] * 667 + ["treatment"] * 333})
 
         analyzer = ExperimentAnalyzer()
         results = analyzer.check_srm(
-            data,
-            expected_ratio={'control': 2, 'treatment': 1}
+            data, expected_ratio={"control": 2, "treatment": 1}
         )
 
-        assert not results['is_srm']  # Should not detect SRM with correct ratio
+        assert not results["is_srm"]  # Should not detect SRM with correct ratio
 
     def test_analyze_conversion(self, sample_data):
         """Test conversion analysis."""
         analyzer = ExperimentAnalyzer()
-        results = analyzer.analyze_conversion(sample_data, 'converted')
+        results = analyzer.analyze_conversion(sample_data, "converted")
 
-        assert 'conversion_rates' in results
-        assert 'sample_sizes' in results
-        assert 'p_value' in results
-        assert 'significant' in results
-        assert 'absolute_lift' in results
-        assert 'relative_lift' in results
-        assert 'confidence_interval' in results
-        assert 'statistical_power' in results
+        assert "conversion_rates" in results
+        assert "sample_sizes" in results
+        assert "p_value" in results
+        assert "significant" in results
+        assert "absolute_lift" in results
+        assert "relative_lift" in results
+        assert "confidence_interval" in results
+        assert "statistical_power" in results
 
     def test_analyze_conversion_multigroup(self):
         """Test conversion analysis with multiple groups."""
-        data = pd.DataFrame({
-            'group': ['A'] * 100 + ['B'] * 100 + ['C'] * 100,
-            'converted': np.random.binomial(1, 0.1, 300)
-        })
+        data = pd.DataFrame(
+            {
+                "group": ["A"] * 100 + ["B"] * 100 + ["C"] * 100,
+                "converted": np.random.binomial(1, 0.1, 300),
+            }
+        )
 
         analyzer = ExperimentAnalyzer()
-        results = analyzer.analyze_conversion(data, 'converted')
+        results = analyzer.analyze_conversion(data, "converted")
 
-        assert 'chi2_statistic' in results
-        assert 'degrees_of_freedom' in results
-        assert results['test_type'] == 'chi_square'
+        assert "chi2_statistic" in results
+        assert "degrees_of_freedom" in results
+        assert results["test_type"] == "chi_square"
 
     def test_analyze_conversion_missing_column(self, sample_data):
         """Test error handling for missing columns."""
         analyzer = ExperimentAnalyzer()
 
         with pytest.raises(ValueError, match="Conversion column"):
-            analyzer.analyze_conversion(sample_data, 'nonexistent')
+            analyzer.analyze_conversion(sample_data, "nonexistent")
 
     def test_comprehensive_analysis(self, sample_data):
         """Test comprehensive multi-metric analysis."""
         analyzer = ExperimentAnalyzer()
 
         results = analyzer.run_comprehensive_analysis(
-            sample_data,
-            metrics=['converted', 'revenue'],
-            group_col='group'
+            sample_data, metrics=["converted", "revenue"], group_col="group"
         )
 
-        assert 'data_quality' in results
-        assert 'metrics_analysis' in results
-        assert 'recommendations' in results
+        assert "data_quality" in results
+        assert "metrics_analysis" in results
+        assert "recommendations" in results
 
         # Check data quality section
-        assert 'srm_check' in results['data_quality']
-        assert 'sample_sizes' in results['data_quality']
-        assert 'missing_data' in results['data_quality']
+        assert "srm_check" in results["data_quality"]
+        assert "sample_sizes" in results["data_quality"]
+        assert "missing_data" in results["data_quality"]
 
         # Check metrics analysis
-        assert 'converted' in results['metrics_analysis']
-        assert 'revenue' in results['metrics_analysis']
+        assert "converted" in results["metrics_analysis"]
+        assert "revenue" in results["metrics_analysis"]
 
     def test_single_group_error(self):
         """Test error handling for single group."""
-        data = pd.DataFrame({
-            'group': ['control'] * 100,
-            'converted': np.random.binomial(1, 0.1, 100)
-        })
+        data = pd.DataFrame(
+            {"group": ["control"] * 100, "converted": np.random.binomial(1, 0.1, 100)}
+        )
 
         analyzer = ExperimentAnalyzer()
 
@@ -456,7 +448,7 @@ class TestMultipleTestingCorrection:
         p_values = [0.01, 0.02, 0.03, 0.04, 0.05]
 
         corrected, rejected = apply_multiple_testing_correction(
-            p_values, method='bonferroni'
+            p_values, method="bonferroni"
         )
 
         # Bonferroni multiplies p-values by number of tests
@@ -471,9 +463,7 @@ class TestMultipleTestingCorrection:
         """Test Holm-Bonferroni correction."""
         p_values = [0.01, 0.02, 0.03, 0.04, 0.05]
 
-        corrected, rejected = apply_multiple_testing_correction(
-            p_values, method='holm'
-        )
+        corrected, rejected = apply_multiple_testing_correction(p_values, method="holm")
 
         # Holm is step-down procedure
         assert len(corrected) == len(p_values)
@@ -487,7 +477,7 @@ class TestMultipleTestingCorrection:
         p_values = [0.001, 0.008, 0.039, 0.041, 0.042]
 
         corrected, rejected = apply_multiple_testing_correction(
-            p_values, method='fdr_bh'
+            p_values, method="fdr_bh"
         )
 
         assert len(corrected) == len(p_values)
@@ -502,11 +492,11 @@ class TestMultipleTestingCorrection:
         p_values = [0.01, 0.02]
 
         with pytest.raises(ValueError, match="Unknown correction method"):
-            apply_multiple_testing_correction(p_values, method='invalid')
+            apply_multiple_testing_correction(p_values, method="invalid")
 
     def test_empty_pvalues(self):
         """Test handling of empty p-value list."""
-        corrected, rejected = apply_multiple_testing_correction([], method='holm')
+        corrected, rejected = apply_multiple_testing_correction([], method="holm")
 
         assert corrected == []
         assert rejected == []
@@ -518,9 +508,7 @@ class TestSequentialTesting:
     def test_obrien_fleming_boundary(self):
         """Test O'Brien-Fleming boundary."""
         boundary = sequential_testing_boundary(
-            n=1000,
-            alpha=0.05,
-            method='obrien_fleming'
+            n=1000, alpha=0.05, method="obrien_fleming"
         )
 
         assert isinstance(boundary, float)
@@ -529,11 +517,7 @@ class TestSequentialTesting:
 
     def test_pocock_boundary(self):
         """Test Pocock boundary."""
-        boundary = sequential_testing_boundary(
-            n=1000,
-            alpha=0.05,
-            method='pocock'
-        )
+        boundary = sequential_testing_boundary(n=1000, alpha=0.05, method="pocock")
 
         assert isinstance(boundary, float)
         assert boundary > 0
@@ -550,7 +534,7 @@ class TestSequentialTesting:
     def test_invalid_method(self):
         """Test error handling for invalid method."""
         with pytest.raises(ValueError, match="Unknown boundary method"):
-            sequential_testing_boundary(1000, method='invalid')
+            sequential_testing_boundary(1000, method="invalid")
 
 
 # Integration tests
@@ -561,39 +545,40 @@ class TestIntegration:
         """Test complete experiment analysis workflow."""
         # 1. Calculate required sample size
         n_required = calculate_sample_size(
-            baseline_rate=0.1,
-            mde=0.02,
-            alpha=0.05,
-            power=0.8
+            baseline_rate=0.1, mde=0.02, alpha=0.05, power=0.8
         )
 
         # 2. Generate experiment data
         np.random.seed(42)
-        data = pd.DataFrame({
-            'user_id': range(n_required * 2),
-            'group': ['control'] * n_required + ['treatment'] * n_required,
-            'converted': np.concatenate([
-                np.random.binomial(1, 0.10, n_required),
-                np.random.binomial(1, 0.12, n_required)
-            ])
-        })
+        data = pd.DataFrame(
+            {
+                "user_id": range(n_required * 2),
+                "group": ["control"] * n_required + ["treatment"] * n_required,
+                "converted": np.concatenate(
+                    [
+                        np.random.binomial(1, 0.10, n_required),
+                        np.random.binomial(1, 0.12, n_required),
+                    ]
+                ),
+            }
+        )
 
         # 3. Analyze results
         analyzer = ExperimentAnalyzer(alpha=0.05, power=0.8)
 
         # Check SRM
         srm_results = analyzer.check_srm(data)
-        assert not srm_results['is_srm']
+        assert not srm_results["is_srm"]
 
         # Analyze conversion
-        conversion_results = analyzer.analyze_conversion(data, 'converted')
+        conversion_results = analyzer.analyze_conversion(data, "converted")
 
         # 4. Calculate actual power
         actual_power = calculate_power(
             n_required,
             n_required,
-            conversion_results['conversion_rates']['control'],
-            conversion_results['absolute_lift']
+            conversion_results["conversion_rates"]["control"],
+            conversion_results["absolute_lift"],
         )
 
         assert 0 <= actual_power <= 1
@@ -603,26 +588,28 @@ class TestIntegration:
         # Create data with multiple metrics
         np.random.seed(42)
         n = 1000
-        data = pd.DataFrame({
-            'group': ['control'] * n + ['treatment'] * n,
-            'metric1': np.random.binomial(1, 0.1, 2*n),
-            'metric2': np.random.binomial(1, 0.15, 2*n),
-            'metric3': np.random.binomial(1, 0.2, 2*n),
-        })
+        data = pd.DataFrame(
+            {
+                "group": ["control"] * n + ["treatment"] * n,
+                "metric1": np.random.binomial(1, 0.1, 2 * n),
+                "metric2": np.random.binomial(1, 0.15, 2 * n),
+                "metric3": np.random.binomial(1, 0.2, 2 * n),
+            }
+        )
 
         # Analyze each metric
         analyzer = ExperimentAnalyzer()
         p_values = []
 
-        for metric in ['metric1', 'metric2', 'metric3']:
+        for metric in ["metric1", "metric2", "metric3"]:
             results = analyzer.analyze_conversion(data, metric)
-            if 'p_value' in results:
-                p_values.append(results['p_value'])
+            if "p_value" in results:
+                p_values.append(results["p_value"])
 
         # Apply multiple testing correction
         if p_values:
             corrected, rejected = apply_multiple_testing_correction(
-                p_values, method='holm'
+                p_values, method="holm"
             )
 
             assert len(corrected) == len(p_values)
@@ -648,12 +635,14 @@ class TestPerformance:
         """Test analyzer with large dataset."""
         # Create large dataset
         n = 100000
-        data = pd.DataFrame({
-            'group': ['control'] * n + ['treatment'] * n,
-            'converted': np.random.binomial(1, 0.1, 2*n)
-        })
+        data = pd.DataFrame(
+            {
+                "group": ["control"] * n + ["treatment"] * n,
+                "converted": np.random.binomial(1, 0.1, 2 * n),
+            }
+        )
 
         analyzer = ExperimentAnalyzer()
-        results = analyzer.analyze_conversion(data, 'converted')
+        results = analyzer.analyze_conversion(data, "converted")
 
-        assert 'p_value' in results
+        assert "p_value" in results

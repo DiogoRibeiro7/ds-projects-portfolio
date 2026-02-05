@@ -353,9 +353,7 @@ class MultipleTestingCorrections:
         Returns:
             tuple[np.ndarray, np.ndarray]: Reject mask and adjusted p-values.
         """
-        reject, p_adjusted, _, _ = multipletests(
-            p_values, alpha=alpha, method="fdr_bh"
-        )
+        reject, p_adjusted, _, _ = multipletests(p_values, alpha=alpha, method="fdr_bh")
         return reject, p_adjusted
 
     @staticmethod
@@ -372,9 +370,7 @@ class MultipleTestingCorrections:
         Returns:
             tuple[np.ndarray, np.ndarray]: Reject mask and adjusted p-values.
         """
-        reject, p_adjusted, _, _ = multipletests(
-            p_values, alpha=alpha, method=method
-        )
+        reject, p_adjusted, _, _ = multipletests(p_values, alpha=alpha, method=method)
         return reject, p_adjusted
 
 
@@ -439,9 +435,7 @@ class BootstrapMethods:
             lower = 2 * point_estimate - np.percentile(
                 boot_statistics, (1 - alpha / 2) * 100
             )
-            upper = 2 * point_estimate - np.percentile(
-                boot_statistics, alpha / 2 * 100
-            )
+            upper = 2 * point_estimate - np.percentile(boot_statistics, alpha / 2 * 100)
             ci = (lower, upper)
         elif method == "bca":
             # BCa (Bias-Corrected and Accelerated)
@@ -831,9 +825,7 @@ class EffectSizeCalculations:
             np.sum([np.var(g, ddof=1) * len(g) for g in groups]) / df_within
         )
 
-        omega_sq = (df_between * (ms_between - 1)) / (
-            df_between * ms_between + n_total
-        )
+        omega_sq = (df_between * (ms_between - 1)) / (df_between * ms_between + n_total)
 
         return float(max(0, omega_sq))  # Can't be negative
 

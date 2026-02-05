@@ -9,40 +9,54 @@ import numpy as np
 from typing import List, Dict, Optional, Union, Tuple, Any
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_selection import (
-    SelectKBest, SelectPercentile, SelectFpr, SelectFdr, SelectFwe,
-    RFE, RFECV, SelectFromModel, VarianceThreshold,
-    mutual_info_classif, mutual_info_regression,
-    f_classif, f_regression, chi2
+    SelectKBest,
+    SelectPercentile,
+    SelectFpr,
+    SelectFdr,
+    SelectFwe,
+    RFE,
+    RFECV,
+    SelectFromModel,
+    VarianceThreshold,
+    mutual_info_classif,
+    mutual_info_regression,
+    f_classif,
+    f_regression,
+    chi2,
 )
 from sklearn.ensemble import (
-    RandomForestClassifier, RandomForestRegressor,
-    GradientBoostingClassifier, GradientBoostingRegressor,
-    ExtraTreesClassifier, ExtraTreesRegressor
+    RandomForestClassifier,
+    RandomForestRegressor,
+    GradientBoostingClassifier,
+    GradientBoostingRegressor,
+    ExtraTreesClassifier,
+    ExtraTreesRegressor,
 )
-from sklearn.linear_model import (
-    LassoCV, RidgeCV, ElasticNetCV,
-    LogisticRegressionCV
-)
+from sklearn.linear_model import LassoCV, RidgeCV, ElasticNetCV, LogisticRegressionCV
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 # Optional imports
 try:
     import shap
+
     SHAP_AVAILABLE = True
 except ImportError:
     SHAP_AVAILABLE = False
 
 try:
     from boruta import BorutaPy
+
     BORUTA_AVAILABLE = True
 except ImportError:
     BORUTA_AVAILABLE = False
 
 try:
     import lightgbm as lgb
+
     LIGHTGBM_AVAILABLE = True
 except ImportError:
     LIGHTGBM_AVAILABLE = False
@@ -51,11 +65,14 @@ except ImportError:
 class AdvancedFeatureSelector:
     """Advanced feature selection with multiple strategies."""
 
-    def __init__(self, task_type: str = 'classification',
-                 selection_methods: List[str] = None,
-                 max_features: Optional[int] = None,
-                 cv_folds: int = 5,
-                 verbosity: int = 1):
+    def __init__(
+        self,
+        task_type: str = "classification",
+        selection_methods: List[str] = None,
+        max_features: Optional[int] = None,
+        cv_folds: int = 5,
+        verbosity: int = 1,
+    ):
         """
         Initialize advanced feature selector.
 
@@ -67,7 +84,11 @@ class AdvancedFeatureSelector:
             verbosity: Logging verbosity
         """
         self.task_type = task_type
-        self.selection_methods = selection_methods or ['importance', 'mutual_info', 'lasso']
+        self.selection_methods = selection_methods or [
+            "importance",
+            "mutual_info",
+            "lasso",
+        ]
         self.max_features = max_features
         self.cv_folds = cv_folds
         self.verbosity = verbosity
@@ -75,8 +96,9 @@ class AdvancedFeatureSelector:
         self.selected_features = {}
         self.selectors = {}
 
-    def fit_select(self, X: pd.DataFrame, y: pd.Series,
-                   return_scores: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, Dict]]:
+    def fit_select(
+        self, X: pd.DataFrame, y: pd.Series, return_scores: bool = False
+    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, Dict]]:
         """
         Fit selectors and select features.
 
@@ -100,10 +122,7 @@ class AdvancedFeatureSelector:
                 X_numeric, y, method
             )
 
-            results[method] = {
-                'features': selected_features,
-                'scores': scores
-            }
+            results[method] = {"features": selected_features, "scores": scores}
 
         # Combine results
         final_features = self._combine_selections(results, X_numeric)
@@ -113,47 +132,49 @@ class AdvancedFeatureSelector:
         else:
             return X[final_features]
 
-    def _apply_selection_method(self, X: pd.DataFrame, y: pd.Series,
-                               method: str) -> Tuple[List[str], Dict[str, float]]:
+    def _apply_selection_method(
+        self, X: pd.DataFrame, y: pd.Series, method: str
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Apply specific selection method."""
-        if method == 'variance':
+        if method == "variance":
             return self._variance_selection(X)
 
-        elif method == 'correlation':
+        elif method == "correlation":
             return self._correlation_selection(X, y)
 
-        elif method == 'mutual_info':
+        elif method == "mutual_info":
             return self._mutual_info_selection(X, y)
 
-        elif method == 'importance':
+        elif method == "importance":
             return self._importance_selection(X, y)
 
-        elif method == 'lasso':
+        elif method == "lasso":
             return self._lasso_selection(X, y)
 
-        elif method == 'rfe':
+        elif method == "rfe":
             return self._rfe_selection(X, y)
 
-        elif method == 'boruta':
+        elif method == "boruta":
             return self._boruta_selection(X, y)
 
-        elif method == 'shap':
+        elif method == "shap":
             return self._shap_selection(X, y)
 
-        elif method == 'forward':
+        elif method == "forward":
             return self._forward_selection(X, y)
 
-        elif method == 'backward':
+        elif method == "backward":
             return self._backward_selection(X, y)
 
-        elif method == 'genetic':
+        elif method == "genetic":
             return self._genetic_selection(X, y)
 
         else:
             raise ValueError(f"Unknown selection method: {method}")
 
-    def _variance_selection(self, X: pd.DataFrame,
-                           threshold: float = 0.01) -> Tuple[List[str], Dict[str, float]]:
+    def _variance_selection(
+        self, X: pd.DataFrame, threshold: float = 0.01
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Select features based on variance."""
         selector = VarianceThreshold(threshold=threshold)
         selector.fit(X)
@@ -163,11 +184,12 @@ class AdvancedFeatureSelector:
 
         scores = dict(zip(X.columns, selector.variances_))
 
-        self.selectors['variance'] = selector
+        self.selectors["variance"] = selector
         return selected_features, scores
 
-    def _correlation_selection(self, X: pd.DataFrame, y: pd.Series,
-                              threshold: float = 0.9) -> Tuple[List[str], Dict[str, float]]:
+    def _correlation_selection(
+        self, X: pd.DataFrame, y: pd.Series, threshold: float = 0.9
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Select features based on correlation."""
         # Calculate correlation with target
         correlations = X.corrwith(y).abs()
@@ -201,9 +223,11 @@ class AdvancedFeatureSelector:
 
         return selected_features, scores
 
-    def _mutual_info_selection(self, X: pd.DataFrame, y: pd.Series) -> Tuple[List[str], Dict[str, float]]:
+    def _mutual_info_selection(
+        self, X: pd.DataFrame, y: pd.Series
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Select features using mutual information."""
-        if self.task_type == 'classification':
+        if self.task_type == "classification":
             mi_scores = mutual_info_classif(X, y)
         else:
             mi_scores = mutual_info_regression(X, y)
@@ -217,20 +241,24 @@ class AdvancedFeatureSelector:
             k = len(X.columns) // 2
 
         selector = SelectKBest(
-            mutual_info_classif if self.task_type == 'classification' else mutual_info_regression,
-            k=k
+            mutual_info_classif
+            if self.task_type == "classification"
+            else mutual_info_regression,
+            k=k,
         )
         selector.fit(X, y)
 
         selected_mask = selector.get_support()
         selected_features = X.columns[selected_mask].tolist()
 
-        self.selectors['mutual_info'] = selector
+        self.selectors["mutual_info"] = selector
         return selected_features, scores
 
-    def _importance_selection(self, X: pd.DataFrame, y: pd.Series) -> Tuple[List[str], Dict[str, float]]:
+    def _importance_selection(
+        self, X: pd.DataFrame, y: pd.Series
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Select features using tree-based importance."""
-        if self.task_type == 'classification':
+        if self.task_type == "classification":
             model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
         else:
             model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
@@ -250,22 +278,24 @@ class AdvancedFeatureSelector:
         selected_mask = selector.get_support()
         selected_features = X.columns[selected_mask].tolist()
 
-        self.selectors['importance'] = selector
+        self.selectors["importance"] = selector
         return selected_features, scores
 
-    def _lasso_selection(self, X: pd.DataFrame, y: pd.Series) -> Tuple[List[str], Dict[str, float]]:
+    def _lasso_selection(
+        self, X: pd.DataFrame, y: pd.Series
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Select features using Lasso regularization."""
         # Standardize features
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
 
-        if self.task_type == 'classification':
+        if self.task_type == "classification":
             model = LogisticRegressionCV(
                 cv=self.cv_folds,
-                penalty='l1',
-                solver='liblinear',
+                penalty="l1",
+                solver="liblinear",
                 random_state=42,
-                n_jobs=-1
+                n_jobs=-1,
             )
         else:
             model = LassoCV(cv=self.cv_folds, random_state=42, n_jobs=-1)
@@ -273,7 +303,7 @@ class AdvancedFeatureSelector:
         model.fit(X_scaled, y)
 
         # Get coefficients
-        if hasattr(model, 'coef_'):
+        if hasattr(model, "coef_"):
             if len(model.coef_.shape) > 1:
                 coefs = np.abs(model.coef_).mean(axis=0)
             else:
@@ -289,17 +319,23 @@ class AdvancedFeatureSelector:
 
         # Limit to max_features if specified
         if self.max_features and len(selected_features) > self.max_features:
-            top_indices = np.argsort(coefs)[-self.max_features:]
+            top_indices = np.argsort(coefs)[-self.max_features :]
             selected_features = X.columns[top_indices].tolist()
 
         return selected_features, scores
 
-    def _rfe_selection(self, X: pd.DataFrame, y: pd.Series) -> Tuple[List[str], Dict[str, float]]:
+    def _rfe_selection(
+        self, X: pd.DataFrame, y: pd.Series
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Select features using Recursive Feature Elimination."""
-        if self.task_type == 'classification':
-            estimator = RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
+        if self.task_type == "classification":
+            estimator = RandomForestClassifier(
+                n_estimators=50, random_state=42, n_jobs=-1
+            )
         else:
-            estimator = RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1)
+            estimator = RandomForestRegressor(
+                n_estimators=50, random_state=42, n_jobs=-1
+            )
 
         if self.max_features:
             n_features = min(self.max_features, X.shape[1])
@@ -315,26 +351,24 @@ class AdvancedFeatureSelector:
         # Create scores from ranking
         scores = dict(zip(X.columns, 1 / selector.ranking_))
 
-        self.selectors['rfe'] = selector
+        self.selectors["rfe"] = selector
         return selected_features, scores
 
-    def _boruta_selection(self, X: pd.DataFrame, y: pd.Series) -> Tuple[List[str], Dict[str, float]]:
+    def _boruta_selection(
+        self, X: pd.DataFrame, y: pd.Series
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Select features using Boruta algorithm."""
         if not BORUTA_AVAILABLE:
             print("Boruta not available. Using importance selection instead.")
             return self._importance_selection(X, y)
 
-        if self.task_type == 'classification':
+        if self.task_type == "classification":
             rf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
         else:
             rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
 
         boruta_selector = BorutaPy(
-            rf,
-            n_estimators='auto',
-            verbose=0,
-            random_state=42,
-            max_iter=100
+            rf, n_estimators="auto", verbose=0, random_state=42, max_iter=100
         )
 
         boruta_selector.fit(X.values, y.values)
@@ -344,20 +378,22 @@ class AdvancedFeatureSelector:
 
         # Get feature importance scores
         scores = {}
-        if hasattr(boruta_selector, 'ranking_'):
+        if hasattr(boruta_selector, "ranking_"):
             scores = dict(zip(X.columns, 1 / boruta_selector.ranking_))
 
-        self.selectors['boruta'] = boruta_selector
+        self.selectors["boruta"] = boruta_selector
         return selected_features, scores
 
-    def _shap_selection(self, X: pd.DataFrame, y: pd.Series) -> Tuple[List[str], Dict[str, float]]:
+    def _shap_selection(
+        self, X: pd.DataFrame, y: pd.Series
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Select features using SHAP values."""
         if not SHAP_AVAILABLE:
             print("SHAP not available. Using importance selection instead.")
             return self._importance_selection(X, y)
 
         # Train model
-        if self.task_type == 'classification':
+        if self.task_type == "classification":
             model = GradientBoostingClassifier(n_estimators=100, random_state=42)
         else:
             model = GradientBoostingRegressor(n_estimators=100, random_state=42)
@@ -387,8 +423,9 @@ class AdvancedFeatureSelector:
 
         return selected_features, scores
 
-    def _forward_selection(self, X: pd.DataFrame, y: pd.Series,
-                          max_features: Optional[int] = None) -> Tuple[List[str], Dict[str, float]]:
+    def _forward_selection(
+        self, X: pd.DataFrame, y: pd.Series, max_features: Optional[int] = None
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Forward feature selection."""
         if max_features is None:
             max_features = self.max_features or X.shape[1] // 2
@@ -398,12 +435,12 @@ class AdvancedFeatureSelector:
         scores = {}
 
         # Get base model
-        if self.task_type == 'classification':
+        if self.task_type == "classification":
             model = RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
-            scoring = 'accuracy'
+            scoring = "accuracy"
         else:
             model = RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1)
-            scoring = 'r2'
+            scoring = "r2"
 
         for _ in range(min(max_features, len(X.columns))):
             best_score = -np.inf
@@ -412,8 +449,12 @@ class AdvancedFeatureSelector:
             for feature in remaining_features:
                 current_features = selected_features + [feature]
                 score = cross_val_score(
-                    model, X[current_features], y,
-                    cv=self.cv_folds, scoring=scoring, n_jobs=-1
+                    model,
+                    X[current_features],
+                    y,
+                    cv=self.cv_folds,
+                    scoring=scoring,
+                    n_jobs=-1,
                 ).mean()
 
                 if score > best_score:
@@ -430,24 +471,24 @@ class AdvancedFeatureSelector:
 
         return selected_features, scores
 
-    def _backward_selection(self, X: pd.DataFrame, y: pd.Series,
-                           min_features: int = 1) -> Tuple[List[str], Dict[str, float]]:
+    def _backward_selection(
+        self, X: pd.DataFrame, y: pd.Series, min_features: int = 1
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Backward feature selection."""
         selected_features = list(X.columns)
         scores = {}
 
         # Get base model
-        if self.task_type == 'classification':
+        if self.task_type == "classification":
             model = RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
-            scoring = 'accuracy'
+            scoring = "accuracy"
         else:
             model = RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1)
-            scoring = 'r2'
+            scoring = "r2"
 
         # Calculate initial score
         best_score = cross_val_score(
-            model, X[selected_features], y,
-            cv=self.cv_folds, scoring=scoring, n_jobs=-1
+            model, X[selected_features], y, cv=self.cv_folds, scoring=scoring, n_jobs=-1
         ).mean()
 
         while len(selected_features) > min_features:
@@ -461,15 +502,21 @@ class AdvancedFeatureSelector:
                     continue
 
                 score = cross_val_score(
-                    model, X[current_features], y,
-                    cv=self.cv_folds, scoring=scoring, n_jobs=-1
+                    model,
+                    X[current_features],
+                    y,
+                    cv=self.cv_folds,
+                    scoring=scoring,
+                    n_jobs=-1,
                 ).mean()
 
                 if score > best_score or (score == best_score and score < worst_score):
                     worst_score = score
                     worst_feature = feature
 
-            if worst_feature and worst_score >= best_score * 0.95:  # Allow 5% degradation
+            if (
+                worst_feature and worst_score >= best_score * 0.95
+            ):  # Allow 5% degradation
                 selected_features.remove(worst_feature)
                 scores[worst_feature] = worst_score
                 best_score = worst_score
@@ -486,9 +533,13 @@ class AdvancedFeatureSelector:
 
         return selected_features, scores
 
-    def _genetic_selection(self, X: pd.DataFrame, y: pd.Series,
-                          population_size: int = 50,
-                          generations: int = 20) -> Tuple[List[str], Dict[str, float]]:
+    def _genetic_selection(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        population_size: int = 50,
+        generations: int = 20,
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Genetic algorithm for feature selection."""
         n_features = X.shape[1]
 
@@ -507,12 +558,12 @@ class AdvancedFeatureSelector:
             population.append(individual)
 
         # Get model for evaluation
-        if self.task_type == 'classification':
+        if self.task_type == "classification":
             model = RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
-            scoring = 'accuracy'
+            scoring = "accuracy"
         else:
             model = RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1)
-            scoring = 'r2'
+            scoring = "r2"
 
         best_individual = None
         best_score = -np.inf
@@ -527,8 +578,12 @@ class AdvancedFeatureSelector:
 
                 selected_cols = X.columns[individual.astype(bool)]
                 score = cross_val_score(
-                    model, X[selected_cols], y,
-                    cv=3, scoring=scoring, n_jobs=-1  # Use fewer folds for speed
+                    model,
+                    X[selected_cols],
+                    y,
+                    cv=3,
+                    scoring=scoring,
+                    n_jobs=-1,  # Use fewer folds for speed
                 ).mean()
 
                 # Penalize for too many features
@@ -565,7 +620,9 @@ class AdvancedFeatureSelector:
 
                 # Crossover
                 crossover_point = np.random.randint(1, n_features)
-                child = np.concatenate([parent1[:crossover_point], parent2[crossover_point:]])
+                child = np.concatenate(
+                    [parent1[:crossover_point], parent2[crossover_point:]]
+                )
 
                 # Mutation
                 mutation_rate = 0.01
@@ -594,8 +651,8 @@ class AdvancedFeatureSelector:
         all_scores = {}
 
         for method, result in results.items():
-            selected = result['features']
-            scores = result['scores']
+            selected = result["features"]
+            scores = result["scores"]
 
             for feature in selected:
                 feature_counts[feature] = feature_counts.get(feature, 0) + 1
@@ -607,31 +664,33 @@ class AdvancedFeatureSelector:
 
         # Average scores across methods
         self.feature_scores = {
-            feature: np.mean(scores)
-            for feature, scores in all_scores.items()
+            feature: np.mean(scores) for feature, scores in all_scores.items()
         }
 
         # Select features that appear in multiple methods or have high scores
         min_methods = len(self.selection_methods) // 2  # At least half of methods
 
         selected = [
-            feature for feature, count in feature_counts.items()
-            if count >= min_methods
+            feature for feature, count in feature_counts.items() if count >= min_methods
         ]
 
         # If not enough features, add by score
         if self.max_features and len(selected) < self.max_features:
             remaining = [f for f in self.feature_scores if f not in selected]
-            remaining_sorted = sorted(remaining, key=lambda x: self.feature_scores[x], reverse=True)
+            remaining_sorted = sorted(
+                remaining, key=lambda x: self.feature_scores[x], reverse=True
+            )
             n_to_add = min(self.max_features - len(selected), len(remaining_sorted))
             selected.extend(remaining_sorted[:n_to_add])
 
         # If too many features, keep top by score
         elif self.max_features and len(selected) > self.max_features:
-            selected = sorted(selected, key=lambda x: self.feature_scores[x], reverse=True)
-            selected = selected[:self.max_features]
+            selected = sorted(
+                selected, key=lambda x: self.feature_scores[x], reverse=True
+            )
+            selected = selected[: self.max_features]
 
-        self.selected_features['combined'] = selected
+        self.selected_features["combined"] = selected
 
         if self.verbosity >= 1:
             print(f"Selected {len(selected)} features from {X.shape[1]} total features")
@@ -646,8 +705,9 @@ class FeatureImportanceAnalyzer:
         self.importance_scores = {}
         self.model_importances = {}
 
-    def analyze(self, X: pd.DataFrame, y: pd.Series,
-               models: List[str] = None) -> pd.DataFrame:
+    def analyze(
+        self, X: pd.DataFrame, y: pd.Series, models: List[str] = None
+    ) -> pd.DataFrame:
         """
         Analyze feature importance using multiple models.
 
@@ -660,18 +720,18 @@ class FeatureImportanceAnalyzer:
             DataFrame with importance scores
         """
         if models is None:
-            models = ['rf', 'gb', 'et', 'lr']
+            models = ["rf", "gb", "et", "lr"]
 
         for model_name in models:
-            if model_name == 'rf':
+            if model_name == "rf":
                 scores = self._random_forest_importance(X, y)
-            elif model_name == 'gb':
+            elif model_name == "gb":
                 scores = self._gradient_boosting_importance(X, y)
-            elif model_name == 'et':
+            elif model_name == "et":
                 scores = self._extra_trees_importance(X, y)
-            elif model_name == 'lr':
+            elif model_name == "lr":
                 scores = self._linear_importance(X, y)
-            elif model_name == 'lgb' and LIGHTGBM_AVAILABLE:
+            elif model_name == "lgb" and LIGHTGBM_AVAILABLE:
                 scores = self._lightgbm_importance(X, y)
             else:
                 continue
@@ -682,21 +742,21 @@ class FeatureImportanceAnalyzer:
         importance_df = pd.DataFrame(self.model_importances)
 
         # Add statistics
-        importance_df['mean'] = importance_df.mean(axis=1)
-        importance_df['std'] = importance_df.std(axis=1)
-        importance_df['median'] = importance_df.median(axis=1)
-        importance_df['max'] = importance_df.max(axis=1)
-        importance_df['min'] = importance_df.min(axis=1)
+        importance_df["mean"] = importance_df.mean(axis=1)
+        importance_df["std"] = importance_df.std(axis=1)
+        importance_df["median"] = importance_df.median(axis=1)
+        importance_df["max"] = importance_df.max(axis=1)
+        importance_df["min"] = importance_df.min(axis=1)
 
         # Rank features
-        importance_df['rank'] = importance_df['mean'].rank(ascending=False)
+        importance_df["rank"] = importance_df["mean"].rank(ascending=False)
 
-        return importance_df.sort_values('mean', ascending=False)
+        return importance_df.sort_values("mean", ascending=False)
 
     def _random_forest_importance(self, X: pd.DataFrame, y: pd.Series) -> pd.Series:
         """Get Random Forest feature importance."""
         # Determine task type
-        if y.dtype == 'object' or y.nunique() < 20:
+        if y.dtype == "object" or y.nunique() < 20:
             model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
         else:
             model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
@@ -706,7 +766,7 @@ class FeatureImportanceAnalyzer:
 
     def _gradient_boosting_importance(self, X: pd.DataFrame, y: pd.Series) -> pd.Series:
         """Get Gradient Boosting feature importance."""
-        if y.dtype == 'object' or y.nunique() < 20:
+        if y.dtype == "object" or y.nunique() < 20:
             model = GradientBoostingClassifier(n_estimators=100, random_state=42)
         else:
             model = GradientBoostingRegressor(n_estimators=100, random_state=42)
@@ -716,7 +776,7 @@ class FeatureImportanceAnalyzer:
 
     def _extra_trees_importance(self, X: pd.DataFrame, y: pd.Series) -> pd.Series:
         """Get Extra Trees feature importance."""
-        if y.dtype == 'object' or y.nunique() < 20:
+        if y.dtype == "object" or y.nunique() < 20:
             model = ExtraTreesClassifier(n_estimators=100, random_state=42, n_jobs=-1)
         else:
             model = ExtraTreesRegressor(n_estimators=100, random_state=42, n_jobs=-1)
@@ -730,15 +790,17 @@ class FeatureImportanceAnalyzer:
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
 
-        if y.dtype == 'object' or y.nunique() < 20:
-            model = LogisticRegressionCV(cv=5, random_state=42, n_jobs=-1, max_iter=1000)
+        if y.dtype == "object" or y.nunique() < 20:
+            model = LogisticRegressionCV(
+                cv=5, random_state=42, n_jobs=-1, max_iter=1000
+            )
         else:
             model = ElasticNetCV(cv=5, random_state=42, n_jobs=-1)
 
         model.fit(X_scaled, y)
 
         # Get coefficients
-        if hasattr(model, 'coef_'):
+        if hasattr(model, "coef_"):
             if len(model.coef_.shape) > 1:
                 coefs = np.abs(model.coef_).mean(axis=0)
             else:
@@ -753,10 +815,14 @@ class FeatureImportanceAnalyzer:
         if not LIGHTGBM_AVAILABLE:
             return pd.Series(index=X.columns)
 
-        if y.dtype == 'object' or y.nunique() < 20:
-            model = lgb.LGBMClassifier(n_estimators=100, random_state=42, n_jobs=-1, verbosity=-1)
+        if y.dtype == "object" or y.nunique() < 20:
+            model = lgb.LGBMClassifier(
+                n_estimators=100, random_state=42, n_jobs=-1, verbosity=-1
+            )
         else:
-            model = lgb.LGBMRegressor(n_estimators=100, random_state=42, n_jobs=-1, verbosity=-1)
+            model = lgb.LGBMRegressor(
+                n_estimators=100, random_state=42, n_jobs=-1, verbosity=-1
+            )
 
         model.fit(X, y)
         return pd.Series(model.feature_importances_, index=X.columns)

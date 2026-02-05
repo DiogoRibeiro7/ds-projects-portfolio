@@ -128,7 +128,7 @@ class ModelVersionControl:
             feature_names=feature_names,
             model_hash=model_hash,
             training_data_hash=data_hash,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         # Save model and version info
@@ -154,15 +154,13 @@ class ModelVersionControl:
         version = self.versions[version_id]
         model_path = self.base_path / f"{version_id}.pkl"
 
-        with open(model_path, 'rb') as f:
+        with open(model_path, "rb") as f:
             model = pickle.load(f)
 
         return model, version
 
     def compare_versions(
-        self,
-        version_ids: List[str],
-        metrics: List[str] = None
+        self, version_ids: List[str], metrics: List[str] = None
     ) -> pd.DataFrame:
         """
         Compare multiple model versions.
@@ -182,9 +180,9 @@ class ModelVersionControl:
 
             version = self.versions[version_id]
             row_data = {
-                'version_id': version_id,
-                'model_name': version.model_name,
-                'created_at': version.created_at,
+                "version_id": version_id,
+                "model_name": version.model_name,
+                "created_at": version.created_at,
             }
 
             # Add metrics
@@ -210,8 +208,8 @@ class ModelVersionControl:
             raise ValueError(f"Version {version_id} not found")
 
         version = self.versions[version_id]
-        version.metadata['stage'] = stage
-        version.metadata['promoted_at'] = datetime.now().isoformat()
+        version.metadata["stage"] = stage
+        version.metadata["promoted_at"] = datetime.now().isoformat()
 
         self.current_version = version_id
         self._save_registry()
@@ -220,14 +218,14 @@ class ModelVersionControl:
         """Save model to disk."""
         model_path = self.base_path / f"{version.version_id}.pkl"
 
-        with open(model_path, 'wb') as f:
+        with open(model_path, "wb") as f:
             pickle.dump(model, f)
 
         # Save version metadata
         meta_path = self.base_path / f"{version.version_id}_meta.json"
-        with open(meta_path, 'w') as f:
+        with open(meta_path, "w") as f:
             version_dict = asdict(version)
-            version_dict['created_at'] = version.created_at.isoformat()
+            version_dict["created_at"] = version.created_at.isoformat()
             json.dump(version_dict, f, indent=2)
 
     def _load_registry(self):
@@ -235,32 +233,29 @@ class ModelVersionControl:
         registry_path = self.base_path / "registry.json"
 
         if registry_path.exists():
-            with open(registry_path, 'r') as f:
+            with open(registry_path, "r") as f:
                 registry_data = json.load(f)
 
-                for version_id, version_data in registry_data['versions'].items():
-                    version_data['created_at'] = datetime.fromisoformat(
-                        version_data['created_at']
+                for version_id, version_data in registry_data["versions"].items():
+                    version_data["created_at"] = datetime.fromisoformat(
+                        version_data["created_at"]
                     )
                     self.versions[version_id] = ModelVersion(**version_data)
 
-                self.current_version = registry_data.get('current_version')
+                self.current_version = registry_data.get("current_version")
 
     def _save_registry(self):
         """Save model registry to disk."""
         registry_path = self.base_path / "registry.json"
 
-        registry_data = {
-            'versions': {},
-            'current_version': self.current_version
-        }
+        registry_data = {"versions": {}, "current_version": self.current_version}
 
         for version_id, version in self.versions.items():
             version_dict = asdict(version)
-            version_dict['created_at'] = version.created_at.isoformat()
-            registry_data['versions'][version_id] = version_dict
+            version_dict["created_at"] = version.created_at.isoformat()
+            registry_data["versions"][version_id] = version_dict
 
-        with open(registry_path, 'w') as f:
+        with open(registry_path, "w") as f:
             json.dump(registry_data, f, indent=2)
 
     def _calculate_model_hash(self, model: BaseEstimator) -> str:
@@ -322,9 +317,7 @@ class DriftDetector:
             feature_subset = self.reference_data.columns.tolist()
 
         # Feature drift detection
-        feature_drift_results = self._detect_feature_drift(
-            current_data[feature_subset]
-        )
+        feature_drift_results = self._detect_feature_drift(current_data[feature_subset])
 
         # Target/prediction drift
         target_drift = 0
@@ -332,30 +325,31 @@ class DriftDetector:
             target_drift = self._detect_target_drift(current_predictions)
 
         # Concept drift (if we have ground truth)
-        concept_drift = self._detect_concept_drift(
-            current_data, current_predictions
-        )
+        concept_drift = self._detect_concept_drift(current_data, current_predictions)
 
         # Data quality checks
         quality_issues = self._check_data_quality(current_data)
 
         # Determine overall drift status
-        max_feature_drift = feature_drift_results['drift_score'].max()
+        max_feature_drift = feature_drift_results["drift_score"].max()
         drift_detected = (
-            max_feature_drift > self.drift_threshold or
-            target_drift > self.drift_threshold or
-            concept_drift > self.drift_threshold
+            max_feature_drift > self.drift_threshold
+            or target_drift > self.drift_threshold
+            or concept_drift > self.drift_threshold
         )
 
         # Determine severity
         if not drift_detected:
-            severity = 'none'
-        elif max(max_feature_drift, target_drift, concept_drift) > self.drift_threshold * 2:
-            severity = 'high'
+            severity = "none"
+        elif (
+            max(max_feature_drift, target_drift, concept_drift)
+            > self.drift_threshold * 2
+        ):
+            severity = "high"
         elif max(max_feature_drift, target_drift, concept_drift) > self.drift_threshold:
-            severity = 'medium'
+            severity = "medium"
         else:
-            severity = 'low'
+            severity = "low"
 
         # Generate recommendations
         recommendations = self._generate_recommendations(
@@ -384,12 +378,12 @@ class DriftDetector:
             curr_stats = self._calculate_column_statistics(current_data[column])
 
             # Choose appropriate test based on data type
-            if current_data[column].dtype in ['float64', 'int64']:
+            if current_data[column].dtype in ["float64", "int64"]:
                 # Kolmogorov-Smirnov test for numerical features
                 if len(current_data[column].dropna()) > 0:
                     ks_stat, p_value = stats.ks_2samp(
                         self.reference_data[column].dropna(),
-                        current_data[column].dropna()
+                        current_data[column].dropna(),
                     )
                 else:
                     ks_stat, p_value = 0, 1
@@ -397,8 +391,12 @@ class DriftDetector:
                 drift_score = ks_stat
 
                 # Also check distribution shift
-                mean_shift = abs(curr_stats['mean'] - ref_stats['mean']) / (ref_stats['std'] + 1e-10)
-                std_shift = abs(curr_stats['std'] - ref_stats['std']) / (ref_stats['std'] + 1e-10)
+                mean_shift = abs(curr_stats["mean"] - ref_stats["mean"]) / (
+                    ref_stats["std"] + 1e-10
+                )
+                std_shift = abs(curr_stats["std"] - ref_stats["std"]) / (
+                    ref_stats["std"] + 1e-10
+                )
 
             else:
                 # Chi-square test for categorical features
@@ -418,31 +416,28 @@ class DriftDetector:
                 mean_shift = 0
                 std_shift = 0
 
-            drift_results.append({
-                'feature': column,
-                'drift_score': drift_score,
-                'p_value': p_value,
-                'mean_shift': mean_shift,
-                'std_shift': std_shift,
-                'drift_detected': drift_score > self.drift_threshold,
-            })
+            drift_results.append(
+                {
+                    "feature": column,
+                    "drift_score": drift_score,
+                    "p_value": p_value,
+                    "mean_shift": mean_shift,
+                    "std_shift": std_shift,
+                    "drift_detected": drift_score > self.drift_threshold,
+                }
+            )
 
         return pd.DataFrame(drift_results)
 
     def _detect_target_drift(self, current_predictions: np.ndarray) -> float:
         """Detect drift in prediction distribution."""
         # KS test for prediction distribution
-        ks_stat, _ = stats.ks_2samp(
-            self.reference_predictions,
-            current_predictions
-        )
+        ks_stat, _ = stats.ks_2samp(self.reference_predictions, current_predictions)
 
         return ks_stat
 
     def _detect_concept_drift(
-        self,
-        current_data: pd.DataFrame,
-        current_predictions: np.ndarray
+        self, current_data: pd.DataFrame, current_predictions: np.ndarray
     ) -> float:
         """Detect concept drift (change in P(y|X))."""
         # This would require ground truth labels
@@ -454,7 +449,9 @@ class DriftDetector:
         ref_confidence = np.mean(np.abs(self.reference_predictions - 0.5))
         curr_confidence = np.mean(np.abs(current_predictions - 0.5))
 
-        confidence_shift = abs(curr_confidence - ref_confidence) / (ref_confidence + 1e-10)
+        confidence_shift = abs(curr_confidence - ref_confidence) / (
+            ref_confidence + 1e-10
+        )
 
         return confidence_shift
 
@@ -470,9 +467,13 @@ class DriftDetector:
             issues.append(f"High missing rate in: {high_missing.index.tolist()}")
 
         # Check for new categories
-        for column in current_data.select_dtypes(include=['object', 'category']).columns:
+        for column in current_data.select_dtypes(
+            include=["object", "category"]
+        ).columns:
             if column in self.reference_data.columns:
-                new_categories = set(current_data[column].unique()) - set(self.reference_data[column].unique())
+                new_categories = set(current_data[column].unique()) - set(
+                    self.reference_data[column].unique()
+                )
                 if new_categories:
                     issues.append(f"New categories in {column}: {new_categories}")
 
@@ -480,14 +481,18 @@ class DriftDetector:
         for column in current_data.select_dtypes(include=[np.number]).columns:
             if column in self.reference_stats:
                 ref_stats = self.reference_stats[column]
-                lower_bound = ref_stats['mean'] - 4 * ref_stats['std']
-                upper_bound = ref_stats['mean'] + 4 * ref_stats['std']
+                lower_bound = ref_stats["mean"] - 4 * ref_stats["std"]
+                upper_bound = ref_stats["mean"] + 4 * ref_stats["std"]
 
-                outliers = ((current_data[column] < lower_bound) |
-                          (current_data[column] > upper_bound)).sum()
+                outliers = (
+                    (current_data[column] < lower_bound)
+                    | (current_data[column] > upper_bound)
+                ).sum()
 
                 if outliers > len(current_data) * 0.05:
-                    issues.append(f"High outlier rate in {column}: {outliers/len(current_data):.2%}")
+                    issues.append(
+                        f"High outlier rate in {column}: {outliers / len(current_data):.2%}"
+                    )
 
         return issues
 
@@ -502,22 +507,24 @@ class DriftDetector:
 
     def _calculate_column_statistics(self, series: pd.Series) -> Dict[str, float]:
         """Calculate statistics for a single column."""
-        if series.dtype in ['float64', 'int64']:
+        if series.dtype in ["float64", "int64"]:
             return {
-                'mean': series.mean(),
-                'std': series.std(),
-                'min': series.min(),
-                'max': series.max(),
-                'q25': series.quantile(0.25),
-                'q50': series.quantile(0.50),
-                'q75': series.quantile(0.75),
+                "mean": series.mean(),
+                "std": series.std(),
+                "min": series.min(),
+                "max": series.max(),
+                "q25": series.quantile(0.25),
+                "q50": series.quantile(0.50),
+                "q75": series.quantile(0.75),
             }
         else:
             value_counts = series.value_counts()
             return {
-                'unique_count': series.nunique(),
-                'most_common': value_counts.index[0] if len(value_counts) > 0 else None,
-                'most_common_freq': value_counts.iloc[0] / len(series) if len(value_counts) > 0 else 0,
+                "unique_count": series.nunique(),
+                "most_common": value_counts.index[0] if len(value_counts) > 0 else None,
+                "most_common_freq": value_counts.iloc[0] / len(series)
+                if len(value_counts) > 0
+                else 0,
             }
 
     def _generate_recommendations(
@@ -531,9 +538,13 @@ class DriftDetector:
         recommendations = []
 
         # Feature drift recommendations
-        drifted_features = feature_drift[feature_drift['drift_detected']]['feature'].tolist()
+        drifted_features = feature_drift[feature_drift["drift_detected"]][
+            "feature"
+        ].tolist()
         if drifted_features:
-            recommendations.append(f"Retrain model - features with drift: {drifted_features[:5]}")
+            recommendations.append(
+                f"Retrain model - features with drift: {drifted_features[:5]}"
+            )
 
         # Target drift recommendations
         if target_drift > self.drift_threshold:
@@ -542,7 +553,9 @@ class DriftDetector:
 
         # Concept drift recommendations
         if concept_drift > self.drift_threshold:
-            recommendations.append("Potential concept drift detected - validate with recent labels")
+            recommendations.append(
+                "Potential concept drift detected - validate with recent labels"
+            )
             recommendations.append("Consider online learning or frequent retraining")
 
         # Data quality recommendations
@@ -551,7 +564,9 @@ class DriftDetector:
             recommendations.extend(quality_issues[:3])
 
         if not recommendations:
-            recommendations.append("No significant issues detected - continue monitoring")
+            recommendations.append(
+                "No significant issues detected - continue monitoring"
+            )
 
         return recommendations
 
@@ -577,21 +592,19 @@ class ModelExplainer:
     def _initialize_explainer(self):
         """Initialize SHAP explainer."""
         if self.X_background is not None:
-            if hasattr(self.model, 'predict_proba'):
+            if hasattr(self.model, "predict_proba"):
                 self.explainer = shap.Explainer(
                     lambda x: self.model.predict_proba(x)[:, 1],
-                    self.X_background.sample(min(100, len(self.X_background)))
+                    self.X_background.sample(min(100, len(self.X_background))),
                 )
             else:
                 self.explainer = shap.Explainer(
                     self.model.predict,
-                    self.X_background.sample(min(100, len(self.X_background)))
+                    self.X_background.sample(min(100, len(self.X_background))),
                 )
 
     def explain_prediction(
-        self,
-        X_instance: pd.DataFrame,
-        plot: bool = True
+        self, X_instance: pd.DataFrame, plot: bool = True
     ) -> Dict[str, Any]:
         """
         Explain a single prediction.
@@ -610,26 +623,34 @@ class ModelExplainer:
         shap_values = self.explainer(X_instance)
 
         # Get feature importance for this instance
-        feature_importance = pd.DataFrame({
-            'feature': X_instance.columns,
-            'value': X_instance.iloc[0].values,
-            'shap_value': shap_values.values[0],
-            'abs_shap': np.abs(shap_values.values[0])
-        }).sort_values('abs_shap', ascending=False)
+        feature_importance = pd.DataFrame(
+            {
+                "feature": X_instance.columns,
+                "value": X_instance.iloc[0].values,
+                "shap_value": shap_values.values[0],
+                "abs_shap": np.abs(shap_values.values[0]),
+            }
+        ).sort_values("abs_shap", ascending=False)
 
         # Get prediction
-        if hasattr(self.model, 'predict_proba'):
+        if hasattr(self.model, "predict_proba"):
             prediction = self.model.predict_proba(X_instance)[0, 1]
         else:
             prediction = self.model.predict(X_instance)[0]
 
         # Create explanation
         explanation = {
-            'prediction': prediction,
-            'base_value': shap_values.base_values[0] if hasattr(shap_values, 'base_values') else 0,
-            'feature_contributions': feature_importance,
-            'top_positive_features': feature_importance[feature_importance['shap_value'] > 0].head(5),
-            'top_negative_features': feature_importance[feature_importance['shap_value'] < 0].head(5),
+            "prediction": prediction,
+            "base_value": shap_values.base_values[0]
+            if hasattr(shap_values, "base_values")
+            else 0,
+            "feature_contributions": feature_importance,
+            "top_positive_features": feature_importance[
+                feature_importance["shap_value"] > 0
+            ].head(5),
+            "top_negative_features": feature_importance[
+                feature_importance["shap_value"] < 0
+            ].head(5),
         }
 
         if plot:
@@ -638,9 +659,7 @@ class ModelExplainer:
         return explanation
 
     def explain_model_global(
-        self,
-        X_sample: pd.DataFrame,
-        plot: bool = True
+        self, X_sample: pd.DataFrame, plot: bool = True
     ) -> Dict[str, Any]:
         """
         Generate global model explanations.
@@ -659,21 +678,25 @@ class ModelExplainer:
         shap_values = self.explainer(X_sample)
 
         # Calculate global feature importance
-        global_importance = pd.DataFrame({
-            'feature': X_sample.columns,
-            'importance': np.abs(shap_values.values).mean(axis=0)
-        }).sort_values('importance', ascending=False)
+        global_importance = pd.DataFrame(
+            {
+                "feature": X_sample.columns,
+                "importance": np.abs(shap_values.values).mean(axis=0),
+            }
+        ).sort_values("importance", ascending=False)
 
         # Calculate feature interactions
         if len(X_sample) < 1000:  # Limit for computational efficiency
-            interaction_values = shap.Interaction().values if hasattr(shap, 'Interaction') else None
+            interaction_values = (
+                shap.Interaction().values if hasattr(shap, "Interaction") else None
+            )
         else:
             interaction_values = None
 
         explanation = {
-            'global_importance': global_importance,
-            'mean_abs_shap': global_importance['importance'].values,
-            'feature_interactions': interaction_values,
+            "global_importance": global_importance,
+            "mean_abs_shap": global_importance["importance"].values,
+            "feature_interactions": interaction_values,
         }
 
         if plot:
@@ -706,24 +729,29 @@ class ModelExplainer:
 
         # Summary plot
         plt.sca(axes[0, 0])
-        shap.summary_plot(shap_values.values, X_sample, show=False, plot_type='bar')
+        shap.summary_plot(shap_values.values, X_sample, show=False, plot_type="bar")
 
         # Summary plot (dot)
         plt.sca(axes[0, 1])
         shap.summary_plot(shap_values.values, X_sample, show=False)
 
         # Dependence plots for top features
-        top_features = pd.DataFrame({
-            'feature': X_sample.columns,
-            'importance': np.abs(shap_values.values).mean(axis=0)
-        }).sort_values('importance', ascending=False)['feature'].head(2)
+        top_features = (
+            pd.DataFrame(
+                {
+                    "feature": X_sample.columns,
+                    "importance": np.abs(shap_values.values).mean(axis=0),
+                }
+            )
+            .sort_values("importance", ascending=False)["feature"]
+            .head(2)
+        )
 
         for idx, feature in enumerate(top_features):
             plt.sca(axes[1, idx])
             feature_idx = X_sample.columns.get_loc(feature)
             shap.dependence_plot(
-                feature_idx, shap_values.values, X_sample,
-                show=False, ax=axes[1, idx]
+                feature_idx, shap_values.values, X_sample, show=False, ax=axes[1, idx]
             )
 
         plt.tight_layout()
@@ -775,12 +803,10 @@ class ABTestingFramework:
         hash_val = int(hashlib.md5(str(user_id).encode()).hexdigest(), 16)
         assignment_prob = (hash_val % 1000) / 1000
 
-        return 'B' if assignment_prob < self.traffic_split else 'A'
+        return "B" if assignment_prob < self.traffic_split else "A"
 
     def predict(
-        self,
-        X: pd.DataFrame,
-        user_id: Union[str, int]
+        self, X: pd.DataFrame, user_id: Union[str, int]
     ) -> Tuple[np.ndarray, str]:
         """
         Make prediction using assigned model.
@@ -794,12 +820,12 @@ class ABTestingFramework:
         """
         variant = self.assign_variant(user_id)
 
-        if variant == 'A':
+        if variant == "A":
             model = self.model_a
         else:
             model = self.model_b
 
-        if hasattr(model, 'predict_proba'):
+        if hasattr(model, "predict_proba"):
             prediction = model.predict_proba(X)[:, 1]
         else:
             prediction = model.predict(X)
@@ -811,7 +837,7 @@ class ABTestingFramework:
         variant: str,
         prediction: float,
         actual: float,
-        metadata: Dict[str, Any] = None
+        metadata: Dict[str, Any] = None,
     ):
         """
         Record result for analysis.
@@ -823,14 +849,14 @@ class ABTestingFramework:
             metadata: Additional metadata
         """
         result = {
-            'timestamp': datetime.now(),
-            'prediction': prediction,
-            'actual': actual,
-            'error': abs(prediction - actual),
-            'metadata': metadata or {}
+            "timestamp": datetime.now(),
+            "prediction": prediction,
+            "actual": actual,
+            "error": abs(prediction - actual),
+            "metadata": metadata or {},
         }
 
-        if variant == 'A':
+        if variant == "A":
             self.results_a.append(result)
         else:
             self.results_b.append(result)
@@ -842,12 +868,15 @@ class ABTestingFramework:
         Returns:
             Dictionary with test results
         """
-        if len(self.results_a) < self.min_sample_size or len(self.results_b) < self.min_sample_size:
+        if (
+            len(self.results_a) < self.min_sample_size
+            or len(self.results_b) < self.min_sample_size
+        ):
             return {
-                'status': 'insufficient_data',
-                'samples_a': len(self.results_a),
-                'samples_b': len(self.results_b),
-                'required': self.min_sample_size
+                "status": "insufficient_data",
+                "samples_a": len(self.results_a),
+                "samples_b": len(self.results_b),
+                "required": self.min_sample_size,
             }
 
         # Calculate metrics for each variant
@@ -858,9 +887,9 @@ class ABTestingFramework:
         # Using bootstrap for confidence intervals
         diff_metrics = {}
 
-        for metric in ['accuracy', 'auc', 'error']:
-            samples_a = [r.get(metric, r.get('error', 0)) for r in self.results_a]
-            samples_b = [r.get(metric, r.get('error', 0)) for r in self.results_b]
+        for metric in ["accuracy", "auc", "error"]:
+            samples_a = [r.get(metric, r.get("error", 0)) for r in self.results_a]
+            samples_b = [r.get(metric, r.get("error", 0)) for r in self.results_b]
 
             # Bootstrap difference
             diff_samples = []
@@ -870,41 +899,47 @@ class ABTestingFramework:
                 diff_samples.append(np.mean(sample_b) - np.mean(sample_a))
 
             # Calculate confidence interval
-            ci_lower = np.percentile(diff_samples, (1 - self.confidence_level) / 2 * 100)
-            ci_upper = np.percentile(diff_samples, (1 + self.confidence_level) / 2 * 100)
+            ci_lower = np.percentile(
+                diff_samples, (1 - self.confidence_level) / 2 * 100
+            )
+            ci_upper = np.percentile(
+                diff_samples, (1 + self.confidence_level) / 2 * 100
+            )
 
             # Check significance
             significant = not (ci_lower <= 0 <= ci_upper)
 
             diff_metrics[metric] = {
-                'difference': metrics_b[metric] - metrics_a[metric],
-                'ci_lower': ci_lower,
-                'ci_upper': ci_upper,
-                'significant': significant,
-                'relative_change': (metrics_b[metric] - metrics_a[metric]) / metrics_a[metric] * 100
+                "difference": metrics_b[metric] - metrics_a[metric],
+                "ci_lower": ci_lower,
+                "ci_upper": ci_upper,
+                "significant": significant,
+                "relative_change": (metrics_b[metric] - metrics_a[metric])
+                / metrics_a[metric]
+                * 100,
             }
 
         # Determine winner
-        if diff_metrics['error']['significant']:
-            winner = 'B' if diff_metrics['error']['difference'] < 0 else 'A'
+        if diff_metrics["error"]["significant"]:
+            winner = "B" if diff_metrics["error"]["difference"] < 0 else "A"
         else:
-            winner = 'no_significant_difference'
+            winner = "no_significant_difference"
 
         return {
-            'status': 'complete',
-            'samples_a': len(self.results_a),
-            'samples_b': len(self.results_b),
-            'metrics_a': metrics_a,
-            'metrics_b': metrics_b,
-            'differences': diff_metrics,
-            'winner': winner,
-            'confidence_level': self.confidence_level
+            "status": "complete",
+            "samples_a": len(self.results_a),
+            "samples_b": len(self.results_b),
+            "metrics_a": metrics_a,
+            "metrics_b": metrics_b,
+            "differences": diff_metrics,
+            "winner": winner,
+            "confidence_level": self.confidence_level,
         }
 
     def _calculate_metrics(self, results: List[Dict]) -> Dict[str, float]:
         """Calculate metrics for a variant."""
-        predictions = np.array([r['prediction'] for r in results])
-        actuals = np.array([r['actual'] for r in results])
+        predictions = np.array([r["prediction"] for r in results])
+        actuals = np.array([r["actual"] for r in results])
 
         # Binary classification metrics
         pred_binary = (predictions >= 0.5).astype(int)
@@ -920,11 +955,11 @@ class ABTestingFramework:
         mae = np.mean(np.abs(predictions - actuals))
 
         return {
-            'accuracy': accuracy,
-            'auc': auc,
-            'error': mae,
-            'mean_prediction': np.mean(predictions),
-            'mean_actual': np.mean(actuals)
+            "accuracy": accuracy,
+            "auc": auc,
+            "error": mae,
+            "mean_prediction": np.mean(predictions),
+            "mean_actual": np.mean(actuals),
         }
 
 

@@ -20,7 +20,9 @@ def make_interactions(
     return pd.DataFrame(rows, columns=["user_id", "item_id", "implicit_feedback"])
 
 
-def train_item_similarity(interactions: pd.DataFrame) -> tuple[pd.DataFrame, np.ndarray]:
+def train_item_similarity(
+    interactions: pd.DataFrame,
+) -> tuple[pd.DataFrame, np.ndarray]:
     user_item = interactions.pivot_table(
         index="user_id",
         columns="item_id",
@@ -44,7 +46,9 @@ def recommend_items(
     return top_items.tolist()
 
 
-def train_test_split_interactions(interactions: pd.DataFrame, random_state: int = 42) -> tuple[pd.DataFrame, pd.DataFrame]:
+def train_test_split_interactions(
+    interactions: pd.DataFrame, random_state: int = 42
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     rng = np.random.default_rng(random_state)
     test_rows = []
     train_rows = []

@@ -214,25 +214,25 @@ class DetailedPerformanceReporter:
 <body>
     <div class="header">
         <h1>Performance Optimization Report</h1>
-        <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p>Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
         <p>Total Operations Tracked: {len(df)}</p>
     </div>
 
     <div class="summary-grid">
         <div class="metric-card">
-            <div class="metric-value">{df['execution_time'].mean():.4f}s</div>
+            <div class="metric-value">{df["execution_time"].mean():.4f}s</div>
             <div class="metric-label">Average Execution Time</div>
         </div>
         <div class="metric-card">
-            <div class="metric-value">{df['memory_peak_mb'].mean():.2f} MB</div>
+            <div class="metric-value">{df["memory_peak_mb"].mean():.2f} MB</div>
             <div class="metric-label">Average Memory Peak</div>
         </div>
         <div class="metric-card">
-            <div class="metric-value">{df['throughput'].mean():.0f}/s</div>
+            <div class="metric-value">{df["throughput"].mean():.0f}/s</div>
             <div class="metric-label">Average Throughput</div>
         </div>
         <div class="metric-card">
-            <div class="metric-value improvement">{df['speedup'].mean():.2f}x</div>
+            <div class="metric-value improvement">{df["speedup"].mean():.2f}x</div>
             <div class="metric-label">Average Speedup</div>
         </div>
     </div>
@@ -399,11 +399,11 @@ class DetailedPerformanceReporter:
 
             html += f"""
                 <tr>
-                    <td>{row['operation_name']}</td>
-                    <td>{row['optimization_applied']}</td>
-                    <td>{row['execution_time']:.4f}</td>
-                    <td>{row['memory_peak_mb']:.2f}</td>
-                    <td>{row['throughput']:.0f}/s</td>
+                    <td>{row["operation_name"]}</td>
+                    <td>{row["optimization_applied"]}</td>
+                    <td>{row["execution_time"]:.4f}</td>
+                    <td>{row["memory_peak_mb"]:.2f}</td>
+                    <td>{row["throughput"]:.0f}/s</td>
                     <td class="{speedup_class}">{speedup_text}</td>
                     <td>{cache_rate}</td>
                 </tr>
@@ -527,7 +527,9 @@ class OptimizationAnalyzer:
             "effect_magnitude": (
                 "large"
                 if abs(effect_size) > 0.8
-                else "medium" if abs(effect_size) > 0.5 else "small"
+                else "medium"
+                if abs(effect_size) > 0.5
+                else "small"
             ),
         }
 

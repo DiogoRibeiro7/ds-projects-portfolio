@@ -26,6 +26,7 @@ SPARK_AVAILABLE = False
 
 try:
     import ray
+
     ray.init(ignore_reinit_error=True, num_cpus=mp.cpu_count())
     RAY_AVAILABLE = True
 except ImportError:
@@ -36,6 +37,7 @@ except:
 
 try:
     from pyspark.sql import SparkSession
+
     SPARK_AVAILABLE = True
 except ImportError:
     warnings.warn("PySpark not installed. Spark processing disabled.")
@@ -44,10 +46,13 @@ except ImportError:
 class DistributedConfig:
     """Configuration for distributed processing."""
 
-    def __init__(self, n_workers: Optional[int] = None,
-                 memory_limit: str = '2GB',
-                 threads_per_worker: int = 1,
-                 scheduler: str = 'threads'):
+    def __init__(
+        self,
+        n_workers: Optional[int] = None,
+        memory_limit: str = "2GB",
+        threads_per_worker: int = 1,
+        scheduler: str = "threads",
+    ):
         """
         Initialize distributed configuration.
 
@@ -78,7 +83,7 @@ class DaskOperations:
                 n_workers=self.config.n_workers,
                 threads_per_worker=self.config.threads_per_worker,
                 memory_limit=self.config.memory_limit,
-                dashboard_address=':8787' if dashboard else None
+                dashboard_address=":8787" if dashboard else None,
             )
         return self.client
 
@@ -89,7 +94,9 @@ class DaskOperations:
             self.client = None
 
     @staticmethod
-    def parallelize_dataframe(df: pd.DataFrame, n_partitions: Optional[int] = None) -> dd.DataFrame:
+    def parallelize_dataframe(
+        df: pd.DataFrame, n_partitions: Optional[int] = None
+    ) -> dd.DataFrame:
         """Convert pandas DataFrame to Dask DataFrame for parallel processing."""
         if n_partitions is None:
             n_partitions = mp.cpu_count() * 2
@@ -100,16 +107,21 @@ class DaskOperations:
         """Convert numpy array to Dask array for parallel processing."""
         if chunks is None:
             # Auto-determine chunk size
-            chunks = 'auto'
+            chunks = "auto"
         return da.from_array(arr, chunks=chunks)
 
-    def parallel_apply(self, df: dd.DataFrame, func: Callable,
-                      meta: Optional[Any] = None) -> dd.DataFrame:
+    def parallel_apply(
+        self, df: dd.DataFrame, func: Callable, meta: Optional[Any] = None
+    ) -> dd.DataFrame:
         """Apply function in parallel across DataFrame partitions."""
         return df.map_partitions(func, meta=meta)
 
-    def parallel_groupby_agg(self, df: pd.DataFrame, groupby_cols: List[str],
-                            agg_dict: Dict[str, Union[str, List[str]]]) -> pd.DataFrame:
+    def parallel_groupby_agg(
+        self,
+        df: pd.DataFrame,
+        groupby_cols: List[str],
+        agg_dict: Dict[str, Union[str, List[str]]],
+    ) -> pd.DataFrame:
         """Parallel groupby aggregation using Dask."""
         # Convert to Dask DataFrame
         ddf = self.parallelize_dataframe(df)
@@ -120,8 +132,13 @@ class DaskOperations:
         # Compute and return result
         return result.compute()
 
-    def parallel_merge(self, df1: pd.DataFrame, df2: pd.DataFrame,
-                      on: Union[str, List[str]], how: str = 'inner') -> pd.DataFrame:
+    def parallel_merge(
+        self,
+        df1: pd.DataFrame,
+        df2: pd.DataFrame,
+        on: Union[str, List[str]],
+        how: str = "inner",
+    ) -> pd.DataFrame:
         """Parallel merge operation using Dask."""
         ddf1 = self.parallelize_dataframe(df1)
         ddf2 = self.parallelize_dataframe(df2)
@@ -134,8 +151,9 @@ class DaskOperations:
         ddf = dd.read_csv(pattern, **kwargs)
         return ddf.compute()
 
-    def parallel_to_parquet(self, df: pd.DataFrame, path: str,
-                           compression: str = 'snappy') -> None:
+    def parallel_to_parquet(
+        self, df: pd.DataFrame, path: str, compression: str = "snappy"
+    ) -> None:
         """Write DataFrame to Parquet in parallel."""
         ddf = self.parallelize_dataframe(df)
         ddf.to_parquet(path, compression=compression)
@@ -155,8 +173,9 @@ class RayOperations:
         return func(data)
 
     @staticmethod
-    def parallel_map(func: Callable, data_list: List[Any],
-                    n_workers: Optional[int] = None) -> List[Any]:
+    def parallel_map(
+        func: Callable, data_list: List[Any], n_workers: Optional[int] = None
+    ) -> List[Any]:
         """Parallel map operation using Ray."""
         if not RAY_AVAILABLE or ray is None:
             return [func(d) for d in data_list]
@@ -168,8 +187,7 @@ class RayOperations:
         remote_func = ray.remote(RayOperations.process_partition)
 
         # Create futures
-        futures = [remote_func.remote(func_id, data)
-                  for data in data_list]
+        futures = [remote_func.remote(func_id, data) for data in data_list]
 
         # Get results
         return ray.get(futures)
@@ -197,7 +215,9 @@ class RayOperations:
 class ParallelProcessor:
     """High-level parallel processing interface."""
 
-    def __init__(self, backend: str = 'multiprocessing', n_workers: Optional[int] = None):
+    def __init__(
+        self, backend: str = "multiprocessing", n_workers: Optional[int] = None
+    ):
         """
         Initialize parallel processor.
 
@@ -208,8 +228,9 @@ class ParallelProcessor:
         self.backend = backend
         self.n_workers = n_workers or mp.cpu_count()
 
-    def parallel_execute(self, func: Callable, data_list: List[Any],
-                        show_progress: bool = True) -> List[Any]:
+    def parallel_execute(
+        self, func: Callable, data_list: List[Any], show_progress: bool = True
+    ) -> List[Any]:
         """
         Execute function in parallel across data list.
 
@@ -221,25 +242,27 @@ class ParallelProcessor:
         Returns:
             List of results
         """
-        if self.backend == 'threading':
+        if self.backend == "threading":
             return self._thread_execute(func, data_list, show_progress)
-        elif self.backend == 'multiprocessing':
+        elif self.backend == "multiprocessing":
             return self._process_execute(func, data_list, show_progress)
-        elif self.backend == 'dask':
+        elif self.backend == "dask":
             return self._dask_execute(func, data_list, show_progress)
-        elif self.backend == 'ray' and RAY_AVAILABLE:
+        elif self.backend == "ray" and RAY_AVAILABLE:
             return RayOperations.parallel_map(func, data_list, self.n_workers)
         else:
             # Fallback to sequential
             return [func(d) for d in data_list]
 
-    def _thread_execute(self, func: Callable, data_list: List[Any],
-                       show_progress: bool) -> List[Any]:
+    def _thread_execute(
+        self, func: Callable, data_list: List[Any], show_progress: bool
+    ) -> List[Any]:
         """Execute using ThreadPoolExecutor."""
         results = []
         with ThreadPoolExecutor(max_workers=self.n_workers) as executor:
-            futures = {executor.submit(func, data): i
-                      for i, data in enumerate(data_list)}
+            futures = {
+                executor.submit(func, data): i for i, data in enumerate(data_list)
+            }
 
             for future in as_completed(futures):
                 idx = futures[future]
@@ -247,7 +270,7 @@ class ParallelProcessor:
                     result = future.result()
                     results.append((idx, result))
                     if show_progress:
-                        print(f"Completed {len(results)}/{len(data_list)}", end='\r')
+                        print(f"Completed {len(results)}/{len(data_list)}", end="\r")
                 except Exception as e:
                     print(f"Error processing item {idx}: {e}")
 
@@ -255,13 +278,15 @@ class ParallelProcessor:
         results.sort(key=lambda x: x[0])
         return [r[1] for r in results]
 
-    def _process_execute(self, func: Callable, data_list: List[Any],
-                        show_progress: bool) -> List[Any]:
+    def _process_execute(
+        self, func: Callable, data_list: List[Any], show_progress: bool
+    ) -> List[Any]:
         """Execute using ProcessPoolExecutor."""
         results = []
         with ProcessPoolExecutor(max_workers=self.n_workers) as executor:
-            futures = {executor.submit(func, data): i
-                      for i, data in enumerate(data_list)}
+            futures = {
+                executor.submit(func, data): i for i, data in enumerate(data_list)
+            }
 
             for future in as_completed(futures):
                 idx = futures[future]
@@ -269,7 +294,7 @@ class ParallelProcessor:
                     result = future.result()
                     results.append((idx, result))
                     if show_progress:
-                        print(f"Completed {len(results)}/{len(data_list)}", end='\r')
+                        print(f"Completed {len(results)}/{len(data_list)}", end="\r")
                 except Exception as e:
                     print(f"Error processing item {idx}: {e}")
 
@@ -277,8 +302,9 @@ class ParallelProcessor:
         results.sort(key=lambda x: x[0])
         return [r[1] for r in results]
 
-    def _dask_execute(self, func: Callable, data_list: List[Any],
-                     show_progress: bool) -> List[Any]:
+    def _dask_execute(
+        self, func: Callable, data_list: List[Any], show_progress: bool
+    ) -> List[Any]:
         """Execute using Dask."""
         from dask import compute, delayed
 
@@ -297,9 +323,12 @@ class MapReduce:
         """Initialize MapReduce with specified workers."""
         self.n_workers = n_workers or mp.cpu_count()
 
-    def map_reduce(self, data: List[Any],
-                  mapper: Callable[[Any], List[Tuple[Any, Any]]],
-                  reducer: Callable[[Any, List[Any]], Any]) -> Dict[Any, Any]:
+    def map_reduce(
+        self,
+        data: List[Any],
+        mapper: Callable[[Any], List[Tuple[Any, Any]]],
+        reducer: Callable[[Any, List[Any]], Any],
+    ) -> Dict[Any, Any]:
         """
         Execute MapReduce operation.
 
@@ -326,8 +355,10 @@ class MapReduce:
 
         # Reduce phase
         with ProcessPoolExecutor(max_workers=self.n_workers) as executor:
-            futures = {executor.submit(reducer, key, values): key
-                      for key, values in grouped.items()}
+            futures = {
+                executor.submit(reducer, key, values): key
+                for key, values in grouped.items()
+            }
 
             results = {}
             for future in as_completed(futures):
@@ -344,7 +375,7 @@ class DataParallelizer:
     def partition_dataframe(df: pd.DataFrame, n_partitions: int) -> List[pd.DataFrame]:
         """Partition DataFrame into chunks for parallel processing."""
         chunk_size = len(df) // n_partitions + 1
-        return [df.iloc[i:i+chunk_size] for i in range(0, len(df), chunk_size)]
+        return [df.iloc[i : i + chunk_size] for i in range(0, len(df), chunk_size)]
 
     @staticmethod
     def partition_array(arr: np.ndarray, n_partitions: int) -> List[np.ndarray]:
@@ -352,8 +383,11 @@ class DataParallelizer:
         return np.array_split(arr, n_partitions)
 
     @staticmethod
-    def scatter_gather(func: Callable, data: Union[pd.DataFrame, np.ndarray],
-                      n_workers: Optional[int] = None) -> Union[pd.DataFrame, np.ndarray]:
+    def scatter_gather(
+        func: Callable,
+        data: Union[pd.DataFrame, np.ndarray],
+        n_workers: Optional[int] = None,
+    ) -> Union[pd.DataFrame, np.ndarray]:
         """
         Scatter data to workers, apply function, and gather results.
 
@@ -384,8 +418,13 @@ class DataParallelizer:
             return np.concatenate(results)
 
 
-def benchmark_distributed(func: Callable, data: Any, backends: List[str],
-                         n_workers: int = 4, iterations: int = 3) -> pd.DataFrame:
+def benchmark_distributed(
+    func: Callable,
+    data: Any,
+    backends: List[str],
+    n_workers: int = 4,
+    iterations: int = 3,
+) -> pd.DataFrame:
     """
     Benchmark different distributed processing backends.
 
@@ -416,14 +455,16 @@ def benchmark_distributed(func: Callable, data: Any, backends: List[str],
                 times.append(None)
 
         if times and all(t is not None for t in times):
-            results.append({
-                'backend': backend,
-                'mean_time': np.mean(times),
-                'std_time': np.std(times),
-                'min_time': np.min(times),
-                'max_time': np.max(times),
-                'n_workers': n_workers
-            })
+            results.append(
+                {
+                    "backend": backend,
+                    "mean_time": np.mean(times),
+                    "std_time": np.std(times),
+                    "min_time": np.min(times),
+                    "max_time": np.max(times),
+                    "n_workers": n_workers,
+                }
+            )
 
     return pd.DataFrame(results)
 
@@ -431,7 +472,7 @@ def benchmark_distributed(func: Callable, data: Any, backends: List[str],
 # Example usage
 if __name__ == "__main__":
     print("Distributed Processing Module")
-    print("="*60)
+    print("=" * 60)
 
     # Test data
     n_items = 1000
@@ -444,18 +485,18 @@ if __name__ == "__main__":
 
     # Benchmark different backends
     print("\nBenchmarking distributed backends...")
-    backends = ['threading', 'multiprocessing']
+    backends = ["threading", "multiprocessing"]
     if DASK_AVAILABLE:
-        backends.append('dask')
+        backends.append("dask")
     if RAY_AVAILABLE:
-        backends.append('ray')
+        backends.append("ray")
 
     results = benchmark_distributed(
         process_matrix,
         data[:10],  # Use subset for demo
         backends=backends,
         n_workers=4,
-        iterations=2
+        iterations=2,
     )
 
     print("\nBenchmark Results:")
@@ -463,5 +504,5 @@ if __name__ == "__main__":
 
     # Find best backend
     if not results.empty:
-        best = results.loc[results['mean_time'].idxmin()]
+        best = results.loc[results["mean_time"].idxmin()]
         print(f"\nBest backend: {best['backend']} ({best['mean_time']:.3f}s)")

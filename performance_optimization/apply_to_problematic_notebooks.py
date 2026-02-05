@@ -264,7 +264,7 @@ except ImportError as e:
         # Replace iterrows with vectorized operations
         if "for index, row in" in code and "iterrows()" in code:
             code = f"""# OPTIMIZED: Vectorized operation (replaced iterrows loop)
-{code.replace('for index, row in', '# Original loop replaced: for index, row in')}
+{code.replace("for index, row in", "# Original loop replaced: for index, row in")}
 
 # Vectorized version:
 # df['new_column'] = df['column1'] * df['column2']  # Example

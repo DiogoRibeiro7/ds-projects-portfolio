@@ -15,7 +15,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 
-def make_synthetic_credit_data(n_samples: int = 5000, random_state: int = 42) -> tuple[pd.DataFrame, pd.Series]:
+def make_synthetic_credit_data(
+    n_samples: int = 5000, random_state: int = 42
+) -> tuple[pd.DataFrame, pd.Series]:
     X, y = make_classification(
         n_samples=n_samples,
         n_features=12,

@@ -51,6 +51,7 @@ try:
     from cuml.dask.preprocessing import StandardScaler as CumlStandardScaler
     from cuml.dask.ensemble import RandomForestClassifier as CumlRFC
     from cuml.dask.linear_model import LogisticRegression as CumlLR
+
     GPU_AVAILABLE = True
 except ImportError:
     GPU_AVAILABLE = False
@@ -64,6 +65,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ComputeConfig:
     """Configuration for distributed computing"""
+
     backend: str = "ray"  # "ray", "dask", "spark"
     n_workers: int = 4
     threads_per_worker: int = 2
@@ -101,10 +103,15 @@ class DistributedComputer:
             ray.init(
                 address=self.config.scheduler_address or "auto",
                 num_cpus=self.config.n_workers * self.config.threads_per_worker,
-                num_gpus=self.config.n_workers * self.config.gpu_per_worker if self.config.use_gpu else 0,
+                num_gpus=self.config.n_workers * self.config.gpu_per_worker
+                if self.config.use_gpu
+                else 0,
                 dashboard_host="0.0.0.0" if self.config.dashboard_address else None,
-                _memory=self._parse_memory(self.config.memory_per_worker) * self.config.n_workers,
-                object_store_memory=self._parse_memory(self.config.memory_per_worker) * self.config.n_workers // 2
+                _memory=self._parse_memory(self.config.memory_per_worker)
+                * self.config.n_workers,
+                object_store_memory=self._parse_memory(self.config.memory_per_worker)
+                * self.config.n_workers
+                // 2,
             )
         logger.info(f"Ray initialized with {ray.cluster_resources()}")
 
@@ -112,19 +119,21 @@ class DistributedComputer:
         """Initialize Dask cluster"""
         if self.config.use_gpu and GPU_AVAILABLE:
             from dask_cuda import LocalCUDACluster
+
             cluster = LocalCUDACluster(
                 n_workers=self.config.n_workers,
                 threads_per_worker=self.config.threads_per_worker,
                 memory_limit=self.config.memory_per_worker,
-                dashboard_address=self.config.dashboard_address or ":8787"
+                dashboard_address=self.config.dashboard_address or ":8787",
             )
         else:
             from dask.distributed import LocalCluster
+
             cluster = LocalCluster(
                 n_workers=self.config.n_workers,
                 threads_per_worker=self.config.threads_per_worker,
                 memory_limit=self.config.memory_per_worker,
-                dashboard_address=self.config.dashboard_address or ":8787"
+                dashboard_address=self.config.dashboard_address or ":8787",
             )
 
         self.client = Client(cluster)
@@ -132,8 +141,7 @@ class DistributedComputer:
         # Setup adaptive scaling if enabled
         if self.config.adaptive_scaling:
             self.client.cluster.adapt(
-                minimum=self.config.min_workers,
-                maximum=self.config.max_workers
+                minimum=self.config.min_workers, maximum=self.config.max_workers
             )
 
         logger.info(f"Dask client initialized: {self.client}")
@@ -165,9 +173,9 @@ class DaskMLPipeline:
 
     def load_data(self, file_path: str, **kwargs) -> dd.DataFrame:
         """Load data as Dask DataFrame"""
-        if file_path.endswith('.parquet'):
+        if file_path.endswith(".parquet"):
             df = dd.read_parquet(file_path, **kwargs)
-        elif file_path.endswith('.csv'):
+        elif file_path.endswith(".csv"):
             df = dd.read_csv(file_path, **kwargs)
         else:
             # Load with pandas and convert
@@ -177,8 +185,9 @@ class DaskMLPipeline:
         logger.info(f"Loaded data with {df.npartitions} partitions")
         return df
 
-    def preprocess_data(self, X: dd.DataFrame, y: Optional[dd.Series] = None,
-                       use_gpu: bool = False) -> Tuple[dd.DataFrame, Optional[dd.Series]]:
+    def preprocess_data(
+        self, X: dd.DataFrame, y: Optional[dd.Series] = None, use_gpu: bool = False
+    ) -> Tuple[dd.DataFrame, Optional[dd.Series]]:
         """Preprocess data with scaling"""
         if use_gpu and GPU_AVAILABLE:
             self.scaler = CumlStandardScaler()
@@ -202,8 +211,9 @@ class DaskMLPipeline:
         model.fit(X_partition, y_partition)
         return model
 
-    def train_distributed(self, X: dd.DataFrame, y: dd.Series,
-                         model_class: Any, **model_kwargs) -> List:
+    def train_distributed(
+        self, X: dd.DataFrame, y: dd.Series, model_class: Any, **model_kwargs
+    ) -> List:
         """Train models on distributed partitions"""
         # Get partition pairs
         X_parts = X.to_delayed()
@@ -227,8 +237,7 @@ class DaskMLPipeline:
 
         for model in models:
             pred = dd.from_pandas(
-                pd.Series(model.predict(X.compute())),
-                npartitions=X.npartitions
+                pd.Series(model.predict(X.compute())), npartitions=X.npartitions
             )
             predictions.append(pred)
 
@@ -236,22 +245,20 @@ class DaskMLPipeline:
         ensemble_pred = dd.concat(predictions, axis=1).mean(axis=1)
         return ensemble_pred
 
-    def hyperparameter_search(self, X: dd.DataFrame, y: dd.Series,
-                            model_class: Any, param_grid: Dict) -> Dict:
+    def hyperparameter_search(
+        self, X: dd.DataFrame, y: dd.Series, model_class: Any, param_grid: Dict
+    ) -> Dict:
         """Distributed hyperparameter search"""
         from dask_ml.model_selection import GridSearchCV
 
         model = model_class()
-        search = GridSearchCV(
-            model, param_grid,
-            cv=5, scoring='roc_auc'
-        )
+        search = GridSearchCV(model, param_grid, cv=5, scoring="roc_auc")
 
         search.fit(X, y)
         return {
-            'best_params': search.best_params_,
-            'best_score': search.best_score_,
-            'cv_results': search.cv_results_
+            "best_params": search.best_params_,
+            "best_score": search.best_score_,
+            "cv_results": search.cv_results_,
         }
 
 
@@ -266,9 +273,9 @@ class RayMLPipeline:
 
     def load_data(self, file_path: str, **kwargs) -> Dataset:
         """Load data as Ray Dataset"""
-        if file_path.endswith('.parquet'):
+        if file_path.endswith(".parquet"):
             dataset = ray.data.read_parquet(file_path)
-        elif file_path.endswith('.csv'):
+        elif file_path.endswith(".csv"):
             dataset = ray.data.read_csv(file_path)
         else:
             # Load with pandas and convert
@@ -297,19 +304,19 @@ class RayMLPipeline:
         """Preprocess data using Ray"""
         # Map preprocessing to batches
         preprocessed = dataset.map_batches(
-            lambda batch: self.preprocess_batch.remote(batch),
-            batch_size=1000
+            lambda batch: self.preprocess_batch.remote(batch), batch_size=1000
         )
         return preprocessed
 
-    def train_xgboost(self, dataset: Dataset, label_column: str,
-                     num_boost_rounds: int = 100) -> XGBoostTrainer:
+    def train_xgboost(
+        self, dataset: Dataset, label_column: str, num_boost_rounds: int = 100
+    ) -> XGBoostTrainer:
         """Train XGBoost model using Ray Train"""
         trainer = XGBoostTrainer(
             scaling_config=ScalingConfig(
                 num_workers=4,
                 use_gpu=GPU_AVAILABLE,
-                resources_per_worker={"CPU": 2, "GPU": 0.25 if GPU_AVAILABLE else 0}
+                resources_per_worker={"CPU": 2, "GPU": 0.25 if GPU_AVAILABLE else 0},
             ),
             label_column=label_column,
             params={
@@ -327,8 +334,11 @@ class RayMLPipeline:
         self.trainer = trainer
         return result
 
-    def hyperparameter_tuning(self, dataset: Dataset, label_column: str) -> tune.ResultGrid:
+    def hyperparameter_tuning(
+        self, dataset: Dataset, label_column: str
+    ) -> tune.ResultGrid:
         """Hyperparameter tuning using Ray Tune"""
+
         def train_model(config):
             from sklearn.ensemble import RandomForestClassifier
             from sklearn.metrics import roc_auc_score
@@ -345,7 +355,7 @@ class RayMLPipeline:
                 n_estimators=config["n_estimators"],
                 max_depth=config["max_depth"],
                 min_samples_split=config["min_samples_split"],
-                random_state=42
+                random_state=42,
             )
             model.fit(X_train, y_train)
 
@@ -359,33 +369,27 @@ class RayMLPipeline:
         search_space = {
             "n_estimators": tune.choice([50, 100, 200]),
             "max_depth": tune.choice([5, 10, 15, None]),
-            "min_samples_split": tune.choice([2, 5, 10])
+            "min_samples_split": tune.choice([2, 5, 10]),
         }
 
         # Use Optuna for search
         optuna_search = OptunaSearch(metric="auc", mode="max")
 
         # Use ASHA scheduler for early stopping
-        scheduler = ASHAScheduler(
-            metric="auc",
-            mode="max",
-            max_t=100,
-            grace_period=10
-        )
+        scheduler = ASHAScheduler(metric="auc", mode="max", max_t=100, grace_period=10)
 
         # Run tuning
         tuner = tune.Tuner(
             tune.with_resources(
-                train_model,
-                {"cpu": 2, "gpu": 0.25 if GPU_AVAILABLE else 0}
+                train_model, {"cpu": 2, "gpu": 0.25 if GPU_AVAILABLE else 0}
             ),
             param_space=search_space,
             tune_config=tune.TuneConfig(
                 search_alg=optuna_search,
                 scheduler=scheduler,
                 num_samples=20,
-                max_concurrent_trials=4
-            )
+                max_concurrent_trials=4,
+            ),
         )
 
         results = tuner.fit()
@@ -397,8 +401,9 @@ class RayMLPipeline:
         predictions = model.predict(data_chunk)
         return predictions
 
-    def batch_inference(self, model: Any, dataset: Dataset,
-                       batch_size: int = 1000) -> List[np.ndarray]:
+    def batch_inference(
+        self, model: Any, dataset: Dataset, batch_size: int = 1000
+    ) -> List[np.ndarray]:
         """Perform batch inference using Ray"""
         # Serialize model
         model_ref = ray.put(model)
@@ -423,7 +428,9 @@ class GPUAccelerator:
         self.device_count = cp.cuda.runtime.getDeviceCount()
         logger.info(f"GPU Accelerator initialized with {self.device_count} devices")
 
-    def to_gpu(self, data: Union[pd.DataFrame, np.ndarray]) -> Union[cudf.DataFrame, cp.ndarray]:
+    def to_gpu(
+        self, data: Union[pd.DataFrame, np.ndarray]
+    ) -> Union[cudf.DataFrame, cp.ndarray]:
         """Transfer data to GPU"""
         if isinstance(data, pd.DataFrame):
             return cudf.from_pandas(data)
@@ -432,7 +439,9 @@ class GPUAccelerator:
         else:
             raise TypeError(f"Unsupported data type: {type(data)}")
 
-    def to_cpu(self, data: Union[cudf.DataFrame, cp.ndarray]) -> Union[pd.DataFrame, np.ndarray]:
+    def to_cpu(
+        self, data: Union[cudf.DataFrame, cp.ndarray]
+    ) -> Union[pd.DataFrame, np.ndarray]:
         """Transfer data from GPU to CPU"""
         if isinstance(data, cudf.DataFrame):
             return data.to_pandas()
@@ -441,33 +450,33 @@ class GPUAccelerator:
         else:
             raise TypeError(f"Unsupported data type: {type(data)}")
 
-    def train_gpu_model(self, X: cudf.DataFrame, y: cudf.Series,
-                       model_type: str = "xgboost") -> Any:
+    def train_gpu_model(
+        self, X: cudf.DataFrame, y: cudf.Series, model_type: str = "xgboost"
+    ) -> Any:
         """Train model on GPU"""
         if model_type == "xgboost":
             import xgboost as xgb
+
             dtrain = xgb.DMatrix(X, label=y)
             params = {
-                'objective': 'binary:logistic',
-                'tree_method': 'gpu_hist',
-                'predictor': 'gpu_predictor',
-                'eval_metric': 'auc',
-                'max_depth': 6,
-                'learning_rate': 0.3
+                "objective": "binary:logistic",
+                "tree_method": "gpu_hist",
+                "predictor": "gpu_predictor",
+                "eval_metric": "auc",
+                "max_depth": 6,
+                "learning_rate": 0.3,
             }
             model = xgb.train(params, dtrain, num_boost_round=100)
 
         elif model_type == "random_forest":
             from cuml.ensemble import RandomForestClassifier
-            model = RandomForestClassifier(
-                n_estimators=100,
-                max_depth=10,
-                n_streams=4
-            )
+
+            model = RandomForestClassifier(n_estimators=100, max_depth=10, n_streams=4)
             model.fit(X, y)
 
         elif model_type == "logistic_regression":
             from cuml.linear_model import LogisticRegression
+
             model = LogisticRegression()
             model.fit(X, y)
 
@@ -490,8 +499,9 @@ class GPUAccelerator:
         return X
 
     @staticmethod
-    def benchmark_gpu_vs_cpu(func_gpu: Callable, func_cpu: Callable,
-                            data: Any, iterations: int = 10) -> Dict:
+    def benchmark_gpu_vs_cpu(
+        func_gpu: Callable, func_cpu: Callable, data: Any, iterations: int = 10
+    ) -> Dict:
         """Benchmark GPU vs CPU performance"""
         import time
 
@@ -510,11 +520,11 @@ class GPUAccelerator:
             cpu_times.append(time.time() - start)
 
         return {
-            'gpu_mean': np.mean(gpu_times),
-            'gpu_std': np.std(gpu_times),
-            'cpu_mean': np.mean(cpu_times),
-            'cpu_std': np.std(cpu_times),
-            'speedup': np.mean(cpu_times) / np.mean(gpu_times)
+            "gpu_mean": np.mean(gpu_times),
+            "gpu_std": np.std(gpu_times),
+            "cpu_mean": np.mean(cpu_times),
+            "cpu_std": np.std(cpu_times),
+            "speedup": np.mean(cpu_times) / np.mean(gpu_times),
         }
 
 
@@ -533,7 +543,7 @@ class ParallelProcessor:
         """Parallel map operation"""
         # Split data into chunks
         chunk_size = len(data) // self.n_workers
-        chunks = [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
+        chunks = [data[i : i + chunk_size] for i in range(0, len(data), chunk_size)]
 
         # Process in parallel
         futures = [self.process_chunk.remote(func, chunk, **kwargs) for chunk in chunks]
@@ -560,9 +570,10 @@ class ParallelProcessor:
                     pairs.append((data[i], initial))
 
             # Reduce pairs in parallel
-            futures = [self.process_chunk.remote(
-                lambda p: func(p[0], p[1]), pair
-            ) for pair in pairs]
+            futures = [
+                self.process_chunk.remote(lambda p: func(p[0], p[1]), pair)
+                for pair in pairs
+            ]
 
             data = ray.get(futures)
 
@@ -573,10 +584,7 @@ class ParallelProcessor:
 if __name__ == "__main__":
     # Initialize distributed computing
     config = ComputeConfig(
-        backend="ray",
-        n_workers=4,
-        use_gpu=GPU_AVAILABLE,
-        adaptive_scaling=True
+        backend="ray", n_workers=4, use_gpu=GPU_AVAILABLE, adaptive_scaling=True
     )
 
     computer = DistributedComputer(config)
@@ -585,12 +593,14 @@ if __name__ == "__main__":
     ray_pipeline = RayMLPipeline()
 
     # Create sample data
-    sample_data = pd.DataFrame({
-        'feature1': np.random.randn(10000),
-        'feature2': np.random.randn(10000),
-        'feature3': np.random.randn(10000),
-        'target': np.random.randint(0, 2, 10000)
-    })
+    sample_data = pd.DataFrame(
+        {
+            "feature1": np.random.randn(10000),
+            "feature2": np.random.randn(10000),
+            "feature3": np.random.randn(10000),
+            "target": np.random.randint(0, 2, 10000),
+        }
+    )
 
     # Convert to Ray Dataset
     dataset = ray.data.from_pandas(sample_data)
@@ -599,7 +609,7 @@ if __name__ == "__main__":
     processed_dataset = ray_pipeline.preprocess_data(dataset)
 
     # Train model
-    result = ray_pipeline.train_xgboost(processed_dataset, label_column='target')
+    result = ray_pipeline.train_xgboost(processed_dataset, label_column="target")
 
     logger.info(f"Training completed: {result}")
 

@@ -70,8 +70,14 @@ class EnhancedFeatureSelector:
         """
         if methods is None:
             methods = [
-                "mutual_info", "chi2", "anova", "random_forest",
-                "gradient_boost", "lasso", "recursive_elimination", "boruta"
+                "mutual_info",
+                "chi2",
+                "anova",
+                "random_forest",
+                "gradient_boost",
+                "lasso",
+                "recursive_elimination",
+                "boruta",
             ]
 
         self.methods = methods
@@ -96,10 +102,14 @@ class EnhancedFeatureSelector:
         # Run each selection method
         for method in self.methods:
             if self.stability_selection:
-                scores, selected = self._stable_feature_selection(X, y, method, n_features)
+                scores, selected = self._stable_feature_selection(
+                    X, y, method, n_features
+                )
                 self.stability_scores_[method] = self._calculate_stability(X, y, method)
             else:
-                scores, selected = self._single_feature_selection(X, y, method, n_features)
+                scores, selected = self._single_feature_selection(
+                    X, y, method, n_features
+                )
                 self.stability_scores_[method] = 1.0  # Perfect stability for single run
 
             self.feature_scores_[method] = scores
@@ -138,7 +148,9 @@ class EnhancedFeatureSelector:
 
         # Select features that appear in at least threshold proportion of bootstraps
         selection_freq = feature_counts / self.n_bootstrap
-        selected_features = selection_freq[selection_freq >= self.consensus_threshold].index.tolist()
+        selected_features = selection_freq[
+            selection_freq >= self.consensus_threshold
+        ].index.tolist()
 
         return avg_scores, selected_features
 
@@ -173,6 +185,7 @@ class EnhancedFeatureSelector:
 
         elif method == "gradient_boost":
             from sklearn.ensemble import GradientBoostingClassifier
+
             gb = GradientBoostingClassifier(
                 n_estimators=100, random_state=42, max_depth=3
             )
@@ -182,6 +195,7 @@ class EnhancedFeatureSelector:
         elif method == "lasso":
             from sklearn.linear_model import LassoCV
             from sklearn.preprocessing import StandardScaler
+
             X_scaled = StandardScaler().fit_transform(X)
             lasso = LassoCV(cv=5, random_state=42, n_jobs=-1)
             lasso.fit(X_scaled, y)
@@ -221,8 +235,12 @@ class EnhancedFeatureSelector:
         importance = pd.Series(rf.feature_importances_, index=X_combined.columns)
 
         # Compare with shadow max
-        shadow_max = importance[[col for col in importance.index if "shadow_" in col]].max()
-        original_importance = importance[[col for col in importance.index if "shadow_" not in col]]
+        shadow_max = importance[
+            [col for col in importance.index if "shadow_" in col]
+        ].max()
+        original_importance = importance[
+            [col for col in importance.index if "shadow_" not in col]
+        ]
 
         # Features that beat shadow max
         selected_mask = original_importance > shadow_max
@@ -239,8 +257,10 @@ class EnhancedFeatureSelector:
             y_train = y.iloc[train_idx]
 
             _, selected = self._single_feature_selection(
-                X_train, y_train, method, int(self.k * X.shape[1])
-                if isinstance(self.k, float) else self.k
+                X_train,
+                y_train,
+                method,
+                int(self.k * X.shape[1]) if isinstance(self.k, float) else self.k,
             )
             selections.append(set(selected))
 
@@ -295,7 +315,7 @@ class EnhancedFeatureSelector:
 
         # Add stability scores
         stability_df = pd.DataFrame.from_dict(
-            self.stability_scores_, orient='index', columns=['stability']
+            self.stability_scores_, orient="index", columns=["stability"]
         )
 
         return report, stability_df
@@ -356,17 +376,21 @@ class FeatureInteractionDetector:
             if feat1 != feat2:
                 interaction_score = self._test_interaction(X, y, feat1, feat2)
                 if interaction_score > self.importance_threshold:
-                    interactions_scores.append({
-                        'feature1': feat1,
-                        'feature2': feat2,
-                        'score': interaction_score,
-                        'type': self._determine_best_interaction(X, y, feat1, feat2)
-                    })
+                    interactions_scores.append(
+                        {
+                            "feature1": feat1,
+                            "feature2": feat2,
+                            "score": interaction_score,
+                            "type": self._determine_best_interaction(
+                                X, y, feat1, feat2
+                            ),
+                        }
+                    )
 
         # Sort by score and keep top interactions
         interactions_scores = sorted(
-            interactions_scores, key=lambda x: x['score'], reverse=True
-        )[:self.max_interactions]
+            interactions_scores, key=lambda x: x["score"], reverse=True
+        )[: self.max_interactions]
 
         self.interactions_ = interactions_scores
         return self
@@ -377,15 +401,15 @@ class FeatureInteractionDetector:
         """Test importance of interaction between two features."""
         # Create interaction features
         interactions = pd.DataFrame()
-        interactions['multiply'] = X[feat1] * X[feat2]
+        interactions["multiply"] = X[feat1] * X[feat2]
 
         # Avoid division by zero
-        with np.errstate(divide='ignore', invalid='ignore'):
-            interactions['divide'] = X[feat1] / (X[feat2] + 1e-10)
-            interactions['divide'].fillna(0, inplace=True)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            interactions["divide"] = X[feat1] / (X[feat2] + 1e-10)
+            interactions["divide"].fillna(0, inplace=True)
 
-        interactions['add'] = X[feat1] + X[feat2]
-        interactions['subtract'] = X[feat1] - X[feat2]
+        interactions["add"] = X[feat1] + X[feat2]
+        interactions["subtract"] = X[feat1] - X[feat2]
 
         # Calculate mutual information for each interaction
         scores = []
@@ -400,17 +424,19 @@ class FeatureInteractionDetector:
     ) -> str:
         """Determine the best type of interaction."""
         interactions = {
-            'multiply': X[feat1] * X[feat2],
-            'divide': X[feat1] / (X[feat2] + 1e-10),
-            'add': X[feat1] + X[feat2],
-            'subtract': X[feat1] - X[feat2],
+            "multiply": X[feat1] * X[feat2],
+            "divide": X[feat1] / (X[feat2] + 1e-10),
+            "add": X[feat1] + X[feat2],
+            "subtract": X[feat1] - X[feat2],
         }
 
         best_type = None
         best_score = -np.inf
 
         for int_type, int_values in interactions.items():
-            mi = mutual_info_classif(int_values.values.reshape(-1, 1), y, random_state=42)[0]
+            mi = mutual_info_classif(
+                int_values.values.reshape(-1, 1), y, random_state=42
+            )[0]
             if mi > best_score:
                 best_score = mi
                 best_type = int_type
@@ -422,17 +448,17 @@ class FeatureInteractionDetector:
         X_new = X.copy()
 
         for interaction in self.interactions_:
-            feat1 = interaction['feature1']
-            feat2 = interaction['feature2']
-            int_type = interaction['type']
+            feat1 = interaction["feature1"]
+            feat2 = interaction["feature2"]
+            int_type = interaction["type"]
 
-            if int_type == 'multiply':
+            if int_type == "multiply":
                 X_new[f"{feat1}*{feat2}"] = X[feat1] * X[feat2]
-            elif int_type == 'divide':
+            elif int_type == "divide":
                 X_new[f"{feat1}/{feat2}"] = X[feat1] / (X[feat2] + 1e-10)
-            elif int_type == 'add':
+            elif int_type == "add":
                 X_new[f"{feat1}+{feat2}"] = X[feat1] + X[feat2]
-            elif int_type == 'subtract':
+            elif int_type == "subtract":
                 X_new[f"{feat1}-{feat2}"] = X[feat1] - X[feat2]
 
         return X_new
@@ -476,7 +502,9 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         # Identify categorical columns if not specified
         if self.columns is None:
-            self.columns = X.select_dtypes(include=['object', 'category']).columns.tolist()
+            self.columns = X.select_dtypes(
+                include=["object", "category"]
+            ).columns.tolist()
 
         # Fit encoding for each column
         for col in self.columns:
@@ -518,7 +546,9 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         return encoding
 
-    def _regularize_encoding(self, category_mean: float, n: int, global_mean: float) -> float:
+    def _regularize_encoding(
+        self, category_mean: float, n: int, global_mean: float
+    ) -> float:
         """Apply regularization to encoding."""
         # Empirical Bayes smoothing
         lambda_param = 1 / (1 + np.exp(-(n - self.min_samples_leaf) / self.smoothing))
@@ -542,7 +572,9 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.global_mean_ = y.mean()
 
         if self.columns is None:
-            self.columns = X.select_dtypes(include=['object', 'category']).columns.tolist()
+            self.columns = X.select_dtypes(
+                include=["object", "category"]
+            ).columns.tolist()
 
         # Use out-of-fold predictions
         for col in self.columns:
@@ -618,12 +650,12 @@ class FeatureStabilityAnalyzer:
             feature_list = X.columns.tolist()
 
         stability_metrics = {
-            'mean': [],
-            'std': [],
-            'cv': [],  # Coefficient of variation
-            'iqr': [],  # Interquartile range
-            'range': [],
-            'stability_score': []
+            "mean": [],
+            "std": [],
+            "cv": [],  # Coefficient of variation
+            "iqr": [],  # Interquartile range
+            "range": [],
+            "stability_score": [],
         }
 
         for feature in feature_list:
@@ -643,11 +675,14 @@ class FeatureStabilityAnalyzer:
                 y_split = y.iloc[train_idx]
 
                 # Calculate importance (using mutual information)
-                if X[feature].dtype in ['object', 'category']:
+                if X[feature].dtype in ["object", "category"]:
                     # Encode categorical
                     from sklearn.preprocessing import LabelEncoder
+
                     le = LabelEncoder()
-                    feature_encoded = le.fit_transform(X_split[feature].fillna('missing'))
+                    feature_encoded = le.fit_transform(
+                        X_split[feature].fillna("missing")
+                    )
                     mi_score = mutual_info_classif(
                         feature_encoded.reshape(-1, 1), y_split, random_state=42
                     )[0]
@@ -661,22 +696,28 @@ class FeatureStabilityAnalyzer:
             # Calculate stability metrics
             importances = np.array(importances)
 
-            stability_metrics['mean'].append(np.mean(importances))
-            stability_metrics['std'].append(np.std(importances))
-            stability_metrics['cv'].append(
-                np.std(importances) / np.mean(importances) if np.mean(importances) > 0 else np.inf
+            stability_metrics["mean"].append(np.mean(importances))
+            stability_metrics["std"].append(np.std(importances))
+            stability_metrics["cv"].append(
+                np.std(importances) / np.mean(importances)
+                if np.mean(importances) > 0
+                else np.inf
             )
-            stability_metrics['iqr'].append(np.percentile(importances, 75) - np.percentile(importances, 25))
-            stability_metrics['range'].append(np.max(importances) - np.min(importances))
+            stability_metrics["iqr"].append(
+                np.percentile(importances, 75) - np.percentile(importances, 25)
+            )
+            stability_metrics["range"].append(np.max(importances) - np.min(importances))
 
             # Overall stability score (lower CV is more stable)
-            cv = stability_metrics['cv'][-1]
+            cv = stability_metrics["cv"][-1]
             stability_score = 1 / (1 + cv) if cv != np.inf else 0
-            stability_metrics['stability_score'].append(stability_score)
+            stability_metrics["stability_score"].append(stability_score)
 
         # Create DataFrame
-        stability_df = pd.DataFrame(stability_metrics, index=feature_list[:len(stability_metrics['mean'])])
-        stability_df = stability_df.sort_values('stability_score', ascending=False)
+        stability_df = pd.DataFrame(
+            stability_metrics, index=feature_list[: len(stability_metrics["mean"])]
+        )
+        stability_df = stability_df.sort_values("stability_score", ascending=False)
 
         self.stability_scores_ = stability_df
         return stability_df
@@ -698,7 +739,9 @@ class FeatureStabilityAnalyzer:
         """
         # Split data into time periods
         time_values = pd.to_datetime(X[time_column])
-        period_edges = pd.qcut(time_values.rank(method='first'), n_periods, duplicates='drop')
+        period_edges = pd.qcut(
+            time_values.rank(method="first"), n_periods, duplicates="drop"
+        )
 
         temporal_importance = {}
 
@@ -712,11 +755,14 @@ class FeatureStabilityAnalyzer:
                 if feature not in temporal_importance:
                     temporal_importance[feature] = []
 
-                if X_period[feature].dtype in ['object', 'category']:
+                if X_period[feature].dtype in ["object", "category"]:
                     # Encode categorical
                     from sklearn.preprocessing import LabelEncoder
+
                     le = LabelEncoder()
-                    feature_encoded = le.fit_transform(X_period[feature].fillna('missing'))
+                    feature_encoded = le.fit_transform(
+                        X_period[feature].fillna("missing")
+                    )
                     mi_score = mutual_info_classif(
                         feature_encoded.reshape(-1, 1), y_period, random_state=42
                     )[0]
@@ -738,18 +784,20 @@ class FeatureStabilityAnalyzer:
             trend_corr, _ = spearmanr(time_indices, scores)
 
             # Variance over time
-            temporal_cv = np.std(scores) / np.mean(scores) if np.mean(scores) > 0 else np.inf
+            temporal_cv = (
+                np.std(scores) / np.mean(scores) if np.mean(scores) > 0 else np.inf
+            )
 
             temporal_stability[feature] = {
-                'trend': trend_corr,
-                'temporal_cv': temporal_cv,
-                'temporal_stability': 1 / (1 + abs(trend_corr) + temporal_cv),
-                'mean_importance': np.mean(scores),
-                'importance_by_period': scores.tolist()
+                "trend": trend_corr,
+                "temporal_cv": temporal_cv,
+                "temporal_stability": 1 / (1 + abs(trend_corr) + temporal_cv),
+                "mean_importance": np.mean(scores),
+                "importance_by_period": scores.tolist(),
             }
 
-        temporal_df = pd.DataFrame.from_dict(temporal_stability, orient='index')
-        temporal_df = temporal_df.sort_values('temporal_stability', ascending=False)
+        temporal_df = pd.DataFrame.from_dict(temporal_stability, orient="index")
+        temporal_df = temporal_df.sort_values("temporal_stability", ascending=False)
 
         self.temporal_stability_ = temporal_df
         return temporal_df

@@ -13,14 +13,18 @@ pytestmark = pytest.mark.unit
 
 def make_outlier_data(seed: int = 0):
     rng = np.random.default_rng(seed)
-    base = pd.DataFrame({
-        "group": np.repeat(["control", "treatment"], 500),
-        "converted": rng.binomial(1, 0.2, size=1000),
-    })
-    outliers = pd.DataFrame({
-        "group": ["treatment"] * 10,
-        "converted": np.ones(10),
-    })
+    base = pd.DataFrame(
+        {
+            "group": np.repeat(["control", "treatment"], 500),
+            "converted": rng.binomial(1, 0.2, size=1000),
+        }
+    )
+    outliers = pd.DataFrame(
+        {
+            "group": ["treatment"] * 10,
+            "converted": np.ones(10),
+        }
+    )
     return pd.concat([base, outliers], ignore_index=True)
 
 

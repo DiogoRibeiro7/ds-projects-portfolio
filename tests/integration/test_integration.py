@@ -20,7 +20,10 @@ import queue
 
 pytestmark = pytest.mark.integration
 
-from modern_bank_churn.ml_pipeline_orchestrator import MLPipelineOrchestrator, PipelineConfig
+from modern_bank_churn.ml_pipeline_orchestrator import (
+    MLPipelineOrchestrator,
+    PipelineConfig,
+)
 from statistical_methods.statistical_analyzer import StatisticalAnalyzer
 from statistical_methods.hypothesis_tester import HypothesisTester
 from dashboard_enhanced.dashboard_framework import EnhancedDashboard, DashboardConfig
@@ -40,26 +43,27 @@ class TestEndToEndPipeline:
         # 2. Statistical analysis
         analyzer = StatisticalAnalyzer(data)
         summary = analyzer.generate_summary()
-        assert 'mean' in str(summary).lower()
+        assert "mean" in str(summary).lower()
 
         # 3. Feature engineering
         from modern_bank_churn.feature_engineering import FeatureEngineer
+
         engineer = FeatureEngineer()
         features = engineer.create_features(data)
         assert features.shape[1] >= data.shape[1]
 
         # 4. Model training
         config = PipelineConfig(
-            feature_selection_method='mutual_info',
-            model_type='random_forest',
+            feature_selection_method="mutual_info",
+            model_type="random_forest",
             hyperparameter_tuning=False,
-            cross_validation_folds=2
+            cross_validation_folds=2,
         )
         orchestrator = MLPipelineOrchestrator(config)
         results = orchestrator.run_pipeline(features)
 
         assert results.best_model is not None
-        assert results.metrics['auc_roc'] > 0.5
+        assert results.metrics["auc_roc"] > 0.5
 
         # 5. Model persistence
         model_path = temp_dir / "model.pkl"
@@ -68,9 +72,9 @@ class TestEndToEndPipeline:
 
         # 6. Production deployment
         from modern_bank_churn.production_readiness import ProductionPipeline
+
         prod_pipeline = ProductionPipeline(
-            model=results.best_model,
-            feature_names=results.selected_features
+            model=results.best_model, feature_names=results.selected_features
         )
 
         # 7. Prediction
@@ -110,8 +114,8 @@ class TestEndToEndPipeline:
         assert not validation_result.success  # Should fail due to duplicates
 
         # Clean data based on validation
-        cleaned_data = corrupted_dataframe.drop_duplicates(subset=['id'])
-        cleaned_data = cleaned_data.dropna(subset=['value'])
+        cleaned_data = corrupted_dataframe.drop_duplicates(subset=["id"])
+        cleaned_data = cleaned_data.dropna(subset=["value"])
 
         # Revalidate
         batch_request_clean = data_asset.build_batch_request(dataframe=cleaned_data)
@@ -124,9 +128,9 @@ class TestEndToEndPipeline:
     def test_notebook_execution_order(self, notebook_runner, temp_dir):
         """Test notebook execution in different orders."""
         notebooks = [
-            'tutorials/01_getting_started.ipynb',
-            'tutorials/02_real_world_case_study.ipynb',
-            'tutorials/03_model_comparison.ipynb'
+            "tutorials/01_getting_started.ipynb",
+            "tutorials/02_real_world_case_study.ipynb",
+            "tutorials/03_model_comparison.ipynb",
         ]
 
         # Test sequential execution
@@ -134,7 +138,7 @@ class TestEndToEndPipeline:
             if Path(notebook).exists():
                 output = temp_dir / f"output_{Path(notebook).stem}.ipynb"
                 try:
-                    notebook_runner(notebook, output, parameters={'test_mode': True})
+                    notebook_runner(notebook, output, parameters={"test_mode": True})
                     assert output.exists()
                 except Exception as e:
                     # Notebooks might not execute without dependencies
@@ -147,13 +151,13 @@ class TestEndToEndPipeline:
         from sklearn.linear_model import LogisticRegression
         from sklearn.svm import SVC
 
-        X = sample_dataframe.drop('churn', axis=1).select_dtypes(include=[np.number])
-        y = sample_dataframe['churn']
+        X = sample_dataframe.drop("churn", axis=1).select_dtypes(include=[np.number])
+        y = sample_dataframe["churn"]
 
         models = {
-            'rf': RandomForestClassifier(n_estimators=10, random_state=42),
-            'lr': LogisticRegression(random_state=42, max_iter=100),
-            'svm': SVC(random_state=42, probability=True)
+            "rf": RandomForestClassifier(n_estimators=10, random_state=42),
+            "lr": LogisticRegression(random_state=42, max_iter=100),
+            "svm": SVC(random_state=42, probability=True),
         }
 
         def train_model(model_data):
@@ -164,8 +168,9 @@ class TestEndToEndPipeline:
 
         # Train models concurrently
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-            futures = {executor.submit(train_model, item): item[0]
-                      for item in models.items()}
+            futures = {
+                executor.submit(train_model, item): item[0] for item in models.items()
+            }
 
             results = {}
             for future in concurrent.futures.as_completed(futures):
@@ -179,11 +184,9 @@ class TestEndToEndPipeline:
     def test_data_pipeline_with_different_formats(self, temp_dir):
         """Test pipeline with various data formats."""
         # Create test data in different formats
-        test_data = pd.DataFrame({
-            'a': [1, 2, 3, 4, 5],
-            'b': [10, 20, 30, 40, 50],
-            'target': [0, 1, 0, 1, 1]
-        })
+        test_data = pd.DataFrame(
+            {"a": [1, 2, 3, 4, 5], "b": [10, 20, 30, 40, 50], "target": [0, 1, 0, 1, 1]}
+        )
 
         # CSV format
         csv_path = temp_dir / "data.csv"
@@ -193,7 +196,7 @@ class TestEndToEndPipeline:
 
         # JSON format
         json_path = temp_dir / "data.json"
-        test_data.to_json(json_path, orient='records')
+        test_data.to_json(json_path, orient="records")
         json_data = pd.read_json(json_path)
         assert json_data.shape == test_data.shape
 
@@ -254,8 +257,8 @@ class TestEndToEndPipeline:
 
         if len(cleaned) > 10 and len(cleaned.columns) > 1:
             # Add a target column if missing
-            if 'target' not in cleaned.columns:
-                cleaned['target'] = np.random.choice([0, 1], len(cleaned))
+            if "target" not in cleaned.columns:
+                cleaned["target"] = np.random.choice([0, 1], len(cleaned))
 
             # Retry with cleaned data
             results = orchestrator.run_pipeline(cleaned)
@@ -270,21 +273,21 @@ class TestAPIIntegration:
         """Test REST API endpoints."""
         api = APIInfrastructure()
 
-        with patch('requests.post') as mock_post:
+        with patch("requests.post") as mock_post:
             mock_post.return_value.status_code = 200
-            mock_post.return_value.json.return_value = {'token': 'test_token'}
+            mock_post.return_value.json.return_value = {"token": "test_token"}
 
             # Test authentication
-            response = api.authenticate('user', 'pass')
-            assert response['token'] == 'test_token'
+            response = api.authenticate("user", "pass")
+            assert response["token"] == "test_token"
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             mock_get.return_value.status_code = 200
-            mock_get.return_value.json.return_value = {'data': [1, 2, 3]}
+            mock_get.return_value.json.return_value = {"data": [1, 2, 3]}
 
             # Test data retrieval
-            response = api.get_data('test_token')
-            assert response['data'] == [1, 2, 3]
+            response = api.get_data("test_token")
+            assert response["data"] == [1, 2, 3]
 
     @pytest.mark.integration
     def test_graphql_queries(self):
@@ -299,19 +302,19 @@ class TestAPIIntegration:
         }
         """
 
-        with patch('requests.post') as mock_post:
+        with patch("requests.post") as mock_post:
             mock_post.return_value.status_code = 200
             mock_post.return_value.json.return_value = {
-                'data': {
-                    'metrics': [
-                        {'name': 'accuracy', 'value': 0.95, 'timestamp': '2024-01-01'}
+                "data": {
+                    "metrics": [
+                        {"name": "accuracy", "value": 0.95, "timestamp": "2024-01-01"}
                     ]
                 }
             }
 
             api = APIInfrastructure()
             response = api.graphql_query(query)
-            assert response['data']['metrics'][0]['value'] == 0.95
+            assert response["data"]["metrics"][0]["value"] == 0.95
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -319,15 +322,17 @@ class TestAPIIntegration:
         """Test WebSocket connection."""
         async with aiohttp.ClientSession() as session:
             try:
-                async with session.ws_connect('ws://localhost:5000/ws') as ws:
+                async with session.ws_connect("ws://localhost:5000/ws") as ws:
                     # Send message
-                    await ws.send_str(json.dumps({'action': 'subscribe', 'channel': 'metrics'}))
+                    await ws.send_str(
+                        json.dumps({"action": "subscribe", "channel": "metrics"})
+                    )
 
                     # Receive message
                     msg = await ws.receive()
                     if msg.type == aiohttp.WSMsgType.TEXT:
                         data = json.loads(msg.data)
-                        assert 'channel' in data
+                        assert "channel" in data
             except:
                 # Connection might fail in test environment
                 pass
@@ -337,47 +342,47 @@ class TestAPIIntegration:
         """Test API rate limiting."""
         api = APIInfrastructure()
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             # First 10 requests succeed
             for i in range(10):
                 mock_get.return_value.status_code = 200
-                response = api.get_data('token')
+                response = api.get_data("token")
                 assert response is not None
 
             # 11th request should be rate limited
             mock_get.return_value.status_code = 429
-            mock_get.return_value.json.return_value = {'error': 'Rate limit exceeded'}
+            mock_get.return_value.json.return_value = {"error": "Rate limit exceeded"}
 
             with pytest.raises(Exception):
-                api.get_data('token')
+                api.get_data("token")
 
     @pytest.mark.integration
     def test_api_authentication_flow(self):
         """Test complete authentication flow."""
         api = APIInfrastructure()
 
-        with patch('requests.post') as mock_post:
+        with patch("requests.post") as mock_post:
             # Register user
             mock_post.return_value.status_code = 201
-            mock_post.return_value.json.return_value = {'user_id': '123'}
+            mock_post.return_value.json.return_value = {"user_id": "123"}
 
-            registration = api.register_user('newuser', 'password', 'email@test.com')
-            assert registration['user_id'] == '123'
+            registration = api.register_user("newuser", "password", "email@test.com")
+            assert registration["user_id"] == "123"
 
             # Login
             mock_post.return_value.status_code = 200
-            mock_post.return_value.json.return_value = {'token': 'jwt_token'}
+            mock_post.return_value.json.return_value = {"token": "jwt_token"}
 
-            login = api.login('newuser', 'password')
-            assert login['token'] == 'jwt_token'
+            login = api.login("newuser", "password")
+            assert login["token"] == "jwt_token"
 
             # Use token for authenticated request
-            with patch('requests.get') as mock_get:
+            with patch("requests.get") as mock_get:
                 mock_get.return_value.status_code = 200
-                mock_get.return_value.json.return_value = {'profile': 'user_data'}
+                mock_get.return_value.json.return_value = {"profile": "user_data"}
 
-                profile = api.get_profile('jwt_token')
-                assert profile['profile'] == 'user_data'
+                profile = api.get_profile("jwt_token")
+                assert profile["profile"] == "user_data"
 
 
 class TestDashboardIntegration:
@@ -397,18 +402,20 @@ class TestDashboardIntegration:
         # Register data source
         def get_data(filters=None):
             if filters:
-                return sample_dataframe[sample_dataframe['churn'] == filters.get('churn', 0)]
+                return sample_dataframe[
+                    sample_dataframe["churn"] == filters.get("churn", 0)
+                ]
             return sample_dataframe
 
-        dashboard.register_data_source('test_data', get_data)
-        assert 'test_data' in dashboard.data_sources
+        dashboard.register_data_source("test_data", get_data)
+        assert "test_data" in dashboard.data_sources
 
         # Test data retrieval
-        data = dashboard.get_data('test_data')
+        data = dashboard.get_data("test_data")
         assert len(data) == len(sample_dataframe)
 
         # Test with filters
-        filtered_data = dashboard.get_data('test_data', filters={'churn': 1})
+        filtered_data = dashboard.get_data("test_data", filters={"churn": 1})
         assert len(filtered_data) <= len(sample_dataframe)
 
     @pytest.mark.integration
@@ -418,28 +425,30 @@ class TestDashboardIntegration:
         dashboard = EnhancedDashboard(dashboard_config)
 
         # Simulate real-time data
-        test_data = {'metric': 'accuracy', 'value': 0.95, 'timestamp': time.time()}
+        test_data = {"metric": "accuracy", "value": 0.95, "timestamp": time.time()}
 
         # Publish to Redis
-        redis_client.publish('metrics', json.dumps(test_data))
+        redis_client.publish("metrics", json.dumps(test_data))
 
         # Subscribe and receive
         pubsub = redis_client.pubsub()
-        pubsub.subscribe('metrics')
+        pubsub.subscribe("metrics")
 
         # Get message (skip subscription confirmation)
         pubsub.get_message()
         message = pubsub.get_message()
 
         if message:
-            data = json.loads(message['data'])
-            assert data['metric'] == 'accuracy'
-            assert data['value'] == 0.95
+            data = json.loads(message["data"])
+            assert data["metric"] == "accuracy"
+            assert data["value"] == 0.95
 
     @pytest.mark.integration
     def test_dashboard_export_functionality(self, sample_dataframe, temp_dir):
         """Test dashboard export capabilities."""
-        from dashboard_enhanced.visualization_components import InteractiveVisualizations
+        from dashboard_enhanced.visualization_components import (
+            InteractiveVisualizations,
+        )
         import plotly.graph_objects as go
 
         viz = InteractiveVisualizations()
@@ -466,10 +475,12 @@ class TestConcurrentExecution:
         """Test parallel training of multiple models."""
         from sklearn.model_selection import train_test_split
 
-        X = sample_dataframe.drop('churn', axis=1).select_dtypes(include=[np.number])
-        y = sample_dataframe['churn']
+        X = sample_dataframe.drop("churn", axis=1).select_dtypes(include=[np.number])
+        y = sample_dataframe["churn"]
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
 
         def train_single_model(config_dict):
             """Train a single model with given config."""
@@ -478,15 +489,15 @@ class TestConcurrentExecution:
 
             # Create temporary dataframe
             train_df = pd.concat([X_train, y_train], axis=1)
-            train_df.columns = list(X_train.columns) + ['target']
+            train_df.columns = list(X_train.columns) + ["target"]
 
             results = orchestrator.run_pipeline(train_df)
-            return results.metrics.get('auc_roc', 0)
+            return results.metrics.get("auc_roc", 0)
 
         configs = [
-            {'model_type': 'random_forest', 'cross_validation_folds': 2},
-            {'model_type': 'xgboost', 'cross_validation_folds': 2},
-            {'model_type': 'lightgbm', 'cross_validation_folds': 2}
+            {"model_type": "random_forest", "cross_validation_folds": 2},
+            {"model_type": "xgboost", "cross_validation_folds": 2},
+            {"model_type": "lightgbm", "cross_validation_folds": 2},
         ]
 
         # Train models in parallel
@@ -514,7 +525,7 @@ class TestConcurrentExecution:
         # Create threads
         threads = []
         for i in range(10):
-            batch = X_test.iloc[i*10:(i+1)*10]
+            batch = X_test.iloc[i * 10 : (i + 1) * 10]
             t = threading.Thread(target=predict_batch, args=(batch, i))
             threads.append(t)
             t.start()
@@ -583,18 +594,17 @@ class TestDataSizeScaling:
         """Test pipeline with different data sizes."""
         # Generate data
         np.random.seed(42)
-        data = pd.DataFrame({
-            'feature1': np.random.randn(n_samples),
-            'feature2': np.random.randn(n_samples),
-            'feature3': np.random.randn(n_samples),
-            'target': np.random.choice([0, 1], n_samples)
-        })
+        data = pd.DataFrame(
+            {
+                "feature1": np.random.randn(n_samples),
+                "feature2": np.random.randn(n_samples),
+                "feature3": np.random.randn(n_samples),
+                "target": np.random.choice([0, 1], n_samples),
+            }
+        )
 
         # Run pipeline
-        config = PipelineConfig(
-            cross_validation_folds=2,
-            hyperparameter_tuning=False
-        )
+        config = PipelineConfig(cross_validation_folds=2, hyperparameter_tuning=False)
         orchestrator = MLPipelineOrchestrator(config)
 
         start_time = time.time()
@@ -618,23 +628,19 @@ class TestDataSizeScaling:
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
 
         # Create large dataset
-        large_data = pd.DataFrame({
-            f'col_{i}': np.random.randn(100000)
-            for i in range(50)
-        })
-        large_data['target'] = np.random.choice([0, 1], 100000)
+        large_data = pd.DataFrame(
+            {f"col_{i}": np.random.randn(100000) for i in range(50)}
+        )
+        large_data["target"] = np.random.choice([0, 1], 100000)
 
         # Run pipeline
-        config = PipelineConfig(
-            cross_validation_folds=2,
-            hyperparameter_tuning=False
-        )
+        config = PipelineConfig(cross_validation_folds=2, hyperparameter_tuning=False)
         orchestrator = MLPipelineOrchestrator(config)
 
         # Use chunked processing
         chunk_size = 10000
         for i in range(0, len(large_data), chunk_size):
-            chunk = large_data.iloc[i:i+chunk_size]
+            chunk = large_data.iloc[i : i + chunk_size]
             # Process chunk (in real scenario, would aggregate results)
             del chunk
             gc.collect()

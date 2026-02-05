@@ -32,7 +32,11 @@ from nltk.tag import pos_tag
 
 # Machine Learning
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix
+from sklearn.metrics import (
+    accuracy_score,
+    precision_recall_fscore_support,
+    confusion_matrix,
+)
 from sklearn.metrics import silhouette_score, calinski_harabasz_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
@@ -43,14 +47,22 @@ import seaborn as sns
 from wordcloud import WordCloud
 import plotly.graph_objects as go
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 # Download required NLTK data
-nltk_resources = ['punkt', 'stopwords', 'wordnet', 'averaged_perceptron_tagger',
-                  'maxent_ne_chunker', 'words', 'vader_lexicon', 'omw-1.4']
+nltk_resources = [
+    "punkt",
+    "stopwords",
+    "wordnet",
+    "averaged_perceptron_tagger",
+    "maxent_ne_chunker",
+    "words",
+    "vader_lexicon",
+    "omw-1.4",
+]
 for resource in nltk_resources:
     try:
-        nltk.data.find(f'tokenizers/{resource}')
+        nltk.data.find(f"tokenizers/{resource}")
     except LookupError:
         try:
             nltk.download(resource, quiet=True)
@@ -62,36 +74,40 @@ for resource in nltk_resources:
 # Text Preprocessing
 # ============================================================================
 
+
 class TextPreprocessor:
     """Comprehensive text preprocessing utilities."""
 
-    def __init__(self, language: str = 'english'):
+    def __init__(self, language: str = "english"):
         self.language = language
         self.stop_words = set(stopwords.words(language))
         self.lemmatizer = WordNetLemmatizer()
         self.stemmer = PorterStemmer()
         self.snowball_stemmer = SnowballStemmer(language)
 
-    def clean_text(self, text: str,
-                  lowercase: bool = True,
-                  remove_numbers: bool = False,
-                  remove_punctuation: bool = True,
-                  remove_whitespace: bool = True,
-                  remove_urls: bool = True,
-                  remove_emails: bool = True,
-                  remove_special_chars: bool = True) -> str:
+    def clean_text(
+        self,
+        text: str,
+        lowercase: bool = True,
+        remove_numbers: bool = False,
+        remove_punctuation: bool = True,
+        remove_whitespace: bool = True,
+        remove_urls: bool = True,
+        remove_emails: bool = True,
+        remove_special_chars: bool = True,
+    ) -> str:
         """Clean text with various options."""
 
         # Remove URLs
         if remove_urls:
-            text = re.sub(r'https?://\S+|www\.\S+', '', text)
+            text = re.sub(r"https?://\S+|www\.\S+", "", text)
 
         # Remove emails
         if remove_emails:
-            text = re.sub(r'\S+@\S+', '', text)
+            text = re.sub(r"\S+@\S+", "", text)
 
         # Remove HTML tags
-        text = re.sub(r'<.*?>', '', text)
+        text = re.sub(r"<.*?>", "", text)
 
         # Lowercase
         if lowercase:
@@ -99,43 +115,44 @@ class TextPreprocessor:
 
         # Remove numbers
         if remove_numbers:
-            text = re.sub(r'\d+', '', text)
+            text = re.sub(r"\d+", "", text)
 
         # Remove punctuation
         if remove_punctuation:
-            text = text.translate(str.maketrans('', '', string.punctuation))
+            text = text.translate(str.maketrans("", "", string.punctuation))
 
         # Remove special characters
         if remove_special_chars:
-            text = re.sub(r'[^\w\s]', ' ', text)
+            text = re.sub(r"[^\w\s]", " ", text)
 
         # Remove extra whitespace
         if remove_whitespace:
-            text = ' '.join(text.split())
+            text = " ".join(text.split())
 
         return text
 
-    def tokenize(self, text: str,
-                method: str = 'word',
-                preserve_case: bool = False) -> List[str]:
+    def tokenize(
+        self, text: str, method: str = "word", preserve_case: bool = False
+    ) -> List[str]:
         """Tokenize text."""
 
-        if method == 'word':
+        if method == "word":
             tokens = word_tokenize(text)
-        elif method == 'sentence':
+        elif method == "sentence":
             tokens = sent_tokenize(text)
-        elif method == 'whitespace':
+        elif method == "whitespace":
             tokens = text.split()
         else:
             raise ValueError(f"Unknown tokenization method: {method}")
 
-        if not preserve_case and method != 'sentence':
+        if not preserve_case and method != "sentence":
             tokens = [t.lower() for t in tokens]
 
         return tokens
 
-    def remove_stopwords(self, tokens: List[str],
-                        custom_stopwords: Optional[List[str]] = None) -> List[str]:
+    def remove_stopwords(
+        self, tokens: List[str], custom_stopwords: Optional[List[str]] = None
+    ) -> List[str]:
         """Remove stopwords from tokens."""
 
         stop_words = self.stop_words.copy()
@@ -148,12 +165,12 @@ class TextPreprocessor:
         """Lemmatize tokens."""
         return [self.lemmatizer.lemmatize(token) for token in tokens]
 
-    def stem(self, tokens: List[str], method: str = 'porter') -> List[str]:
+    def stem(self, tokens: List[str], method: str = "porter") -> List[str]:
         """Stem tokens."""
 
-        if method == 'porter':
+        if method == "porter":
             return [self.stemmer.stem(token) for token in tokens]
-        elif method == 'snowball':
+        elif method == "snowball":
             return [self.snowball_stemmer.stem(token) for token in tokens]
         else:
             raise ValueError(f"Unknown stemming method: {method}")
@@ -166,32 +183,33 @@ class TextPreprocessor:
 
         ngrams = []
         for i in range(len(tokens) - n + 1):
-            ngrams.append(tuple(tokens[i:i + n]))
+            ngrams.append(tuple(tokens[i : i + n]))
 
         return ngrams
 
-    def preprocess_pipeline(self, text: str,
-                          steps: List[str] = None) -> Union[str, List[str]]:
+    def preprocess_pipeline(
+        self, text: str, steps: List[str] = None
+    ) -> Union[str, List[str]]:
         """Apply preprocessing pipeline."""
 
         if steps is None:
-            steps = ['clean', 'tokenize', 'stopwords', 'lemmatize']
+            steps = ["clean", "tokenize", "stopwords", "lemmatize"]
 
         result = text
 
         for step in steps:
-            if step == 'clean':
+            if step == "clean":
                 result = self.clean_text(result)
-            elif step == 'tokenize':
+            elif step == "tokenize":
                 result = self.tokenize(result)
-            elif step == 'stopwords' and isinstance(result, list):
+            elif step == "stopwords" and isinstance(result, list):
                 result = self.remove_stopwords(result)
-            elif step == 'lemmatize' and isinstance(result, list):
+            elif step == "lemmatize" and isinstance(result, list):
                 result = self.lemmatize(result)
-            elif step == 'stem' and isinstance(result, list):
+            elif step == "stem" and isinstance(result, list):
                 result = self.stem(result)
-            elif step == 'join' and isinstance(result, list):
-                result = ' '.join(result)
+            elif step == "join" and isinstance(result, list):
+                result = " ".join(result)
 
         return result
 
@@ -199,6 +217,7 @@ class TextPreprocessor:
 # ============================================================================
 # Feature Extraction
 # ============================================================================
+
 
 class FeatureExtractor:
     """Extract features from text."""
@@ -211,13 +230,17 @@ class FeatureExtractor:
         words = word_tokenize(text.lower())
 
         features = {
-            'char_count': len(text),
-            'word_count': len(words),
-            'sentence_count': len(sentences),
-            'avg_word_length': np.mean([len(word) for word in words]) if words else 0,
-            'avg_sentence_length': np.mean([len(word_tokenize(sent)) for sent in sentences]) if sentences else 0,
-            'unique_words': len(set(words)),
-            'vocabulary_richness': len(set(words)) / len(words) if words else 0
+            "char_count": len(text),
+            "word_count": len(words),
+            "sentence_count": len(sentences),
+            "avg_word_length": np.mean([len(word) for word in words]) if words else 0,
+            "avg_sentence_length": np.mean(
+                [len(word_tokenize(sent)) for sent in sentences]
+            )
+            if sentences
+            else 0,
+            "unique_words": len(set(words)),
+            "vocabulary_richness": len(set(words)) / len(words) if words else 0,
         }
 
         return features
@@ -241,12 +264,14 @@ class FeatureExtractor:
             import textstat
 
             features = {
-                'flesch_reading_ease': textstat.flesch_reading_ease(text),
-                'flesch_kincaid_grade': textstat.flesch_kincaid_grade(text),
-                'gunning_fog': textstat.gunning_fog(text),
-                'smog_index': textstat.smog_index(text),
-                'automated_readability_index': textstat.automated_readability_index(text),
-                'coleman_liau_index': textstat.coleman_liau_index(text)
+                "flesch_reading_ease": textstat.flesch_reading_ease(text),
+                "flesch_kincaid_grade": textstat.flesch_kincaid_grade(text),
+                "gunning_fog": textstat.gunning_fog(text),
+                "smog_index": textstat.smog_index(text),
+                "automated_readability_index": textstat.automated_readability_index(
+                    text
+                ),
+                "coleman_liau_index": textstat.coleman_liau_index(text),
             }
         except ImportError:
             features = {}
@@ -265,15 +290,15 @@ class FeatureExtractor:
         return scores
 
     @staticmethod
-    def create_tfidf_features(texts: List[str],
-                            max_features: int = 1000,
-                            ngram_range: Tuple[int, int] = (1, 2)) -> Tuple[np.ndarray, List[str]]:
+    def create_tfidf_features(
+        texts: List[str],
+        max_features: int = 1000,
+        ngram_range: Tuple[int, int] = (1, 2),
+    ) -> Tuple[np.ndarray, List[str]]:
         """Create TF-IDF features."""
 
         vectorizer = TfidfVectorizer(
-            max_features=max_features,
-            ngram_range=ngram_range,
-            stop_words='english'
+            max_features=max_features, ngram_range=ngram_range, stop_words="english"
         )
 
         features = vectorizer.fit_transform(texts)
@@ -286,29 +311,37 @@ class FeatureExtractor:
 # Text Similarity
 # ============================================================================
 
-def calculate_similarity(text1: str, text2: str,
-                        method: str = 'jaccard') -> float:
+
+def calculate_similarity(text1: str, text2: str, method: str = "jaccard") -> float:
     """Calculate similarity between two texts."""
 
     # Tokenize
     tokens1 = set(word_tokenize(text1.lower()))
     tokens2 = set(word_tokenize(text2.lower()))
 
-    if method == 'jaccard':
+    if method == "jaccard":
         # Jaccard similarity
         intersection = tokens1.intersection(tokens2)
         union = tokens1.union(tokens2)
         return len(intersection) / len(union) if union else 0
 
-    elif method == 'dice':
+    elif method == "dice":
         # Dice coefficient
         intersection = tokens1.intersection(tokens2)
-        return 2 * len(intersection) / (len(tokens1) + len(tokens2)) if (tokens1 or tokens2) else 0
+        return (
+            2 * len(intersection) / (len(tokens1) + len(tokens2))
+            if (tokens1 or tokens2)
+            else 0
+        )
 
-    elif method == 'overlap':
+    elif method == "overlap":
         # Overlap coefficient
         intersection = tokens1.intersection(tokens2)
-        return len(intersection) / min(len(tokens1), len(tokens2)) if min(len(tokens1), len(tokens2)) > 0 else 0
+        return (
+            len(intersection) / min(len(tokens1), len(tokens2))
+            if min(len(tokens1), len(tokens2)) > 0
+            else 0
+        )
 
     else:
         raise ValueError(f"Unknown similarity method: {method}")
@@ -327,10 +360,10 @@ def edit_distance(str1: str, str2: str) -> int:
 
     for i in range(1, m + 1):
         for j in range(1, n + 1):
-            if str1[i-1] == str2[j-1]:
-                dp[i][j] = dp[i-1][j-1]
+            if str1[i - 1] == str2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]
             else:
-                dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
+                dp[i][j] = 1 + min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
 
     return dp[m][n]
 
@@ -338,6 +371,7 @@ def edit_distance(str1: str, str2: str) -> int:
 # ============================================================================
 # Evaluation Metrics
 # ============================================================================
+
 
 class NLPMetrics:
     """NLP-specific evaluation metrics."""
@@ -352,7 +386,7 @@ class NLPMetrics:
         hypothesis_tokens = word_tokenize(hypothesis)
 
         # Calculate weights for n-grams
-        weights = tuple([1/n] * n)
+        weights = tuple([1 / n] * n)
 
         score = sentence_bleu([reference_tokens], hypothesis_tokens, weights=weights)
 
@@ -369,9 +403,9 @@ class NLPMetrics:
             scores = rouge.get_scores(hypothesis, reference)[0]
 
             return {
-                'rouge-1': scores['rouge-1']['f'],
-                'rouge-2': scores['rouge-2']['f'],
-                'rouge-l': scores['rouge-l']['f']
+                "rouge-1": scores["rouge-1"]["f"],
+                "rouge-2": scores["rouge-2"]["f"],
+                "rouge-l": scores["rouge-l"]["f"],
             }
         except ImportError:
             return {}
@@ -418,14 +452,18 @@ class NLPMetrics:
 # Visualization
 # ============================================================================
 
+
 class NLPVisualizer:
     """Visualization utilities for NLP."""
 
     @staticmethod
-    def plot_word_cloud(text: str, max_words: int = 100,
-                       background_color: str = 'white',
-                       colormap: str = 'viridis',
-                       save_path: Optional[str] = None) -> None:
+    def plot_word_cloud(
+        text: str,
+        max_words: int = 100,
+        background_color: str = "white",
+        colormap: str = "viridis",
+        save_path: Optional[str] = None,
+    ) -> None:
         """Generate and plot word cloud."""
 
         wordcloud = WordCloud(
@@ -434,16 +472,16 @@ class NLPVisualizer:
             max_words=max_words,
             background_color=background_color,
             colormap=colormap,
-            relative_scaling=0.5
+            relative_scaling=0.5,
         ).generate(text)
 
         plt.figure(figsize=(12, 6))
-        plt.imshow(wordcloud, interpolation='bilinear')
-        plt.axis('off')
-        plt.title('Word Cloud')
+        plt.imshow(wordcloud, interpolation="bilinear")
+        plt.axis("off")
+        plt.title("Word Cloud")
 
         if save_path:
-            plt.savefig(save_path, bbox_inches='tight', dpi=300)
+            plt.savefig(save_path, bbox_inches="tight", dpi=300)
 
         plt.show()
 
@@ -461,20 +499,25 @@ class NLPVisualizer:
         labels, values = zip(*sorted_pos)
 
         plt.figure(figsize=(10, 6))
-        plt.bar(labels, values, color='skyblue', edgecolor='navy')
-        plt.xlabel('Part of Speech')
-        plt.ylabel('Frequency')
-        plt.title('Part-of-Speech Distribution')
+        plt.bar(labels, values, color="skyblue", edgecolor="navy")
+        plt.xlabel("Part of Speech")
+        plt.ylabel("Frequency")
+        plt.title("Part-of-Speech Distribution")
         plt.xticks(rotation=45)
         plt.tight_layout()
         plt.show()
 
     @staticmethod
-    def plot_topic_distribution(topic_weights: np.ndarray,
-                              topic_labels: Optional[List[str]] = None) -> None:
+    def plot_topic_distribution(
+        topic_weights: np.ndarray, topic_labels: Optional[List[str]] = None
+    ) -> None:
         """Plot topic distribution."""
 
-        n_topics = topic_weights.shape[1] if len(topic_weights.shape) > 1 else len(topic_weights)
+        n_topics = (
+            topic_weights.shape[1]
+            if len(topic_weights.shape) > 1
+            else len(topic_weights)
+        )
 
         if topic_labels is None:
             topic_labels = [f"Topic {i}" for i in range(n_topics)]
@@ -486,27 +529,34 @@ class NLPVisualizer:
             avg_weights = topic_weights
 
         plt.figure(figsize=(10, 6))
-        plt.bar(topic_labels, avg_weights, color='coral', edgecolor='darkred')
-        plt.xlabel('Topics')
-        plt.ylabel('Average Weight')
-        plt.title('Topic Distribution')
+        plt.bar(topic_labels, avg_weights, color="coral", edgecolor="darkred")
+        plt.xlabel("Topics")
+        plt.ylabel("Average Weight")
+        plt.title("Topic Distribution")
         plt.xticks(rotation=45)
         plt.tight_layout()
         plt.show()
 
     @staticmethod
-    def plot_confusion_matrix(y_true: List, y_pred: List,
-                            labels: Optional[List[str]] = None) -> None:
+    def plot_confusion_matrix(
+        y_true: List, y_pred: List, labels: Optional[List[str]] = None
+    ) -> None:
         """Plot confusion matrix."""
 
         cm = confusion_matrix(y_true, y_pred)
 
         plt.figure(figsize=(10, 8))
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-                   xticklabels=labels, yticklabels=labels)
-        plt.title('Confusion Matrix')
-        plt.ylabel('True Label')
-        plt.xlabel('Predicted Label')
+        sns.heatmap(
+            cm,
+            annot=True,
+            fmt="d",
+            cmap="Blues",
+            xticklabels=labels,
+            yticklabels=labels,
+        )
+        plt.title("Confusion Matrix")
+        plt.ylabel("True Label")
+        plt.xlabel("Predicted Label")
         plt.tight_layout()
         plt.show()
 
@@ -515,14 +565,15 @@ class NLPVisualizer:
 # Data Handling
 # ============================================================================
 
+
 class NLPDataHandler:
     """Handle NLP data loading and saving."""
 
     @staticmethod
-    def load_text_file(file_path: str, encoding: str = 'utf-8') -> str:
+    def load_text_file(file_path: str, encoding: str = "utf-8") -> str:
         """Load text from file."""
 
-        with open(file_path, 'r', encoding=encoding) as f:
+        with open(file_path, "r", encoding=encoding) as f:
             text = f.read()
 
         return text
@@ -532,7 +583,7 @@ class NLPDataHandler:
         """Load JSON lines file."""
 
         data = []
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             for line in f:
                 data.append(json.loads(line))
 
@@ -542,12 +593,12 @@ class NLPDataHandler:
     def save_json_lines(data: List[Dict], file_path: str) -> None:
         """Save data as JSON lines."""
 
-        with open(file_path, 'w') as f:
+        with open(file_path, "w") as f:
             for item in data:
-                f.write(json.dumps(item) + '\n')
+                f.write(json.dumps(item) + "\n")
 
     @staticmethod
-    def load_corpus(directory: str, pattern: str = '*.txt') -> List[Tuple[str, str]]:
+    def load_corpus(directory: str, pattern: str = "*.txt") -> List[Tuple[str, str]]:
         """Load corpus from directory."""
 
         corpus = []
@@ -560,27 +611,32 @@ class NLPDataHandler:
         return corpus
 
     @staticmethod
-    def split_dataset(texts: List[str], labels: List[Any],
-                     test_size: float = 0.2,
-                     val_size: float = 0.1,
-                     random_state: int = 42) -> Tuple:
+    def split_dataset(
+        texts: List[str],
+        labels: List[Any],
+        test_size: float = 0.2,
+        val_size: float = 0.1,
+        random_state: int = 42,
+    ) -> Tuple:
         """Split dataset into train, validation, and test sets."""
 
         # First split: train+val and test
         X_temp, X_test, y_temp, y_test = train_test_split(
-            texts, labels,
+            texts,
+            labels,
             test_size=test_size,
             random_state=random_state,
-            stratify=labels if len(set(labels)) > 1 else None
+            stratify=labels if len(set(labels)) > 1 else None,
         )
 
         # Second split: train and val
         val_size_adjusted = val_size / (1 - test_size)
         X_train, X_val, y_train, y_val = train_test_split(
-            X_temp, y_temp,
+            X_temp,
+            y_temp,
             test_size=val_size_adjusted,
             random_state=random_state,
-            stratify=y_temp if len(set(y_temp)) > 1 else None
+            stratify=y_temp if len(set(y_temp)) > 1 else None,
         )
 
         return X_train, X_val, X_test, y_train, y_val, y_test
@@ -590,6 +646,7 @@ class NLPDataHandler:
 # Text Generation Helpers
 # ============================================================================
 
+
 def generate_text_statistics_report(texts: List[str]) -> pd.DataFrame:
     """Generate comprehensive statistics report for texts."""
 
@@ -598,34 +655,37 @@ def generate_text_statistics_report(texts: List[str]) -> pd.DataFrame:
 
     for i, text in enumerate(texts):
         text_stats = extractor.extract_basic_features(text)
-        text_stats['text_id'] = i
-        text_stats['text_preview'] = text[:100] + '...' if len(text) > 100 else text
+        text_stats["text_id"] = i
+        text_stats["text_preview"] = text[:100] + "..." if len(text) > 100 else text
         stats.append(text_stats)
 
     df = pd.DataFrame(stats)
 
     # Add summary statistics
-    summary = pd.DataFrame({
-        'mean': df.select_dtypes(include=[np.number]).mean(),
-        'std': df.select_dtypes(include=[np.number]).std(),
-        'min': df.select_dtypes(include=[np.number]).min(),
-        'max': df.select_dtypes(include=[np.number]).max()
-    }).T
+    summary = pd.DataFrame(
+        {
+            "mean": df.select_dtypes(include=[np.number]).mean(),
+            "std": df.select_dtypes(include=[np.number]).std(),
+            "min": df.select_dtypes(include=[np.number]).min(),
+            "max": df.select_dtypes(include=[np.number]).max(),
+        }
+    ).T
 
     return df, summary
 
 
-def extract_keywords(text: str, method: str = 'tfidf',
-                    n_keywords: int = 10) -> List[Tuple[str, float]]:
+def extract_keywords(
+    text: str, method: str = "tfidf", n_keywords: int = 10
+) -> List[Tuple[str, float]]:
     """Extract keywords from text."""
 
-    if method == 'tfidf':
+    if method == "tfidf":
         # Use TF-IDF for single document (treating sentences as documents)
         sentences = sent_tokenize(text)
         if len(sentences) < 2:
             sentences = [text]
 
-        vectorizer = TfidfVectorizer(max_features=n_keywords, stop_words='english')
+        vectorizer = TfidfVectorizer(max_features=n_keywords, stop_words="english")
         tfidf_matrix = vectorizer.fit_transform(sentences)
 
         # Get feature names and scores
@@ -633,12 +693,13 @@ def extract_keywords(text: str, method: str = 'tfidf',
         scores = tfidf_matrix.sum(axis=0).A1
 
         # Sort by score
-        keyword_scores = [(feature_names[i], scores[i])
-                         for i in scores.argsort()[-n_keywords:][::-1]]
+        keyword_scores = [
+            (feature_names[i], scores[i]) for i in scores.argsort()[-n_keywords:][::-1]
+        ]
 
         return keyword_scores
 
-    elif method == 'frequency':
+    elif method == "frequency":
         # Simple frequency-based extraction
         preprocessor = TextPreprocessor()
         tokens = preprocessor.tokenize(text)
@@ -683,7 +744,7 @@ if __name__ == "__main__":
     print("\nBasic features:", features)
 
     # Keywords
-    keywords = extract_keywords(sample_text, method='tfidf', n_keywords=5)
+    keywords = extract_keywords(sample_text, method="tfidf", n_keywords=5)
     print("\nKeywords:", keywords)
 
     print("\nNLP utilities loaded successfully!")

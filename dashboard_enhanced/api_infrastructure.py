@@ -93,24 +93,26 @@ class DashboardAPI:
 
         # Initialize Flask app
         self.app = Flask(__name__)
-        self.app.config['SECRET_KEY'] = self.config.secret_key
+        self.app.config["SECRET_KEY"] = self.config.secret_key
 
         # Initialize extensions
         CORS(self.app, origins=self.config.cors_origins or ["*"])
         self.api = Api(self.app)
-        self.socketio = SocketIO(self.app, cors_allowed_origins="*", async_mode='threading')
+        self.socketio = SocketIO(
+            self.app, cors_allowed_origins="*", async_mode="threading"
+        )
 
         # Initialize rate limiter
         self.limiter = Limiter(
             self.app,
             key_func=get_remote_address,
             default_limits=[self.config.rate_limit_default],
-            storage_uri=f"redis://{self.config.redis_host}:{self.config.redis_port}"
+            storage_uri=f"redis://{self.config.redis_host}:{self.config.redis_port}",
         )
 
         # Initialize authentication
         self.basic_auth = HTTPBasicAuth()
-        self.token_auth = HTTPTokenAuth(scheme='Bearer')
+        self.token_auth = HTTPTokenAuth(scheme="Bearer")
 
         # User store (in production, use database)
         self.users = {}
@@ -122,7 +124,7 @@ class DashboardAPI:
                 host=self.config.redis_host,
                 port=self.config.redis_port,
                 db=self.config.redis_db,
-                decode_responses=True
+                decode_responses=True,
             )
             self.redis_client.ping()
             logger.info("Connected to Redis")
@@ -145,18 +147,16 @@ class DashboardAPI:
         @self.basic_auth.verify_password
         def verify_password(username, password):
             if username in self.users:
-                return check_password_hash(self.users[username]['password'], password)
+                return check_password_hash(self.users[username]["password"], password)
             return False
 
         @self.token_auth.verify_token
         def verify_token(token):
             try:
                 payload = jwt.decode(
-                    token,
-                    self.config.jwt_secret,
-                    algorithms=['HS256']
+                    token, self.config.jwt_secret, algorithms=["HS256"]
                 )
-                username = payload.get('username')
+                username = payload.get("username")
                 if username and username in self.users:
                     return username
             except jwt.ExpiredSignatureError:
@@ -166,70 +166,72 @@ class DashboardAPI:
             return None
 
         # User registration endpoint
-        @self.app.route('/api/auth/register', methods=['POST'])
+        @self.app.route("/api/auth/register", methods=["POST"])
         @self.limiter.limit("5 per hour")
         def register():
             data = request.get_json()
-            username = data.get('username')
-            password = data.get('password')
-            email = data.get('email')
+            username = data.get("username")
+            password = data.get("password")
+            email = data.get("email")
 
             if not username or not password:
-                return jsonify({'error': 'Username and password required'}), 400
+                return jsonify({"error": "Username and password required"}), 400
 
             if username in self.users:
-                return jsonify({'error': 'User already exists'}), 409
+                return jsonify({"error": "User already exists"}), 409
 
             # Create user
             self.users[username] = {
-                'password': generate_password_hash(password),
-                'email': email,
-                'created_at': datetime.utcnow().isoformat(),
-                'api_key': secrets.token_urlsafe(32)
+                "password": generate_password_hash(password),
+                "email": email,
+                "created_at": datetime.utcnow().isoformat(),
+                "api_key": secrets.token_urlsafe(32),
             }
 
-            return jsonify({
-                'message': 'User created successfully',
-                'api_key': self.users[username]['api_key']
-            }), 201
+            return jsonify(
+                {
+                    "message": "User created successfully",
+                    "api_key": self.users[username]["api_key"],
+                }
+            ), 201
 
         # Login endpoint
-        @self.app.route('/api/auth/login', methods=['POST'])
+        @self.app.route("/api/auth/login", methods=["POST"])
         @self.limiter.limit("10 per hour")
         def login():
             auth = request.authorization
 
             if not auth or not auth.username or not auth.password:
-                return jsonify({'error': 'Authentication required'}), 401
+                return jsonify({"error": "Authentication required"}), 401
 
             if not verify_password(auth.username, auth.password):
-                return jsonify({'error': 'Invalid credentials'}), 401
+                return jsonify({"error": "Invalid credentials"}), 401
 
             # Generate JWT token
             payload = {
-                'username': auth.username,
-                'exp': datetime.utcnow() + timedelta(hours=self.config.jwt_expiration_hours)
+                "username": auth.username,
+                "exp": datetime.utcnow()
+                + timedelta(hours=self.config.jwt_expiration_hours),
             }
-            token = jwt.encode(payload, self.config.jwt_secret, algorithm='HS256')
+            token = jwt.encode(payload, self.config.jwt_secret, algorithm="HS256")
 
             self.tokens[token] = {
-                'username': auth.username,
-                'created_at': datetime.utcnow().isoformat()
+                "username": auth.username,
+                "created_at": datetime.utcnow().isoformat(),
             }
 
-            return jsonify({
-                'token': token,
-                'expires_in': self.config.jwt_expiration_hours * 3600
-            }), 200
+            return jsonify(
+                {"token": token, "expires_in": self.config.jwt_expiration_hours * 3600}
+            ), 200
 
         # Logout endpoint
-        @self.app.route('/api/auth/logout', methods=['POST'])
+        @self.app.route("/api/auth/logout", methods=["POST"])
         @self.token_auth.login_required
         def logout():
-            token = request.headers.get('Authorization', '').replace('Bearer ', '')
+            token = request.headers.get("Authorization", "").replace("Bearer ", "")
             if token in self.tokens:
                 del self.tokens[token]
-            return jsonify({'message': 'Logged out successfully'}), 200
+            return jsonify({"message": "Logged out successfully"}), 200
 
     def _setup_rest_api(self):
         """Setup REST API endpoints."""
@@ -245,45 +247,45 @@ class DashboardAPI:
                     # Get specific dataset
                     data = self._get_dataset(dataset_id)
                     if data is None:
-                        return {'error': 'Dataset not found'}, 404
-                    return {'data': data}, 200
+                        return {"error": "Dataset not found"}, 404
+                    return {"data": data}, 200
                 else:
                     # List all datasets
                     datasets = self._list_datasets()
-                    return {'datasets': datasets}, 200
+                    return {"datasets": datasets}, 200
 
             def post(self):
                 """Upload new dataset."""
                 data = request.get_json()
-                dataset_id = data.get('id')
-                dataset = data.get('data')
+                dataset_id = data.get("id")
+                dataset = data.get("data")
 
                 if not dataset_id or not dataset:
-                    return {'error': 'Dataset ID and data required'}, 400
+                    return {"error": "Dataset ID and data required"}, 400
 
                 # Store dataset
                 self._store_dataset(dataset_id, dataset)
 
-                return {'message': 'Dataset uploaded', 'id': dataset_id}, 201
+                return {"message": "Dataset uploaded", "id": dataset_id}, 201
 
             def put(self, dataset_id):
                 """Update existing dataset."""
                 data = request.get_json()
-                dataset = data.get('data')
+                dataset = data.get("data")
 
                 if not dataset:
-                    return {'error': 'Dataset data required'}, 400
+                    return {"error": "Dataset data required"}, 400
 
                 # Update dataset
                 self._update_dataset(dataset_id, dataset)
 
-                return {'message': 'Dataset updated', 'id': dataset_id}, 200
+                return {"message": "Dataset updated", "id": dataset_id}, 200
 
             def delete(self, dataset_id):
                 """Delete dataset."""
                 if self._delete_dataset(dataset_id):
-                    return {'message': 'Dataset deleted'}, 200
-                return {'error': 'Dataset not found'}, 404
+                    return {"message": "Dataset deleted"}, 200
+                return {"error": "Dataset not found"}, 404
 
             def _get_dataset(self, dataset_id):
                 """Get dataset from storage."""
@@ -306,7 +308,7 @@ class DashboardAPI:
                     self.redis_client.set(
                         f"dataset:{dataset_id}",
                         json.dumps(dataset),
-                        ex=3600  # Expire after 1 hour
+                        ex=3600,  # Expire after 1 hour
                     )
 
             def _update_dataset(self, dataset_id, dataset):
@@ -328,19 +330,22 @@ class DashboardAPI:
                 """Get metrics data."""
                 # Generate sample metrics
                 metrics = {
-                    'cpu_usage': np.random.uniform(20, 80),
-                    'memory_usage': np.random.uniform(30, 70),
-                    'request_count': np.random.randint(100, 1000),
-                    'response_time': np.random.uniform(10, 100),
-                    'error_rate': np.random.uniform(0, 5)
+                    "cpu_usage": np.random.uniform(20, 80),
+                    "memory_usage": np.random.uniform(30, 70),
+                    "request_count": np.random.randint(100, 1000),
+                    "response_time": np.random.uniform(10, 100),
+                    "error_rate": np.random.uniform(0, 5),
                 }
 
                 if metric_name:
                     if metric_name in metrics:
-                        return {'metric': metric_name, 'value': metrics[metric_name]}, 200
-                    return {'error': 'Metric not found'}, 404
+                        return {
+                            "metric": metric_name,
+                            "value": metrics[metric_name],
+                        }, 200
+                    return {"error": "Metric not found"}, 404
 
-                return {'metrics': metrics}, 200
+                return {"metrics": metrics}, 200
 
         class AnalyticsResource(Resource):
             """Resource for analytics operations."""
@@ -350,72 +355,73 @@ class DashboardAPI:
             def post(self):
                 """Run analytics query."""
                 data = request.get_json()
-                query_type = data.get('type')
-                parameters = data.get('parameters', {})
+                query_type = data.get("type")
+                parameters = data.get("parameters", {})
 
                 # Process analytics query
-                if query_type == 'aggregate':
+                if query_type == "aggregate":
                     result = self._run_aggregate_query(parameters)
-                elif query_type == 'timeseries':
+                elif query_type == "timeseries":
                     result = self._run_timeseries_query(parameters)
-                elif query_type == 'correlation':
+                elif query_type == "correlation":
                     result = self._run_correlation_query(parameters)
                 else:
-                    return {'error': 'Invalid query type'}, 400
+                    return {"error": "Invalid query type"}, 400
 
-                return {'result': result}, 200
+                return {"result": result}, 200
 
             def _run_aggregate_query(self, params):
                 """Run aggregate analytics query."""
                 # Sample implementation
                 return {
-                    'sum': np.random.uniform(1000, 10000),
-                    'avg': np.random.uniform(10, 100),
-                    'max': np.random.uniform(100, 1000),
-                    'min': np.random.uniform(1, 10),
-                    'count': np.random.randint(100, 1000)
+                    "sum": np.random.uniform(1000, 10000),
+                    "avg": np.random.uniform(10, 100),
+                    "max": np.random.uniform(100, 1000),
+                    "min": np.random.uniform(1, 10),
+                    "count": np.random.randint(100, 1000),
                 }
 
             def _run_timeseries_query(self, params):
                 """Run time series analytics query."""
                 # Sample implementation
-                dates = pd.date_range('2024-01-01', periods=30)
+                dates = pd.date_range("2024-01-01", periods=30)
                 return {
-                    'dates': [d.isoformat() for d in dates],
-                    'values': np.random.uniform(10, 100, 30).tolist()
+                    "dates": [d.isoformat() for d in dates],
+                    "values": np.random.uniform(10, 100, 30).tolist(),
                 }
 
             def _run_correlation_query(self, params):
                 """Run correlation analytics query."""
                 # Sample implementation
                 return {
-                    'correlation_matrix': np.random.uniform(-1, 1, (5, 5)).tolist(),
-                    'features': ['A', 'B', 'C', 'D', 'E']
+                    "correlation_matrix": np.random.uniform(-1, 1, (5, 5)).tolist(),
+                    "features": ["A", "B", "C", "D", "E"],
                 }
 
         # Register resources
-        self.api.add_resource(DataResource,
-                            '/api/v1/data',
-                            '/api/v1/data/<string:dataset_id>')
-        self.api.add_resource(MetricsResource,
-                            '/api/v1/metrics',
-                            '/api/v1/metrics/<string:metric_name>')
-        self.api.add_resource(AnalyticsResource,
-                            '/api/v1/analytics')
+        self.api.add_resource(
+            DataResource, "/api/v1/data", "/api/v1/data/<string:dataset_id>"
+        )
+        self.api.add_resource(
+            MetricsResource, "/api/v1/metrics", "/api/v1/metrics/<string:metric_name>"
+        )
+        self.api.add_resource(AnalyticsResource, "/api/v1/analytics")
 
         # Health check endpoint
-        @self.app.route('/api/health')
+        @self.app.route("/api/health")
         def health_check():
             """Health check endpoint."""
             status = {
-                'status': 'healthy',
-                'timestamp': datetime.utcnow().isoformat(),
-                'version': self.config.api_version,
-                'services': {
-                    'api': 'up',
-                    'redis': 'up' if self.redis_client and self.redis_client.ping() else 'down',
-                    'websocket': 'up'
-                }
+                "status": "healthy",
+                "timestamp": datetime.utcnow().isoformat(),
+                "version": self.config.api_version,
+                "services": {
+                    "api": "up",
+                    "redis": "up"
+                    if self.redis_client and self.redis_client.ping()
+                    else "down",
+                    "websocket": "up",
+                },
             }
             return jsonify(status), 200
 
@@ -446,27 +452,25 @@ class DashboardAPI:
             all_metrics = GraphList(MetricType)
             dataset = Field(DatasetType, id=String())
             all_datasets = GraphList(DatasetType)
-            analytics = Field(AnalyticsResultType,
-                            query_type=String(),
-                            parameters=String())
+            analytics = Field(
+                AnalyticsResultType, query_type=String(), parameters=String()
+            )
 
             def resolve_metric(self, info, name):
                 """Resolve single metric."""
                 value = np.random.uniform(0, 100)
                 return MetricType(
-                    name=name,
-                    value=value,
-                    timestamp=datetime.utcnow().isoformat()
+                    name=name, value=value, timestamp=datetime.utcnow().isoformat()
                 )
 
             def resolve_all_metrics(self, info):
                 """Resolve all metrics."""
-                metrics = ['cpu', 'memory', 'disk', 'network', 'requests']
+                metrics = ["cpu", "memory", "disk", "network", "requests"]
                 return [
                     MetricType(
                         name=m,
                         value=np.random.uniform(0, 100),
-                        timestamp=datetime.utcnow().isoformat()
+                        timestamp=datetime.utcnow().isoformat(),
                     )
                     for m in metrics
                 ]
@@ -478,7 +482,7 @@ class DashboardAPI:
                     name=f"Dataset {id}",
                     rows=np.random.randint(100, 10000),
                     columns=np.random.randint(5, 50),
-                    created_at=datetime.utcnow().isoformat()
+                    created_at=datetime.utcnow().isoformat(),
                 )
 
             def resolve_all_datasets(self, info):
@@ -489,7 +493,7 @@ class DashboardAPI:
                         name=f"Dataset {i}",
                         rows=np.random.randint(100, 10000),
                         columns=np.random.randint(5, 50),
-                        created_at=datetime.utcnow().isoformat()
+                        created_at=datetime.utcnow().isoformat(),
                     )
                     for i in range(5)
                 ]
@@ -499,19 +503,19 @@ class DashboardAPI:
                 start_time = time.time()
 
                 # Process query
-                if query_type == 'aggregate':
-                    result = {'sum': 1000, 'avg': 50, 'count': 20}
-                elif query_type == 'trend':
-                    result = {'trend': 'increasing', 'slope': 0.5}
+                if query_type == "aggregate":
+                    result = {"sum": 1000, "avg": 50, "count": 20}
+                elif query_type == "trend":
+                    result = {"trend": "increasing", "slope": 0.5}
                 else:
-                    result = {'error': 'Unknown query type'}
+                    result = {"error": "Unknown query type"}
 
                 execution_time = time.time() - start_time
 
                 return AnalyticsResultType(
                     query_type=query_type,
                     result=json.dumps(result),
-                    execution_time=execution_time
+                    execution_time=execution_time,
                 )
 
         # Define mutations
@@ -535,20 +539,16 @@ class DashboardAPI:
                         name=name,
                         rows=100,
                         columns=10,
-                        created_at=datetime.utcnow().isoformat()
+                        created_at=datetime.utcnow().isoformat(),
                     )
 
                     return CreateDataset(
                         dataset=dataset,
                         success=True,
-                        message="Dataset created successfully"
+                        message="Dataset created successfully",
                     )
                 except Exception as e:
-                    return CreateDataset(
-                        dataset=None,
-                        success=False,
-                        message=str(e)
-                    )
+                    return CreateDataset(dataset=None, success=False, message=str(e))
 
         class UpdateMetric(graphene.Mutation):
             class Arguments:
@@ -561,17 +561,15 @@ class DashboardAPI:
             def mutate(self, info, name, value):
                 """Update metric value."""
                 metric = MetricType(
-                    name=name,
-                    value=value,
-                    timestamp=datetime.utcnow().isoformat()
+                    name=name, value=value, timestamp=datetime.utcnow().isoformat()
                 )
 
                 # Store in Redis if available
                 if self.redis_client:
                     self.redis_client.set(
                         f"metric:{name}",
-                        json.dumps({'value': value, 'timestamp': metric.timestamp}),
-                        ex=3600
+                        json.dumps({"value": value, "timestamp": metric.timestamp}),
+                        ex=3600,
                     )
 
                 return UpdateMetric(metric=metric, success=True)
@@ -585,74 +583,72 @@ class DashboardAPI:
 
         # Add GraphQL view
         self.app.add_url_rule(
-            '/graphql',
+            "/graphql",
             view_func=GraphQLView.as_view(
-                'graphql',
+                "graphql",
                 schema=schema,
-                graphiql=True  # Enable GraphiQL interface
-            )
+                graphiql=True,  # Enable GraphiQL interface
+            ),
         )
 
     def _setup_websocket(self):
         """Setup WebSocket handlers."""
 
-        @self.socketio.on('connect')
+        @self.socketio.on("connect")
         def handle_connect():
             """Handle client connection."""
             client_id = request.sid
             logger.info(f"Client connected: {client_id}")
-            emit('connected', {'client_id': client_id})
+            emit("connected", {"client_id": client_id})
 
-        @self.socketio.on('disconnect')
+        @self.socketio.on("disconnect")
         def handle_disconnect():
             """Handle client disconnection."""
             client_id = request.sid
             logger.info(f"Client disconnected: {client_id}")
 
-        @self.socketio.on('subscribe')
+        @self.socketio.on("subscribe")
         def handle_subscribe(data):
             """Handle subscription to data channel."""
-            channel = data.get('channel')
+            channel = data.get("channel")
             client_id = request.sid
 
             if channel:
                 join_room(channel)
                 logger.info(f"Client {client_id} subscribed to {channel}")
-                emit('subscribed', {'channel': channel})
+                emit("subscribed", {"channel": channel})
 
                 # Start sending real-time data
                 self.socketio.start_background_task(
-                    self._send_realtime_data,
-                    channel,
-                    client_id
+                    self._send_realtime_data, channel, client_id
                 )
 
-        @self.socketio.on('unsubscribe')
+        @self.socketio.on("unsubscribe")
         def handle_unsubscribe(data):
             """Handle unsubscription from data channel."""
-            channel = data.get('channel')
+            channel = data.get("channel")
             client_id = request.sid
 
             if channel:
                 leave_room(channel)
                 logger.info(f"Client {client_id} unsubscribed from {channel}")
-                emit('unsubscribed', {'channel': channel})
+                emit("unsubscribed", {"channel": channel})
 
-        @self.socketio.on('message')
+        @self.socketio.on("message")
         def handle_message(data):
             """Handle client message."""
-            message_type = data.get('type')
-            payload = data.get('payload')
+            message_type = data.get("type")
+            payload = data.get("payload")
 
             # Process message based on type
-            if message_type == 'query':
+            if message_type == "query":
                 result = self._process_query(payload)
-                emit('query_result', result)
-            elif message_type == 'update':
+                emit("query_result", result)
+            elif message_type == "update":
                 self._process_update(payload)
                 # Broadcast update to all clients in room
-                room = data.get('room', 'global')
-                emit('data_update', payload, room=room, include_self=False)
+                room = data.get("room", "global")
+                emit("data_update", payload, room=room, include_self=False)
 
     def _send_realtime_data(self, channel: str, client_id: str):
         """Send real-time data to subscribed client."""
@@ -660,18 +656,18 @@ class DashboardAPI:
             try:
                 # Generate sample real-time data
                 data = {
-                    'timestamp': datetime.utcnow().isoformat(),
-                    'channel': channel,
-                    'value': np.random.uniform(0, 100),
-                    'metrics': {
-                        'cpu': np.random.uniform(20, 80),
-                        'memory': np.random.uniform(30, 70),
-                        'requests': np.random.randint(10, 100)
-                    }
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "channel": channel,
+                    "value": np.random.uniform(0, 100),
+                    "metrics": {
+                        "cpu": np.random.uniform(20, 80),
+                        "memory": np.random.uniform(30, 70),
+                        "requests": np.random.randint(10, 100),
+                    },
                 }
 
                 # Send to specific room
-                self.socketio.emit('realtime_data', data, room=channel)
+                self.socketio.emit("realtime_data", data, room=channel)
 
                 # Sleep before next update
                 self.socketio.sleep(5)
@@ -682,33 +678,26 @@ class DashboardAPI:
 
     def _process_query(self, payload: Dict) -> Dict:
         """Process WebSocket query."""
-        query_type = payload.get('type')
+        query_type = payload.get("type")
 
-        if query_type == 'status':
+        if query_type == "status":
+            return {"status": "operational", "timestamp": datetime.utcnow().isoformat()}
+        elif query_type == "metrics":
             return {
-                'status': 'operational',
-                'timestamp': datetime.utcnow().isoformat()
-            }
-        elif query_type == 'metrics':
-            return {
-                'metrics': {
-                    'active_connections': len(self.socketio.server.manager.rooms),
-                    'messages_processed': np.random.randint(1000, 10000)
+                "metrics": {
+                    "active_connections": len(self.socketio.server.manager.rooms),
+                    "messages_processed": np.random.randint(1000, 10000),
                 }
             }
         else:
-            return {'error': 'Unknown query type'}
+            return {"error": "Unknown query type"}
 
     def _process_update(self, payload: Dict):
         """Process WebSocket update."""
         # Store update in Redis if available
         if self.redis_client:
-            update_id = payload.get('id', 'update')
-            self.redis_client.set(
-                f"update:{update_id}",
-                json.dumps(payload),
-                ex=3600
-            )
+            update_id = payload.get("id", "update")
+            self.redis_client.set(f"update:{update_id}", json.dumps(payload), ex=3600)
 
     def _setup_swagger(self):
         """Setup Swagger documentation."""
@@ -718,17 +707,13 @@ class DashboardAPI:
         API_URL = self.config.api_url
 
         swaggerui_blueprint = get_swaggerui_blueprint(
-            SWAGGER_URL,
-            API_URL,
-            config={
-                'app_name': self.config.api_title
-            }
+            SWAGGER_URL, API_URL, config={"app_name": self.config.api_title}
         )
 
         self.app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
         # Serve Swagger JSON
-        @self.app.route('/static/swagger.json')
+        @self.app.route("/static/swagger.json")
         def swagger_json():
             """Serve Swagger JSON specification."""
             swagger_spec = {
@@ -736,12 +721,12 @@ class DashboardAPI:
                 "info": {
                     "title": self.config.api_title,
                     "version": self.config.api_version,
-                    "description": "Enhanced Dashboard API with REST, GraphQL, and WebSocket support"
+                    "description": "Enhanced Dashboard API with REST, GraphQL, and WebSocket support",
                 },
                 "servers": [
                     {
                         "url": f"http://{self.config.host}:{self.config.port}",
-                        "description": "Development server"
+                        "description": "Development server",
                     }
                 ],
                 "components": {
@@ -749,12 +734,9 @@ class DashboardAPI:
                         "bearerAuth": {
                             "type": "http",
                             "scheme": "bearer",
-                            "bearerFormat": "JWT"
+                            "bearerFormat": "JWT",
                         },
-                        "basicAuth": {
-                            "type": "http",
-                            "scheme": "basic"
-                        }
+                        "basicAuth": {"type": "http", "scheme": "basic"},
                     },
                     "schemas": {
                         "Dataset": {
@@ -763,26 +745,26 @@ class DashboardAPI:
                                 "id": {"type": "string"},
                                 "name": {"type": "string"},
                                 "data": {"type": "object"},
-                                "created_at": {"type": "string", "format": "date-time"}
-                            }
+                                "created_at": {"type": "string", "format": "date-time"},
+                            },
                         },
                         "Metric": {
                             "type": "object",
                             "properties": {
                                 "name": {"type": "string"},
                                 "value": {"type": "number"},
-                                "timestamp": {"type": "string", "format": "date-time"}
-                            }
+                                "timestamp": {"type": "string", "format": "date-time"},
+                            },
                         },
                         "Error": {
                             "type": "object",
                             "properties": {
                                 "error": {"type": "string"},
                                 "message": {"type": "string"},
-                                "code": {"type": "integer"}
-                            }
-                        }
-                    }
+                                "code": {"type": "integer"},
+                            },
+                        },
+                    },
                 },
                 "paths": {
                     "/api/health": {
@@ -790,10 +772,8 @@ class DashboardAPI:
                             "summary": "Health check",
                             "tags": ["System"],
                             "responses": {
-                                "200": {
-                                    "description": "System health status"
-                                }
-                            }
+                                "200": {"description": "System health status"}
+                            },
                         }
                     },
                     "/api/auth/register": {
@@ -809,18 +789,21 @@ class DashboardAPI:
                                             "properties": {
                                                 "username": {"type": "string"},
                                                 "password": {"type": "string"},
-                                                "email": {"type": "string", "format": "email"}
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                },
                                             },
-                                            "required": ["username", "password"]
+                                            "required": ["username", "password"],
                                         }
                                     }
-                                }
+                                },
                             },
                             "responses": {
                                 "201": {"description": "User created"},
                                 "400": {"description": "Invalid request"},
-                                "409": {"description": "User already exists"}
-                            }
+                                "409": {"description": "User already exists"},
+                            },
                         }
                     },
                     "/api/auth/login": {
@@ -837,14 +820,14 @@ class DashboardAPI:
                                                 "type": "object",
                                                 "properties": {
                                                     "token": {"type": "string"},
-                                                    "expires_in": {"type": "integer"}
-                                                }
+                                                    "expires_in": {"type": "integer"},
+                                                },
                                             }
                                         }
-                                    }
+                                    },
                                 },
-                                "401": {"description": "Invalid credentials"}
-                            }
+                                "401": {"description": "Invalid credentials"},
+                            },
                         }
                     },
                     "/api/v1/data": {
@@ -862,14 +845,14 @@ class DashboardAPI:
                                                 "properties": {
                                                     "datasets": {
                                                         "type": "array",
-                                                        "items": {"type": "string"}
+                                                        "items": {"type": "string"},
                                                     }
-                                                }
+                                                },
                                             }
                                         }
-                                    }
+                                    },
                                 }
-                            }
+                            },
                         },
                         "post": {
                             "summary": "Upload new dataset",
@@ -879,15 +862,17 @@ class DashboardAPI:
                                 "required": True,
                                 "content": {
                                     "application/json": {
-                                        "schema": {"$ref": "#/components/schemas/Dataset"}
+                                        "schema": {
+                                            "$ref": "#/components/schemas/Dataset"
+                                        }
                                     }
-                                }
+                                },
                             },
                             "responses": {
                                 "201": {"description": "Dataset created"},
-                                "400": {"description": "Invalid request"}
-                            }
-                        }
+                                "400": {"description": "Invalid request"},
+                            },
+                        },
                     },
                     "/api/v1/data/{dataset_id}": {
                         "get": {
@@ -899,7 +884,7 @@ class DashboardAPI:
                                     "name": "dataset_id",
                                     "in": "path",
                                     "required": True,
-                                    "schema": {"type": "string"}
+                                    "schema": {"type": "string"},
                                 }
                             ],
                             "responses": {
@@ -907,12 +892,14 @@ class DashboardAPI:
                                     "description": "Dataset data",
                                     "content": {
                                         "application/json": {
-                                            "schema": {"$ref": "#/components/schemas/Dataset"}
+                                            "schema": {
+                                                "$ref": "#/components/schemas/Dataset"
+                                            }
                                         }
-                                    }
+                                    },
                                 },
-                                "404": {"description": "Dataset not found"}
-                            }
+                                "404": {"description": "Dataset not found"},
+                            },
                         },
                         "put": {
                             "summary": "Update dataset",
@@ -923,21 +910,23 @@ class DashboardAPI:
                                     "name": "dataset_id",
                                     "in": "path",
                                     "required": True,
-                                    "schema": {"type": "string"}
+                                    "schema": {"type": "string"},
                                 }
                             ],
                             "requestBody": {
                                 "required": True,
                                 "content": {
                                     "application/json": {
-                                        "schema": {"$ref": "#/components/schemas/Dataset"}
+                                        "schema": {
+                                            "$ref": "#/components/schemas/Dataset"
+                                        }
                                     }
-                                }
+                                },
                             },
                             "responses": {
                                 "200": {"description": "Dataset updated"},
-                                "404": {"description": "Dataset not found"}
-                            }
+                                "404": {"description": "Dataset not found"},
+                            },
                         },
                         "delete": {
                             "summary": "Delete dataset",
@@ -948,14 +937,14 @@ class DashboardAPI:
                                     "name": "dataset_id",
                                     "in": "path",
                                     "required": True,
-                                    "schema": {"type": "string"}
+                                    "schema": {"type": "string"},
                                 }
                             ],
                             "responses": {
                                 "200": {"description": "Dataset deleted"},
-                                "404": {"description": "Dataset not found"}
-                            }
-                        }
+                                "404": {"description": "Dataset not found"},
+                            },
+                        },
                     },
                     "/api/v1/metrics": {
                         "get": {
@@ -971,12 +960,12 @@ class DashboardAPI:
                                                 "type": "object",
                                                 "properties": {
                                                     "metrics": {"type": "object"}
-                                                }
+                                                },
                                             }
                                         }
-                                    }
+                                    },
                                 }
-                            }
+                            },
                         }
                     },
                     "/api/v1/analytics": {
@@ -992,18 +981,16 @@ class DashboardAPI:
                                             "type": "object",
                                             "properties": {
                                                 "type": {"type": "string"},
-                                                "parameters": {"type": "object"}
-                                            }
+                                                "parameters": {"type": "object"},
+                                            },
                                         }
                                     }
-                                }
+                                },
                             },
                             "responses": {
-                                "200": {
-                                    "description": "Analytics result"
-                                },
-                                "400": {"description": "Invalid query"}
-                            }
+                                "200": {"description": "Analytics result"},
+                                "400": {"description": "Invalid query"},
+                            },
                         }
                     },
                     "/graphql": {
@@ -1019,41 +1006,48 @@ class DashboardAPI:
                                             "type": "object",
                                             "properties": {
                                                 "query": {"type": "string"},
-                                                "variables": {"type": "object"}
-                                            }
+                                                "variables": {"type": "object"},
+                                            },
                                         }
                                     }
-                                }
+                                },
                             },
-                            "responses": {
-                                "200": {"description": "GraphQL response"}
-                            }
+                            "responses": {"200": {"description": "GraphQL response"}},
                         }
-                    }
+                    },
                 },
                 "tags": [
                     {"name": "System", "description": "System operations"},
-                    {"name": "Authentication", "description": "Authentication endpoints"},
+                    {
+                        "name": "Authentication",
+                        "description": "Authentication endpoints",
+                    },
                     {"name": "Data", "description": "Data management endpoints"},
                     {"name": "Metrics", "description": "Metrics endpoints"},
                     {"name": "Analytics", "description": "Analytics endpoints"},
-                    {"name": "GraphQL", "description": "GraphQL endpoint"}
-                ]
+                    {"name": "GraphQL", "description": "GraphQL endpoint"},
+                ],
             }
 
             return jsonify(swagger_spec)
 
     def run(self):
         """Run the API server."""
-        logger.info(f"Starting API server on http://{self.config.host}:{self.config.port}")
-        logger.info(f"Swagger documentation: http://{self.config.host}:{self.config.port}{self.config.swagger_url}")
-        logger.info(f"GraphiQL interface: http://{self.config.host}:{self.config.port}/graphql")
+        logger.info(
+            f"Starting API server on http://{self.config.host}:{self.config.port}"
+        )
+        logger.info(
+            f"Swagger documentation: http://{self.config.host}:{self.config.port}{self.config.swagger_url}"
+        )
+        logger.info(
+            f"GraphiQL interface: http://{self.config.host}:{self.config.port}/graphql"
+        )
 
         self.socketio.run(
             self.app,
             host=self.config.host,
             port=self.config.port,
-            debug=self.config.debug
+            debug=self.config.debug,
         )
 
 
@@ -1064,7 +1058,7 @@ if __name__ == "__main__":
         port=5000,
         debug=True,
         secret_key="development-secret-key",
-        jwt_secret="development-jwt-secret"
+        jwt_secret="development-jwt-secret",
     )
 
     api = DashboardAPI(config)

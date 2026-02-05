@@ -112,9 +112,9 @@ def main() -> int:
                     stats.documented += 1
                 else:
                     missing.append(f"{path}:{node.name} (class)")
-            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and is_public(
-                node.name
-            ):
+            elif isinstance(
+                node, (ast.FunctionDef, ast.AsyncFunctionDef)
+            ) and is_public(node.name):
                 stats.total += 1
                 if ast.get_docstring(node):
                     stats.documented += 1

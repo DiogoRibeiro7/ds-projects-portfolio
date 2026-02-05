@@ -36,7 +36,15 @@ import io
 import base64
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, PageBreak
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+    Image,
+    PageBreak,
+)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from pptx import Presentation
@@ -80,7 +88,9 @@ class DashboardConfig:
     enable_data_sampling: bool = True
 
     # Export settings
-    export_formats: List[str] = field(default_factory=lambda: ["pdf", "pptx", "csv", "excel"])
+    export_formats: List[str] = field(
+        default_factory=lambda: ["pdf", "pptx", "csv", "excel"]
+    )
     pdf_page_size: str = "A4"
     pptx_template: Optional[str] = None
 
@@ -127,12 +137,12 @@ class EnhancedDashboard:
             __name__,
             external_stylesheets=[
                 dbc.themes.BOOTSTRAP,
-                "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+                "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css",
             ],
             suppress_callback_exceptions=True,
             meta_tags=[
                 {"name": "viewport", "content": "width=device-width, initial-scale=1"}
-            ]
+            ],
         )
 
         # Configure Flask server
@@ -143,9 +153,9 @@ class EnhancedDashboard:
         self.cache = Cache(
             self.server,
             config={
-                'CACHE_TYPE': 'simple',
-                'CACHE_DEFAULT_TIMEOUT': self.config.cache_timeout
-            }
+                "CACHE_TYPE": "simple",
+                "CACHE_DEFAULT_TIMEOUT": self.config.cache_timeout,
+            },
         )
 
         # Initialize Redis for real-time data (optional)
@@ -153,11 +163,12 @@ class EnhancedDashboard:
         if self.config.enable_realtime:
             try:
                 import redis
+
                 self.redis_client = redis.Redis(
                     host=self.config.redis_host,
                     port=self.config.redis_port,
                     db=self.config.redis_db,
-                    decode_responses=True
+                    decode_responses=True,
                 )
                 self.redis_client.ping()
                 logger.info("Connected to Redis for real-time data")
@@ -202,67 +213,70 @@ class EnhancedDashboard:
             color="primary",
             dark=True,
             fluid=True,
-            id="navbar"
+            id="navbar",
         )
 
         # Dark mode toggle
-        dark_mode_switch = dbc.Switch(
-            id="dark-mode-switch",
-            label="Dark Mode",
-            value=self.config.theme == "dark",
-            className="mt-2"
-        ) if self.config.enable_dark_mode else html.Div()
+        dark_mode_switch = (
+            dbc.Switch(
+                id="dark-mode-switch",
+                label="Dark Mode",
+                value=self.config.theme == "dark",
+                className="mt-2",
+            )
+            if self.config.enable_dark_mode
+            else html.Div()
+        )
 
         # Filter panel
-        filter_panel = dbc.Card(
-            [
-                dbc.CardHeader("Filters"),
-                dbc.CardBody(
-                    [
-                        dcc.DatePickerRange(
-                            id="date-range-picker",
-                            start_date=datetime.now() - timedelta(days=30),
-                            end_date=datetime.now(),
-                            display_format="YYYY-MM-DD",
-                            className="mb-3"
-                        ),
-                        dcc.Dropdown(
-                            id="category-filter",
-                            options=[],
-                            multi=True,
-                            placeholder="Select categories...",
-                            className="mb-3"
-                        ),
-                        dcc.Dropdown(
-                            id="metric-filter",
-                            options=[],
-                            multi=True,
-                            placeholder="Select metrics...",
-                            className="mb-3"
-                        ),
-                        dbc.Button(
-                            "Apply Filters",
-                            id="apply-filters-btn",
-                            color="primary",
-                            className="w-100"
-                        )
-                    ]
-                )
-            ],
-            className="mb-3"
-        ) if self.config.enable_filtering else html.Div()
+        filter_panel = (
+            dbc.Card(
+                [
+                    dbc.CardHeader("Filters"),
+                    dbc.CardBody(
+                        [
+                            dcc.DatePickerRange(
+                                id="date-range-picker",
+                                start_date=datetime.now() - timedelta(days=30),
+                                end_date=datetime.now(),
+                                display_format="YYYY-MM-DD",
+                                className="mb-3",
+                            ),
+                            dcc.Dropdown(
+                                id="category-filter",
+                                options=[],
+                                multi=True,
+                                placeholder="Select categories...",
+                                className="mb-3",
+                            ),
+                            dcc.Dropdown(
+                                id="metric-filter",
+                                options=[],
+                                multi=True,
+                                placeholder="Select metrics...",
+                                className="mb-3",
+                            ),
+                            dbc.Button(
+                                "Apply Filters",
+                                id="apply-filters-btn",
+                                color="primary",
+                                className="w-100",
+                            ),
+                        ]
+                    ),
+                ],
+                className="mb-3",
+            )
+            if self.config.enable_filtering
+            else html.Div()
+        )
 
         # Main content area
         content = dbc.Container(
             [
                 dbc.Row(
                     [
-                        dbc.Col(
-                            [filter_panel],
-                            width=12,
-                            md=3,
-                            className="mb-3"
-                        ),
+                        dbc.Col([filter_panel], width=12, md=3, className="mb-3"),
                         dbc.Col(
                             [
                                 dcc.Location(id="url", refresh=False),
@@ -271,45 +285,32 @@ class EnhancedDashboard:
                                     id="interval-component",
                                     interval=self.config.data_refresh_interval,
                                     n_intervals=0,
-                                    disabled=not self.config.enable_realtime
+                                    disabled=not self.config.enable_realtime,
                                 ),
-                                WebSocket(
-                                    id="ws",
-                                    url=self.config.websocket_url
-                                ) if self.config.enable_realtime else html.Div(),
+                                WebSocket(id="ws", url=self.config.websocket_url)
+                                if self.config.enable_realtime
+                                else html.Div(),
                             ],
                             width=12,
-                            md=9
-                        )
+                            md=9,
+                        ),
                     ]
                 ),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            [dark_mode_switch],
-                            width=12,
-                            className="text-end"
-                        )
-                    ]
-                )
+                dbc.Row([dbc.Col([dark_mode_switch], width=12, className="text-end")]),
             ],
             fluid=True,
-            className="p-4"
+            className="p-4",
         )
 
         # Accessibility features
         if self.config.enable_accessibility:
             content = html.Div(
                 [
-                    html.Div(
-                        "Skip to main content",
-                        className="sr-only",
-                        tabIndex=0
-                    ),
-                    content
+                    html.Div("Skip to main content", className="sr-only", tabIndex=0),
+                    content,
                 ],
                 role="main",
-                **{"aria-label": "Main Dashboard Content"}
+                **{"aria-label": "Main Dashboard Content"},
             )
 
         # Set the app layout
@@ -319,9 +320,9 @@ class EnhancedDashboard:
                 dcc.Store(id="filter-store", storage_type="session"),
                 dcc.Store(id="data-store", storage_type="memory"),
                 navbar,
-                content
+                content,
             ],
-            id="main-container"
+            id="main-container",
         )
 
     def register_component(self, component_id: str, component_func: Callable):
@@ -371,8 +372,9 @@ class EnhancedDashboard:
 
         return data
 
-    def create_responsive_card(self, title: str, content: Any,
-                              card_id: Optional[str] = None) -> dbc.Card:
+    def create_responsive_card(
+        self, title: str, content: Any, card_id: Optional[str] = None
+    ) -> dbc.Card:
         """
         Create a responsive card component.
 
@@ -388,17 +390,21 @@ class EnhancedDashboard:
             [
                 dbc.CardHeader(
                     html.H5(title, className="mb-0"),
-                    className="d-flex justify-content-between align-items-center"
+                    className="d-flex justify-content-between align-items-center",
                 ),
-                dbc.CardBody(content)
+                dbc.CardBody(content),
             ],
             id=card_id,
-            className="mb-3 shadow-sm"
+            className="mb-3 shadow-sm",
         )
 
-    def create_kpi_card(self, title: str, value: Union[str, float],
-                        change: Optional[float] = None,
-                        icon: Optional[str] = None) -> dbc.Card:
+    def create_kpi_card(
+        self,
+        title: str,
+        value: Union[str, float],
+        change: Optional[float] = None,
+        icon: Optional[str] = None,
+    ) -> dbc.Card:
         """
         Create a KPI card with optional change indicator.
 
@@ -416,8 +422,7 @@ class EnhancedDashboard:
             color = "success" if change >= 0 else "danger"
             arrow = "↑" if change >= 0 else "↓"
             change_indicator = html.Div(
-                f"{arrow} {abs(change):.1f}%",
-                className=f"text-{color} small"
+                f"{arrow} {abs(change):.1f}%", className=f"text-{color} small"
             )
 
         icon_element = html.Div()
@@ -430,10 +435,10 @@ class EnhancedDashboard:
                     icon_element,
                     html.H6(title, className="text-muted"),
                     html.H3(value, className="mb-0"),
-                    change_indicator
+                    change_indicator,
                 ]
             ),
-            className="text-center h-100 shadow-sm"
+            className="text-center h-100 shadow-sm",
         )
 
     async def stream_data(self, channel: str) -> AsyncGenerator:
@@ -450,14 +455,15 @@ class EnhancedDashboard:
             return
 
         async with aioredis.create_redis_pool(
-            f'redis://{self.config.redis_host}:{self.config.redis_port}'
+            f"redis://{self.config.redis_host}:{self.config.redis_port}"
         ) as redis:
             channel_obj = await redis.subscribe(channel)
             async for message in channel_obj[0].iter():
-                yield json.loads(message.decode('utf-8'))
+                yield json.loads(message.decode("utf-8"))
 
-    def export_to_pdf(self, figures: List[go.Figure],
-                      filename: str = "dashboard_report.pdf") -> str:
+    def export_to_pdf(
+        self, figures: List[go.Figure], filename: str = "dashboard_report.pdf"
+    ) -> str:
         """
         Export dashboard to PDF.
 
@@ -477,7 +483,7 @@ class EnhancedDashboard:
             rightMargin=72,
             leftMargin=72,
             topMargin=72,
-            bottomMargin=18
+            bottomMargin=18,
         )
 
         # Container for the 'Flowable' objects
@@ -486,19 +492,20 @@ class EnhancedDashboard:
         # Add title
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
+            "CustomTitle",
+            parent=styles["Heading1"],
             fontSize=24,
             textColor=colors.HexColor(self.config.primary_color),
             spaceAfter=30,
-            alignment=1  # Center
+            alignment=1,  # Center
         )
 
+        elements.append(Paragraph(f"{self.config.app_name} Report", title_style))
         elements.append(
-            Paragraph(f"{self.config.app_name} Report", title_style)
-        )
-        elements.append(
-            Paragraph(f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal'])
+            Paragraph(
+                f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                styles["Normal"],
+            )
         )
         elements.append(Spacer(1, 0.5 * inch))
 
@@ -506,9 +513,13 @@ class EnhancedDashboard:
         for i, fig in enumerate(figures):
             # Convert Plotly figure to image
             img_bytes = fig.to_image(format="png", width=600, height=400)
-            img = Image(io.BytesIO(img_bytes), width=6*inch, height=4*inch)
+            img = Image(io.BytesIO(img_bytes), width=6 * inch, height=4 * inch)
 
-            elements.append(Paragraph(f"Figure {i+1}: {fig.layout.title.text}", styles['Heading2']))
+            elements.append(
+                Paragraph(
+                    f"Figure {i + 1}: {fig.layout.title.text}", styles["Heading2"]
+                )
+            )
             elements.append(img)
             elements.append(Spacer(1, 0.3 * inch))
 
@@ -521,8 +532,9 @@ class EnhancedDashboard:
 
         return str(output_path)
 
-    def export_to_powerpoint(self, figures: List[go.Figure],
-                            filename: str = "dashboard_presentation.pptx") -> str:
+    def export_to_powerpoint(
+        self, figures: List[go.Figure], filename: str = "dashboard_presentation.pptx"
+    ) -> str:
         """
         Export dashboard to PowerPoint.
 
@@ -581,11 +593,11 @@ class EnhancedDashboard:
 
         # Dark mode toggle
         if self.config.enable_dark_mode:
+
             @self.app.callback(
-                [Output("main-container", "className"),
-                 Output("theme-store", "data")],
+                [Output("main-container", "className"), Output("theme-store", "data")],
                 [Input("dark-mode-switch", "value")],
-                [State("theme-store", "data")]
+                [State("theme-store", "data")],
             )
             def toggle_dark_mode(dark_mode, stored_theme):
                 theme = "dark" if dark_mode else "light"
@@ -594,8 +606,7 @@ class EnhancedDashboard:
 
         # Page routing
         @self.app.callback(
-            Output("page-content", "children"),
-            [Input("url", "pathname")]
+            Output("page-content", "children"), [Input("url", "pathname")]
         )
         def display_page(pathname):
             if pathname == "/analytics":
@@ -607,10 +618,10 @@ class EnhancedDashboard:
 
         # Real-time data updates
         if self.config.enable_realtime:
+
             @self.app.callback(
                 Output("data-store", "data"),
-                [Input("interval-component", "n_intervals"),
-                 Input("ws", "message")]
+                [Input("interval-component", "n_intervals"), Input("ws", "message")],
             )
             def update_data(n, ws_message):
                 ctx = callback_context
@@ -635,11 +646,14 @@ class EnhancedDashboard:
 
         # Export callbacks
         if self.config.enable_export:
+
             @self.app.callback(
                 Output("export-status", "children"),
-                [Input("export-pdf", "n_clicks"),
-                 Input("export-pptx", "n_clicks"),
-                 Input("export-excel", "n_clicks")]
+                [
+                    Input("export-pdf", "n_clicks"),
+                    Input("export-pptx", "n_clicks"),
+                    Input("export-excel", "n_clicks"),
+                ],
             )
             def handle_export(pdf_clicks, pptx_clicks, excel_clicks):
                 ctx = callback_context
@@ -656,14 +670,14 @@ class EnhancedDashboard:
                     return dbc.Alert(
                         f"PDF exported successfully to {filepath}",
                         color="success",
-                        dismissable=True
+                        dismissable=True,
                     )
                 elif button_id == "export-pptx":
                     filepath = self.export_to_powerpoint(figures)
                     return dbc.Alert(
                         f"PowerPoint exported successfully to {filepath}",
                         color="success",
-                        dismissable=True
+                        dismissable=True,
                     )
                 elif button_id == "export-excel":
                     # Export data to Excel
@@ -671,7 +685,7 @@ class EnhancedDashboard:
                     return dbc.Alert(
                         f"Excel exported successfully to {filepath}",
                         color="success",
-                        dismissable=True
+                        dismissable=True,
                     )
 
                 raise PreventUpdate
@@ -687,44 +701,41 @@ class EnhancedDashboard:
                                 "Total Revenue",
                                 "$1.2M",
                                 change=12.5,
-                                icon="fas fa-dollar-sign"
+                                icon="fas fa-dollar-sign",
                             ),
                             width=6,
                             md=3,
-                            className="mb-3"
+                            className="mb-3",
                         ),
                         dbc.Col(
                             self.create_kpi_card(
-                                "Active Users",
-                                "8,543",
-                                change=5.2,
-                                icon="fas fa-users"
+                                "Active Users", "8,543", change=5.2, icon="fas fa-users"
                             ),
                             width=6,
                             md=3,
-                            className="mb-3"
+                            className="mb-3",
                         ),
                         dbc.Col(
                             self.create_kpi_card(
                                 "Conversion Rate",
                                 "3.2%",
                                 change=-1.1,
-                                icon="fas fa-chart-line"
+                                icon="fas fa-chart-line",
                             ),
                             width=6,
                             md=3,
-                            className="mb-3"
+                            className="mb-3",
                         ),
                         dbc.Col(
                             self.create_kpi_card(
                                 "Avg. Order Value",
                                 "$142",
                                 change=8.7,
-                                icon="fas fa-shopping-cart"
+                                icon="fas fa-shopping-cart",
                             ),
                             width=6,
                             md=3,
-                            className="mb-3"
+                            className="mb-3",
                         ),
                     ]
                 ),
@@ -734,19 +745,19 @@ class EnhancedDashboard:
                             html.Div(id="main-chart-container"),
                             width=12,
                             lg=8,
-                            className="mb-3"
+                            className="mb-3",
                         ),
                         dbc.Col(
                             html.Div(id="side-charts-container"),
                             width=12,
                             lg=4,
-                            className="mb-3"
+                            className="mb-3",
                         ),
                     ]
                 ),
                 html.Div(id="export-status"),
             ],
-            fluid=True
+            fluid=True,
         )
 
     def _create_analytics_page(self) -> html.Div:
@@ -755,16 +766,9 @@ class EnhancedDashboard:
             [
                 html.H2("Analytics Dashboard"),
                 html.Hr(),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            html.Div(id="analytics-content"),
-                            width=12
-                        )
-                    ]
-                )
+                dbc.Row([dbc.Col(html.Div(id="analytics-content"), width=12)]),
             ],
-            fluid=True
+            fluid=True,
         )
 
     def _create_reports_page(self) -> html.Div:
@@ -786,18 +790,28 @@ class EnhancedDashboard:
                                                 dcc.Dropdown(
                                                     id="report-type",
                                                     options=[
-                                                        {"label": "Executive Summary", "value": "executive"},
-                                                        {"label": "Detailed Analysis", "value": "detailed"},
-                                                        {"label": "Custom Report", "value": "custom"}
+                                                        {
+                                                            "label": "Executive Summary",
+                                                            "value": "executive",
+                                                        },
+                                                        {
+                                                            "label": "Detailed Analysis",
+                                                            "value": "detailed",
+                                                        },
+                                                        {
+                                                            "label": "Custom Report",
+                                                            "value": "custom",
+                                                        },
                                                     ],
-                                                    value="executive"
+                                                    value="executive",
                                                 ),
                                                 html.Br(),
                                                 dbc.Label("Date Range"),
                                                 dcc.DatePickerRange(
                                                     id="report-date-range",
-                                                    start_date=datetime.now() - timedelta(days=30),
-                                                    end_date=datetime.now()
+                                                    start_date=datetime.now()
+                                                    - timedelta(days=30),
+                                                    end_date=datetime.now(),
                                                 ),
                                                 html.Br(),
                                                 html.Br(),
@@ -805,25 +819,21 @@ class EnhancedDashboard:
                                                     "Generate Report",
                                                     id="generate-report-btn",
                                                     color="primary",
-                                                    className="w-100"
-                                                )
+                                                    className="w-100",
+                                                ),
                                             ]
-                                        )
+                                        ),
                                     ]
                                 )
                             ],
                             width=12,
-                            md=4
+                            md=4,
                         ),
-                        dbc.Col(
-                            html.Div(id="report-preview"),
-                            width=12,
-                            md=8
-                        )
+                        dbc.Col(html.Div(id="report-preview"), width=12, md=8),
                     ]
-                )
+                ),
             ],
-            fluid=True
+            fluid=True,
         )
 
     def _collect_current_figures(self) -> List[go.Figure]:
@@ -835,13 +845,13 @@ class EnhancedDashboard:
         # Create sample figures
         fig1 = go.Figure(
             data=[go.Scatter(x=[1, 2, 3, 4], y=[10, 11, 12, 13])],
-            layout=go.Layout(title="Sample Chart 1")
+            layout=go.Layout(title="Sample Chart 1"),
         )
         figures.append(fig1)
 
         fig2 = go.Figure(
-            data=[go.Bar(x=['A', 'B', 'C'], y=[1, 3, 2])],
-            layout=go.Layout(title="Sample Chart 2")
+            data=[go.Bar(x=["A", "B", "C"], y=[1, 3, 2])],
+            layout=go.Layout(title="Sample Chart 2"),
         )
         figures.append(fig2)
 
@@ -851,7 +861,7 @@ class EnhancedDashboard:
         """Export data to Excel."""
         output_path = Path(filename)
 
-        with pd.ExcelWriter(output_path, engine='xlsxwriter') as writer:
+        with pd.ExcelWriter(output_path, engine="xlsxwriter") as writer:
             for source_id in self.data_sources:
                 try:
                     df = self.get_data(source_id)
@@ -866,23 +876,27 @@ class EnhancedDashboard:
         """Run the dashboard application."""
         self.setup_callbacks()
 
-        logger.info(f"Starting dashboard on http://{self.config.host}:{self.config.port}")
+        logger.info(
+            f"Starting dashboard on http://{self.config.host}:{self.config.port}"
+        )
 
         # Open browser if in debug mode
         if self.config.debug:
             webbrowser.open(f"http://{self.config.host}:{self.config.port}")
 
         self.app.run_server(
-            host=self.config.host,
-            port=self.config.port,
-            debug=self.config.debug
+            host=self.config.host, port=self.config.port, debug=self.config.debug
         )
 
 
 # Utility functions for common visualizations
-def create_time_series_chart(df: pd.DataFrame, x_col: str, y_cols: List[str],
-                            title: str = "Time Series",
-                            animation: bool = False) -> go.Figure:
+def create_time_series_chart(
+    df: pd.DataFrame,
+    x_col: str,
+    y_cols: List[str],
+    title: str = "Time Series",
+    animation: bool = False,
+) -> go.Figure:
     """
     Create an interactive time series chart.
 
@@ -903,9 +917,9 @@ def create_time_series_chart(df: pd.DataFrame, x_col: str, y_cols: List[str],
             go.Scatter(
                 x=df[x_col],
                 y=df[col],
-                mode='lines+markers',
+                mode="lines+markers",
                 name=col,
-                hovertemplate='%{x}<br>%{y:.2f}<extra></extra>'
+                hovertemplate="%{x}<br>%{y:.2f}<extra></extra>",
             )
         )
 
@@ -913,9 +927,9 @@ def create_time_series_chart(df: pd.DataFrame, x_col: str, y_cols: List[str],
         title=title,
         xaxis_title=x_col,
         yaxis_title="Value",
-        hovermode='x unified',
+        hovermode="x unified",
         showlegend=True,
-        template="plotly_white"
+        template="plotly_white",
     )
 
     if animation:
@@ -925,10 +939,12 @@ def create_time_series_chart(df: pd.DataFrame, x_col: str, y_cols: List[str],
                     type="buttons",
                     showactive=False,
                     buttons=[
-                        dict(label="Play",
-                             method="animate",
-                             args=[None, {"frame": {"duration": 100}}])
-                    ]
+                        dict(
+                            label="Play",
+                            method="animate",
+                            args=[None, {"frame": {"duration": 100}}],
+                        )
+                    ],
                 )
             ]
         )
@@ -952,15 +968,12 @@ def create_heatmap(df: pd.DataFrame, title: str = "Heatmap") -> go.Figure:
             z=df.values,
             x=df.columns,
             y=df.index,
-            colorscale='Viridis',
-            hovertemplate='%{x}<br>%{y}<br>Value: %{z:.2f}<extra></extra>'
+            colorscale="Viridis",
+            hovertemplate="%{x}<br>%{y}<br>Value: %{z:.2f}<extra></extra>",
         )
     )
 
-    fig.update_layout(
-        title=title,
-        template="plotly_white"
-    )
+    fig.update_layout(title=title, template="plotly_white")
 
     return fig
 
@@ -971,7 +984,7 @@ if __name__ == "__main__":
         app_name="Data Science Portfolio Dashboard",
         enable_realtime=True,
         enable_dark_mode=True,
-        enable_export=True
+        enable_export=True,
     )
 
     dashboard = EnhancedDashboard(config)
@@ -979,13 +992,15 @@ if __name__ == "__main__":
     # Register sample data source
     def sample_data_source(filters=None):
         """Generate a synthetic daily revenue dataset for demo purposes."""
-        dates = pd.date_range(start='2024-01-01', end='2024-01-31', freq='D')
-        data = pd.DataFrame({
-            'date': dates,
-            'revenue': np.random.uniform(10000, 50000, len(dates)),
-            'users': np.random.uniform(1000, 5000, len(dates)),
-            'conversion': np.random.uniform(0.01, 0.05, len(dates))
-        })
+        dates = pd.date_range(start="2024-01-01", end="2024-01-31", freq="D")
+        data = pd.DataFrame(
+            {
+                "date": dates,
+                "revenue": np.random.uniform(10000, 50000, len(dates)),
+                "users": np.random.uniform(1000, 5000, len(dates)),
+                "conversion": np.random.uniform(0.01, 0.05, len(dates)),
+            }
+        )
         return data
 
     dashboard.register_data_source("sample_data", sample_data_source)

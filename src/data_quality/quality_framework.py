@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 
 class DataQualityLevel(Enum):
     """Data quality severity levels"""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -50,6 +51,7 @@ class DataQualityLevel(Enum):
 
 class ValidationStatus(Enum):
     """Validation status"""
+
     PASSED = "passed"
     FAILED = "failed"
     WARNING = "warning"
@@ -59,6 +61,7 @@ class ValidationStatus(Enum):
 @dataclass
 class DataQualityRule:
     """Individual data quality rule"""
+
     rule_id: str
     name: str
     description: str
@@ -73,6 +76,7 @@ class DataQualityRule:
 @dataclass
 class ValidationResult:
     """Result of a validation check"""
+
     rule_id: str
     rule_name: str
     status: ValidationStatus
@@ -87,6 +91,7 @@ class ValidationResult:
 @dataclass
 class DataQualityReport:
     """Comprehensive data quality report"""
+
     dataset_name: str
     timestamp: datetime
     total_records: int
@@ -105,7 +110,9 @@ class SchemaValidator:
         self.schemas = {}
         self.pandera_schemas = {}
 
-    def register_schema(self, schema_name: str, schema: Union[Dict, pa.DataFrameSchema]):
+    def register_schema(
+        self, schema_name: str, schema: Union[Dict, pa.DataFrameSchema]
+    ):
         """Register a schema for validation"""
         if isinstance(schema, dict):
             self.schemas[schema_name] = schema
@@ -122,7 +129,7 @@ class SchemaValidator:
                 rule_name="JSON Schema Validation",
                 status=ValidationStatus.SKIPPED,
                 message=f"Schema {schema_name} not found",
-                severity=DataQualityLevel.HIGH
+                severity=DataQualityLevel.HIGH,
             )
 
         try:
@@ -132,7 +139,7 @@ class SchemaValidator:
                 rule_name="JSON Schema Validation",
                 status=ValidationStatus.PASSED,
                 message="Data conforms to JSON schema",
-                severity=DataQualityLevel.HIGH
+                severity=DataQualityLevel.HIGH,
             )
         except jsonschema.ValidationError as e:
             return ValidationResult(
@@ -141,10 +148,12 @@ class SchemaValidator:
                 status=ValidationStatus.FAILED,
                 message=f"Schema validation failed: {str(e)}",
                 severity=DataQualityLevel.HIGH,
-                details={"error": str(e), "path": list(e.path)}
+                details={"error": str(e), "path": list(e.path)},
             )
 
-    def validate_dataframe_schema(self, df: pd.DataFrame, schema_name: str) -> ValidationResult:
+    def validate_dataframe_schema(
+        self, df: pd.DataFrame, schema_name: str
+    ) -> ValidationResult:
         """Validate DataFrame against pandera schema"""
         if schema_name not in self.pandera_schemas:
             # Try to infer schema
@@ -160,7 +169,7 @@ class SchemaValidator:
                 rule_name="DataFrame Schema Validation",
                 status=ValidationStatus.PASSED,
                 message="DataFrame conforms to schema",
-                severity=DataQualityLevel.HIGH
+                severity=DataQualityLevel.HIGH,
             )
         except pa.errors.SchemaError as e:
             return ValidationResult(
@@ -169,7 +178,7 @@ class SchemaValidator:
                 status=ValidationStatus.FAILED,
                 message=f"Schema validation failed: {str(e)}",
                 severity=DataQualityLevel.HIGH,
-                details={"errors": str(e)}
+                details={"errors": str(e)},
             )
 
     def _infer_schema(self, df: pd.DataFrame) -> pa.DataFrameSchema:
@@ -182,7 +191,7 @@ class SchemaValidator:
             if pd.api.types.is_numeric_dtype(dtype):
                 checks = [
                     Check.greater_than_or_equal_to(df[col].min()),
-                    Check.less_than_or_equal_to(df[col].max())
+                    Check.less_than_or_equal_to(df[col].max()),
                 ]
             else:
                 checks = []
@@ -197,13 +206,14 @@ class StatisticalValidator:
 
     def __init__(self):
         self.distribution_tests = {
-            'normal': normaltest,
-            'uniform': lambda x: kstest(x, 'uniform'),
-            'exponential': lambda x: kstest(x, 'expon')
+            "normal": normaltest,
+            "uniform": lambda x: kstest(x, "uniform"),
+            "exponential": lambda x: kstest(x, "expon"),
         }
 
-    def check_distribution(self, data: pd.Series, expected_dist: str = 'normal',
-                         alpha: float = 0.05) -> ValidationResult:
+    def check_distribution(
+        self, data: pd.Series, expected_dist: str = "normal", alpha: float = 0.05
+    ) -> ValidationResult:
         """Check if data follows expected distribution"""
         if expected_dist not in self.distribution_tests:
             return ValidationResult(
@@ -211,7 +221,7 @@ class StatisticalValidator:
                 rule_name=f"Distribution Check ({expected_dist})",
                 status=ValidationStatus.SKIPPED,
                 message=f"Unknown distribution: {expected_dist}",
-                severity=DataQualityLevel.MEDIUM
+                severity=DataQualityLevel.MEDIUM,
             )
 
         test_func = self.distribution_tests[expected_dist]
@@ -227,7 +237,7 @@ class StatisticalValidator:
                     status=ValidationStatus.WARNING,
                     message="Insufficient data for distribution test",
                     severity=DataQualityLevel.LOW,
-                    details={"sample_size": len(clean_data)}
+                    details={"sample_size": len(clean_data)},
                 )
 
             statistic, p_value = test_func(clean_data)[:2]
@@ -248,8 +258,8 @@ class StatisticalValidator:
                 details={
                     "statistic": float(statistic),
                     "p_value": float(p_value),
-                    "alpha": alpha
-                }
+                    "alpha": alpha,
+                },
             )
         except Exception as e:
             return ValidationResult(
@@ -257,11 +267,12 @@ class StatisticalValidator:
                 rule_name=f"Distribution Check ({expected_dist})",
                 status=ValidationStatus.FAILED,
                 message=f"Distribution test failed: {str(e)}",
-                severity=DataQualityLevel.MEDIUM
+                severity=DataQualityLevel.MEDIUM,
             )
 
-    def detect_outliers(self, df: pd.DataFrame, method: str = 'iqr',
-                       contamination: float = 0.1) -> ValidationResult:
+    def detect_outliers(
+        self, df: pd.DataFrame, method: str = "iqr", contamination: float = 0.1
+    ) -> ValidationResult:
         """Detect outliers in data"""
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         outliers = {}
@@ -269,7 +280,7 @@ class StatisticalValidator:
         for col in numeric_cols:
             data = df[col].dropna()
 
-            if method == 'iqr':
+            if method == "iqr":
                 Q1 = data.quantile(0.25)
                 Q3 = data.quantile(0.75)
                 IQR = Q3 - Q1
@@ -277,15 +288,15 @@ class StatisticalValidator:
                 upper = Q3 + 1.5 * IQR
                 outlier_mask = (data < lower) | (data > upper)
 
-            elif method == 'zscore':
+            elif method == "zscore":
                 z_scores = np.abs(stats.zscore(data))
                 outlier_mask = z_scores > 3
 
-            elif method == 'isolation_forest':
+            elif method == "isolation_forest":
                 clf = IsolationForest(contamination=contamination, random_state=42)
                 outlier_mask = clf.fit_predict(data.values.reshape(-1, 1)) == -1
 
-            elif method == 'lof':
+            elif method == "lof":
                 clf = LocalOutlierFactor(contamination=contamination)
                 outlier_mask = clf.fit_predict(data.values.reshape(-1, 1)) == -1
 
@@ -295,14 +306,18 @@ class StatisticalValidator:
             outlier_indices = df.index[outlier_mask].tolist()
             if outlier_indices:
                 outliers[col] = {
-                    'count': len(outlier_indices),
-                    'percentage': len(outlier_indices) / len(data) * 100,
-                    'indices': outlier_indices[:100]  # Limit to first 100
+                    "count": len(outlier_indices),
+                    "percentage": len(outlier_indices) / len(data) * 100,
+                    "indices": outlier_indices[:100],  # Limit to first 100
                 }
 
         if outliers:
-            total_outliers = sum(v['count'] for v in outliers.values())
-            status = ValidationStatus.WARNING if total_outliers / len(df) < 0.05 else ValidationStatus.FAILED
+            total_outliers = sum(v["count"] for v in outliers.values())
+            status = (
+                ValidationStatus.WARNING
+                if total_outliers / len(df) < 0.05
+                else ValidationStatus.FAILED
+            )
 
             return ValidationResult(
                 rule_id="outlier_detection",
@@ -311,7 +326,7 @@ class StatisticalValidator:
                 message=f"Found {total_outliers} outliers across {len(outliers)} columns",
                 severity=DataQualityLevel.MEDIUM,
                 details=outliers,
-                affected_columns=list(outliers.keys())
+                affected_columns=list(outliers.keys()),
             )
         else:
             return ValidationResult(
@@ -319,10 +334,12 @@ class StatisticalValidator:
                 rule_name=f"Outlier Detection ({method})",
                 status=ValidationStatus.PASSED,
                 message="No outliers detected",
-                severity=DataQualityLevel.MEDIUM
+                severity=DataQualityLevel.MEDIUM,
             )
 
-    def check_correlation(self, df: pd.DataFrame, threshold: float = 0.95) -> ValidationResult:
+    def check_correlation(
+        self, df: pd.DataFrame, threshold: float = 0.95
+    ) -> ValidationResult:
         """Check for highly correlated features"""
         numeric_cols = df.select_dtypes(include=[np.number]).columns
 
@@ -332,20 +349,22 @@ class StatisticalValidator:
                 rule_name="High Correlation Check",
                 status=ValidationStatus.SKIPPED,
                 message="Insufficient numeric columns for correlation check",
-                severity=DataQualityLevel.LOW
+                severity=DataQualityLevel.LOW,
             )
 
         corr_matrix = df[numeric_cols].corr()
         high_corr_pairs = []
 
         for i in range(len(corr_matrix.columns)):
-            for j in range(i+1, len(corr_matrix.columns)):
+            for j in range(i + 1, len(corr_matrix.columns)):
                 if abs(corr_matrix.iloc[i, j]) > threshold:
-                    high_corr_pairs.append({
-                        'feature1': corr_matrix.columns[i],
-                        'feature2': corr_matrix.columns[j],
-                        'correlation': corr_matrix.iloc[i, j]
-                    })
+                    high_corr_pairs.append(
+                        {
+                            "feature1": corr_matrix.columns[i],
+                            "feature2": corr_matrix.columns[j],
+                            "correlation": corr_matrix.iloc[i, j],
+                        }
+                    )
 
         if high_corr_pairs:
             return ValidationResult(
@@ -354,7 +373,7 @@ class StatisticalValidator:
                 status=ValidationStatus.WARNING,
                 message=f"Found {len(high_corr_pairs)} highly correlated feature pairs",
                 severity=DataQualityLevel.MEDIUM,
-                details={'high_correlations': high_corr_pairs}
+                details={"high_correlations": high_corr_pairs},
             )
         else:
             return ValidationResult(
@@ -362,10 +381,12 @@ class StatisticalValidator:
                 rule_name="High Correlation Check",
                 status=ValidationStatus.PASSED,
                 message="No highly correlated features found",
-                severity=DataQualityLevel.MEDIUM
+                severity=DataQualityLevel.MEDIUM,
             )
 
-    def check_multicollinearity(self, df: pd.DataFrame, threshold: float = 10.0) -> ValidationResult:
+    def check_multicollinearity(
+        self, df: pd.DataFrame, threshold: float = 10.0
+    ) -> ValidationResult:
         """Check for multicollinearity using VIF"""
         numeric_cols = df.select_dtypes(include=[np.number]).columns
 
@@ -375,7 +396,7 @@ class StatisticalValidator:
                 rule_name="Multicollinearity Check (VIF)",
                 status=ValidationStatus.SKIPPED,
                 message="Insufficient numeric columns for VIF check",
-                severity=DataQualityLevel.MEDIUM
+                severity=DataQualityLevel.MEDIUM,
             )
 
         # Calculate VIF for each feature
@@ -385,9 +406,9 @@ class StatisticalValidator:
         try:
             vif_values = []
             for i in range(len(numeric_cols)):
-                vif_values.append(variance_inflation_factor(
-                    df[numeric_cols].dropna().values, i
-                ))
+                vif_values.append(
+                    variance_inflation_factor(df[numeric_cols].dropna().values, i)
+                )
             vif_data["VIF"] = vif_values
 
             high_vif = vif_data[vif_data["VIF"] > threshold]
@@ -399,7 +420,7 @@ class StatisticalValidator:
                     status=ValidationStatus.WARNING,
                     message=f"Found {len(high_vif)} features with high VIF",
                     severity=DataQualityLevel.MEDIUM,
-                    details={'high_vif_features': high_vif.to_dict('records')}
+                    details={"high_vif_features": high_vif.to_dict("records")},
                 )
             else:
                 return ValidationResult(
@@ -407,7 +428,7 @@ class StatisticalValidator:
                     rule_name="Multicollinearity Check (VIF)",
                     status=ValidationStatus.PASSED,
                     message="No multicollinearity detected",
-                    severity=DataQualityLevel.MEDIUM
+                    severity=DataQualityLevel.MEDIUM,
                 )
         except Exception as e:
             return ValidationResult(
@@ -415,7 +436,7 @@ class StatisticalValidator:
                 rule_name="Multicollinearity Check (VIF)",
                 status=ValidationStatus.FAILED,
                 message=f"VIF calculation failed: {str(e)}",
-                severity=DataQualityLevel.MEDIUM
+                severity=DataQualityLevel.MEDIUM,
             )
 
 
@@ -434,7 +455,9 @@ class DataIntegrityValidator:
         """Register a referential integrity rule"""
         self.referential_rules[rule.rule_id] = rule
 
-    def check_uniqueness(self, df: pd.DataFrame, columns: List[str]) -> ValidationResult:
+    def check_uniqueness(
+        self, df: pd.DataFrame, columns: List[str]
+    ) -> ValidationResult:
         """Check uniqueness constraint"""
         duplicates = df.duplicated(subset=columns, keep=False)
         duplicate_count = duplicates.sum()
@@ -449,12 +472,12 @@ class DataIntegrityValidator:
                 message=f"Found {duplicate_count} duplicate records",
                 severity=DataQualityLevel.HIGH,
                 details={
-                    'duplicate_count': int(duplicate_count),
-                    'duplicate_rows': duplicate_rows,
-                    'columns_checked': columns
+                    "duplicate_count": int(duplicate_count),
+                    "duplicate_rows": duplicate_rows,
+                    "columns_checked": columns,
                 },
                 affected_columns=columns,
-                affected_rows=duplicate_rows
+                affected_rows=duplicate_rows,
             )
         else:
             return ValidationResult(
@@ -462,11 +485,12 @@ class DataIntegrityValidator:
                 rule_name="Uniqueness Constraint",
                 status=ValidationStatus.PASSED,
                 message="All records are unique",
-                severity=DataQualityLevel.HIGH
+                severity=DataQualityLevel.HIGH,
             )
 
-    def check_referential_integrity(self, df1: pd.DataFrame, df2: pd.DataFrame,
-                                   key1: str, key2: str) -> ValidationResult:
+    def check_referential_integrity(
+        self, df1: pd.DataFrame, df2: pd.DataFrame, key1: str, key2: str
+    ) -> ValidationResult:
         """Check referential integrity between two dataframes"""
         missing_refs = df1[~df1[key1].isin(df2[key2])]
         missing_count = len(missing_refs)
@@ -481,11 +505,11 @@ class DataIntegrityValidator:
                 message=f"Found {missing_count} records with missing references",
                 severity=DataQualityLevel.CRITICAL,
                 details={
-                    'missing_count': missing_count,
-                    'missing_values': missing_values.tolist(),
-                    'key_column': key1
+                    "missing_count": missing_count,
+                    "missing_values": missing_values.tolist(),
+                    "key_column": key1,
                 },
-                affected_columns=[key1]
+                affected_columns=[key1],
             )
         else:
             return ValidationResult(
@@ -493,7 +517,7 @@ class DataIntegrityValidator:
                 rule_name="Referential Integrity Check",
                 status=ValidationStatus.PASSED,
                 message="All references are valid",
-                severity=DataQualityLevel.CRITICAL
+                severity=DataQualityLevel.CRITICAL,
             )
 
     def validate_business_rules(self, df: pd.DataFrame) -> List[ValidationResult]:
@@ -509,25 +533,33 @@ class DataIntegrityValidator:
                 if isinstance(result, ValidationResult):
                     results.append(result)
                 elif isinstance(result, bool):
-                    results.append(ValidationResult(
+                    results.append(
+                        ValidationResult(
+                            rule_id=rule.rule_id,
+                            rule_name=rule.name,
+                            status=ValidationStatus.PASSED
+                            if result
+                            else ValidationStatus.FAILED,
+                            message=rule.description,
+                            severity=rule.severity,
+                        )
+                    )
+            except Exception as e:
+                results.append(
+                    ValidationResult(
                         rule_id=rule.rule_id,
                         rule_name=rule.name,
-                        status=ValidationStatus.PASSED if result else ValidationStatus.FAILED,
-                        message=rule.description,
-                        severity=rule.severity
-                    ))
-            except Exception as e:
-                results.append(ValidationResult(
-                    rule_id=rule.rule_id,
-                    rule_name=rule.name,
-                    status=ValidationStatus.FAILED,
-                    message=f"Rule execution failed: {str(e)}",
-                    severity=rule.severity
-                ))
+                        status=ValidationStatus.FAILED,
+                        message=f"Rule execution failed: {str(e)}",
+                        severity=rule.severity,
+                    )
+                )
 
         return results
 
-    def check_date_consistency(self, df: pd.DataFrame, start_col: str, end_col: str) -> ValidationResult:
+    def check_date_consistency(
+        self, df: pd.DataFrame, start_col: str, end_col: str
+    ) -> ValidationResult:
         """Check if start dates are before end dates"""
         df[start_col] = pd.to_datetime(df[start_col])
         df[end_col] = pd.to_datetime(df[end_col])
@@ -543,10 +575,10 @@ class DataIntegrityValidator:
                 message=f"Found {invalid_count} records with invalid date ranges",
                 severity=DataQualityLevel.HIGH,
                 details={
-                    'invalid_count': invalid_count,
-                    'invalid_rows': invalid_dates.index.tolist()[:100]
+                    "invalid_count": invalid_count,
+                    "invalid_rows": invalid_dates.index.tolist()[:100],
                 },
-                affected_columns=[start_col, end_col]
+                affected_columns=[start_col, end_col],
             )
         else:
             return ValidationResult(
@@ -554,7 +586,7 @@ class DataIntegrityValidator:
                 rule_name="Date Consistency Check",
                 status=ValidationStatus.PASSED,
                 message="All date ranges are valid",
-                severity=DataQualityLevel.HIGH
+                severity=DataQualityLevel.HIGH,
             )
 
 
@@ -572,7 +604,9 @@ class DataQualityFramework:
         """Register a validation rule"""
         self.rules.append(rule)
 
-    def validate_completeness(self, df: pd.DataFrame, threshold: float = 0.95) -> ValidationResult:
+    def validate_completeness(
+        self, df: pd.DataFrame, threshold: float = 0.95
+    ) -> ValidationResult:
         """Check data completeness"""
         missing_data = df.isnull().sum()
         missing_pct = missing_data / len(df)
@@ -583,14 +617,16 @@ class DataQualityFramework:
             return ValidationResult(
                 rule_id="completeness_check",
                 rule_name="Data Completeness Check",
-                status=ValidationStatus.WARNING if columns_with_missing.max() < 0.5 else ValidationStatus.FAILED,
+                status=ValidationStatus.WARNING
+                if columns_with_missing.max() < 0.5
+                else ValidationStatus.FAILED,
                 message=f"Found {len(columns_with_missing)} columns below completeness threshold",
                 severity=DataQualityLevel.HIGH,
                 details={
-                    'missing_columns': columns_with_missing.to_dict(),
-                    'threshold': threshold
+                    "missing_columns": columns_with_missing.to_dict(),
+                    "threshold": threshold,
                 },
-                affected_columns=columns_with_missing.index.tolist()
+                affected_columns=columns_with_missing.index.tolist(),
             )
         else:
             return ValidationResult(
@@ -598,25 +634,26 @@ class DataQualityFramework:
                 rule_name="Data Completeness Check",
                 status=ValidationStatus.PASSED,
                 message="All columns meet completeness threshold",
-                severity=DataQualityLevel.HIGH
+                severity=DataQualityLevel.HIGH,
             )
 
-    def validate_data_types(self, df: pd.DataFrame, expected_types: Dict[str, type]) -> ValidationResult:
+    def validate_data_types(
+        self, df: pd.DataFrame, expected_types: Dict[str, type]
+    ) -> ValidationResult:
         """Validate data types"""
         type_mismatches = []
 
         for col, expected_type in expected_types.items():
             if col not in df.columns:
-                type_mismatches.append({
-                    'column': col,
-                    'issue': 'Column not found'
-                })
+                type_mismatches.append({"column": col, "issue": "Column not found"})
             elif not pd.api.types.is_dtype_equal(df[col].dtype, expected_type):
-                type_mismatches.append({
-                    'column': col,
-                    'expected': str(expected_type),
-                    'actual': str(df[col].dtype)
-                })
+                type_mismatches.append(
+                    {
+                        "column": col,
+                        "expected": str(expected_type),
+                        "actual": str(df[col].dtype),
+                    }
+                )
 
         if type_mismatches:
             return ValidationResult(
@@ -625,7 +662,7 @@ class DataQualityFramework:
                 status=ValidationStatus.FAILED,
                 message=f"Found {len(type_mismatches)} type mismatches",
                 severity=DataQualityLevel.HIGH,
-                details={'mismatches': type_mismatches}
+                details={"mismatches": type_mismatches},
             )
         else:
             return ValidationResult(
@@ -633,11 +670,16 @@ class DataQualityFramework:
                 rule_name="Data Type Validation",
                 status=ValidationStatus.PASSED,
                 message="All data types are correct",
-                severity=DataQualityLevel.HIGH
+                severity=DataQualityLevel.HIGH,
             )
 
-    def validate_range(self, df: pd.DataFrame, column: str, min_val: float = None,
-                      max_val: float = None) -> ValidationResult:
+    def validate_range(
+        self,
+        df: pd.DataFrame,
+        column: str,
+        min_val: float = None,
+        max_val: float = None,
+    ) -> ValidationResult:
         """Validate value ranges"""
         if column not in df.columns:
             return ValidationResult(
@@ -645,7 +687,7 @@ class DataQualityFramework:
                 rule_name=f"Range Validation ({column})",
                 status=ValidationStatus.FAILED,
                 message=f"Column {column} not found",
-                severity=DataQualityLevel.HIGH
+                severity=DataQualityLevel.HIGH,
             )
 
         values = df[column].dropna()
@@ -669,12 +711,12 @@ class DataQualityFramework:
                 message=f"Values out of range: {', '.join(out_of_range)}",
                 severity=DataQualityLevel.HIGH,
                 details={
-                    'min_val': min_val,
-                    'max_val': max_val,
-                    'actual_min': float(values.min()),
-                    'actual_max': float(values.max())
+                    "min_val": min_val,
+                    "max_val": max_val,
+                    "actual_min": float(values.min()),
+                    "actual_max": float(values.max()),
                 },
-                affected_columns=[column]
+                affected_columns=[column],
             )
         else:
             return ValidationResult(
@@ -682,11 +724,15 @@ class DataQualityFramework:
                 rule_name=f"Range Validation ({column})",
                 status=ValidationStatus.PASSED,
                 message="All values within expected range",
-                severity=DataQualityLevel.HIGH
+                severity=DataQualityLevel.HIGH,
             )
 
-    def run_validation(self, df: pd.DataFrame, dataset_name: str = "dataset",
-                      rules: Optional[List[DataQualityRule]] = None) -> DataQualityReport:
+    def run_validation(
+        self,
+        df: pd.DataFrame,
+        dataset_name: str = "dataset",
+        rules: Optional[List[DataQualityRule]] = None,
+    ) -> DataQualityReport:
         """Run comprehensive data validation"""
         validation_results = []
         timestamp = datetime.now()
@@ -697,18 +743,16 @@ class DataQualityFramework:
         # Statistical checks
         for col in df.select_dtypes(include=[np.number]).columns:
             validation_results.append(
-                self.statistical_validator.check_distribution(df[col], 'normal')
+                self.statistical_validator.check_distribution(df[col], "normal")
             )
 
         # Outlier detection
         validation_results.append(
-            self.statistical_validator.detect_outliers(df, method='iqr')
+            self.statistical_validator.detect_outliers(df, method="iqr")
         )
 
         # Correlation checks
-        validation_results.append(
-            self.statistical_validator.check_correlation(df)
-        )
+        validation_results.append(self.statistical_validator.check_correlation(df))
 
         # Custom rules
         if rules:
@@ -717,28 +761,39 @@ class DataQualityFramework:
                     result = rule.check_function(df, **rule.parameters)
                     validation_results.append(result)
                 except Exception as e:
-                    validation_results.append(ValidationResult(
-                        rule_id=rule.rule_id,
-                        rule_name=rule.name,
-                        status=ValidationStatus.FAILED,
-                        message=f"Rule execution failed: {str(e)}",
-                        severity=rule.severity
-                    ))
+                    validation_results.append(
+                        ValidationResult(
+                            rule_id=rule.rule_id,
+                            rule_name=rule.name,
+                            status=ValidationStatus.FAILED,
+                            message=f"Rule execution failed: {str(e)}",
+                            severity=rule.severity,
+                        )
+                    )
 
         # Calculate quality score
-        passed = sum(1 for r in validation_results if r.status == ValidationStatus.PASSED)
+        passed = sum(
+            1 for r in validation_results if r.status == ValidationStatus.PASSED
+        )
         total = len(validation_results)
         quality_score = (passed / total * 100) if total > 0 else 0
 
         # Generate summary
         summary = {
-            'total_checks': total,
-            'passed': passed,
-            'failed': sum(1 for r in validation_results if r.status == ValidationStatus.FAILED),
-            'warnings': sum(1 for r in validation_results if r.status == ValidationStatus.WARNING),
-            'critical_issues': sum(1 for r in validation_results
-                                 if r.status == ValidationStatus.FAILED
-                                 and r.severity == DataQualityLevel.CRITICAL)
+            "total_checks": total,
+            "passed": passed,
+            "failed": sum(
+                1 for r in validation_results if r.status == ValidationStatus.FAILED
+            ),
+            "warnings": sum(
+                1 for r in validation_results if r.status == ValidationStatus.WARNING
+            ),
+            "critical_issues": sum(
+                1
+                for r in validation_results
+                if r.status == ValidationStatus.FAILED
+                and r.severity == DataQualityLevel.CRITICAL
+            ),
         }
 
         # Generate recommendations
@@ -754,9 +809,9 @@ class DataQualityFramework:
             summary=summary,
             recommendations=recommendations,
             metadata={
-                'dtypes': df.dtypes.to_dict(),
-                'memory_usage': df.memory_usage(deep=True).sum()
-            }
+                "dtypes": df.dtypes.to_dict(),
+                "memory_usage": df.memory_usage(deep=True).sum(),
+            },
         )
 
         # Store in history
@@ -771,17 +826,23 @@ class DataQualityFramework:
         for result in results:
             if result.status == ValidationStatus.FAILED:
                 if result.rule_id == "completeness_check":
-                    recommendations.append("Consider imputation strategies for missing data")
+                    recommendations.append(
+                        "Consider imputation strategies for missing data"
+                    )
                 elif result.rule_id == "outlier_detection":
                     recommendations.append("Review and handle detected outliers")
                 elif result.rule_id == "correlation_check":
-                    recommendations.append("Consider removing highly correlated features")
+                    recommendations.append(
+                        "Consider removing highly correlated features"
+                    )
                 elif result.rule_id == "uniqueness_check":
                     recommendations.append("Remove or consolidate duplicate records")
 
             elif result.status == ValidationStatus.WARNING:
                 if result.rule_id == "dist_check":
-                    recommendations.append("Consider data transformation for non-normal distributions")
+                    recommendations.append(
+                        "Consider data transformation for non-normal distributions"
+                    )
 
         return list(set(recommendations))  # Remove duplicates
 
@@ -806,7 +867,7 @@ class DataQualityFramework:
                 body {{ font-family: Arial, sans-serif; margin: 20px; }}
                 .header {{ background: #f0f0f0; padding: 20px; }}
                 .score {{ font-size: 48px; font-weight: bold;
-                         color: {'green' if report.quality_score > 80 else 'orange' if report.quality_score > 60 else 'red'}; }}
+                         color: {"green" if report.quality_score > 80 else "orange" if report.quality_score > 60 else "red"}; }}
                 .summary {{ margin: 20px 0; }}
                 .results {{ margin: 20px 0; }}
                 .passed {{ color: green; }}
@@ -829,8 +890,8 @@ class DataQualityFramework:
                 <ul>
                     <li>Total Records: {report.total_records:,}</li>
                     <li>Total Columns: {report.total_columns}</li>
-                    <li>Checks Passed: {report.summary['passed']}/{report.summary['total_checks']}</li>
-                    <li>Critical Issues: {report.summary['critical_issues']}</li>
+                    <li>Checks Passed: {report.summary["passed"]}/{report.summary["total_checks"]}</li>
+                    <li>Critical Issues: {report.summary["critical_issues"]}</li>
                 </ul>
             </div>
 
@@ -888,10 +949,10 @@ class DataQualityFramework:
 ## Summary
 - **Total Records:** {report.total_records:,}
 - **Total Columns:** {report.total_columns}
-- **Checks Passed:** {report.summary['passed']}/{report.summary['total_checks']}
-- **Failed:** {report.summary['failed']}
-- **Warnings:** {report.summary['warnings']}
-- **Critical Issues:** {report.summary['critical_issues']}
+- **Checks Passed:** {report.summary["passed"]}/{report.summary["total_checks"]}
+- **Failed:** {report.summary["failed"]}
+- **Warnings:** {report.summary["warnings"]}
+- **Critical Issues:** {report.summary["critical_issues"]}
 
 ## Validation Results
 
@@ -912,19 +973,21 @@ class DataQualityFramework:
 # Example usage
 if __name__ == "__main__":
     # Create sample data
-    df = pd.DataFrame({
-        'id': range(1000),
-        'age': np.random.normal(35, 10, 1000),
-        'salary': np.random.normal(50000, 15000, 1000),
-        'department': np.random.choice(['IT', 'HR', 'Sales'], 1000),
-        'start_date': pd.date_range('2020-01-01', periods=1000, freq='D'),
-        'end_date': pd.date_range('2021-01-01', periods=1000, freq='D')
-    })
+    df = pd.DataFrame(
+        {
+            "id": range(1000),
+            "age": np.random.normal(35, 10, 1000),
+            "salary": np.random.normal(50000, 15000, 1000),
+            "department": np.random.choice(["IT", "HR", "Sales"], 1000),
+            "start_date": pd.date_range("2020-01-01", periods=1000, freq="D"),
+            "end_date": pd.date_range("2021-01-01", periods=1000, freq="D"),
+        }
+    )
 
     # Add some data quality issues
-    df.loc[50:100, 'age'] = np.nan
-    df.loc[200:210, 'salary'] = -1000
-    df.loc[300:305, 'id'] = 1  # Duplicates
+    df.loc[50:100, "age"] = np.nan
+    df.loc[200:210, "salary"] = -1000
+    df.loc[300:305, "id"] = 1  # Duplicates
 
     # Initialize framework
     dq_framework = DataQualityFramework()

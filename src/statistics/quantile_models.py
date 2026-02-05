@@ -52,9 +52,7 @@ class MonotoneQuantileHead:
         """Convert raw outputs to monotone quantiles."""
         raw = np.asarray(raw_outputs, dtype=float)
         if raw.ndim != 2 or raw.shape[1] != self.n_quantiles + 1:
-            raise ValueError(
-                "raw_outputs must have shape (n_samples, n_quantiles + 1)"
-            )
+            raise ValueError("raw_outputs must have shape (n_samples, n_quantiles + 1)")
         base = raw[:, [0]]
         deltas = raw[:, 1:]
         increments = _softplus(deltas)

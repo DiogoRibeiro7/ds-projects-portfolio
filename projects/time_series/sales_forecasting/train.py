@@ -16,13 +16,17 @@ def make_synthetic_sales(n_days: int = 730, random_state: int = 42) -> pd.Series
     return pd.Series(values, index=dates, name="sales")
 
 
-def train_test_split(series: pd.Series, test_days: int = 60) -> tuple[pd.Series, pd.Series]:
+def train_test_split(
+    series: pd.Series, test_days: int = 60
+) -> tuple[pd.Series, pd.Series]:
     return series.iloc[:-test_days], series.iloc[-test_days:]
 
 
 def forecast_naive(train: pd.Series, horizon: int) -> pd.Series:
     last_value = train.iloc[-1]
-    forecast_index = pd.date_range(train.index[-1] + pd.Timedelta(days=1), periods=horizon, freq="D")
+    forecast_index = pd.date_range(
+        train.index[-1] + pd.Timedelta(days=1), periods=horizon, freq="D"
+    )
     return pd.Series([last_value] * horizon, index=forecast_index)
 
 
@@ -60,7 +64,15 @@ def main() -> None:
     print("\nARIMA Metrics")
     print({k: round(v, 2) for k, v in arima_metrics.items()})
     print("\nSample Forecasts")
-    print(pd.DataFrame({"actual": test.head(5), "naive": naive_forecast.head(5), "arima": arima_forecast.head(5)}))
+    print(
+        pd.DataFrame(
+            {
+                "actual": test.head(5),
+                "naive": naive_forecast.head(5),
+                "arima": arima_forecast.head(5),
+            }
+        )
+    )
 
 
 if __name__ == "__main__":

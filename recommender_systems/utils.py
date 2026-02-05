@@ -30,9 +30,12 @@ class DataPreprocessor:
         self.item_encoder = LabelEncoder()
         self.stats = {}
 
-    def preprocess_interactions(self, df: pd.DataFrame,
-                                min_user_interactions: int = 5,
-                                min_item_interactions: int = 5) -> pd.DataFrame:
+    def preprocess_interactions(
+        self,
+        df: pd.DataFrame,
+        min_user_interactions: int = 5,
+        min_item_interactions: int = 5,
+    ) -> pd.DataFrame:
         """
         Preprocess interaction data
 
@@ -47,29 +50,29 @@ class DataPreprocessor:
         logger.info(f"Initial shape: {df.shape}")
 
         # Remove duplicates
-        df = df.drop_duplicates(subset=['user_id', 'item_id'])
+        df = df.drop_duplicates(subset=["user_id", "item_id"])
 
         # Filter users and items by minimum interactions
-        user_counts = df['user_id'].value_counts()
-        item_counts = df['item_id'].value_counts()
+        user_counts = df["user_id"].value_counts()
+        item_counts = df["item_id"].value_counts()
 
         valid_users = user_counts[user_counts >= min_user_interactions].index
         valid_items = item_counts[item_counts >= min_item_interactions].index
 
-        df = df[df['user_id'].isin(valid_users) & df['item_id'].isin(valid_items)]
+        df = df[df["user_id"].isin(valid_users) & df["item_id"].isin(valid_items)]
 
         # Encode user and item IDs
-        df['user_idx'] = self.user_encoder.fit_transform(df['user_id'])
-        df['item_idx'] = self.item_encoder.fit_transform(df['item_id'])
+        df["user_idx"] = self.user_encoder.fit_transform(df["user_id"])
+        df["item_idx"] = self.item_encoder.fit_transform(df["item_id"])
 
         # Store statistics
         self.stats = {
-            'n_users': df['user_idx'].nunique(),
-            'n_items': df['item_idx'].nunique(),
-            'n_interactions': len(df),
-            'density': len(df) / (df['user_idx'].nunique() * df['item_idx'].nunique()),
-            'avg_user_interactions': df.groupby('user_idx').size().mean(),
-            'avg_item_interactions': df.groupby('item_idx').size().mean()
+            "n_users": df["user_idx"].nunique(),
+            "n_items": df["item_idx"].nunique(),
+            "n_interactions": len(df),
+            "density": len(df) / (df["user_idx"].nunique() * df["item_idx"].nunique()),
+            "avg_user_interactions": df.groupby("user_idx").size().mean(),
+            "avg_item_interactions": df.groupby("item_idx").size().mean(),
         }
 
         logger.info(f"Preprocessed shape: {df.shape}")
@@ -77,9 +80,9 @@ class DataPreprocessor:
 
         return df
 
-    def create_interaction_matrix(self, df: pd.DataFrame,
-                                  value_col: str = 'rating',
-                                  sparse: bool = True) -> Union[np.ndarray, sp.csr_matrix]:
+    def create_interaction_matrix(
+        self, df: pd.DataFrame, value_col: str = "rating", sparse: bool = True
+    ) -> Union[np.ndarray, sp.csr_matrix]:
         """
         Create user-item interaction matrix
 
@@ -91,23 +94,23 @@ class DataPreprocessor:
         Returns:
             Interaction matrix
         """
-        n_users = df['user_idx'].max() + 1
-        n_items = df['item_idx'].max() + 1
+        n_users = df["user_idx"].max() + 1
+        n_items = df["item_idx"].max() + 1
 
         if sparse:
             matrix = sp.csr_matrix(
-                (df[value_col].values, (df['user_idx'].values, df['item_idx'].values)),
-                shape=(n_users, n_items)
+                (df[value_col].values, (df["user_idx"].values, df["item_idx"].values)),
+                shape=(n_users, n_items),
             )
         else:
             matrix = np.zeros((n_users, n_items))
-            matrix[df['user_idx'].values, df['item_idx'].values] = df[value_col].values
+            matrix[df["user_idx"].values, df["item_idx"].values] = df[value_col].values
 
         return matrix
 
-    def train_test_split_temporal(self, df: pd.DataFrame,
-                                  test_size: float = 0.2,
-                                  timestamp_col: str = 'timestamp') -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def train_test_split_temporal(
+        self, df: pd.DataFrame, test_size: float = 0.2, timestamp_col: str = "timestamp"
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Split data temporally for time-aware evaluation
 
@@ -126,22 +129,22 @@ class DataPreprocessor:
         test_df = df.iloc[split_idx:]
 
         # Ensure test users/items are in train
-        test_users = set(test_df['user_id'].unique())
-        test_items = set(test_df['item_id'].unique())
-        train_users = set(train_df['user_id'].unique())
-        train_items = set(train_df['item_id'].unique())
+        test_users = set(test_df["user_id"].unique())
+        test_items = set(test_df["item_id"].unique())
+        train_users = set(train_df["user_id"].unique())
+        train_items = set(train_df["item_id"].unique())
 
         test_df = test_df[
-            test_df['user_id'].isin(train_users) &
-            test_df['item_id'].isin(train_items)
+            test_df["user_id"].isin(train_users) & test_df["item_id"].isin(train_items)
         ]
 
         logger.info(f"Train size: {len(train_df)}, Test size: {len(test_df)}")
 
         return train_df, test_df
 
-    def create_negative_samples(self, df: pd.DataFrame,
-                               n_negative: int = 4) -> pd.DataFrame:
+    def create_negative_samples(
+        self, df: pd.DataFrame, n_negative: int = 4
+    ) -> pd.DataFrame:
         """
         Create negative samples for implicit feedback
 
@@ -152,31 +155,30 @@ class DataPreprocessor:
         Returns:
             DataFrame with positive and negative samples
         """
-        all_items = set(df['item_id'].unique())
+        all_items = set(df["item_id"].unique())
         negative_samples = []
 
-        for user_id in df['user_id'].unique():
-            user_items = set(df[df['user_id'] == user_id]['item_id'].values)
+        for user_id in df["user_id"].unique():
+            user_items = set(df[df["user_id"] == user_id]["item_id"].values)
             non_interacted = list(all_items - user_items)
 
             if len(non_interacted) >= n_negative:
-                sampled_items = np.random.choice(non_interacted, n_negative, replace=False)
+                sampled_items = np.random.choice(
+                    non_interacted, n_negative, replace=False
+                )
                 for item_id in sampled_items:
-                    negative_samples.append({
-                        'user_id': user_id,
-                        'item_id': item_id,
-                        'label': 0
-                    })
+                    negative_samples.append(
+                        {"user_id": user_id, "item_id": item_id, "label": 0}
+                    )
 
         # Add positive samples
-        positive_samples = df[['user_id', 'item_id']].copy()
-        positive_samples['label'] = 1
+        positive_samples = df[["user_id", "item_id"]].copy()
+        positive_samples["label"] = 1
 
         # Combine
-        all_samples = pd.concat([
-            positive_samples,
-            pd.DataFrame(negative_samples)
-        ], ignore_index=True)
+        all_samples = pd.concat(
+            [positive_samples, pd.DataFrame(negative_samples)], ignore_index=True
+        )
 
         return all_samples.sample(frac=1).reset_index(drop=True)
 
@@ -199,35 +201,49 @@ class FeatureEngineering:
         """
         user_features = []
 
-        for user_id in df['user_id'].unique():
-            user_data = df[df['user_id'] == user_id]
+        for user_id in df["user_id"].unique():
+            user_data = df[df["user_id"] == user_id]
 
             features = {
-                'user_id': user_id,
-                'n_interactions': len(user_data),
-                'avg_rating': user_data['rating'].mean() if 'rating' in df.columns else 0,
-                'std_rating': user_data['rating'].std() if 'rating' in df.columns else 0,
-                'n_unique_items': user_data['item_id'].nunique(),
-                'interaction_recency': (datetime.now() - pd.to_datetime(user_data['timestamp'].max())).days
-                    if 'timestamp' in df.columns else 0,
-                'interaction_frequency': len(user_data) / max(1, (
-                    pd.to_datetime(user_data['timestamp'].max()) -
-                    pd.to_datetime(user_data['timestamp'].min())
-                ).days) if 'timestamp' in df.columns else 0
+                "user_id": user_id,
+                "n_interactions": len(user_data),
+                "avg_rating": user_data["rating"].mean()
+                if "rating" in df.columns
+                else 0,
+                "std_rating": user_data["rating"].std()
+                if "rating" in df.columns
+                else 0,
+                "n_unique_items": user_data["item_id"].nunique(),
+                "interaction_recency": (
+                    datetime.now() - pd.to_datetime(user_data["timestamp"].max())
+                ).days
+                if "timestamp" in df.columns
+                else 0,
+                "interaction_frequency": len(user_data)
+                / max(
+                    1,
+                    (
+                        pd.to_datetime(user_data["timestamp"].max())
+                        - pd.to_datetime(user_data["timestamp"].min())
+                    ).days,
+                )
+                if "timestamp" in df.columns
+                else 0,
             }
 
             # Add category preferences if available
-            if 'category' in df.columns:
-                category_dist = user_data['category'].value_counts(normalize=True)
+            if "category" in df.columns:
+                category_dist = user_data["category"].value_counts(normalize=True)
                 for cat, prop in category_dist.head(5).items():
-                    features[f'pref_{cat}'] = prop
+                    features[f"pref_{cat}"] = prop
 
             user_features.append(features)
 
         return pd.DataFrame(user_features)
 
-    def create_item_features(self, df: pd.DataFrame,
-                            item_metadata: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    def create_item_features(
+        self, df: pd.DataFrame, item_metadata: Optional[pd.DataFrame] = None
+    ) -> pd.DataFrame:
         """
         Create item features from interaction data and metadata
 
@@ -240,24 +256,31 @@ class FeatureEngineering:
         """
         item_features = []
 
-        for item_id in df['item_id'].unique():
-            item_data = df[df['item_id'] == item_id]
+        for item_id in df["item_id"].unique():
+            item_data = df[df["item_id"] == item_id]
 
             features = {
-                'item_id': item_id,
-                'n_interactions': len(item_data),
-                'avg_rating': item_data['rating'].mean() if 'rating' in df.columns else 0,
-                'std_rating': item_data['rating'].std() if 'rating' in df.columns else 0,
-                'n_unique_users': item_data['user_id'].nunique(),
-                'popularity_score': len(item_data) / len(df),
-                'recency': (datetime.now() - pd.to_datetime(item_data['timestamp'].max())).days
-                    if 'timestamp' in df.columns else 0
+                "item_id": item_id,
+                "n_interactions": len(item_data),
+                "avg_rating": item_data["rating"].mean()
+                if "rating" in df.columns
+                else 0,
+                "std_rating": item_data["rating"].std()
+                if "rating" in df.columns
+                else 0,
+                "n_unique_users": item_data["user_id"].nunique(),
+                "popularity_score": len(item_data) / len(df),
+                "recency": (
+                    datetime.now() - pd.to_datetime(item_data["timestamp"].max())
+                ).days
+                if "timestamp" in df.columns
+                else 0,
             }
 
             # Add metadata features if available
             if item_metadata is not None and item_id in item_metadata.index:
                 metadata = item_metadata.loc[item_id]
-                for col in ['category', 'price', 'brand']:
+                for col in ["category", "price", "brand"]:
                     if col in metadata:
                         features[col] = metadata[col]
 
@@ -275,36 +298,43 @@ class FeatureEngineering:
         Returns:
             DataFrame with context features added
         """
-        if 'timestamp' not in df.columns:
+        if "timestamp" not in df.columns:
             logger.warning("No timestamp column found, skipping context features")
             return df
 
         df = df.copy()
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
 
         # Time-based features
-        df['hour'] = df['timestamp'].dt.hour
-        df['day_of_week'] = df['timestamp'].dt.dayofweek
-        df['day_of_month'] = df['timestamp'].dt.day
-        df['month'] = df['timestamp'].dt.month
-        df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)
+        df["hour"] = df["timestamp"].dt.hour
+        df["day_of_week"] = df["timestamp"].dt.dayofweek
+        df["day_of_month"] = df["timestamp"].dt.day
+        df["month"] = df["timestamp"].dt.month
+        df["is_weekend"] = df["day_of_week"].isin([5, 6]).astype(int)
 
         # Time of day categories
-        df['time_of_day'] = pd.cut(df['hour'],
-                                   bins=[0, 6, 12, 18, 24],
-                                   labels=['night', 'morning', 'afternoon', 'evening'])
+        df["time_of_day"] = pd.cut(
+            df["hour"],
+            bins=[0, 6, 12, 18, 24],
+            labels=["night", "morning", "afternoon", "evening"],
+        )
 
         # Season
-        df['season'] = df['month'].apply(lambda x:
-            'winter' if x in [12, 1, 2] else
-            'spring' if x in [3, 4, 5] else
-            'summer' if x in [6, 7, 8] else
-            'fall')
+        df["season"] = df["month"].apply(
+            lambda x: "winter"
+            if x in [12, 1, 2]
+            else "spring"
+            if x in [3, 4, 5]
+            else "summer"
+            if x in [6, 7, 8]
+            else "fall"
+        )
 
         return df
 
-    def create_sequence_features(self, df: pd.DataFrame,
-                                 sequence_length: int = 5) -> Dict[int, List]:
+    def create_sequence_features(
+        self, df: pd.DataFrame, sequence_length: int = 5
+    ) -> Dict[int, List]:
         """
         Create sequence features for sequential recommendation
 
@@ -317,14 +347,14 @@ class FeatureEngineering:
         """
         sequences = {}
 
-        for user_id in df['user_id'].unique():
-            user_data = df[df['user_id'] == user_id].sort_values('timestamp')
-            items = user_data['item_id'].values
+        for user_id in df["user_id"].unique():
+            user_data = df[df["user_id"] == user_id].sort_values("timestamp")
+            items = user_data["item_id"].values
 
             # Create sliding window sequences
             user_sequences = []
             for i in range(len(items) - sequence_length + 1):
-                seq = items[i:i + sequence_length]
+                seq = items[i : i + sequence_length]
                 user_sequences.append(seq.tolist())
 
             if user_sequences:
@@ -347,7 +377,9 @@ class EvaluationMetrics:
         return mean_absolute_error(y_true, y_pred)
 
     @staticmethod
-    def precision_at_k(recommendations: List[int], relevant: List[int], k: int) -> float:
+    def precision_at_k(
+        recommendations: List[int], relevant: List[int], k: int
+    ) -> float:
         """Precision@K"""
         if not recommendations or not relevant:
             return 0.0
@@ -383,8 +415,12 @@ class EvaluationMetrics:
         return 2 * (prec * rec) / (prec + rec)
 
     @staticmethod
-    def ndcg_at_k(recommendations: List[int], relevant: List[int],
-                  relevance_scores: Optional[Dict[int, float]] = None, k: int = 10) -> float:
+    def ndcg_at_k(
+        recommendations: List[int],
+        relevant: List[int],
+        relevance_scores: Optional[Dict[int, float]] = None,
+        k: int = 10,
+    ) -> float:
         """
         Normalized Discounted Cumulative Gain@K
 
@@ -420,8 +456,11 @@ class EvaluationMetrics:
         return dcg / idcg
 
     @staticmethod
-    def map_at_k(user_recommendations: Dict[int, List[int]],
-                 user_relevant: Dict[int, List[int]], k: int = 10) -> float:
+    def map_at_k(
+        user_recommendations: Dict[int, List[int]],
+        user_relevant: Dict[int, List[int]],
+        k: int = 10,
+    ) -> float:
         """
         Mean Average Precision@K
 
@@ -528,8 +567,9 @@ class EvaluationMetrics:
         return np.mean(novelty_scores) if novelty_scores else 0.0
 
     @staticmethod
-    def serendipity(recommendations: List[int], expected: List[int],
-                    relevant: List[int]) -> float:
+    def serendipity(
+        recommendations: List[int], expected: List[int], relevant: List[int]
+    ) -> float:
         """
         Serendipity of recommendations
 
@@ -564,7 +604,7 @@ class ColdStartHandler:
             interactions: Interaction data
         """
         # Get popular items
-        item_counts = interactions['item_id'].value_counts()
+        item_counts = interactions["item_id"].value_counts()
         self.popular_items = item_counts.head(100).index.tolist()
 
         # Calculate default embeddings
@@ -573,15 +613,16 @@ class ColdStartHandler:
     def _calculate_defaults(self, interactions: pd.DataFrame):
         """Calculate default embeddings for cold start"""
         # User default: average of all users
-        user_groups = interactions.groupby('user_id')['rating'].mean()
-        self.default_embeddings['user'] = user_groups.mean()
+        user_groups = interactions.groupby("user_id")["rating"].mean()
+        self.default_embeddings["user"] = user_groups.mean()
 
         # Item default: average of all items
-        item_groups = interactions.groupby('item_id')['rating'].mean()
-        self.default_embeddings['item'] = item_groups.mean()
+        item_groups = interactions.groupby("item_id")["rating"].mean()
+        self.default_embeddings["item"] = item_groups.mean()
 
-    def handle_cold_user(self, user_features: Optional[Dict] = None,
-                         n_recommendations: int = 10) -> List[int]:
+    def handle_cold_user(
+        self, user_features: Optional[Dict] = None, n_recommendations: int = 10
+    ) -> List[int]:
         """
         Handle cold start for new users
 
@@ -599,8 +640,7 @@ class ColdStartHandler:
             # Return popular items
             return self.popular_items[:n_recommendations]
 
-    def handle_cold_item(self, item_features: Dict,
-                        similar_items: List[int]) -> Dict:
+    def handle_cold_item(self, item_features: Dict, similar_items: List[int]) -> Dict:
         """
         Handle cold start for new items
 
@@ -612,16 +652,17 @@ class ColdStartHandler:
             Cold start strategy for item
         """
         strategy = {
-            'method': 'similarity_based',
-            'similar_items': similar_items[:10],
-            'predicted_rating': self.default_embeddings.get('item', 3.0),
-            'confidence': 0.5
+            "method": "similarity_based",
+            "similar_items": similar_items[:10],
+            "predicted_rating": self.default_embeddings.get("item", 3.0),
+            "confidence": 0.5,
         }
 
         return strategy
 
-    def _content_based_cold_start(self, user_features: Dict,
-                                  n_recommendations: int) -> List[int]:
+    def _content_based_cold_start(
+        self, user_features: Dict, n_recommendations: int
+    ) -> List[int]:
         """Content-based recommendations for cold start users"""
         # Simplified: return items matching user preferences
         # In practice, would use more sophisticated matching
@@ -639,7 +680,7 @@ class RecommendationCache:
 
     def _create_key(self, user_id: int, context: Optional[Dict] = None) -> str:
         """Create cache key"""
-        key_data = {'user_id': user_id}
+        key_data = {"user_id": user_id}
         if context:
             key_data.update(context)
 
@@ -652,7 +693,9 @@ class RecommendationCache:
 
         if key in self.cache:
             # Check TTL
-            if datetime.now() - self.access_times[key] < timedelta(seconds=self.ttl_seconds):
+            if datetime.now() - self.access_times[key] < timedelta(
+                seconds=self.ttl_seconds
+            ):
                 self.access_times[key] = datetime.now()  # Update access time
                 return self.cache[key]
             else:
@@ -662,8 +705,7 @@ class RecommendationCache:
 
         return None
 
-    def set(self, user_id: int, recommendations: List,
-            context: Optional[Dict] = None):
+    def set(self, user_id: int, recommendations: List, context: Optional[Dict] = None):
         """Cache recommendations"""
         key = self._create_key(user_id, context)
 
@@ -685,11 +727,15 @@ class RecommendationCache:
     def get_stats(self) -> Dict:
         """Get cache statistics"""
         return {
-            'size': len(self.cache),
-            'max_size': self.max_size,
-            'ttl_seconds': self.ttl_seconds,
-            'oldest_entry': min(self.access_times.values()) if self.access_times else None,
-            'newest_entry': max(self.access_times.values()) if self.access_times else None
+            "size": len(self.cache),
+            "max_size": self.max_size,
+            "ttl_seconds": self.ttl_seconds,
+            "oldest_entry": min(self.access_times.values())
+            if self.access_times
+            else None,
+            "newest_entry": max(self.access_times.values())
+            if self.access_times
+            else None,
         }
 
 
@@ -698,10 +744,15 @@ class ABTestFramework:
 
     def __init__(self):
         self.experiments = {}
-        self.results = defaultdict(lambda: {'control': [], 'treatment': []})
+        self.results = defaultdict(lambda: {"control": [], "treatment": []})
 
-    def create_experiment(self, name: str, control_model: Any,
-                         treatment_model: Any, split_ratio: float = 0.5):
+    def create_experiment(
+        self,
+        name: str,
+        control_model: Any,
+        treatment_model: Any,
+        split_ratio: float = 0.5,
+    ):
         """
         Create new A/B test experiment
 
@@ -712,11 +763,11 @@ class ABTestFramework:
             split_ratio: Proportion of users for treatment
         """
         self.experiments[name] = {
-            'control': control_model,
-            'treatment': treatment_model,
-            'split_ratio': split_ratio,
-            'start_time': datetime.now(),
-            'metrics': defaultdict(list)
+            "control": control_model,
+            "treatment": treatment_model,
+            "split_ratio": split_ratio,
+            "start_time": datetime.now(),
+            "metrics": defaultdict(list),
         }
 
     def assign_variant(self, user_id: int, experiment_name: str) -> str:
@@ -735,12 +786,13 @@ class ABTestFramework:
 
         # Simple hash-based assignment
         hash_val = hash(f"{user_id}_{experiment_name}") % 100
-        split_threshold = self.experiments[experiment_name]['split_ratio'] * 100
+        split_threshold = self.experiments[experiment_name]["split_ratio"] * 100
 
-        return 'treatment' if hash_val < split_threshold else 'control'
+        return "treatment" if hash_val < split_threshold else "control"
 
-    def get_recommendations(self, user_id: int, experiment_name: str,
-                           n_recommendations: int = 10) -> Tuple[List, str]:
+    def get_recommendations(
+        self, user_id: int, experiment_name: str, n_recommendations: int = 10
+    ) -> Tuple[List, str]:
         """
         Get recommendations for user in experiment
 
@@ -760,17 +812,20 @@ class ABTestFramework:
 
         return recommendations, variant
 
-    def log_interaction(self, user_id: int, item_id: int,
-                       action: str, experiment_name: str):
+    def log_interaction(
+        self, user_id: int, item_id: int, action: str, experiment_name: str
+    ):
         """Log user interaction for analysis"""
         variant = self.assign_variant(user_id, experiment_name)
 
-        self.results[experiment_name][variant].append({
-            'user_id': user_id,
-            'item_id': item_id,
-            'action': action,
-            'timestamp': datetime.now()
-        })
+        self.results[experiment_name][variant].append(
+            {
+                "user_id": user_id,
+                "item_id": item_id,
+                "action": action,
+                "timestamp": datetime.now(),
+            }
+        )
 
     def analyze_experiment(self, experiment_name: str) -> Dict:
         """
@@ -785,42 +840,44 @@ class ABTestFramework:
         if experiment_name not in self.results:
             return {}
 
-        control_data = pd.DataFrame(self.results[experiment_name]['control'])
-        treatment_data = pd.DataFrame(self.results[experiment_name]['treatment'])
+        control_data = pd.DataFrame(self.results[experiment_name]["control"])
+        treatment_data = pd.DataFrame(self.results[experiment_name]["treatment"])
 
         analysis = {
-            'control_size': len(control_data),
-            'treatment_size': len(treatment_data),
-            'control_ctr': self._calculate_ctr(control_data),
-            'treatment_ctr': self._calculate_ctr(treatment_data),
-            'lift': None,
-            'p_value': None
+            "control_size": len(control_data),
+            "treatment_size": len(treatment_data),
+            "control_ctr": self._calculate_ctr(control_data),
+            "treatment_ctr": self._calculate_ctr(treatment_data),
+            "lift": None,
+            "p_value": None,
         }
 
         # Calculate lift
-        if analysis['control_ctr'] > 0:
-            analysis['lift'] = (
-                (analysis['treatment_ctr'] - analysis['control_ctr']) /
-                analysis['control_ctr'] * 100
+        if analysis["control_ctr"] > 0:
+            analysis["lift"] = (
+                (analysis["treatment_ctr"] - analysis["control_ctr"])
+                / analysis["control_ctr"]
+                * 100
             )
 
         # Statistical significance (simplified)
         from scipy.stats import chi2_contingency
+
         if len(control_data) > 0 and len(treatment_data) > 0:
             # Create contingency table
-            control_clicks = len(control_data[control_data['action'] == 'click'])
-            treatment_clicks = len(treatment_data[treatment_data['action'] == 'click'])
+            control_clicks = len(control_data[control_data["action"] == "click"])
+            treatment_clicks = len(treatment_data[treatment_data["action"] == "click"])
             control_no_clicks = len(control_data) - control_clicks
             treatment_no_clicks = len(treatment_data) - treatment_clicks
 
             contingency = [
                 [control_clicks, control_no_clicks],
-                [treatment_clicks, treatment_no_clicks]
+                [treatment_clicks, treatment_no_clicks],
             ]
 
             if all(sum(row) > 0 for row in contingency):
                 _, p_value, _, _ = chi2_contingency(contingency)
-                analysis['p_value'] = p_value
+                analysis["p_value"] = p_value
 
         return analysis
 
@@ -829,28 +886,29 @@ class ABTestFramework:
         if len(data) == 0:
             return 0.0
 
-        clicks = len(data[data['action'] == 'click'])
+        clicks = len(data[data["action"] == "click"])
         return clicks / len(data)
 
 
 # Example usage functions
-def create_sample_data(n_users: int = 1000, n_items: int = 500,
-                      n_interactions: int = 10000) -> pd.DataFrame:
+def create_sample_data(
+    n_users: int = 1000, n_items: int = 500, n_interactions: int = 10000
+) -> pd.DataFrame:
     """Create sample interaction data for testing"""
     np.random.seed(42)
 
     data = {
-        'user_id': np.random.randint(0, n_users, n_interactions),
-        'item_id': np.random.randint(0, n_items, n_interactions),
-        'rating': np.random.uniform(1, 5, n_interactions),
-        'timestamp': pd.date_range('2024-01-01', periods=n_interactions, freq='1H')
+        "user_id": np.random.randint(0, n_users, n_interactions),
+        "item_id": np.random.randint(0, n_items, n_interactions),
+        "rating": np.random.uniform(1, 5, n_interactions),
+        "timestamp": pd.date_range("2024-01-01", periods=n_interactions, freq="1H"),
     }
 
     df = pd.DataFrame(data)
 
     # Add some categories
-    categories = ['electronics', 'books', 'clothing', 'food', 'sports']
-    df['category'] = np.random.choice(categories, n_interactions)
+    categories = ["electronics", "books", "clothing", "food", "sports"]
+    df["category"] = np.random.choice(categories, n_interactions)
 
     return df
 
@@ -871,7 +929,7 @@ def evaluate_recommender(recommender, test_data: pd.DataFrame, k: int = 10) -> D
     results = defaultdict(list)
 
     # Group test data by user
-    user_items = test_data.groupby('user_id')['item_id'].apply(list).to_dict()
+    user_items = test_data.groupby("user_id")["item_id"].apply(list).to_dict()
 
     for user_id, relevant_items in user_items.items():
         # Get recommendations
@@ -883,20 +941,17 @@ def evaluate_recommender(recommender, test_data: pd.DataFrame, k: int = 10) -> D
             continue
 
         # Calculate metrics
-        results['precision'].append(
+        results["precision"].append(
             metrics.precision_at_k(recommendations, relevant_items, k)
         )
-        results['recall'].append(
+        results["recall"].append(
             metrics.recall_at_k(recommendations, relevant_items, k)
         )
-        results['ndcg'].append(
-            metrics.ndcg_at_k(recommendations, relevant_items, k=k)
-        )
+        results["ndcg"].append(metrics.ndcg_at_k(recommendations, relevant_items, k=k))
 
     # Average metrics
     return {
-        metric: np.mean(values) if values else 0.0
-        for metric, values in results.items()
+        metric: np.mean(values) if values else 0.0 for metric, values in results.items()
     }
 
 

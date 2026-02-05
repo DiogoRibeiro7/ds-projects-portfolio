@@ -42,7 +42,7 @@ class HTMLReportGenerator:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notebook Test Report - {datetime.now().strftime('%Y-%m-%d %H:%M')}</title>
+    <title>Notebook Test Report - {datetime.now().strftime("%Y-%m-%d %H:%M")}</title>
     {self._generate_styles()}
     {self._generate_scripts()}
 </head>
@@ -457,7 +457,7 @@ class HTMLReportGenerator:
 <div class="header">
     <h1>📊 Notebook Test Report</h1>
     <div class="subtitle">
-        Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}
+        Generated on {datetime.now().strftime("%B %d, %Y at %I:%M %p")}
     </div>
 </div>
 """
@@ -508,7 +508,7 @@ class HTMLReportGenerator:
 
     <div class="card">
         <div class="card-icon info">⚡</div>
-        <div class="card-value">{total_time/max(1, total):.1f}s</div>
+        <div class="card-value">{total_time / max(1, total):.1f}s</div>
         <div class="card-label">Avg Time per Notebook</div>
     </div>
 </div>
@@ -558,16 +558,16 @@ class HTMLReportGenerator:
 
 <script>
     const statusChartData = {{
-        labels: {json.dumps(status_data['labels'])},
+        labels: {json.dumps(status_data["labels"])},
         datasets: [{{
-            data: {json.dumps(status_data['data'])},
-            backgroundColor: {json.dumps(status_data['colors'])},
+            data: {json.dumps(status_data["data"])},
+            backgroundColor: {json.dumps(status_data["colors"])},
             borderWidth: 0
         }}]
     }};
 
     const timeChartData = {{
-        labels: {json.dumps([n[:20] + '...' if len(n) > 20 else n for n in notebooks])},
+        labels: {json.dumps([n[:20] + "..." if len(n) > 20 else n for n in notebooks])},
         datasets: [{{
             data: {json.dumps(exec_times)},
             backgroundColor: '#2563eb',
@@ -629,7 +629,7 @@ class HTMLReportGenerator:
                 </tr>
             </thead>
             <tbody>
-                {''.join(rows)}
+                {"".join(rows)}
             </tbody>
         </table>
     </div>
@@ -677,7 +677,7 @@ class HTMLReportGenerator:
                 <div class="detail-card">
                     <div class="detail-header">
                         <div class="detail-title">{name}</div>
-                        <span class="status-badge {status}">{status.replace('_', ' ').title()}</span>
+                        <span class="status-badge {status}">{status.replace("_", " ").title()}</span>
                     </div>
                     <div class="collapsible">Click to view details</div>
                     <div class="content">
@@ -693,7 +693,7 @@ class HTMLReportGenerator:
             return f"""
             <div class="details-section">
                 <h2 style="margin-bottom: 1rem;">Detailed Issues</h2>
-                {''.join(details)}
+                {"".join(details)}
             </div>
             """
         return ""

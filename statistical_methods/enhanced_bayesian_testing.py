@@ -91,7 +91,9 @@ class NetworkEffectBayesianTest:
                 data[user_col].unique(), network_edges
             )
         elif network_adjacency is None:
-            raise ValueError("Either network_adjacency or network_edges must be provided")
+            raise ValueError(
+                "Either network_adjacency or network_edges must be provided"
+            )
 
         # Calculate exposure to treatment through network
         user_to_idx = {user: i for i, user in enumerate(data[user_col].unique())}
@@ -108,29 +110,29 @@ class NetworkEffectBayesianTest:
             network_exposure,
             degree,
             out=np.zeros_like(network_exposure),
-            where=degree != 0
+            where=degree != 0,
         )
 
         # Add network exposure to data
         data = data.copy()
-        data['network_exposure'] = data[user_col].map(
+        data["network_exposure"] = data[user_col].map(
             lambda u: network_exposure[user_to_idx[u]]
         )
 
         # Stratify by exposure levels
         exposure_levels = [0, 0.25, 0.5, 0.75, 1.0]
-        data['exposure_bin'] = pd.cut(
-            data['network_exposure'],
+        data["exposure_bin"] = pd.cut(
+            data["network_exposure"],
             bins=[-0.01] + exposure_levels,
-            labels=['0%', '0-25%', '25-50%', '50-75%', '75-100%']
+            labels=["0%", "0-25%", "25-50%", "50-75%", "75-100%"],
         )
 
         # Estimate effects at different exposure levels
         direct_effects = []
         indirect_effects = []
 
-        for exposure_bin in data['exposure_bin'].unique():
-            subset = data[data['exposure_bin'] == exposure_bin]
+        for exposure_bin in data["exposure_bin"].unique():
+            subset = data[data["exposure_bin"] == exposure_bin]
 
             if len(subset) == 0:
                 continue
@@ -148,23 +150,20 @@ class NetworkEffectBayesianTest:
 
                 # Sample from posteriors
                 samples_t = np.random.beta(
-                    self.prior_alpha + conv_t,
-                    self.prior_beta + n_t - conv_t,
-                    n_samples
+                    self.prior_alpha + conv_t, self.prior_beta + n_t - conv_t, n_samples
                 )
                 samples_c = np.random.beta(
-                    self.prior_alpha + conv_c,
-                    self.prior_beta + n_c - conv_c,
-                    n_samples
+                    self.prior_alpha + conv_c, self.prior_beta + n_c - conv_c, n_samples
                 )
 
                 direct_effect = np.mean(samples_t - samples_c)
                 direct_effects.append(direct_effect)
 
                 # Indirect effect: effect of network exposure within control group
-                if exposure_bin != '0%':
-                    no_exposure = data[(data['exposure_bin'] == '0%') &
-                                      (data[treatment_col] == 0)]
+                if exposure_bin != "0%":
+                    no_exposure = data[
+                        (data["exposure_bin"] == "0%") & (data[treatment_col] == 0)
+                    ]
                     if len(no_exposure) > 0:
                         conv_no_exp = no_exposure[outcome_col].sum()
                         n_no_exp = len(no_exposure)
@@ -172,7 +171,7 @@ class NetworkEffectBayesianTest:
                         samples_no_exp = np.random.beta(
                             self.prior_alpha + conv_no_exp,
                             self.prior_beta + n_no_exp - conv_no_exp,
-                            n_samples
+                            n_samples,
                         )
 
                         indirect_effect = np.mean(samples_c - samples_no_exp)
@@ -184,14 +183,13 @@ class NetworkEffectBayesianTest:
         total_effect = avg_direct_effect + avg_indirect_effect
 
         # Calculate spillover ratio
-        spillover_ratio = (
-            avg_indirect_effect / total_effect
-            if total_effect != 0 else 0
-        )
+        spillover_ratio = avg_indirect_effect / total_effect if total_effect != 0 else 0
 
         # Bootstrap confidence intervals
         ci_direct = self._bootstrap_ci(direct_effects) if direct_effects else (0, 0)
-        ci_indirect = self._bootstrap_ci(indirect_effects) if indirect_effects else (0, 0)
+        ci_indirect = (
+            self._bootstrap_ci(indirect_effects) if indirect_effects else (0, 0)
+        )
         ci_total = (ci_direct[0] + ci_indirect[0], ci_direct[1] + ci_indirect[1])
 
         # Network statistics
@@ -203,7 +201,7 @@ class NetworkEffectBayesianTest:
             data, outcome_col, treatment_col, avg_direct_effect
         )
         p_value_indirect = self._permutation_test_network(
-            data, outcome_col, 'network_exposure', avg_indirect_effect
+            data, outcome_col, "network_exposure", avg_indirect_effect
         )
 
         return NetworkEffectResult(
@@ -212,20 +210,17 @@ class NetworkEffectBayesianTest:
             total_effect=total_effect,
             spillover_ratio=spillover_ratio,
             confidence_intervals={
-                'direct': ci_direct,
-                'indirect': ci_indirect,
-                'total': ci_total
+                "direct": ci_direct,
+                "indirect": ci_indirect,
+                "total": ci_total,
             },
             network_statistics={
-                'avg_degree': avg_degree,
-                'clustering_coefficient': clustering_coeff,
-                'n_nodes': len(user_to_idx),
-                'n_edges': int(network_adjacency.sum() / 2)
+                "avg_degree": avg_degree,
+                "clustering_coefficient": clustering_coeff,
+                "n_nodes": len(user_to_idx),
+                "n_edges": int(network_adjacency.sum() / 2),
             },
-            p_values={
-                'direct': p_value_direct,
-                'indirect': p_value_indirect
-            }
+            p_values={"direct": p_value_direct, "indirect": p_value_indirect},
         )
 
     def _build_adjacency_matrix(
@@ -272,10 +267,9 @@ class NetworkEffectBayesianTest:
             bootstrap_means.append(np.mean(sample))
 
         alpha = 1 - confidence
-        return tuple(np.percentile(
-            bootstrap_means,
-            [alpha/2 * 100, (1 - alpha/2) * 100]
-        ))
+        return tuple(
+            np.percentile(bootstrap_means, [alpha / 2 * 100, (1 - alpha / 2) * 100])
+        )
 
     def _permutation_test(
         self,
@@ -283,7 +277,7 @@ class NetworkEffectBayesianTest:
         outcome_col: str,
         treatment_col: str,
         observed_effect: float,
-        n_permutations: int = 1000
+        n_permutations: int = 1000,
     ) -> float:
         """Permutation test for significance."""
         permuted_effects = []
@@ -305,7 +299,7 @@ class NetworkEffectBayesianTest:
         outcome_col: str,
         exposure_col: str,
         observed_effect: float,
-        n_permutations: int = 1000
+        n_permutations: int = 1000,
     ) -> float:
         """Permutation test for network effects."""
         permuted_effects = []
@@ -338,7 +332,7 @@ class TimeDependentBayesianTest:
         treatment_col: str,
         time_col: str,
         user_col: Optional[str] = None,
-        granularity: str = 'daily',
+        granularity: str = "daily",
         n_samples: int = 10000,
     ) -> TimeDependentResult:
         """
@@ -361,28 +355,30 @@ class TimeDependentBayesianTest:
         data[time_col] = pd.to_datetime(data[time_col])
 
         # Aggregate by time period
-        if granularity == 'hourly':
-            data['time_period'] = data[time_col].dt.floor('H')
-        elif granularity == 'daily':
-            data['time_period'] = data[time_col].dt.date
-        elif granularity == 'weekly':
-            data['time_period'] = data[time_col].dt.to_period('W').dt.start_time
+        if granularity == "hourly":
+            data["time_period"] = data[time_col].dt.floor("H")
+        elif granularity == "daily":
+            data["time_period"] = data[time_col].dt.date
+        elif granularity == "weekly":
+            data["time_period"] = data[time_col].dt.to_period("W").dt.start_time
         else:
             raise ValueError(f"Unknown granularity: {granularity}")
 
         # Calculate effects over time
         time_effects = []
-        time_points = sorted(data['time_period'].unique())
+        time_points = sorted(data["time_period"].unique())
 
         for t in time_points:
-            period_data = data[data['time_period'] == t]
+            period_data = data[data["time_period"] == t]
 
             treated = period_data[period_data[treatment_col] == 1]
             control = period_data[period_data[treatment_col] == 0]
 
             if len(treated) > 0 and len(control) > 0:
                 # Binary outcome
-                if data[outcome_col].dtype == bool or set(data[outcome_col].unique()) == {0, 1}:
+                if data[outcome_col].dtype == bool or set(
+                    data[outcome_col].unique()
+                ) == {0, 1}:
                     conv_t = treated[outcome_col].sum()
                     n_t = len(treated)
                     conv_c = control[outcome_col].sum()
@@ -392,12 +388,12 @@ class TimeDependentBayesianTest:
                     samples_t = np.random.beta(
                         self.prior_alpha + conv_t,
                         self.prior_beta + n_t - conv_t,
-                        n_samples
+                        n_samples,
                     )
                     samples_c = np.random.beta(
                         self.prior_alpha + conv_c,
                         self.prior_beta + n_c - conv_c,
-                        n_samples
+                        n_samples,
                     )
                 else:
                     # Continuous outcome - use normal approximation
@@ -417,14 +413,16 @@ class TimeDependentBayesianTest:
                 ci_lower = np.percentile(samples_t - samples_c, 2.5)
                 ci_upper = np.percentile(samples_t - samples_c, 97.5)
 
-                time_effects.append({
-                    'time': t,
-                    'effect': effect,
-                    'ci_lower': ci_lower,
-                    'ci_upper': ci_upper,
-                    'n_treated': len(treated),
-                    'n_control': len(control)
-                })
+                time_effects.append(
+                    {
+                        "time": t,
+                        "effect": effect,
+                        "ci_lower": ci_lower,
+                        "ci_upper": ci_upper,
+                        "n_treated": len(treated),
+                        "n_control": len(control),
+                    }
+                )
 
         # Convert to DataFrame
         effects_df = pd.DataFrame(time_effects)
@@ -432,14 +430,12 @@ class TimeDependentBayesianTest:
         # Fit Gaussian Process for smooth effect estimation
         if len(effects_df) > 3:
             X_time = np.arange(len(effects_df)).reshape(-1, 1)
-            y_effect = effects_df['effect'].values
+            y_effect = effects_df["effect"].values
 
             # Configure GP kernel
-            kernel = (
-                ConstantKernel(1.0, (1e-3, 1e3)) *
-                RBF(length_scale=1.0, length_scale_bounds=(1e-2, 1e2)) +
-                WhiteKernel(noise_level=1e-5, noise_level_bounds=(1e-10, 1e-1))
-            )
+            kernel = ConstantKernel(1.0, (1e-3, 1e3)) * RBF(
+                length_scale=1.0, length_scale_bounds=(1e-2, 1e2)
+            ) + WhiteKernel(noise_level=1e-5, noise_level_bounds=(1e-10, 1e-1))
 
             self.gp_model = GaussianProcessRegressor(
                 kernel=kernel, n_restarts_optimizer=10, alpha=1e-6
@@ -447,26 +443,28 @@ class TimeDependentBayesianTest:
             self.gp_model.fit(X_time, y_effect)
 
             # Predict smooth effects with confidence bands
-            X_pred = np.linspace(0, len(effects_df)-1, 100).reshape(-1, 1)
+            X_pred = np.linspace(0, len(effects_df) - 1, 100).reshape(-1, 1)
             y_pred, y_std = self.gp_model.predict(X_pred, return_std=True)
 
-            confidence_bands = pd.DataFrame({
-                'time_index': X_pred.flatten(),
-                'smooth_effect': y_pred,
-                'ci_lower': y_pred - 1.96 * y_std,
-                'ci_upper': y_pred + 1.96 * y_std
-            })
+            confidence_bands = pd.DataFrame(
+                {
+                    "time_index": X_pred.flatten(),
+                    "smooth_effect": y_pred,
+                    "ci_lower": y_pred - 1.96 * y_std,
+                    "ci_upper": y_pred + 1.96 * y_std,
+                }
+            )
         else:
             confidence_bands = pd.DataFrame()
 
         # Analyze temporal patterns
-        cumulative_effect = effects_df['effect'].mean()
+        cumulative_effect = effects_df["effect"].mean()
 
         # Find peak effect
-        peak_idx = effects_df['effect'].idxmax()
+        peak_idx = effects_df["effect"].idxmax()
         peak_effect = (
-            effects_df.loc[peak_idx, 'time'],
-            effects_df.loc[peak_idx, 'effect']
+            effects_df.loc[peak_idx, "time"],
+            effects_df.loc[peak_idx, "effect"],
         )
 
         # Detect decay
@@ -485,7 +483,7 @@ class TimeDependentBayesianTest:
             decay_rate=decay_rate,
             seasonality_detected=seasonality,
             trend_component=trend,
-            confidence_bands=confidence_bands
+            confidence_bands=confidence_bands,
         )
 
     def _estimate_decay_rate(self, effects_df: pd.DataFrame) -> Optional[float]:
@@ -495,8 +493,7 @@ class TimeDependentBayesianTest:
 
         # Check if effects decrease over time
         correlation = np.corrcoef(
-            np.arange(len(effects_df)),
-            effects_df['effect'].values
+            np.arange(len(effects_df)), effects_df["effect"].values
         )[0, 1]
 
         if correlation < -0.5:  # Negative correlation suggests decay
@@ -508,14 +505,12 @@ class TimeDependentBayesianTest:
 
             try:
                 t = np.arange(len(effects_df))
-                y = effects_df['effect'].values
+                y = effects_df["effect"].values
 
                 # Initial guess
                 p0 = [y[0], 0.1]
 
-                popt, _ = curve_fit(
-                    exp_decay, t, y, p0=p0, maxfev=5000
-                )
+                popt, _ = curve_fit(exp_decay, t, y, p0=p0, maxfev=5000)
 
                 return float(popt[1])  # Return decay rate
             except:
@@ -531,11 +526,13 @@ class TimeDependentBayesianTest:
         # Use autocorrelation to detect seasonality
         from statsmodels.tsa.stattools import acf
 
-        effects = effects_df['effect'].values
-        autocorr = acf(effects, nlags=min(len(effects)//2, 20))
+        effects = effects_df["effect"].values
+        autocorr = acf(effects, nlags=min(len(effects) // 2, 20))
 
         # Look for significant peaks in autocorrelation
-        significant_peaks = np.where(np.abs(autocorr[1:]) > 2/np.sqrt(len(effects)))[0]
+        significant_peaks = np.where(np.abs(autocorr[1:]) > 2 / np.sqrt(len(effects)))[
+            0
+        ]
 
         # If we have regular peaks, there might be seasonality
         if len(significant_peaks) > 1:
@@ -552,9 +549,10 @@ class TimeDependentBayesianTest:
 
         # Simple linear regression
         X = np.arange(len(effects_df)).reshape(-1, 1)
-        y = effects_df['effect'].values
+        y = effects_df["effect"].values
 
         from sklearn.linear_model import LinearRegression
+
         model = LinearRegression()
         model.fit(X, y)
 
@@ -572,79 +570,74 @@ class TimeDependentBayesianTest:
         # Time series of effects
         ax = axes[0, 0]
         effects = result.time_series_effects
-        ax.plot(range(len(effects)), effects['effect'], 'o-', label='Observed')
+        ax.plot(range(len(effects)), effects["effect"], "o-", label="Observed")
         ax.fill_between(
             range(len(effects)),
-            effects['ci_lower'],
-            effects['ci_upper'],
+            effects["ci_lower"],
+            effects["ci_upper"],
             alpha=0.3,
-            label='95% CI'
+            label="95% CI",
         )
 
         # Add smooth GP fit if available
         if not result.confidence_bands.empty:
             bands = result.confidence_bands
             ax.plot(
-                bands['time_index'],
-                bands['smooth_effect'],
-                'r-',
-                label='GP Smooth',
-                alpha=0.7
+                bands["time_index"],
+                bands["smooth_effect"],
+                "r-",
+                label="GP Smooth",
+                alpha=0.7,
             )
             ax.fill_between(
-                bands['time_index'],
-                bands['ci_lower'],
-                bands['ci_upper'],
+                bands["time_index"],
+                bands["ci_lower"],
+                bands["ci_upper"],
                 alpha=0.2,
-                color='red'
+                color="red",
             )
 
-        ax.set_xlabel('Time Period')
-        ax.set_ylabel('Treatment Effect')
-        ax.set_title('Treatment Effect Over Time')
+        ax.set_xlabel("Time Period")
+        ax.set_ylabel("Treatment Effect")
+        ax.set_title("Treatment Effect Over Time")
         ax.legend()
         ax.grid(True, alpha=0.3)
 
         # Cumulative effect
         ax = axes[0, 1]
-        cumul_effects = effects['effect'].cumsum() / np.arange(1, len(effects) + 1)
-        ax.plot(range(len(effects)), cumul_effects, 'g-', linewidth=2)
+        cumul_effects = effects["effect"].cumsum() / np.arange(1, len(effects) + 1)
+        ax.plot(range(len(effects)), cumul_effects, "g-", linewidth=2)
         ax.axhline(
             result.cumulative_effect,
-            color='red',
-            linestyle='--',
-            label=f'Mean: {result.cumulative_effect:.3f}'
+            color="red",
+            linestyle="--",
+            label=f"Mean: {result.cumulative_effect:.3f}",
         )
-        ax.set_xlabel('Time Period')
-        ax.set_ylabel('Cumulative Average Effect')
-        ax.set_title('Cumulative Treatment Effect')
+        ax.set_xlabel("Time Period")
+        ax.set_ylabel("Cumulative Average Effect")
+        ax.set_title("Cumulative Treatment Effect")
         ax.legend()
         ax.grid(True, alpha=0.3)
 
         # Sample sizes over time
         ax = axes[1, 0]
+        ax.bar(range(len(effects)), effects["n_treated"], alpha=0.7, label="Treated")
         ax.bar(
             range(len(effects)),
-            effects['n_treated'],
+            effects["n_control"],
             alpha=0.7,
-            label='Treated'
+            label="Control",
+            bottom=effects["n_treated"],
         )
-        ax.bar(
-            range(len(effects)),
-            effects['n_control'],
-            alpha=0.7,
-            label='Control',
-            bottom=effects['n_treated']
-        )
-        ax.set_xlabel('Time Period')
-        ax.set_ylabel('Sample Size')
-        ax.set_title('Sample Sizes Over Time')
+        ax.set_xlabel("Time Period")
+        ax.set_ylabel("Sample Size")
+        ax.set_title("Sample Sizes Over Time")
         ax.legend()
         ax.grid(True, alpha=0.3)
 
         # Summary statistics
         ax = axes[1, 1]
-        ax.axis('off')
+        ax.axis("off")
 
         summary_text = f"""
         Temporal Analysis Summary:
@@ -652,12 +645,12 @@ class TimeDependentBayesianTest:
         Cumulative Effect: {result.cumulative_effect:.4f}
         Peak Effect: {result.peak_effect[1]:.4f} at period {result.peak_effect[0]}
         Decay Rate: {result.decay_rate:.4f if result.decay_rate else 'Not detected'}
-        Seasonality: {'Detected' if result.seasonality_detected else 'Not detected'}
+        Seasonality: {"Detected" if result.seasonality_detected else "Not detected"}
         Trend: {result.trend_component:.4f if result.trend_component else 'None'}
         Total Periods: {len(effects)}
         """
 
-        ax.text(0.1, 0.5, summary_text, fontsize=11, family='monospace')
+        ax.text(0.1, 0.5, summary_text, fontsize=11, family="monospace")
 
         plt.tight_layout()
         plt.show()
@@ -673,8 +666,8 @@ class MetaAnalysisBayesian:
     def combine_experiments(
         self,
         experiments: List[Dict[str, Any]],
-        method: str = 'fixed_effects',
-        tau_prior: Optional[Tuple[float, float]] = None
+        method: str = "fixed_effects",
+        tau_prior: Optional[Tuple[float, float]] = None,
     ) -> Dict[str, Any]:
         """
         Combine multiple Bayesian experiments using meta-analysis.
@@ -691,11 +684,11 @@ class MetaAnalysisBayesian:
         Returns:
             Combined meta-analysis results
         """
-        effects = np.array([exp['effect'] for exp in experiments])
-        variances = np.array([exp['variance'] for exp in experiments])
+        effects = np.array([exp["effect"] for exp in experiments])
+        variances = np.array([exp["variance"] for exp in experiments])
         weights = 1 / variances
 
-        if method == 'fixed_effects':
+        if method == "fixed_effects":
             # Fixed effects meta-analysis
             pooled_effect = np.sum(weights * effects) / np.sum(weights)
             pooled_variance = 1 / np.sum(weights)
@@ -709,12 +702,14 @@ class MetaAnalysisBayesian:
             # I-squared statistic
             i_squared = max(0, (q_stat - df) / q_stat) if q_stat > 0 else 0
 
-        elif method == 'random_effects':
+        elif method == "random_effects":
             # Random effects meta-analysis (DerSimonian-Laird)
 
             # Estimate tau-squared (between-study variance)
-            q_stat = np.sum(weights * (effects - np.sum(weights * effects) / np.sum(weights)) ** 2)
-            c = np.sum(weights) - np.sum(weights ** 2) / np.sum(weights)
+            q_stat = np.sum(
+                weights * (effects - np.sum(weights * effects) / np.sum(weights)) ** 2
+            )
+            c = np.sum(weights) - np.sum(weights**2) / np.sum(weights)
             tau_squared = max(0, (q_stat - (len(effects) - 1)) / c)
 
             # Adjust weights for random effects
@@ -740,31 +735,35 @@ class MetaAnalysisBayesian:
         # Forest plot data
         forest_data = []
         for exp in experiments:
-            exp_ci_lower = exp['effect'] - 1.96 * np.sqrt(exp['variance'])
-            exp_ci_upper = exp['effect'] + 1.96 * np.sqrt(exp['variance'])
-            forest_data.append({
-                'name': exp['name'],
-                'effect': exp['effect'],
-                'ci_lower': exp_ci_lower,
-                'ci_upper': exp_ci_upper,
-                'weight': 1 / exp['variance'] if method == 'fixed_effects' else 1 / (exp['variance'] + tau_squared)
-            })
+            exp_ci_lower = exp["effect"] - 1.96 * np.sqrt(exp["variance"])
+            exp_ci_upper = exp["effect"] + 1.96 * np.sqrt(exp["variance"])
+            forest_data.append(
+                {
+                    "name": exp["name"],
+                    "effect": exp["effect"],
+                    "ci_lower": exp_ci_lower,
+                    "ci_upper": exp_ci_upper,
+                    "weight": 1 / exp["variance"]
+                    if method == "fixed_effects"
+                    else 1 / (exp["variance"] + tau_squared),
+                }
+            )
 
         return {
-            'pooled_effect': pooled_effect,
-            'pooled_se': pooled_se,
-            'confidence_interval': (ci_lower, ci_upper),
-            'p_value': p_value,
-            'heterogeneity': {
-                'q_statistic': q_stat,
-                'p_value': p_heterogeneity,
-                'i_squared': i_squared,
-                'tau_squared': tau_squared if method == 'random_effects' else None
+            "pooled_effect": pooled_effect,
+            "pooled_se": pooled_se,
+            "confidence_interval": (ci_lower, ci_upper),
+            "p_value": p_value,
+            "heterogeneity": {
+                "q_statistic": q_stat,
+                "p_value": p_heterogeneity,
+                "i_squared": i_squared,
+                "tau_squared": tau_squared if method == "random_effects" else None,
             },
-            'forest_data': forest_data,
-            'method': method,
-            'n_experiments': len(experiments),
-            'total_n': sum(exp.get('n', 0) for exp in experiments)
+            "forest_data": forest_data,
+            "method": method,
+            "n_experiments": len(experiments),
+            "total_n": sum(exp.get("n", 0) for exp in experiments),
         }
 
     def create_forest_plot(self, meta_result: Dict[str, Any]):
@@ -774,7 +773,7 @@ class MetaAnalysisBayesian:
         Args:
             meta_result: Result from combine_experiments
         """
-        forest_data = meta_result['forest_data']
+        forest_data = meta_result["forest_data"]
         n = len(forest_data)
 
         fig, ax = plt.subplots(figsize=(12, max(6, n * 0.5)))
@@ -784,68 +783,60 @@ class MetaAnalysisBayesian:
 
         for i, study in enumerate(forest_data):
             # Confidence interval
-            ax.plot(
-                [study['ci_lower'], study['ci_upper']],
-                [i, i],
-                'k-',
-                linewidth=1
-            )
+            ax.plot([study["ci_lower"], study["ci_upper"]], [i, i], "k-", linewidth=1)
 
             # Point estimate (size proportional to weight)
-            size = study['weight'] / max(s['weight'] for s in forest_data) * 200
-            ax.scatter(
-                study['effect'], i,
-                s=size,
-                color='blue',
-                zorder=3
-            )
+            size = study["weight"] / max(s["weight"] for s in forest_data) * 200
+            ax.scatter(study["effect"], i, s=size, color="blue", zorder=3)
 
             # Study name
-            ax.text(
-                ax.get_xlim()[0], i,
-                study['name'],
-                ha='right',
-                va='center'
-            )
+            ax.text(ax.get_xlim()[0], i, study["name"], ha="right", va="center")
 
         # Add pooled estimate
-        pooled = meta_result['pooled_effect']
-        ci = meta_result['confidence_interval']
+        pooled = meta_result["pooled_effect"]
+        ci = meta_result["confidence_interval"]
 
-        ax.axvspan(ci[0], ci[1], alpha=0.2, color='red', ymin=-0.5, ymax=n-0.5)
-        ax.axvline(pooled, color='red', linestyle='--', linewidth=2, label='Pooled estimate')
+        ax.axvspan(ci[0], ci[1], alpha=0.2, color="red", ymin=-0.5, ymax=n - 0.5)
+        ax.axvline(
+            pooled, color="red", linestyle="--", linewidth=2, label="Pooled estimate"
+        )
 
         # Add diamond for pooled estimate
         diamond_y = n
         diamond = plt.Polygon(
-            [[ci[0], diamond_y],
-             [pooled, diamond_y + 0.2],
-             [ci[1], diamond_y],
-             [pooled, diamond_y - 0.2]],
-            color='red',
-            alpha=0.7
+            [
+                [ci[0], diamond_y],
+                [pooled, diamond_y + 0.2],
+                [ci[1], diamond_y],
+                [pooled, diamond_y - 0.2],
+            ],
+            color="red",
+            alpha=0.7,
         )
         ax.add_patch(diamond)
 
         # Formatting
-        ax.axvline(0, color='gray', linestyle='-', alpha=0.5)
+        ax.axvline(0, color="gray", linestyle="-", alpha=0.5)
         ax.set_ylim(-0.5, n + 0.5)
-        ax.set_ylabel('Studies')
-        ax.set_xlabel('Effect Size')
-        ax.set_title(f'Forest Plot - {meta_result["method"].replace("_", " ").title()}')
+        ax.set_ylabel("Studies")
+        ax.set_xlabel("Effect Size")
+        ax.set_title(f"Forest Plot - {meta_result['method'].replace('_', ' ').title()}")
 
         # Add heterogeneity stats
         het_text = f"I² = {meta_result['heterogeneity']['i_squared']:.1%}, "
         het_text += f"p = {meta_result['heterogeneity']['p_value']:.3f}"
         ax.text(
-            0.02, 0.98, het_text,
+            0.02,
+            0.98,
+            het_text,
             transform=ax.transAxes,
-            ha='left', va='top',
-            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+            ha="left",
+            va="top",
+            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
         )
 
-        ax.legend(loc='upper right')
-        ax.grid(True, alpha=0.3, axis='x')
+        ax.legend(loc="upper right")
+        ax.grid(True, alpha=0.3, axis="x")
         ax.set_yticks([])
 
         plt.tight_layout()
@@ -868,18 +859,20 @@ if __name__ == "__main__":
         edges.append((f"user_{u1}", f"user_{u2}"))
 
     # Generate experiment data
-    data = pd.DataFrame({
-        'user': [f"user_{i}" for i in range(n_users)],
-        'treatment': np.random.binomial(1, 0.5, n_users),
-        'outcome': np.random.binomial(1, 0.1, n_users),
-        'time': pd.date_range('2024-01-01', periods=n_users, freq='H')
-    })
+    data = pd.DataFrame(
+        {
+            "user": [f"user_{i}" for i in range(n_users)],
+            "treatment": np.random.binomial(1, 0.5, n_users),
+            "outcome": np.random.binomial(1, 0.1, n_users),
+            "time": pd.date_range("2024-01-01", periods=n_users, freq="H"),
+        }
+    )
 
     # Test network effects
     print("\nNetwork Effect Testing:")
     network_test = NetworkEffectBayesianTest()
     network_result = network_test.test_with_network_effects(
-        data, 'outcome', 'treatment', 'user', network_edges=edges
+        data, "outcome", "treatment", "user", network_edges=edges
     )
 
     print(f"  Direct effect: {network_result.direct_effect:.3f}")
@@ -892,7 +885,7 @@ if __name__ == "__main__":
     print("\nTime-Dependent Testing:")
     time_test = TimeDependentBayesianTest()
     time_result = time_test.test_with_temporal_effects(
-        data, 'outcome', 'treatment', 'time', granularity='daily'
+        data, "outcome", "treatment", "time", granularity="daily"
     )
 
     print(f"  Cumulative effect: {time_result.cumulative_effect:.3f}")
@@ -906,13 +899,13 @@ if __name__ == "__main__":
     meta = MetaAnalysisBayesian()
 
     experiments = [
-        {'name': 'Exp 1', 'effect': 0.05, 'variance': 0.01, 'n': 1000},
-        {'name': 'Exp 2', 'effect': 0.08, 'variance': 0.015, 'n': 800},
-        {'name': 'Exp 3', 'effect': 0.03, 'variance': 0.008, 'n': 1200},
-        {'name': 'Exp 4', 'effect': 0.06, 'variance': 0.012, 'n': 900},
+        {"name": "Exp 1", "effect": 0.05, "variance": 0.01, "n": 1000},
+        {"name": "Exp 2", "effect": 0.08, "variance": 0.015, "n": 800},
+        {"name": "Exp 3", "effect": 0.03, "variance": 0.008, "n": 1200},
+        {"name": "Exp 4", "effect": 0.06, "variance": 0.012, "n": 900},
     ]
 
-    meta_result = meta.combine_experiments(experiments, method='random_effects')
+    meta_result = meta.combine_experiments(experiments, method="random_effects")
     print(f"  Pooled effect: {meta_result['pooled_effect']:.3f}")
     print(f"  95% CI: {meta_result['confidence_interval']}")
     print(f"  P-value: {meta_result['p_value']:.4f}")

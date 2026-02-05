@@ -24,7 +24,8 @@ from abc import ABC, abstractmethod
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 # Data processing
 import numpy as np
@@ -36,9 +37,15 @@ from sklearn.model_selection import train_test_split, cross_val_score, Stratifie
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score, f1_score,
-    roc_auc_score, confusion_matrix, classification_report,
-    precision_recall_curve, roc_curve
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    roc_auc_score,
+    confusion_matrix,
+    classification_report,
+    precision_recall_curve,
+    roc_curve,
 )
 import lightgbm as lgb
 import xgboost as xgb
@@ -69,8 +76,7 @@ from evidently.model_profile.sections import DataDriftProfileSection
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -78,9 +84,11 @@ logger = logging.getLogger(__name__)
 # CONFIGURATION
 # =============================================================================
 
+
 @dataclass
 class DataConfig:
     """Data pipeline configuration"""
+
     raw_data_path: str = "data/raw/bank_churn.csv"
     processed_data_path: str = "data/processed/bank_churn_processed.csv"
     feature_store_path: str = "data/feature_store/"
@@ -98,9 +106,11 @@ class DataConfig:
     create_polynomial_features: bool = False
     feature_selection_threshold: float = 0.01
 
+
 @dataclass
 class TrainingConfig:
     """Model training configuration"""
+
     experiment_name: str = "bank_churn_prediction"
     model_name: str = "churn_classifier"
     tracking_uri: str = "http://localhost:5000"
@@ -118,9 +128,11 @@ class TrainingConfig:
     min_f1: float = 0.78
     min_auc: float = 0.85
 
+
 @dataclass
 class ServingConfig:
     """Model serving configuration"""
+
     model_uri: str = "models:/churn_classifier/production"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
@@ -136,9 +148,11 @@ class ServingConfig:
     max_requests_per_minute: int = 1000
     max_batch_size: int = 10000
 
+
 @dataclass
 class MonitoringConfig:
     """Monitoring configuration"""
+
     prometheus_port: int = 8001
     drift_threshold: float = 0.1
     performance_window_hours: int = 24
@@ -154,9 +168,11 @@ class MonitoringConfig:
     latency_alert_threshold_ms: float = 100
     error_rate_alert_threshold: float = 0.01
 
+
 # =============================================================================
 # DATA VALIDATION
 # =============================================================================
+
 
 class DataValidator:
     """Validate data quality and integrity"""
@@ -170,38 +186,40 @@ class DataValidator:
         logger.info("Starting data validation...")
 
         results = {
-            'timestamp': datetime.now().isoformat(),
-            'is_valid': True,
-            'checks': {},
-            'warnings': [],
-            'errors': []
+            "timestamp": datetime.now().isoformat(),
+            "is_valid": True,
+            "checks": {},
+            "warnings": [],
+            "errors": [],
         }
 
         # Check data size
         if len(df) < self.config.min_rows:
-            results['errors'].append(f"Insufficient data: {len(df)} rows < {self.config.min_rows}")
-            results['is_valid'] = False
+            results["errors"].append(
+                f"Insufficient data: {len(df)} rows < {self.config.min_rows}"
+            )
+            results["is_valid"] = False
 
         # Check missing values
         missing_pct = df.isnull().sum() / len(df)
         for col, pct in missing_pct.items():
             if pct > self.config.max_missing_pct:
-                results['warnings'].append(f"Column {col} has {pct:.2%} missing values")
+                results["warnings"].append(f"Column {col} has {pct:.2%} missing values")
 
         # Check duplicates
         duplicate_pct = df.duplicated().sum() / len(df)
         if duplicate_pct > self.config.max_duplicates_pct:
-            results['warnings'].append(f"Data has {duplicate_pct:.2%} duplicate rows")
+            results["warnings"].append(f"Data has {duplicate_pct:.2%} duplicate rows")
 
         # Check data types
-        results['checks']['data_types'] = self._check_data_types(df)
+        results["checks"]["data_types"] = self._check_data_types(df)
 
         # Check value ranges
-        results['checks']['value_ranges'] = self._check_value_ranges(df)
+        results["checks"]["value_ranges"] = self._check_value_ranges(df)
 
         # Check class balance
-        if 'Churn' in df.columns:
-            results['checks']['class_balance'] = self._check_class_balance(df)
+        if "Churn" in df.columns:
+            results["checks"]["class_balance"] = self._check_class_balance(df)
 
         logger.info(f"Validation complete. Valid: {results['is_valid']}")
         return results
@@ -209,30 +227,34 @@ class DataValidator:
     def _check_data_types(self, df: pd.DataFrame) -> Dict[str, str]:
         """Check if data types are as expected"""
         expected_types = {
-            'CustomerId': 'int64',
-            'CreditScore': 'float64',
-            'Age': 'int64',
-            'Tenure': 'int64',
-            'Balance': 'float64',
-            'NumOfProducts': 'int64',
-            'EstimatedSalary': 'float64'
+            "CustomerId": "int64",
+            "CreditScore": "float64",
+            "Age": "int64",
+            "Tenure": "int64",
+            "Balance": "float64",
+            "NumOfProducts": "int64",
+            "EstimatedSalary": "float64",
         }
 
         results = {}
         for col, expected_type in expected_types.items():
             if col in df.columns:
                 actual_type = str(df[col].dtype)
-                results[col] = 'OK' if actual_type == expected_type else f"Expected {expected_type}, got {actual_type}"
+                results[col] = (
+                    "OK"
+                    if actual_type == expected_type
+                    else f"Expected {expected_type}, got {actual_type}"
+                )
 
         return results
 
     def _check_value_ranges(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Check if values are within expected ranges"""
         ranges = {
-            'CreditScore': (300, 850),
-            'Age': (18, 100),
-            'Tenure': (0, 10),
-            'NumOfProducts': (1, 4)
+            "CreditScore": (300, 850),
+            "Age": (18, 100),
+            "Tenure": (0, 10),
+            "NumOfProducts": (1, 4),
         }
 
         results = {}
@@ -242,25 +264,29 @@ class DataValidator:
                 col_max = df[col].max()
 
                 if col_min < min_val or col_max > max_val:
-                    results[col] = f"Out of range: [{col_min}, {col_max}] not in [{min_val}, {max_val}]"
+                    results[col] = (
+                        f"Out of range: [{col_min}, {col_max}] not in [{min_val}, {max_val}]"
+                    )
                 else:
-                    results[col] = 'OK'
+                    results[col] = "OK"
 
         return results
 
     def _check_class_balance(self, df: pd.DataFrame) -> Dict[str, float]:
         """Check target class balance"""
-        class_dist = df['Churn'].value_counts(normalize=True)
+        class_dist = df["Churn"].value_counts(normalize=True)
 
         return {
-            'class_0': float(class_dist.get(0, 0)),
-            'class_1': float(class_dist.get(1, 0)),
-            'imbalance_ratio': float(class_dist.min() / class_dist.max())
+            "class_0": float(class_dist.get(0, 0)),
+            "class_1": float(class_dist.get(1, 0)),
+            "imbalance_ratio": float(class_dist.min() / class_dist.max()),
         }
+
 
 # =============================================================================
 # FEATURE ENGINEERING
 # =============================================================================
+
 
 class FeatureEngineer:
     """
@@ -315,10 +341,10 @@ class FeatureEngineer:
         df = self._scale_features(df)
 
         # Feature selection
-        if hasattr(self, 'feature_selector'):
+        if hasattr(self, "feature_selector"):
             df = self._select_features(df)
 
-        self.feature_names = [col for col in df.columns if col != 'Churn']
+        self.feature_names = [col for col in df.columns if col != "Churn"]
         logger.info(f"Created {len(self.feature_names)} features")
 
         return df
@@ -337,8 +363,8 @@ class FeatureEngineer:
                 df[col] = encoder.transform(df[col])
 
         # Use fitted scaler
-        numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
-        numeric_cols = [col for col in numeric_cols if col != 'Churn']
+        numeric_cols = df.select_dtypes(include=["float64", "int64"]).columns
+        numeric_cols = [col for col in numeric_cols if col != "Churn"]
 
         if numeric_cols:
             df[numeric_cols] = self.scaler.transform(df[numeric_cols])
@@ -348,53 +374,53 @@ class FeatureEngineer:
     def _create_basic_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Create basic engineered features"""
         # Balance per product
-        df['BalancePerProduct'] = df['Balance'] / df['NumOfProducts'].clip(lower=1)
+        df["BalancePerProduct"] = df["Balance"] / df["NumOfProducts"].clip(lower=1)
 
         # Salary to age ratio
-        df['SalaryAgeRatio'] = df['EstimatedSalary'] / df['Age']
+        df["SalaryAgeRatio"] = df["EstimatedSalary"] / df["Age"]
 
         # Credit score segments
-        df['CreditScoreSegment'] = pd.cut(
-            df['CreditScore'],
+        df["CreditScoreSegment"] = pd.cut(
+            df["CreditScore"],
             bins=[0, 580, 670, 740, 800, 850],
-            labels=['Very Poor', 'Fair', 'Good', 'Very Good', 'Exceptional']
+            labels=["Very Poor", "Fair", "Good", "Very Good", "Exceptional"],
         )
 
         # Age groups
-        df['AgeGroup'] = pd.cut(
-            df['Age'],
+        df["AgeGroup"] = pd.cut(
+            df["Age"],
             bins=[0, 25, 35, 45, 55, 65, 100],
-            labels=['<25', '25-35', '35-45', '45-55', '55-65', '65+']
+            labels=["<25", "25-35", "35-45", "45-55", "55-65", "65+"],
         )
 
         # Activity score
-        df['ActivityScore'] = (
-            (df['NumOfProducts'] > 1).astype(int) +
-            (df['HasCrCard'] == 1).astype(int) +
-            (df['IsActiveMember'] == 1).astype(int)
+        df["ActivityScore"] = (
+            (df["NumOfProducts"] > 1).astype(int)
+            + (df["HasCrCard"] == 1).astype(int)
+            + (df["IsActiveMember"] == 1).astype(int)
         )
 
         # Zero balance flag
-        df['HasZeroBalance'] = (df['Balance'] == 0).astype(int)
+        df["HasZeroBalance"] = (df["Balance"] == 0).astype(int)
 
         return df
 
     def _create_interaction_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Create interaction features"""
         # Age and tenure interaction
-        df['AgeTenureInteraction'] = df['Age'] * df['Tenure']
+        df["AgeTenureInteraction"] = df["Age"] * df["Tenure"]
 
         # Balance and products interaction
-        df['BalanceProductsInteraction'] = df['Balance'] * df['NumOfProducts']
+        df["BalanceProductsInteraction"] = df["Balance"] * df["NumOfProducts"]
 
         # Credit score and balance interaction
-        df['CreditBalanceInteraction'] = df['CreditScore'] * df['Balance']
+        df["CreditBalanceInteraction"] = df["CreditScore"] * df["Balance"]
 
         return df
 
     def _encode_categorical(self, df: pd.DataFrame) -> pd.DataFrame:
         """Encode categorical variables"""
-        categorical_cols = df.select_dtypes(include=['object', 'category']).columns
+        categorical_cols = df.select_dtypes(include=["object", "category"]).columns
 
         for col in categorical_cols:
             if col not in self.label_encoders:
@@ -407,8 +433,8 @@ class FeatureEngineer:
 
     def _scale_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Scale numerical features"""
-        numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
-        numeric_cols = [col for col in numeric_cols if col != 'Churn']
+        numeric_cols = df.select_dtypes(include=["float64", "int64"]).columns
+        numeric_cols = [col for col in numeric_cols if col != "Churn"]
 
         if numeric_cols:
             df[numeric_cols] = self.scaler.fit_transform(df[numeric_cols])
@@ -421,9 +447,11 @@ class FeatureEngineer:
         # For now, return all features
         return df
 
+
 # =============================================================================
 # DATA PIPELINE
 # =============================================================================
+
 
 class DataPipeline:
     """End-to-end data pipeline"""
@@ -434,7 +462,9 @@ class DataPipeline:
         self.feature_engineer = FeatureEngineer(config)
         self.feature_store = FeatureStore(config.feature_store_path)
 
-    def run(self, df: Optional[pd.DataFrame] = None) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    def run(
+        self, df: Optional[pd.DataFrame] = None
+    ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
         """Run complete data pipeline"""
         logger.info("Starting data pipeline...")
 
@@ -444,7 +474,7 @@ class DataPipeline:
 
         # Validate data
         validation_report = self.validator.validate(df)
-        if not validation_report['is_valid']:
+        if not validation_report["is_valid"]:
             raise ValueError(f"Data validation failed: {validation_report['errors']}")
 
         # Clean data
@@ -457,10 +487,10 @@ class DataPipeline:
         feature_set_id = self.feature_store.save_features(
             df,
             metadata={
-                'timestamp': datetime.now().isoformat(),
-                'validation_report': validation_report,
-                'feature_names': self.feature_engineer.feature_names
-            }
+                "timestamp": datetime.now().isoformat(),
+                "validation_report": validation_report,
+                "feature_names": self.feature_engineer.feature_names,
+            },
         )
 
         # Save processed data
@@ -468,18 +498,18 @@ class DataPipeline:
         logger.info(f"Data pipeline complete. Feature set ID: {feature_set_id}")
 
         return df, {
-            'feature_set_id': feature_set_id,
-            'validation_report': validation_report,
-            'n_features': len(self.feature_engineer.feature_names)
+            "feature_set_id": feature_set_id,
+            "validation_report": validation_report,
+            "n_features": len(self.feature_engineer.feature_names),
         }
 
     def load_raw_data(self) -> pd.DataFrame:
         """Load raw data from source"""
         logger.info(f"Loading data from {self.config.raw_data_path}")
 
-        if self.config.raw_data_path.endswith('.csv'):
+        if self.config.raw_data_path.endswith(".csv"):
             df = pd.read_csv(self.config.raw_data_path)
-        elif self.config.raw_data_path.endswith('.parquet'):
+        elif self.config.raw_data_path.endswith(".parquet"):
             df = pd.read_parquet(self.config.raw_data_path)
         else:
             raise ValueError(f"Unsupported file format: {self.config.raw_data_path}")
@@ -495,8 +525,8 @@ class DataPipeline:
         df = df.drop_duplicates()
 
         # Handle missing values
-        numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
-        categorical_cols = df.select_dtypes(include=['object', 'category']).columns
+        numeric_cols = df.select_dtypes(include=["float64", "int64"]).columns
+        categorical_cols = df.select_dtypes(include=["object", "category"]).columns
 
         # Fill numeric with median
         for col in numeric_cols:
@@ -506,14 +536,19 @@ class DataPipeline:
         # Fill categorical with mode
         for col in categorical_cols:
             if df[col].isnull().any():
-                df[col].fillna(df[col].mode()[0] if not df[col].mode().empty else 'Unknown', inplace=True)
+                df[col].fillna(
+                    df[col].mode()[0] if not df[col].mode().empty else "Unknown",
+                    inplace=True,
+                )
 
         logger.info(f"Cleaned data: {len(df)} rows remaining")
         return df
 
+
 # =============================================================================
 # FEATURE STORE
 # =============================================================================
+
 
 class FeatureStore:
     """Feature store for versioned feature management"""
@@ -538,13 +573,13 @@ class FeatureStore:
         df.to_parquet(feature_path, index=False)
 
         # Save metadata
-        metadata['feature_set_id'] = feature_set_id
-        metadata['created_at'] = datetime.now().isoformat()
-        metadata['n_rows'] = len(df)
-        metadata['n_cols'] = len(df.columns)
-        metadata['columns'] = df.columns.tolist()
+        metadata["feature_set_id"] = feature_set_id
+        metadata["created_at"] = datetime.now().isoformat()
+        metadata["n_rows"] = len(df)
+        metadata["n_cols"] = len(df.columns)
+        metadata["columns"] = df.columns.tolist()
 
-        with open(version_dir / "metadata.json", 'w') as f:
+        with open(version_dir / "metadata.json", "w") as f:
             json.dump(metadata, f, indent=2)
 
         # Update global metadata
@@ -580,19 +615,21 @@ class FeatureStore:
     def _load_metadata(self):
         """Load global metadata"""
         if self.metadata_file.exists():
-            with open(self.metadata_file, 'r') as f:
+            with open(self.metadata_file, "r") as f:
                 self.metadata = json.load(f)
         else:
             self.metadata = {}
 
     def _save_metadata(self):
         """Save global metadata"""
-        with open(self.metadata_file, 'w') as f:
+        with open(self.metadata_file, "w") as f:
             json.dump(self.metadata, f, indent=2)
+
 
 # =============================================================================
 # MODEL TRAINING
 # =============================================================================
+
 
 class ModelTrainer:
     """Model training with hyperparameter optimization"""
@@ -613,8 +650,11 @@ class ModelTrainer:
 
         # Split data
         X_train, X_val, y_train, y_val = train_test_split(
-            X, y, test_size=self.config.validation_split,
-            random_state=self.config.random_state, stratify=y
+            X,
+            y,
+            test_size=self.config.validation_split,
+            random_state=self.config.random_state,
+            stratify=y,
         )
 
         # Start MLflow run
@@ -630,11 +670,11 @@ class ModelTrainer:
             mlflow.log_params(self.best_params)
 
             # Train model
-            if self.config.model_type == 'lightgbm':
+            if self.config.model_type == "lightgbm":
                 self.best_model = self._train_lightgbm(
                     X_train, y_train, X_val, y_val, self.best_params
                 )
-            elif self.config.model_type == 'xgboost':
+            elif self.config.model_type == "xgboost":
                 self.best_model = self._train_xgboost(
                     X_train, y_train, X_val, y_val, self.best_params
                 )
@@ -657,7 +697,7 @@ class ModelTrainer:
                 self.best_model,
                 "model",
                 signature=signature,
-                registered_model_name=self.config.model_name
+                registered_model_name=self.config.model_name,
             )
 
             # Save artifacts
@@ -666,10 +706,10 @@ class ModelTrainer:
             logger.info(f"Training complete. Run ID: {run.info.run_id}")
 
             return {
-                'run_id': run.info.run_id,
-                'model': self.best_model,
-                'params': self.best_params,
-                'metrics': self.best_metrics
+                "run_id": run.info.run_id,
+                "model": self.best_model,
+                "params": self.best_params,
+                "metrics": self.best_metrics,
             }
 
     def _optimize_hyperparameters(
@@ -677,64 +717,78 @@ class ModelTrainer:
         X_train: pd.DataFrame,
         y_train: pd.Series,
         X_val: pd.DataFrame,
-        y_val: pd.Series
+        y_val: pd.Series,
     ) -> optuna.Study:
         """Optimize hyperparameters using Optuna"""
         logger.info("Starting hyperparameter optimization...")
 
         def objective(trial):
-            if self.config.model_type == 'lightgbm':
+            if self.config.model_type == "lightgbm":
                 params = {
-                    'objective': 'binary',
-                    'metric': 'auc',
-                    'boosting_type': 'gbdt',
-                    'num_leaves': trial.suggest_int('num_leaves', 20, 300),
-                    'learning_rate': trial.suggest_loguniform('learning_rate', 0.01, 0.3),
-                    'feature_fraction': trial.suggest_uniform('feature_fraction', 0.5, 1.0),
-                    'bagging_fraction': trial.suggest_uniform('bagging_fraction', 0.5, 1.0),
-                    'bagging_freq': trial.suggest_int('bagging_freq', 1, 7),
-                    'min_child_samples': trial.suggest_int('min_child_samples', 5, 100),
-                    'reg_alpha': trial.suggest_loguniform('reg_alpha', 1e-8, 10.0),
-                    'reg_lambda': trial.suggest_loguniform('reg_lambda', 1e-8, 10.0)
+                    "objective": "binary",
+                    "metric": "auc",
+                    "boosting_type": "gbdt",
+                    "num_leaves": trial.suggest_int("num_leaves", 20, 300),
+                    "learning_rate": trial.suggest_loguniform(
+                        "learning_rate", 0.01, 0.3
+                    ),
+                    "feature_fraction": trial.suggest_uniform(
+                        "feature_fraction", 0.5, 1.0
+                    ),
+                    "bagging_fraction": trial.suggest_uniform(
+                        "bagging_fraction", 0.5, 1.0
+                    ),
+                    "bagging_freq": trial.suggest_int("bagging_freq", 1, 7),
+                    "min_child_samples": trial.suggest_int("min_child_samples", 5, 100),
+                    "reg_alpha": trial.suggest_loguniform("reg_alpha", 1e-8, 10.0),
+                    "reg_lambda": trial.suggest_loguniform("reg_lambda", 1e-8, 10.0),
                 }
 
                 model = lgb.LGBMClassifier(**params, n_estimators=1000, random_state=42)
                 model.fit(
-                    X_train, y_train,
+                    X_train,
+                    y_train,
                     eval_set=[(X_val, y_val)],
                     callbacks=[
                         lgb.early_stopping(self.config.early_stopping_rounds),
-                        lgb.log_evaluation(0)
-                    ]
+                        lgb.log_evaluation(0),
+                    ],
                 )
 
-            elif self.config.model_type == 'xgboost':
+            elif self.config.model_type == "xgboost":
                 params = {
-                    'objective': 'binary:logistic',
-                    'eval_metric': 'auc',
-                    'max_depth': trial.suggest_int('max_depth', 3, 10),
-                    'learning_rate': trial.suggest_loguniform('learning_rate', 0.01, 0.3),
-                    'subsample': trial.suggest_uniform('subsample', 0.5, 1.0),
-                    'colsample_bytree': trial.suggest_uniform('colsample_bytree', 0.5, 1.0),
-                    'reg_alpha': trial.suggest_loguniform('reg_alpha', 1e-8, 10.0),
-                    'reg_lambda': trial.suggest_loguniform('reg_lambda', 1e-8, 10.0)
+                    "objective": "binary:logistic",
+                    "eval_metric": "auc",
+                    "max_depth": trial.suggest_int("max_depth", 3, 10),
+                    "learning_rate": trial.suggest_loguniform(
+                        "learning_rate", 0.01, 0.3
+                    ),
+                    "subsample": trial.suggest_uniform("subsample", 0.5, 1.0),
+                    "colsample_bytree": trial.suggest_uniform(
+                        "colsample_bytree", 0.5, 1.0
+                    ),
+                    "reg_alpha": trial.suggest_loguniform("reg_alpha", 1e-8, 10.0),
+                    "reg_lambda": trial.suggest_loguniform("reg_lambda", 1e-8, 10.0),
                 }
 
                 model = xgb.XGBClassifier(**params, n_estimators=1000, random_state=42)
                 model.fit(
-                    X_train, y_train,
+                    X_train,
+                    y_train,
                     eval_set=[(X_val, y_val)],
                     early_stopping_rounds=self.config.early_stopping_rounds,
-                    verbose=False
+                    verbose=False,
                 )
 
             else:  # Random Forest
                 params = {
-                    'n_estimators': trial.suggest_int('n_estimators', 50, 500),
-                    'max_depth': trial.suggest_int('max_depth', 3, 20),
-                    'min_samples_split': trial.suggest_int('min_samples_split', 2, 20),
-                    'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 10),
-                    'max_features': trial.suggest_categorical('max_features', ['sqrt', 'log2'])
+                    "n_estimators": trial.suggest_int("n_estimators", 50, 500),
+                    "max_depth": trial.suggest_int("max_depth", 3, 20),
+                    "min_samples_split": trial.suggest_int("min_samples_split", 2, 20),
+                    "min_samples_leaf": trial.suggest_int("min_samples_leaf", 1, 10),
+                    "max_features": trial.suggest_categorical(
+                        "max_features", ["sqrt", "log2"]
+                    ),
                 }
 
                 model = RandomForestClassifier(**params, random_state=42)
@@ -747,7 +801,7 @@ class ModelTrainer:
             return auc
 
         # Create and run study
-        study = optuna.create_study(direction='maximize')
+        study = optuna.create_study(direction="maximize")
         study.optimize(objective, n_trials=self.config.n_trials, show_progress_bar=True)
 
         logger.info(f"Best AUC: {study.best_value:.4f}")
@@ -761,18 +815,19 @@ class ModelTrainer:
         y_train: pd.Series,
         X_val: pd.DataFrame,
         y_val: pd.Series,
-        params: Dict[str, Any]
+        params: Dict[str, Any],
     ) -> lgb.LGBMClassifier:
         """Train LightGBM model"""
         model = lgb.LGBMClassifier(**params, n_estimators=1000, random_state=42)
 
         model.fit(
-            X_train, y_train,
+            X_train,
+            y_train,
             eval_set=[(X_val, y_val)],
             callbacks=[
                 lgb.early_stopping(self.config.early_stopping_rounds),
-                lgb.log_evaluation(period=50)
-            ]
+                lgb.log_evaluation(period=50),
+            ],
         )
 
         return model
@@ -783,25 +838,23 @@ class ModelTrainer:
         y_train: pd.Series,
         X_val: pd.DataFrame,
         y_val: pd.Series,
-        params: Dict[str, Any]
+        params: Dict[str, Any],
     ) -> xgb.XGBClassifier:
         """Train XGBoost model"""
         model = xgb.XGBClassifier(**params, n_estimators=1000, random_state=42)
 
         model.fit(
-            X_train, y_train,
+            X_train,
+            y_train,
             eval_set=[(X_val, y_val)],
             early_stopping_rounds=self.config.early_stopping_rounds,
-            verbose=True
+            verbose=True,
         )
 
         return model
 
     def _train_random_forest(
-        self,
-        X_train: pd.DataFrame,
-        y_train: pd.Series,
-        params: Dict[str, Any]
+        self, X_train: pd.DataFrame, y_train: pd.Series, params: Dict[str, Any]
     ) -> RandomForestClassifier:
         """Train Random Forest model"""
         model = RandomForestClassifier(**params, random_state=42, n_jobs=-1)
@@ -809,23 +862,25 @@ class ModelTrainer:
 
         return model
 
-    def _evaluate_model(self, model, X_val: pd.DataFrame, y_val: pd.Series) -> Dict[str, float]:
+    def _evaluate_model(
+        self, model, X_val: pd.DataFrame, y_val: pd.Series
+    ) -> Dict[str, float]:
         """Evaluate model performance"""
         y_pred = model.predict(X_val)
         y_pred_proba = model.predict_proba(X_val)[:, 1]
 
         metrics = {
-            'accuracy': accuracy_score(y_val, y_pred),
-            'precision': precision_score(y_val, y_pred),
-            'recall': recall_score(y_val, y_pred),
-            'f1': f1_score(y_val, y_pred),
-            'auc': roc_auc_score(y_val, y_pred_proba)
+            "accuracy": accuracy_score(y_val, y_pred),
+            "precision": precision_score(y_val, y_pred),
+            "recall": recall_score(y_val, y_pred),
+            "f1": f1_score(y_val, y_pred),
+            "auc": roc_auc_score(y_val, y_pred_proba),
         }
 
         # Calculate additional metrics
         tn, fp, fn, tp = confusion_matrix(y_val, y_pred).ravel()
-        metrics['specificity'] = tn / (tn + fp)
-        metrics['fall_out'] = fp / (fp + tn)
+        metrics["specificity"] = tn / (tn + fp)
+        metrics["fall_out"] = fp / (fp + tn)
 
         return metrics
 
@@ -835,37 +890,41 @@ class ModelTrainer:
             return False
 
         return (
-            self.best_metrics['accuracy'] >= self.config.min_accuracy and
-            self.best_metrics['precision'] >= self.config.min_precision and
-            self.best_metrics['recall'] >= self.config.min_recall and
-            self.best_metrics['f1'] >= self.config.min_f1 and
-            self.best_metrics['auc'] >= self.config.min_auc
+            self.best_metrics["accuracy"] >= self.config.min_accuracy
+            and self.best_metrics["precision"] >= self.config.min_precision
+            and self.best_metrics["recall"] >= self.config.min_recall
+            and self.best_metrics["f1"] >= self.config.min_f1
+            and self.best_metrics["auc"] >= self.config.min_auc
         )
 
     def _save_artifacts(self, X_val: pd.DataFrame, y_val: pd.Series):
         """Save training artifacts"""
         # Feature importance
-        if hasattr(self.best_model, 'feature_importances_'):
-            importance = pd.DataFrame({
-                'feature': X_val.columns,
-                'importance': self.best_model.feature_importances_
-            }).sort_values('importance', ascending=False)
+        if hasattr(self.best_model, "feature_importances_"):
+            importance = pd.DataFrame(
+                {
+                    "feature": X_val.columns,
+                    "importance": self.best_model.feature_importances_,
+                }
+            ).sort_values("importance", ascending=False)
 
             # Save as CSV artifact
-            importance.to_csv('feature_importance.csv', index=False)
-            mlflow.log_artifact('feature_importance.csv')
+            importance.to_csv("feature_importance.csv", index=False)
+            mlflow.log_artifact("feature_importance.csv")
 
         # Confusion matrix
         y_pred = self.best_model.predict(X_val)
         cm = confusion_matrix(y_val, y_pred)
 
         # Save confusion matrix
-        np.save('confusion_matrix.npy', cm)
-        mlflow.log_artifact('confusion_matrix.npy')
+        np.save("confusion_matrix.npy", cm)
+        mlflow.log_artifact("confusion_matrix.npy")
+
 
 # =============================================================================
 # TRAINING PIPELINE
 # =============================================================================
+
 
 class TrainingPipeline:
     """Complete training pipeline"""
@@ -884,19 +943,19 @@ class TrainingPipeline:
         processed_df, data_info = self.data_pipeline.run(df)
 
         # Prepare features and target
-        feature_cols = [col for col in processed_df.columns if col != 'Churn']
+        feature_cols = [col for col in processed_df.columns if col != "Churn"]
         X = processed_df[feature_cols]
-        y = processed_df['Churn']
+        y = processed_df["Churn"]
 
         # Train model
         training_results = self.model_trainer.train(X, y)
 
         # Combine results
         results = {
-            'data_info': data_info,
-            'training_results': training_results,
-            'feature_engineer': self.data_pipeline.feature_engineer,
-            'timestamp': datetime.now().isoformat()
+            "data_info": data_info,
+            "training_results": training_results,
+            "feature_engineer": self.data_pipeline.feature_engineer,
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Save pipeline artifacts
@@ -908,26 +967,29 @@ class TrainingPipeline:
     def _save_pipeline_artifacts(self, results: Dict[str, Any]):
         """Save pipeline artifacts"""
         # Save feature engineer
-        with open('feature_engineer.pkl', 'wb') as f:
-            pickle.dump(results['feature_engineer'], f)
+        with open("feature_engineer.pkl", "wb") as f:
+            pickle.dump(results["feature_engineer"], f)
 
         # Save results summary
         summary = {
-            'timestamp': results['timestamp'],
-            'data_info': results['data_info'],
-            'metrics': results['training_results']['metrics'],
-            'model_run_id': results['training_results']['run_id']
+            "timestamp": results["timestamp"],
+            "data_info": results["data_info"],
+            "metrics": results["training_results"]["metrics"],
+            "model_run_id": results["training_results"]["run_id"],
         }
 
-        with open('training_summary.json', 'w') as f:
+        with open("training_summary.json", "w") as f:
             json.dump(summary, f, indent=2)
+
 
 # =============================================================================
 # MODEL SERVING
 # =============================================================================
 
+
 class PredictionRequest(BaseModel):
     """API request model for predictions"""
+
     CustomerId: int
     CreditScore: float = Field(..., ge=300, le=850)
     Geography: str
@@ -940,14 +1002,17 @@ class PredictionRequest(BaseModel):
     IsActiveMember: int = Field(..., ge=0, le=1)
     EstimatedSalary: float = Field(..., gt=0)
 
+
 class PredictionResponse(BaseModel):
     """API response model for predictions"""
+
     customer_id: int
     churn_probability: float
     churn_prediction: int
     confidence: float
     risk_level: str
     timestamp: str
+
 
 class ModelServer:
     """Model serving with caching and monitoring"""
@@ -969,7 +1034,7 @@ class ModelServer:
         self.model = mlflow.sklearn.load_model(self.config.model_uri)
 
         # Load feature engineer
-        with open('feature_engineer.pkl', 'rb') as f:
+        with open("feature_engineer.pkl", "rb") as f:
             self.feature_engineer = pickle.load(f)
 
         logger.info("Model loaded successfully")
@@ -981,7 +1046,7 @@ class ModelServer:
                 host=self.config.redis_host,
                 port=self.config.redis_port,
                 db=self.config.redis_db,
-                decode_responses=True
+                decode_responses=True,
             )
             self.cache.ping()
             logger.info("Redis cache connected")
@@ -992,21 +1057,21 @@ class ModelServer:
     def _setup_metrics(self):
         """Setup Prometheus metrics"""
         self.prediction_counter = Counter(
-            'model_predictions_total',
-            'Total number of predictions',
-            ['model', 'version']
+            "model_predictions_total",
+            "Total number of predictions",
+            ["model", "version"],
         )
 
         self.prediction_latency = Histogram(
-            'model_prediction_latency_seconds',
-            'Prediction latency in seconds',
-            ['model']
+            "model_prediction_latency_seconds",
+            "Prediction latency in seconds",
+            ["model"],
         )
 
         self.prediction_errors = Counter(
-            'model_prediction_errors_total',
-            'Total prediction errors',
-            ['model', 'error_type']
+            "model_prediction_errors_total",
+            "Total prediction errors",
+            ["model", "error_type"],
         )
 
     def predict(self, request: PredictionRequest) -> PredictionResponse:
@@ -1045,40 +1110,42 @@ class ModelServer:
                 churn_prediction=churn_pred,
                 confidence=float(max(churn_proba)),
                 risk_level=risk_level,
-                timestamp=datetime.now().isoformat()
+                timestamp=datetime.now().isoformat(),
             )
 
             # Cache result
             if self.cache:
                 self.cache.setex(
-                    cache_key,
-                    self.config.cache_ttl,
-                    json.dumps(response.dict())
+                    cache_key, self.config.cache_ttl, json.dumps(response.dict())
                 )
 
             # Update metrics
             self.prediction_counter.labels(
-                model=self.config.model_name,
-                version='latest'
+                model=self.config.model_name, version="latest"
             ).inc()
 
             latency = (datetime.now() - start_time).total_seconds()
-            self.prediction_latency.labels(model=self.config.model_name).observe(latency)
+            self.prediction_latency.labels(model=self.config.model_name).observe(
+                latency
+            )
 
             return response
 
         except Exception as e:
             logger.error(f"Prediction error: {e}")
             self.prediction_errors.labels(
-                model=self.config.model_name,
-                error_type=type(e).__name__
+                model=self.config.model_name, error_type=type(e).__name__
             ).inc()
             raise
 
-    def predict_batch(self, requests: List[PredictionRequest]) -> List[PredictionResponse]:
+    def predict_batch(
+        self, requests: List[PredictionRequest]
+    ) -> List[PredictionResponse]:
         """Make predictions for batch of customers"""
         if len(requests) > self.config.max_batch_size:
-            raise ValueError(f"Batch size {len(requests)} exceeds maximum {self.config.max_batch_size}")
+            raise ValueError(
+                f"Batch size {len(requests)} exceeds maximum {self.config.max_batch_size}"
+            )
 
         responses = []
         for request in requests:
@@ -1094,9 +1161,11 @@ class ModelServer:
         feature_hash = hashlib.md5(feature_str.encode()).hexdigest()
         return f"prediction:{self.config.model_name}:{feature_hash}"
 
+
 # =============================================================================
 # MODEL MONITORING
 # =============================================================================
+
 
 class DriftDetector:
     """Detect data and prediction drift"""
@@ -1110,14 +1179,14 @@ class DriftDetector:
     def _setup_profile(self):
         """Setup Evidently profile"""
         column_mapping = ColumnMapping(
-            target='Churn',
-            prediction='prediction',
+            target="Churn",
+            prediction="prediction",
             numerical_features=self.reference_data.select_dtypes(
-                include=['float64', 'int64']
+                include=["float64", "int64"]
             ).columns.tolist(),
             categorical_features=self.reference_data.select_dtypes(
-                include=['object', 'category']
-            ).columns.tolist()
+                include=["object", "category"]
+            ).columns.tolist(),
         )
 
         self.drift_profile = Profile(sections=[DataDriftProfileSection()])
@@ -1138,11 +1207,11 @@ class DriftDetector:
         # This is simplified - actual implementation would parse Evidently results
 
         results = {
-            'timestamp': datetime.now().isoformat(),
-            'drift_detected': drift_detected,
-            'drifted_features': drifted_features,
-            'drift_score': 0.0,  # Would calculate from Evidently
-            'action_required': drift_detected
+            "timestamp": datetime.now().isoformat(),
+            "drift_detected": drift_detected,
+            "drifted_features": drifted_features,
+            "drift_score": 0.0,  # Would calculate from Evidently
+            "action_required": drift_detected,
         }
 
         if drift_detected:
@@ -1151,6 +1220,7 @@ class DriftDetector:
             logger.info("No significant drift detected")
 
         return results
+
 
 class PerformanceMonitor:
     """Monitor model performance"""
@@ -1163,90 +1233,73 @@ class PerformanceMonitor:
     def _setup_metrics(self):
         """Setup performance metrics"""
         self.accuracy_gauge = Gauge(
-            'model_accuracy',
-            'Current model accuracy',
-            ['model']
+            "model_accuracy", "Current model accuracy", ["model"]
         )
 
         self.precision_gauge = Gauge(
-            'model_precision',
-            'Current model precision',
-            ['model']
+            "model_precision", "Current model precision", ["model"]
         )
 
-        self.recall_gauge = Gauge(
-            'model_recall',
-            'Current model recall',
-            ['model']
-        )
+        self.recall_gauge = Gauge("model_recall", "Current model recall", ["model"])
 
     def calculate_metrics(
-        self,
-        predictions: pd.DataFrame,
-        actuals: pd.DataFrame
+        self, predictions: pd.DataFrame, actuals: pd.DataFrame
     ) -> Dict[str, float]:
         """Calculate performance metrics"""
-        y_true = actuals['Churn']
-        y_pred = predictions['prediction']
+        y_true = actuals["Churn"]
+        y_pred = predictions["prediction"]
 
         metrics = {
-            'accuracy': accuracy_score(y_true, y_pred),
-            'precision': precision_score(y_true, y_pred),
-            'recall': recall_score(y_true, y_pred),
-            'f1': f1_score(y_true, y_pred)
+            "accuracy": accuracy_score(y_true, y_pred),
+            "precision": precision_score(y_true, y_pred),
+            "recall": recall_score(y_true, y_pred),
+            "f1": f1_score(y_true, y_pred),
         }
 
         # Update Prometheus metrics
-        self.accuracy_gauge.labels(model='churn_classifier').set(metrics['accuracy'])
-        self.precision_gauge.labels(model='churn_classifier').set(metrics['precision'])
-        self.recall_gauge.labels(model='churn_classifier').set(metrics['recall'])
+        self.accuracy_gauge.labels(model="churn_classifier").set(metrics["accuracy"])
+        self.precision_gauge.labels(model="churn_classifier").set(metrics["precision"])
+        self.recall_gauge.labels(model="churn_classifier").set(metrics["recall"])
 
         # Store history
-        self.performance_history.append({
-            'timestamp': datetime.now().isoformat(),
-            'metrics': metrics
-        })
+        self.performance_history.append(
+            {"timestamp": datetime.now().isoformat(), "metrics": metrics}
+        )
 
         # Check for performance degradation
-        if metrics['accuracy'] < self.config.accuracy_alert_threshold:
-            logger.warning(f"Performance degradation: accuracy {metrics['accuracy']:.3f}")
+        if metrics["accuracy"] < self.config.accuracy_alert_threshold:
+            logger.warning(
+                f"Performance degradation: accuracy {metrics['accuracy']:.3f}"
+            )
 
         return metrics
+
 
 class ModelMonitor:
     """Complete monitoring system"""
 
-    def __init__(
-        self,
-        reference_data: pd.DataFrame,
-        config: MonitoringConfig
-    ):
+    def __init__(self, reference_data: pd.DataFrame, config: MonitoringConfig):
         self.config = config
         self.drift_detector = DriftDetector(reference_data, config)
         self.performance_monitor = PerformanceMonitor(config)
         self.alert_manager = AlertManager(config)
 
     def monitor(
-        self,
-        predictions: pd.DataFrame,
-        actuals: Optional[pd.DataFrame] = None
+        self, predictions: pd.DataFrame, actuals: Optional[pd.DataFrame] = None
     ) -> Dict[str, Any]:
         """Run complete monitoring"""
-        results = {
-            'timestamp': datetime.now().isoformat(),
-            'checks': {}
-        }
+        results = {"timestamp": datetime.now().isoformat(), "checks": {}}
 
         # Check data drift
         drift_results = self.drift_detector.detect_drift(predictions)
-        results['checks']['drift'] = drift_results
+        results["checks"]["drift"] = drift_results
 
         # Calculate performance if actuals available
         if actuals is not None:
             performance_results = self.performance_monitor.calculate_metrics(
                 predictions, actuals
             )
-            results['checks']['performance'] = performance_results
+            results["checks"]["performance"] = performance_results
 
         # Send alerts if needed
         self._check_alerts(results)
@@ -1258,32 +1311,38 @@ class ModelMonitor:
         alerts = []
 
         # Check drift alert
-        if results['checks'].get('drift', {}).get('drift_detected'):
-            alerts.append({
-                'type': 'DRIFT',
-                'severity': 'HIGH',
-                'message': 'Data drift detected',
-                'details': results['checks']['drift']
-            })
+        if results["checks"].get("drift", {}).get("drift_detected"):
+            alerts.append(
+                {
+                    "type": "DRIFT",
+                    "severity": "HIGH",
+                    "message": "Data drift detected",
+                    "details": results["checks"]["drift"],
+                }
+            )
 
         # Check performance alert
-        performance = results['checks'].get('performance', {})
+        performance = results["checks"].get("performance", {})
         if performance:
-            if performance.get('accuracy', 1.0) < self.config.accuracy_alert_threshold:
-                alerts.append({
-                    'type': 'PERFORMANCE',
-                    'severity': 'CRITICAL',
-                    'message': f"Accuracy below threshold: {performance['accuracy']:.3f}",
-                    'details': performance
-                })
+            if performance.get("accuracy", 1.0) < self.config.accuracy_alert_threshold:
+                alerts.append(
+                    {
+                        "type": "PERFORMANCE",
+                        "severity": "CRITICAL",
+                        "message": f"Accuracy below threshold: {performance['accuracy']:.3f}",
+                        "details": performance,
+                    }
+                )
 
         # Send alerts
         for alert in alerts:
             self.alert_manager.send_alert(alert)
 
+
 # =============================================================================
 # ALERT MANAGER
 # =============================================================================
+
 
 class AlertManager:
     """Manage alerts and notifications"""
@@ -1313,6 +1372,7 @@ class AlertManager:
         # Implementation would use requests to post to webhook
         logger.info("Slack alert sent")
 
+
 # =============================================================================
 # API APPLICATION
 # =============================================================================
@@ -1321,7 +1381,7 @@ class AlertManager:
 app = FastAPI(
     title="Bank Churn Prediction API",
     description="MLOps pipeline for bank customer churn prediction",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Add CORS middleware
@@ -1330,13 +1390,14 @@ app.add_middleware(
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 # Initialize components
 serving_config = ServingConfig()
 monitoring_config = MonitoringConfig()
 model_server = ModelServer(serving_config)
+
 
 # API endpoints
 @app.get("/health")
@@ -1345,8 +1406,9 @@ async def health():
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "model_loaded": model_server.model is not None
+        "model_loaded": model_server.model is not None,
     }
+
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest):
@@ -1411,6 +1473,7 @@ async def predict(request: PredictionRequest):
         logger.error(f"Prediction error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/predict_batch", response_model=List[PredictionResponse])
 async def predict_batch(requests: List[PredictionRequest]):
     """Batch prediction endpoint"""
@@ -1421,10 +1484,12 @@ async def predict_batch(requests: List[PredictionRequest]):
         logger.error(f"Batch prediction error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/metrics")
 async def metrics():
     """Prometheus metrics endpoint"""
     return generate_latest()
+
 
 @app.post("/retrain")
 async def retrain(background_tasks: BackgroundTasks):
@@ -1432,9 +1497,11 @@ async def retrain(background_tasks: BackgroundTasks):
     background_tasks.add_task(run_training_pipeline)
     return {"message": "Retraining started", "timestamp": datetime.now().isoformat()}
 
+
 # =============================================================================
 # MAIN EXECUTION
 # =============================================================================
+
 
 def run_training_pipeline():
     """Run the complete training pipeline"""
@@ -1446,6 +1513,7 @@ def run_training_pipeline():
 
     logger.info("Training pipeline completed successfully")
     return results
+
 
 def start_api_server():
     """Start the API server"""
@@ -1461,8 +1529,9 @@ def start_api_server():
                     "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
                 },
             },
-        }
+        },
     )
+
 
 if __name__ == "__main__":
     import argparse
@@ -1472,7 +1541,7 @@ if __name__ == "__main__":
         "--mode",
         choices=["train", "serve", "monitor"],
         default="serve",
-        help="Pipeline mode"
+        help="Pipeline mode",
     )
 
     args = parser.parse_args()

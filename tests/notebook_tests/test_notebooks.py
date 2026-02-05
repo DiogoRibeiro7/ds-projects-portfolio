@@ -60,9 +60,9 @@ class TestNotebooks:
         results = validator.validate_all()
 
         # Check for critical issues
-        assert results["checks"]["data_files"][
-            "passed"
-        ], f"Missing data files in {notebook_path.name}: {results['checks']['data_files']['missing_files']}"
+        assert results["checks"]["data_files"]["passed"], (
+            f"Missing data files in {notebook_path.name}: {results['checks']['data_files']['missing_files']}"
+        )
 
         # Check for hardcoded paths (warning, not failure)
         if not results["checks"]["hardcoded_paths"]["passed"]:
@@ -71,9 +71,9 @@ class TestNotebooks:
             )
 
         # Check validation score
-        assert (
-            results["score"] >= 60
-        ), f"Validation score too low ({results['score']}/100) for {notebook_path.name}"
+        assert results["score"] >= 60, (
+            f"Validation score too low ({results['score']}/100) for {notebook_path.name}"
+        )
 
     @pytest.mark.slow
     @pytest.mark.parametrize(
@@ -93,13 +93,15 @@ class TestNotebooks:
         assert result["status"] in [
             "passed",
             "passed_with_warnings",
-        ], f"Notebook execution failed: {result.get('execution', {}).get('errors', ['Unknown error'])}"
+        ], (
+            f"Notebook execution failed: {result.get('execution', {}).get('errors', ['Unknown error'])}"
+        )
 
         # Check execution time
         exec_time = result.get("execution", {}).get("execution_time", 0)
-        assert (
-            exec_time < self.config.config["timeout"]
-        ), f"Notebook execution timeout: {exec_time}s > {self.config.config['timeout']}s"
+        assert exec_time < self.config.config["timeout"], (
+            f"Notebook execution timeout: {exec_time}s > {self.config.config['timeout']}s"
+        )
 
         # Check memory usage
         memory_delta = (
@@ -108,9 +110,9 @@ class TestNotebooks:
         max_memory = self.config.config.get("memory_limits", {}).get(
             "max_memory_mb", 4096
         )
-        assert (
-            memory_delta < max_memory
-        ), f"Excessive memory usage: {memory_delta}MB > {max_memory}MB"
+        assert memory_delta < max_memory, (
+            f"Excessive memory usage: {memory_delta}MB > {max_memory}MB"
+        )
 
     @pytest.mark.parametrize(
         "notebook_path",
@@ -145,9 +147,9 @@ class TestNotebooks:
                     }
                 )
 
-        assert (
-            len(notebooks_without_seeds) == 0
-        ), f"Notebooks missing random seeds: {notebooks_without_seeds}"
+        assert len(notebooks_without_seeds) == 0, (
+            f"Notebooks missing random seeds: {notebooks_without_seeds}"
+        )
 
     def test_visualization_completeness(self):
         """Test that visualizations are properly displayed."""
@@ -182,9 +184,9 @@ class TestNotebooks:
 
         # Check summary statistics
         summary = results["summary"]
-        assert (
-            summary["pass_rate"] >= 70
-        ), f"Overall pass rate too low: {summary['pass_rate']}%"
+        assert summary["pass_rate"] >= 70, (
+            f"Overall pass rate too low: {summary['pass_rate']}%"
+        )
 
 
 @pytest.fixture(scope="module")
@@ -199,17 +201,17 @@ def notebook_results():
 def test_overall_pass_rate(notebook_results):
     """Test overall pass rate of notebooks."""
     summary = notebook_results["summary"]
-    assert (
-        summary["pass_rate"] >= 70
-    ), f"Overall pass rate {summary['pass_rate']}% is below threshold of 70%"
+    assert summary["pass_rate"] >= 70, (
+        f"Overall pass rate {summary['pass_rate']}% is below threshold of 70%"
+    )
 
 
 def test_no_critical_errors(notebook_results):
     """Test that no notebooks have critical errors."""
     failed = notebook_results["summary"].get("failed_notebooks", [])
-    assert (
-        len(failed) == 0
-    ), f"Notebooks with critical errors: {[f['notebook'] for f in failed]}"
+    assert len(failed) == 0, (
+        f"Notebooks with critical errors: {[f['notebook'] for f in failed]}"
+    )
 
 
 def test_average_execution_time(notebook_results):

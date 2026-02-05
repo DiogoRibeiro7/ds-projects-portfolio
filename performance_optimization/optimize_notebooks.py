@@ -97,7 +97,9 @@ class NotebookOptimizer:
             optimized_memory = df_optimized.memory_usage(deep=True).sum() / 1024 / 1024
             print(f"   Original memory: {original_memory:.2f} MB")
             print(f"   Optimized memory: {optimized_memory:.2f} MB")
-            print(f"   Reduction: {(1 - optimized_memory/original_memory)*100:.1f}%")
+            print(
+                f"   Reduction: {(1 - optimized_memory / original_memory) * 100:.1f}%"
+            )
 
             # Groupby optimization
             print("\n3. GroupBy Optimization:")
@@ -133,7 +135,7 @@ class NotebookOptimizer:
             parquet_size = parquet_path.stat().st_size / 1024 / 1024
             print(f"   CSV size: {csv_size:.2f} MB")
             print(f"   Parquet size: {parquet_size:.2f} MB")
-            print(f"   Compression: {(1 - parquet_size/csv_size)*100:.1f}%")
+            print(f"   Compression: {(1 - parquet_size / csv_size) * 100:.1f}%")
         else:
             print(f"Bank churn data not found at {data_path}")
 

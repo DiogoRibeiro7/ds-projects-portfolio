@@ -19,22 +19,20 @@ class TestDataProcessingBenchmarks:
         """Set up test data for benchmarks."""
         np.random.seed(42)
         self.small_df = pd.DataFrame(
-            np.random.randn(1000, 10),
-            columns=[f"col_{i}" for i in range(10)]
+            np.random.randn(1000, 10), columns=[f"col_{i}" for i in range(10)]
         )
         self.medium_df = pd.DataFrame(
-            np.random.randn(10000, 50),
-            columns=[f"col_{i}" for i in range(50)]
+            np.random.randn(10000, 50), columns=[f"col_{i}" for i in range(50)]
         )
         self.large_df = pd.DataFrame(
-            np.random.randn(100000, 100),
-            columns=[f"col_{i}" for i in range(100)]
+            np.random.randn(100000, 100), columns=[f"col_{i}" for i in range(100)]
         )
 
     @pytest.mark.benchmark(group="data-cleaning")
     def test_remove_duplicates_small(self, benchmark):
         """Benchmark duplicate removal on small dataset."""
         from src.data_processing.cleaning import DataCleaner
+
         cleaner = DataCleaner()
 
         # Add some duplicates
@@ -47,6 +45,7 @@ class TestDataProcessingBenchmarks:
     def test_remove_duplicates_large(self, benchmark):
         """Benchmark duplicate removal on large dataset."""
         from src.data_processing.cleaning import DataCleaner
+
         cleaner = DataCleaner()
 
         # Add some duplicates
@@ -70,14 +69,18 @@ class TestDataProcessingBenchmarks:
     def test_groupby_aggregation(self, benchmark):
         """Benchmark groupby aggregation operations."""
         # Add a categorical column for grouping
-        self.large_df['group'] = np.random.choice(['A', 'B', 'C', 'D'], len(self.large_df))
+        self.large_df["group"] = np.random.choice(
+            ["A", "B", "C", "D"], len(self.large_df)
+        )
 
         def aggregate_data(df):
-            return df.groupby('group').agg({
-                'col_0': ['mean', 'std', 'min', 'max'],
-                'col_1': ['sum', 'count'],
-                'col_2': ['median', 'var']
-            })
+            return df.groupby("group").agg(
+                {
+                    "col_0": ["mean", "std", "min", "max"],
+                    "col_1": ["sum", "count"],
+                    "col_2": ["median", "var"],
+                }
+            )
 
         result = benchmark(aggregate_data, self.large_df)
         assert len(result) == 4  # 4 groups
@@ -115,9 +118,10 @@ class TestStatisticalBenchmarks:
 
         result = benchmark(
             bootstrap_ci_diff,
-            control, treatment,
+            control,
+            treatment,
             n_bootstrap=1000,
-            confidence_level=0.95
+            confidence_level=0.95,
         )
         assert len(result) == 2
 
@@ -136,10 +140,7 @@ class TestStatisticalBenchmarks:
         from src.statistics.core import calculate_sample_size
 
         result = benchmark(
-            calculate_sample_size,
-            alpha=0.05,
-            power=0.8,
-            effect_size=0.2
+            calculate_sample_size, alpha=0.05, power=0.8, effect_size=0.2
         )
         assert result > 0
 
@@ -230,8 +231,8 @@ class TestAPIBenchmarks:
                     "metadata": {
                         "timestamp": "2024-01-01",
                         "version": "1.0.0",
-                        "model": "test_model"
-                    }
+                        "model": "test_model",
+                    },
                 }
                 for i in range(1000)
             ]
@@ -256,7 +257,7 @@ class TestAPIBenchmarks:
             {
                 "features": np.random.randn(100).tolist(),
                 "model_id": f"model_{i}",
-                "options": {"threshold": 0.5}
+                "options": {"threshold": 0.5},
             }
             for i in range(100)
         ]
@@ -276,28 +277,30 @@ class TestResourceBenchmarks:
     def test_dataframe_memory_optimization(self, benchmark):
         """Benchmark DataFrame memory optimization."""
         # Create a large DataFrame with different dtypes
-        df = pd.DataFrame({
-            'int_col': np.random.randint(0, 100, 100000),
-            'float_col': np.random.randn(100000),
-            'string_col': ['category_' + str(i % 100) for i in range(100000)],
-            'bool_col': np.random.choice([True, False], 100000)
-        })
+        df = pd.DataFrame(
+            {
+                "int_col": np.random.randint(0, 100, 100000),
+                "float_col": np.random.randn(100000),
+                "string_col": ["category_" + str(i % 100) for i in range(100000)],
+                "bool_col": np.random.choice([True, False], 100000),
+            }
+        )
 
         def optimize_memory(df):
             """Optimize DataFrame memory usage."""
             optimized = df.copy()
 
             # Convert strings to categories if beneficial
-            for col in optimized.select_dtypes(include=['object']):
+            for col in optimized.select_dtypes(include=["object"]):
                 if optimized[col].nunique() / len(optimized) < 0.5:
-                    optimized[col] = optimized[col].astype('category')
+                    optimized[col] = optimized[col].astype("category")
 
             # Downcast numeric types
-            for col in optimized.select_dtypes(include=['int']):
-                optimized[col] = pd.to_numeric(optimized[col], downcast='integer')
+            for col in optimized.select_dtypes(include=["int"]):
+                optimized[col] = pd.to_numeric(optimized[col], downcast="integer")
 
-            for col in optimized.select_dtypes(include=['float']):
-                optimized[col] = pd.to_numeric(optimized[col], downcast='float')
+            for col in optimized.select_dtypes(include=["float"]):
+                optimized[col] = pd.to_numeric(optimized[col], downcast="float")
 
             return optimized
 

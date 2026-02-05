@@ -789,9 +789,9 @@ if __name__ == "__main__":
         }
     )
     # Add treatment effect
-    did_data.loc[
-        (did_data["treatment"] == 1) & (did_data["time"] == 1), "outcome"
-    ] += 10
+    did_data.loc[(did_data["treatment"] == 1) & (did_data["time"] == 1), "outcome"] += (
+        10
+    )
 
     did = DifferenceInDifferences()
     did_result = did.estimate(did_data, "outcome", "treatment", "time", "group")

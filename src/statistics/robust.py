@@ -18,7 +18,9 @@ def huber_smooth(values: Iterable[float], delta: float = 1.0) -> np.ndarray:
     return out
 
 
-def winsorize_by_quantile(values: Iterable[float], lower: float = 0.05, upper: float = 0.95) -> np.ndarray:
+def winsorize_by_quantile(
+    values: Iterable[float], lower: float = 0.05, upper: float = 0.95
+) -> np.ndarray:
     values = np.asarray(list(values), dtype=float)
     if not 0 <= lower < upper <= 1:
         raise ValueError("invalid quantiles")

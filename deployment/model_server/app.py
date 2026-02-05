@@ -26,7 +26,15 @@ from enum import Enum
 
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Request, Response, status, Depends, BackgroundTasks
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Request,
+    Response,
+    status,
+    Depends,
+    BackgroundTasks,
+)
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -41,7 +49,13 @@ import mlflow.sklearn
 from sklearn.base import BaseEstimator
 
 # Monitoring and tracing
-from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import (
+    Counter,
+    Histogram,
+    Gauge,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+)
 from opentelemetry import trace
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
@@ -68,7 +82,7 @@ structlog.configure(
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
+        structlog.processors.JSONRenderer(),
     ],
     context_class=dict,
     logger_factory=structlog.stdlib.LoggerFactory(),
@@ -78,12 +92,20 @@ structlog.configure(
 logger = structlog.get_logger()
 
 # Prometheus metrics
-prediction_counter = Counter('model_predictions_total', 'Total number of predictions', ['model_name', 'version', 'status'])
-prediction_latency = Histogram('model_prediction_duration_seconds', 'Prediction latency', ['model_name', 'version'])
-model_load_time = Gauge('model_load_time_seconds', 'Time taken to load model', ['model_name', 'version'])
-active_models = Gauge('active_models_count', 'Number of active models')
-cache_hits = Counter('cache_hits_total', 'Total cache hits')
-cache_misses = Counter('cache_misses_total', 'Total cache misses')
+prediction_counter = Counter(
+    "model_predictions_total",
+    "Total number of predictions",
+    ["model_name", "version", "status"],
+)
+prediction_latency = Histogram(
+    "model_prediction_duration_seconds", "Prediction latency", ["model_name", "version"]
+)
+model_load_time = Gauge(
+    "model_load_time_seconds", "Time taken to load model", ["model_name", "version"]
+)
+active_models = Gauge("active_models_count", "Number of active models")
+cache_hits = Counter("cache_hits_total", "Total cache hits")
+cache_misses = Counter("cache_misses_total", "Total cache misses")
 
 # Initialize tracing
 trace.set_tracer_provider(TracerProvider())
@@ -96,25 +118,31 @@ jaeger_exporter = JaegerExporter(
 span_processor = BatchSpanProcessor(jaeger_exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
 
+
 # Request/Response models
 class PredictionRequest(BaseModel):
     """Model prediction request schema"""
+
     data: Union[List[List[float]], Dict[str, List[float]]]
     model_name: str = Field(..., description="Name of the model to use")
     model_version: Optional[str] = Field("latest", description="Version of the model")
-    features: Optional[List[str]] = Field(None, description="Feature names if data is list format")
+    features: Optional[List[str]] = Field(
+        None, description="Feature names if data is list format"
+    )
     request_id: Optional[str] = Field(None, description="Unique request ID for tracing")
     timeout: Optional[int] = Field(30, description="Request timeout in seconds")
 
-    @validator('data')
+    @validator("data")
     def validate_data(cls, v):
         if isinstance(v, list):
             if not all(isinstance(row, list) for row in v):
                 raise ValueError("All rows must be lists")
         return v
 
+
 class PredictionResponse(BaseModel):
     """Model prediction response schema"""
+
     predictions: List[Union[float, int, str, Dict]]
     model_name: str
     model_version: str
@@ -124,19 +152,23 @@ class PredictionResponse(BaseModel):
     cached: bool = False
     metadata: Optional[Dict] = None
 
+
 class HealthStatus(str, Enum):
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
 
+
 class ModelInfo(BaseModel):
     """Model information schema"""
+
     name: str
     version: str
     framework: str
     loaded_at: str
     metrics: Dict[str, float]
     status: str
+
 
 # Model Manager
 class ModelManager:
@@ -157,7 +189,7 @@ class ModelManager:
                 host=os.getenv("REDIS_HOST", "localhost"),
                 port=int(os.getenv("REDIS_PORT", 6379)),
                 password=os.getenv("REDIS_PASSWORD"),
-                decode_responses=True
+                decode_responses=True,
             )
             self.redis_client.ping()
             logger.info("Redis connection established")
@@ -165,7 +197,9 @@ class ModelManager:
             logger.warning(f"Redis connection failed: {e}. Using local cache only.")
             self.redis_client = None
 
-    async def load_model(self, model_name: str, model_version: str = "latest") -> BaseEstimator:
+    async def load_model(
+        self, model_name: str, model_version: str = "latest"
+    ) -> BaseEstimator:
         """Load model from MLflow or local storage"""
         start_time = time.time()
         model_key = f"{model_name}:{model_version}"
@@ -197,12 +231,14 @@ class ModelManager:
             # Store metadata
             self.model_metadata[model_key] = {
                 "loaded_at": datetime.utcnow().isoformat(),
-                "framework": type(model).__module__.split('.')[0],
-                "version": model_version
+                "framework": type(model).__module__.split(".")[0],
+                "version": model_version,
             }
 
             load_time = time.time() - start_time
-            model_load_time.labels(model_name=model_name, version=model_version).set(load_time)
+            model_load_time.labels(model_name=model_name, version=model_version).set(
+                load_time
+            )
             active_models.inc()
 
             logger.info(f"Model {model_key} loaded successfully", load_time=load_time)
@@ -210,7 +246,9 @@ class ModelManager:
 
         except Exception as e:
             logger.error(f"Failed to load model {model_key}", error=str(e))
-            raise HTTPException(status_code=500, detail=f"Failed to load model: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to load model: {str(e)}"
+            )
 
     def _get_latest_version(self, model_name: str) -> str:
         """Get latest model version from MLflow"""
@@ -220,7 +258,9 @@ class ModelManager:
             raise ValueError(f"No versions found for model {model_name}")
         return max(versions, key=lambda x: int(x.version)).version
 
-    async def predict(self, model_name: str, model_version: str, data: np.ndarray) -> np.ndarray:
+    async def predict(
+        self, model_name: str, model_version: str, data: np.ndarray
+    ) -> np.ndarray:
         """Make prediction using specified model"""
         model = await self.load_model(model_name, model_version)
 
@@ -236,6 +276,7 @@ class ModelManager:
             return None
         return self.model_metadata[model_key]
 
+
 # Circuit Breaker
 class CircuitBreaker:
     """Circuit breaker pattern for fault tolerance"""
@@ -250,10 +291,14 @@ class CircuitBreaker:
     async def call(self, func, *args, **kwargs):
         """Execute function with circuit breaker protection"""
         if self.state == "open":
-            if (datetime.utcnow() - self.last_failure_time).seconds > self.recovery_timeout:
+            if (
+                datetime.utcnow() - self.last_failure_time
+            ).seconds > self.recovery_timeout:
                 self.state = "half-open"
             else:
-                raise HTTPException(status_code=503, detail="Service temporarily unavailable")
+                raise HTTPException(
+                    status_code=503, detail="Service temporarily unavailable"
+                )
 
         try:
             result = await func(*args, **kwargs)
@@ -271,9 +316,11 @@ class CircuitBreaker:
 
             raise e
 
+
 # Initialize components
 model_manager = ModelManager()
 circuit_breaker = CircuitBreaker()
+
 
 # FastAPI app with lifespan management
 @asynccontextmanager
@@ -301,11 +348,12 @@ async def lifespan(app: FastAPI):
     if model_manager.redis_client:
         model_manager.redis_client.close()
 
+
 app = FastAPI(
     title="ML Model Server",
     description="Production-ready ML model serving with monitoring and tracing",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add middleware
@@ -322,6 +370,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # Instrument FastAPI with OpenTelemetry
 FastAPIInstrumentor.instrument_app(app)
 
+
 # Request ID middleware
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
@@ -330,6 +379,7 @@ async def add_request_id(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
     return response
+
 
 # Endpoints
 @app.get("/health")
@@ -357,14 +407,15 @@ async def health_check():
             "status": status.value,
             "timestamp": datetime.utcnow().isoformat(),
             "models_loaded": models_count,
-            "redis_connected": redis_healthy
+            "redis_connected": redis_healthy,
         }
     except Exception as e:
         logger.error("Health check failed", error=str(e))
         return JSONResponse(
             status_code=503,
-            content={"status": HealthStatus.UNHEALTHY.value, "error": str(e)}
+            content={"status": HealthStatus.UNHEALTHY.value, "error": str(e)},
         )
+
 
 @app.get("/ready")
 async def readiness_check():
@@ -374,10 +425,12 @@ async def readiness_check():
         return {"ready": True}
     return JSONResponse(status_code=503, content={"ready": False})
 
+
 @app.get("/metrics")
 async def metrics():
     """Prometheus metrics endpoint"""
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest, background_tasks: BackgroundTasks):
@@ -414,7 +467,7 @@ async def predict(request: PredictionRequest, background_tasks: BackgroundTasks)
                     request_id=request_id,
                     timestamp=datetime.utcnow().isoformat(),
                     latency_ms=(time.time() - start_time) * 1000,
-                    cached=True
+                    cached=True,
                 )
 
             cache_misses.inc()
@@ -424,11 +477,11 @@ async def predict(request: PredictionRequest, background_tasks: BackgroundTasks)
                 model_manager.predict,
                 request.model_name,
                 request.model_version,
-                data_array
+                data_array,
             )
 
             # Convert predictions to list
-            if hasattr(predictions, 'tolist'):
+            if hasattr(predictions, "tolist"):
                 predictions_list = predictions.tolist()
             else:
                 predictions_list = list(predictions)
@@ -441,11 +494,10 @@ async def predict(request: PredictionRequest, background_tasks: BackgroundTasks)
             prediction_counter.labels(
                 model_name=request.model_name,
                 version=request.model_version,
-                status="success"
+                status="success",
             ).inc()
             prediction_latency.labels(
-                model_name=request.model_name,
-                version=request.model_version
+                model_name=request.model_name, version=request.model_version
             ).observe(latency)
 
             # Log prediction
@@ -456,7 +508,7 @@ async def predict(request: PredictionRequest, background_tasks: BackgroundTasks)
                 version=request.model_version,
                 latency=latency,
                 input_shape=data_array.shape,
-                output_shape=len(predictions_list)
+                output_shape=len(predictions_list),
             )
 
             return PredictionResponse(
@@ -467,22 +519,25 @@ async def predict(request: PredictionRequest, background_tasks: BackgroundTasks)
                 timestamp=datetime.utcnow().isoformat(),
                 latency_ms=latency * 1000,
                 cached=False,
-                metadata=model_manager.get_model_info(request.model_name, request.model_version)
+                metadata=model_manager.get_model_info(
+                    request.model_name, request.model_version
+                ),
             )
 
         except Exception as e:
             prediction_counter.labels(
                 model_name=request.model_name,
                 version=request.model_version,
-                status="error"
+                status="error",
             ).inc()
             logger.error(
                 "Prediction failed",
                 request_id=request_id,
                 model=request.model_name,
-                error=str(e)
+                error=str(e),
             )
             raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
 
 @app.post("/batch_predict")
 async def batch_predict(requests: List[PredictionRequest]):
@@ -493,14 +548,12 @@ async def batch_predict(requests: List[PredictionRequest]):
     responses = []
     for i, result in enumerate(results):
         if isinstance(result, Exception):
-            responses.append({
-                "error": str(result),
-                "request_index": i
-            })
+            responses.append({"error": str(result), "request_index": i})
         else:
             responses.append(result)
 
     return responses
+
 
 @app.get("/models", response_model=List[ModelInfo])
 async def list_models():
@@ -510,18 +563,21 @@ async def list_models():
         for version, model in versions.items():
             model_key = f"{model_name}:{version}"
             metadata = model_manager.model_metadata.get(model_key, {})
-            models_info.append(ModelInfo(
-                name=model_name,
-                version=version,
-                framework=metadata.get("framework", "unknown"),
-                loaded_at=metadata.get("loaded_at", ""),
-                metrics={
-                    "predictions_total": 0,  # Would need to track per model
-                    "avg_latency_ms": 0
-                },
-                status="active"
-            ))
+            models_info.append(
+                ModelInfo(
+                    name=model_name,
+                    version=version,
+                    framework=metadata.get("framework", "unknown"),
+                    loaded_at=metadata.get("loaded_at", ""),
+                    metrics={
+                        "predictions_total": 0,  # Would need to track per model
+                        "avg_latency_ms": 0,
+                    },
+                    status="active",
+                )
+            )
     return models_info
+
 
 @app.post("/models/{model_name}/load")
 async def load_model(model_name: str, version: str = "latest"):
@@ -532,10 +588,14 @@ async def load_model(model_name: str, version: str = "latest"):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.delete("/models/{model_name}/{version}")
 async def unload_model(model_name: str, version: str):
     """Unload a specific model version"""
-    if model_name in model_manager.models and version in model_manager.models[model_name]:
+    if (
+        model_name in model_manager.models
+        and version in model_manager.models[model_name]
+    ):
         del model_manager.models[model_name][version]
         if not model_manager.models[model_name]:
             del model_manager.models[model_name]
@@ -543,12 +603,13 @@ async def unload_model(model_name: str, version: str):
         return {"message": f"Model {model_name}:{version} unloaded successfully"}
     raise HTTPException(status_code=404, detail="Model not found")
 
+
 @app.post("/feedback")
 async def submit_feedback(
     request_id: str,
     actual_value: Union[float, int, str],
     model_name: str,
-    model_version: str
+    model_version: str,
 ):
     """Submit feedback for model predictions"""
     # Store feedback for model retraining
@@ -557,24 +618,18 @@ async def submit_feedback(
         "actual_value": actual_value,
         "model_name": model_name,
         "model_version": model_version,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
 
     # Store in Redis or database
     if model_manager.redis_client:
         model_manager.redis_client.lpush(
-            f"feedback:{model_name}:{model_version}",
-            json.dumps(feedback_data)
+            f"feedback:{model_name}:{model_version}", json.dumps(feedback_data)
         )
 
     logger.info("Feedback received", **feedback_data)
     return {"message": "Feedback recorded successfully"}
 
+
 if __name__ == "__main__":
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8000,
-        log_level="info",
-        access_log=True
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", access_log=True)

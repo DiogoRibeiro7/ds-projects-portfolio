@@ -225,7 +225,7 @@ class NotebookValidator:
             self.warnings.append(
                 {
                     "type": "missing_random_seeds",
-                    "message": f'Missing random seeds for: {", ".join(missing_seeds)}',
+                    "message": f"Missing random seeds for: {', '.join(missing_seeds)}",
                     "details": {"missing": missing_seeds, "found": seed_locations},
                 }
             )
@@ -571,7 +571,7 @@ class NotebookValidator:
             self.info.append(
                 {
                     "type": "minimal_documentation",
-                    "message": f'Notebook has only {markdown_stats["total_cells"]} markdown cells',
+                    "message": f"Notebook has only {markdown_stats['total_cells']} markdown cells",
                 }
             )
 

@@ -29,21 +29,32 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Metrics
-prediction_counter = Counter('model_predictions_total', 'Total predictions', ['model', 'version', 'status'])
-prediction_latency = Histogram('model_prediction_latency_seconds', 'Prediction latency',
-                              ['model', 'version'], buckets=[.01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10])
-model_accuracy = Gauge('model_accuracy', 'Model accuracy', ['model', 'version'])
-data_drift_score = Gauge('data_drift_score', 'Data drift score', ['model', 'feature'])
-model_health = Gauge('model_health_status', 'Model health status', ['model', 'version'])
-deployment_status = Gauge('deployment_status', 'Deployment status', ['model', 'version', 'environment'])
-cache_hits = Counter('cache_hits_total', 'Cache hit count', ['model'])
-cache_misses = Counter('cache_misses_total', 'Cache miss count', ['model'])
-error_counter = Counter('model_errors_total', 'Model errors', ['model', 'version', 'error_type'])
+prediction_counter = Counter(
+    "model_predictions_total", "Total predictions", ["model", "version", "status"]
+)
+prediction_latency = Histogram(
+    "model_prediction_latency_seconds",
+    "Prediction latency",
+    ["model", "version"],
+    buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
+)
+model_accuracy = Gauge("model_accuracy", "Model accuracy", ["model", "version"])
+data_drift_score = Gauge("data_drift_score", "Data drift score", ["model", "feature"])
+model_health = Gauge("model_health_status", "Model health status", ["model", "version"])
+deployment_status = Gauge(
+    "deployment_status", "Deployment status", ["model", "version", "environment"]
+)
+cache_hits = Counter("cache_hits_total", "Cache hit count", ["model"])
+cache_misses = Counter("cache_misses_total", "Cache miss count", ["model"])
+error_counter = Counter(
+    "model_errors_total", "Model errors", ["model", "version", "error_type"]
+)
 
 
 @dataclass
 class ModelDeploymentConfig:
     """Configuration for model deployment."""
+
     model_name: str
     model_version: str
     model_uri: str
@@ -99,14 +110,16 @@ class ModelDeploymentManager:
         self.monitor = ModelMonitor()
 
         # Initialize cache
-        self.cache = redis.Redis(host='redis', port=6379, db=0)
+        self.cache = redis.Redis(host="redis", port=6379, db=0)
 
         # MLflow client
         self.mlflow_client = mlflow.tracking.MlflowClient()
 
     def deploy_model(self, config: ModelDeploymentConfig) -> Dict[str, Any]:
         """Deploy model to Kubernetes."""
-        logger.info(f"Deploying model {config.model_name} version {config.model_version}")
+        logger.info(
+            f"Deploying model {config.model_name} version {config.model_version}"
+        )
 
         try:
             # Create namespace if not exists
@@ -166,17 +179,17 @@ class ModelDeploymentManager:
             deployment_status.labels(
                 model=config.model_name,
                 version=config.model_version,
-                environment=config.environment
+                environment=config.environment,
             ).set(1)
 
             return {
-                'status': 'success',
-                'configmap': configmap.metadata.name,
-                'deployment': deployment.metadata.name,
-                'service': service.metadata.name,
-                'ingress': ingress.metadata.name,
-                'endpoint': f"http://{ingress.spec.rules[0].host}/predict",
-                'monitoring_dashboard': f"http://grafana.monitoring/d/{config.model_name}"
+                "status": "success",
+                "configmap": configmap.metadata.name,
+                "deployment": deployment.metadata.name,
+                "service": service.metadata.name,
+                "ingress": ingress.metadata.name,
+                "endpoint": f"http://{ingress.spec.rules[0].host}/predict",
+                "monitoring_dashboard": f"http://grafana.monitoring/d/{config.model_name}",
             }
 
         except Exception as e:
@@ -184,7 +197,7 @@ class ModelDeploymentManager:
             deployment_status.labels(
                 model=config.model_name,
                 version=config.model_version,
-                environment=config.environment
+                environment=config.environment,
             ).set(0)
             raise
 
@@ -194,46 +207,42 @@ class ModelDeploymentManager:
             self.v1.read_namespace(namespace)
         except client.exceptions.ApiException as e:
             if e.status == 404:
-                body = client.V1Namespace(
-                    metadata=client.V1ObjectMeta(name=namespace)
-                )
+                body = client.V1Namespace(metadata=client.V1ObjectMeta(name=namespace))
                 self.v1.create_namespace(body)
 
     def _create_configmap(self, config: ModelDeploymentConfig):
         """Create ConfigMap for model configuration."""
         configmap_data = {
-            'model_name': config.model_name,
-            'model_version': config.model_version,
-            'model_uri': config.model_uri,
-            'model_type': config.model_type,
-            'environment': config.environment,
-            'cache_enabled': str(config.cache_enabled),
-            'cache_ttl': str(config.cache_ttl),
-            'monitoring_enabled': str(config.monitoring_enabled),
-            'custom_metrics': json.dumps(config.custom_metrics)
+            "model_name": config.model_name,
+            "model_version": config.model_version,
+            "model_uri": config.model_uri,
+            "model_type": config.model_type,
+            "environment": config.environment,
+            "cache_enabled": str(config.cache_enabled),
+            "cache_ttl": str(config.cache_ttl),
+            "monitoring_enabled": str(config.monitoring_enabled),
+            "custom_metrics": json.dumps(config.custom_metrics),
         }
 
         configmap = client.V1ConfigMap(
             api_version="v1",
             kind="ConfigMap",
             metadata=client.V1ObjectMeta(
-                name=f"{config.model_name}-config",
-                namespace=config.namespace
+                name=f"{config.model_name}-config", namespace=config.namespace
             ),
-            data=configmap_data
+            data=configmap_data,
         )
 
         try:
             return self.v1.create_namespaced_config_map(
-                namespace=config.namespace,
-                body=configmap
+                namespace=config.namespace, body=configmap
             )
         except client.exceptions.ApiException as e:
             if e.status == 409:  # Already exists
                 return self.v1.patch_namespaced_config_map(
                     name=f"{config.model_name}-config",
                     namespace=config.namespace,
-                    body=configmap
+                    body=configmap,
                 )
             raise
 
@@ -249,16 +258,14 @@ class ModelDeploymentManager:
                 api_version="v1",
                 kind="Secret",
                 metadata=client.V1ObjectMeta(
-                    name=secret_name,
-                    namespace=config.namespace
+                    name=secret_name, namespace=config.namespace
                 ),
-                data={k: v.encode('utf-8') for k, v in secret_data.items()}
+                data={k: v.encode("utf-8") for k, v in secret_data.items()},
             )
 
             try:
                 self.v1.create_namespaced_secret(
-                    namespace=config.namespace,
-                    body=secret
+                    namespace=config.namespace, body=secret
                 )
                 created_secrets.append(secret_name)
             except client.exceptions.ApiException as e:
@@ -273,28 +280,23 @@ class ModelDeploymentManager:
             api_version="v1",
             kind="PersistentVolumeClaim",
             metadata=client.V1ObjectMeta(
-                name=f"{config.model_name}-pvc",
-                namespace=config.namespace
+                name=f"{config.model_name}-pvc", namespace=config.namespace
             ),
             spec=client.V1PersistentVolumeClaimSpec(
                 access_modes=["ReadWriteOnce"],
-                resources=client.V1ResourceRequirements(
-                    requests={"storage": "10Gi"}
-                ),
-                storage_class_name="standard"
-            )
+                resources=client.V1ResourceRequirements(requests={"storage": "10Gi"}),
+                storage_class_name="standard",
+            ),
         )
 
         try:
             return self.v1.create_namespaced_persistent_volume_claim(
-                namespace=config.namespace,
-                body=pvc
+                namespace=config.namespace, body=pvc
             )
         except client.exceptions.ApiException as e:
             if e.status == 409:  # Already exists
                 return self.v1.read_namespaced_persistent_volume_claim(
-                    name=f"{config.model_name}-pvc",
-                    namespace=config.namespace
+                    name=f"{config.model_name}-pvc", namespace=config.namespace
                 )
             raise
 
@@ -327,14 +329,16 @@ class ModelDeploymentManager:
             path=str(build_context),
             tag=full_image_name,
             buildargs={
-                'MODEL_NAME': config.model_name,
-                'MODEL_VERSION': config.model_version,
-                'MODEL_URI': config.model_uri
-            }
+                "MODEL_NAME": config.model_name,
+                "MODEL_VERSION": config.model_version,
+                "MODEL_URI": config.model_uri,
+            },
         )
 
         # Push to registry
-        for line in docker_client.images.push(full_image_name, stream=True, decode=True):
+        for line in docker_client.images.push(
+            full_image_name, stream=True, decode=True
+        ):
             logger.debug(line)
 
         return full_image_name
@@ -342,11 +346,11 @@ class ModelDeploymentManager:
     def _generate_dockerfile(self, config: ModelDeploymentConfig) -> str:
         """Generate Dockerfile for model serving."""
         base_image = {
-            'sklearn': 'python:3.9-slim',
-            'tensorflow': 'tensorflow/serving:latest',
-            'pytorch': 'pytorch/pytorch:latest',
-            'xgboost': 'python:3.9-slim'
-        }.get(config.model_type, 'python:3.9-slim')
+            "sklearn": "python:3.9-slim",
+            "tensorflow": "tensorflow/serving:latest",
+            "pytorch": "pytorch/pytorch:latest",
+            "xgboost": "python:3.9-slim",
+        }.get(config.model_type, "python:3.9-slim")
 
         dockerfile = f"""
 FROM {base_image}
@@ -388,7 +392,7 @@ CMD ["python", "model_server.py"]
             image_pull_policy="Always",
             ports=[
                 client.V1ContainerPort(container_port=8080, name="http"),
-                client.V1ContainerPort(container_port=9090, name="metrics")
+                client.V1ContainerPort(container_port=9090, name="metrics"),
             ],
             env=self._create_env_vars(config),
             env_from=[
@@ -399,41 +403,26 @@ CMD ["python", "model_server.py"]
                 )
             ],
             resources=client.V1ResourceRequirements(
-                requests={
-                    "cpu": config.cpu_request,
-                    "memory": config.memory_request
-                },
-                limits={
-                    "cpu": config.cpu_limit,
-                    "memory": config.memory_limit
-                }
+                requests={"cpu": config.cpu_request, "memory": config.memory_request},
+                limits={"cpu": config.cpu_limit, "memory": config.memory_limit},
             ),
             volume_mounts=[
-                client.V1VolumeMount(
-                    name="model-storage",
-                    mount_path="/app/model"
-                )
+                client.V1VolumeMount(name="model-storage", mount_path="/app/model")
             ],
             liveness_probe=client.V1Probe(
-                http_get=client.V1HTTPGetAction(
-                    path="/health",
-                    port=8080
-                ),
+                http_get=client.V1HTTPGetAction(path="/health", port=8080),
                 initial_delay_seconds=30,
                 period_seconds=config.health_check_interval,
                 timeout_seconds=5,
-                failure_threshold=3
+                failure_threshold=3,
             ),
             readiness_probe=client.V1Probe(
-                http_get=client.V1HTTPGetAction(
-                    path="/ready",
-                    port=8080
-                ),
+                http_get=client.V1HTTPGetAction(path="/ready", port=8080),
                 initial_delay_seconds=5,
                 period_seconds=10,
                 timeout_seconds=5,
-                failure_threshold=3
-            )
+                failure_threshold=3,
+            ),
         )
 
         # Add GPU resources if enabled
@@ -446,13 +435,13 @@ CMD ["python", "model_server.py"]
                 labels={
                     "app": config.model_name,
                     "version": config.model_version,
-                    "environment": config.environment
+                    "environment": config.environment,
                 },
                 annotations={
                     "prometheus.io/scrape": "true",
                     "prometheus.io/port": "9090",
-                    "prometheus.io/path": "/metrics"
-                }
+                    "prometheus.io/path": "/metrics",
+                },
             ),
             spec=client.V1PodSpec(
                 containers=[container],
@@ -461,35 +450,37 @@ CMD ["python", "model_server.py"]
                         name="model-storage",
                         persistent_volume_claim=client.V1PersistentVolumeClaimVolumeSource(
                             claim_name=f"{config.model_name}-pvc"
-                        )
+                        ),
                     )
                 ],
                 image_pull_secrets=[
                     client.V1LocalObjectReference(name="registry-credentials")
-                ] if config.environment == "production" else None,
-                affinity=self._create_affinity(config) if config.environment == "production" else None,
-                tolerations=self._create_tolerations(config) if config.gpu_enabled else None
-            )
+                ]
+                if config.environment == "production"
+                else None,
+                affinity=self._create_affinity(config)
+                if config.environment == "production"
+                else None,
+                tolerations=self._create_tolerations(config)
+                if config.gpu_enabled
+                else None,
+            ),
         )
 
         # Deployment spec
         spec = client.V1DeploymentSpec(
             replicas=config.replicas,
             selector=client.V1LabelSelector(
-                match_labels={
-                    "app": config.model_name,
-                    "version": config.model_version
-                }
+                match_labels={"app": config.model_name, "version": config.model_version}
             ),
             template=template,
             strategy=client.V1DeploymentStrategy(
                 type="RollingUpdate",
                 rolling_update=client.V1RollingUpdateDeployment(
-                    max_unavailable="25%",
-                    max_surge="25%"
-                )
+                    max_unavailable="25%", max_surge="25%"
+                ),
             ),
-            revision_history_limit=5
+            revision_history_limit=5,
         )
 
         # Create deployment
@@ -499,25 +490,21 @@ CMD ["python", "model_server.py"]
             metadata=client.V1ObjectMeta(
                 name=f"{config.model_name}-deployment",
                 namespace=config.namespace,
-                labels={
-                    "app": config.model_name,
-                    "version": config.model_version
-                }
+                labels={"app": config.model_name, "version": config.model_version},
             ),
-            spec=spec
+            spec=spec,
         )
 
         try:
             return self.apps_v1.create_namespaced_deployment(
-                namespace=config.namespace,
-                body=deployment
+                namespace=config.namespace, body=deployment
             )
         except client.exceptions.ApiException as e:
             if e.status == 409:  # Already exists
                 return self.apps_v1.patch_namespaced_deployment(
                     name=f"{config.model_name}-deployment",
                     namespace=config.namespace,
-                    body=deployment
+                    body=deployment,
                 )
             raise
 
@@ -525,7 +512,9 @@ CMD ["python", "model_server.py"]
         """Create canary deployment."""
         # Create main deployment with reduced replicas
         main_config = config
-        main_config.replicas = int(config.replicas * (100 - config.canary_percentage) / 100)
+        main_config.replicas = int(
+            config.replicas * (100 - config.canary_percentage) / 100
+        )
         main_deployment = self._create_deployment(main_config, image_uri)
 
         # Create canary deployment
@@ -544,43 +533,32 @@ CMD ["python", "model_server.py"]
             metadata=client.V1ObjectMeta(
                 name=f"{config.model_name}-service",
                 namespace=config.namespace,
-                labels={
-                    "app": config.model_name
-                }
+                labels={"app": config.model_name},
             ),
             spec=client.V1ServiceSpec(
-                selector={
-                    "app": config.model_name
-                },
+                selector={"app": config.model_name},
                 ports=[
                     client.V1ServicePort(
-                        name="http",
-                        port=80,
-                        target_port=8080,
-                        protocol="TCP"
+                        name="http", port=80, target_port=8080, protocol="TCP"
                     ),
                     client.V1ServicePort(
-                        name="metrics",
-                        port=9090,
-                        target_port=9090,
-                        protocol="TCP"
-                    )
+                        name="metrics", port=9090, target_port=9090, protocol="TCP"
+                    ),
                 ],
-                type="ClusterIP"
-            )
+                type="ClusterIP",
+            ),
         )
 
         try:
             return self.v1.create_namespaced_service(
-                namespace=config.namespace,
-                body=service
+                namespace=config.namespace, body=service
             )
         except client.exceptions.ApiException as e:
             if e.status == 409:  # Already exists
                 return self.v1.patch_namespaced_service(
                     name=f"{config.model_name}-service",
                     namespace=config.namespace,
-                    body=service
+                    body=service,
                 )
             raise
 
@@ -596,14 +574,14 @@ CMD ["python", "model_server.py"]
                     "kubernetes.io/ingress.class": "nginx",
                     "cert-manager.io/cluster-issuer": "letsencrypt-prod",
                     "nginx.ingress.kubernetes.io/rate-limit": "100",
-                    "nginx.ingress.kubernetes.io/ssl-redirect": "true"
-                }
+                    "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+                },
             ),
             spec=client.V1IngressSpec(
                 tls=[
                     client.V1IngressTLS(
                         hosts=[f"{config.model_name}.ml.example.com"],
-                        secret_name=f"{config.model_name}-tls"
+                        secret_name=f"{config.model_name}-tls",
                     )
                 ],
                 rules=[
@@ -617,28 +595,27 @@ CMD ["python", "model_server.py"]
                                     backend=client.V1IngressBackend(
                                         service=client.V1IngressServiceBackend(
                                             name=f"{config.model_name}-service",
-                                            port=client.V1ServiceBackendPort(number=80)
+                                            port=client.V1ServiceBackendPort(number=80),
                                         )
-                                    )
+                                    ),
                                 )
                             ]
-                        )
+                        ),
                     )
-                ]
-            )
+                ],
+            ),
         )
 
         try:
             return self.networking_v1.create_namespaced_ingress(
-                namespace=config.namespace,
-                body=ingress
+                namespace=config.namespace, body=ingress
             )
         except client.exceptions.ApiException as e:
             if e.status == 409:  # Already exists
                 return self.networking_v1.patch_namespaced_ingress(
                     name=f"{config.model_name}-ingress",
                     namespace=config.namespace,
-                    body=ingress
+                    body=ingress,
                 )
             raise
 
@@ -648,32 +625,30 @@ CMD ["python", "model_server.py"]
             api_version="autoscaling/v1",
             kind="HorizontalPodAutoscaler",
             metadata=client.V1ObjectMeta(
-                name=f"{config.model_name}-hpa",
-                namespace=config.namespace
+                name=f"{config.model_name}-hpa", namespace=config.namespace
             ),
             spec=client.V1HorizontalPodAutoscalerSpec(
                 scale_target_ref=client.V1CrossVersionObjectReference(
                     api_version="apps/v1",
                     kind="Deployment",
-                    name=f"{config.model_name}-deployment"
+                    name=f"{config.model_name}-deployment",
                 ),
                 min_replicas=config.min_replicas,
                 max_replicas=config.max_replicas,
-                target_cpu_utilization_percentage=config.target_cpu_utilization
-            )
+                target_cpu_utilization_percentage=config.target_cpu_utilization,
+            ),
         )
 
         try:
             return self.autoscaling_v1.create_namespaced_horizontal_pod_autoscaler(
-                namespace=config.namespace,
-                body=hpa
+                namespace=config.namespace, body=hpa
             )
         except client.exceptions.ApiException as e:
             if e.status == 409:  # Already exists
                 return self.autoscaling_v1.patch_namespaced_horizontal_pod_autoscaler(
                     name=f"{config.model_name}-hpa",
                     namespace=config.namespace,
-                    body=hpa
+                    body=hpa,
                 )
             raise
 
@@ -687,19 +662,23 @@ CMD ["python", "model_server.py"]
             client.V1EnvVar(name="ENVIRONMENT", value=config.environment),
             client.V1EnvVar(name="CACHE_ENABLED", value=str(config.cache_enabled)),
             client.V1EnvVar(name="CACHE_TTL", value=str(config.cache_ttl)),
-            client.V1EnvVar(name="MONITORING_ENABLED", value=str(config.monitoring_enabled)),
+            client.V1EnvVar(
+                name="MONITORING_ENABLED", value=str(config.monitoring_enabled)
+            ),
             client.V1EnvVar(
                 name="POD_NAME",
                 value_from=client.V1EnvVarSource(
                     field_ref=client.V1ObjectFieldSelector(field_path="metadata.name")
-                )
+                ),
             ),
             client.V1EnvVar(
                 name="POD_NAMESPACE",
                 value_from=client.V1EnvVarSource(
-                    field_ref=client.V1ObjectFieldSelector(field_path="metadata.namespace")
-                )
-            )
+                    field_ref=client.V1ObjectFieldSelector(
+                        field_path="metadata.namespace"
+                    )
+                ),
+            ),
         ]
 
         # Add custom environment variables
@@ -717,12 +696,10 @@ CMD ["python", "model_server.py"]
                         weight=100,
                         pod_affinity_term=client.V1PodAffinityTerm(
                             label_selector=client.V1LabelSelector(
-                                match_labels={
-                                    "app": config.model_name
-                                }
+                                match_labels={"app": config.model_name}
                             ),
-                            topology_key="kubernetes.io/hostname"
-                        )
+                            topology_key="kubernetes.io/hostname",
+                        ),
                     )
                 ]
             )
@@ -732,9 +709,7 @@ CMD ["python", "model_server.py"]
         """Create GPU tolerations."""
         return [
             client.V1Toleration(
-                key="nvidia.com/gpu",
-                operator="Exists",
-                effect="NoSchedule"
+                key="nvidia.com/gpu", operator="Exists", effect="NoSchedule"
             )
         ]
 
@@ -746,20 +721,14 @@ CMD ["python", "model_server.py"]
             "kind": "ServiceMonitor",
             "metadata": {
                 "name": f"{config.model_name}-monitor",
-                "namespace": config.namespace
+                "namespace": config.namespace,
             },
             "spec": {
-                "selector": {
-                    "matchLabels": {
-                        "app": config.model_name
-                    }
-                },
-                "endpoints": [{
-                    "port": "metrics",
-                    "interval": "30s",
-                    "path": "/metrics"
-                }]
-            }
+                "selector": {"matchLabels": {"app": config.model_name}},
+                "endpoints": [
+                    {"port": "metrics", "interval": "30s", "path": "/metrics"}
+                ],
+            },
         }
 
         # Create Grafana dashboard
@@ -769,9 +738,9 @@ CMD ["python", "model_server.py"]
         alerts = self._create_alerts(config)
 
         return {
-            'service_monitor': service_monitor,
-            'dashboard': dashboard,
-            'alerts': alerts
+            "service_monitor": service_monitor,
+            "dashboard": dashboard,
+            "alerts": alerts,
         }
 
     def _create_grafana_dashboard(self, config: ModelDeploymentConfig) -> Dict:
@@ -783,39 +752,45 @@ CMD ["python", "model_server.py"]
                     {
                         "title": "Prediction Rate",
                         "type": "graph",
-                        "targets": [{
-                            "expr": f'rate(model_predictions_total{{model="{config.model_name}"}}[5m])'
-                        }]
+                        "targets": [
+                            {
+                                "expr": f'rate(model_predictions_total{{model="{config.model_name}"}}[5m])'
+                            }
+                        ],
                     },
                     {
                         "title": "Prediction Latency",
                         "type": "graph",
-                        "targets": [{
-                            "expr": f'histogram_quantile(0.95, model_prediction_latency_seconds{{model="{config.model_name}"}})'
-                        }]
+                        "targets": [
+                            {
+                                "expr": f'histogram_quantile(0.95, model_prediction_latency_seconds{{model="{config.model_name}"}})'
+                            }
+                        ],
                     },
                     {
                         "title": "Model Accuracy",
                         "type": "graph",
-                        "targets": [{
-                            "expr": f'model_accuracy{{model="{config.model_name}"}}'
-                        }]
+                        "targets": [
+                            {"expr": f'model_accuracy{{model="{config.model_name}"}}'}
+                        ],
                     },
                     {
                         "title": "Data Drift Score",
                         "type": "graph",
-                        "targets": [{
-                            "expr": f'data_drift_score{{model="{config.model_name}"}}'
-                        }]
+                        "targets": [
+                            {"expr": f'data_drift_score{{model="{config.model_name}"}}'}
+                        ],
                     },
                     {
                         "title": "Error Rate",
                         "type": "graph",
-                        "targets": [{
-                            "expr": f'rate(model_errors_total{{model="{config.model_name}"}}[5m])'
-                        }]
-                    }
-                ]
+                        "targets": [
+                            {
+                                "expr": f'rate(model_errors_total{{model="{config.model_name}"}}[5m])'
+                            }
+                        ],
+                    },
+                ],
             }
         }
 
@@ -831,55 +806,48 @@ CMD ["python", "model_server.py"]
                 "alert": f"{config.model_name}_HighErrorRate",
                 "expr": f'rate(model_errors_total{{model="{config.model_name}"}}[5m]) > 0.01',
                 "for": "5m",
-                "labels": {
-                    "severity": "warning",
-                    "model": config.model_name
-                },
+                "labels": {"severity": "warning", "model": config.model_name},
                 "annotations": {
                     "summary": f"High error rate for {config.model_name}",
-                    "description": "Error rate is above 1% for 5 minutes"
-                }
+                    "description": "Error rate is above 1% for 5 minutes",
+                },
             },
             {
                 "alert": f"{config.model_name}_HighLatency",
                 "expr": f'histogram_quantile(0.95, model_prediction_latency_seconds{{model="{config.model_name}"}}) > 1',
                 "for": "5m",
-                "labels": {
-                    "severity": "warning",
-                    "model": config.model_name
-                },
+                "labels": {"severity": "warning", "model": config.model_name},
                 "annotations": {
                     "summary": f"High latency for {config.model_name}",
-                    "description": "95th percentile latency is above 1 second"
-                }
+                    "description": "95th percentile latency is above 1 second",
+                },
             },
             {
                 "alert": f"{config.model_name}_DataDrift",
                 "expr": f'data_drift_score{{model="{config.model_name}"}} > 0.1',
                 "for": "10m",
-                "labels": {
-                    "severity": "critical",
-                    "model": config.model_name
-                },
+                "labels": {"severity": "critical", "model": config.model_name},
                 "annotations": {
                     "summary": f"Data drift detected for {config.model_name}",
-                    "description": "Significant data drift detected, consider retraining"
-                }
-            }
+                    "description": "Significant data drift detected, consider retraining",
+                },
+            },
         ]
 
         return alerts
 
-    def _wait_for_deployment(self, config: ModelDeploymentConfig, timeout: int = 300) -> bool:
+    def _wait_for_deployment(
+        self, config: ModelDeploymentConfig, timeout: int = 300
+    ) -> bool:
         """Wait for deployment to be ready."""
         import time
+
         start_time = time.time()
 
         while time.time() - start_time < timeout:
             try:
                 deployment = self.apps_v1.read_namespaced_deployment(
-                    name=f"{config.model_name}-deployment",
-                    namespace=config.namespace
+                    name=f"{config.model_name}-deployment", namespace=config.namespace
                 )
 
                 if deployment.status.ready_replicas == config.replicas:
@@ -891,34 +859,37 @@ CMD ["python", "model_server.py"]
 
             time.sleep(10)
 
-        logger.warning(f"Deployment {config.model_name} not ready after {timeout} seconds")
+        logger.warning(
+            f"Deployment {config.model_name} not ready after {timeout} seconds"
+        )
         return False
 
-    def rollback_deployment(self, config: ModelDeploymentConfig, revision: Optional[int] = None):
+    def rollback_deployment(
+        self, config: ModelDeploymentConfig, revision: Optional[int] = None
+    ):
         """Rollback deployment to previous version."""
         try:
             if revision is None:
                 # Get previous revision
                 deployment = self.apps_v1.read_namespaced_deployment(
-                    name=f"{config.model_name}-deployment",
-                    namespace=config.namespace
+                    name=f"{config.model_name}-deployment", namespace=config.namespace
                 )
-                revision = deployment.metadata.annotations.get('deployment.kubernetes.io/revision', '1')
+                revision = deployment.metadata.annotations.get(
+                    "deployment.kubernetes.io/revision", "1"
+                )
                 revision = str(int(revision) - 1)
 
             # Rollback using kubectl equivalent
             body = {
-                'name': f"{config.model_name}-deployment",
-                'rollout': {
-                    'revision': revision
-                }
+                "name": f"{config.model_name}-deployment",
+                "rollout": {"revision": revision},
             }
 
             # Patch deployment to trigger rollback
             self.apps_v1.patch_namespaced_deployment(
                 name=f"{config.model_name}-deployment",
                 namespace=config.namespace,
-                body=deployment
+                body=deployment,
             )
 
             logger.info(f"Rolled back {config.model_name} to revision {revision}")
@@ -930,16 +901,18 @@ CMD ["python", "model_server.py"]
     def _fetch_secret_from_vault(self, secret_name: str) -> Dict[str, str]:
         """Fetch secret from HashiCorp Vault or AWS Secrets Manager."""
         # Example for AWS Secrets Manager
-        client = boto3.client('secretsmanager')
+        client = boto3.client("secretsmanager")
 
         try:
             response = client.get_secret_value(SecretId=secret_name)
-            return json.loads(response['SecretString'])
+            return json.loads(response["SecretString"])
         except Exception as e:
             logger.error(f"Failed to fetch secret {secret_name}: {e}")
             return {}
 
-    def _prepare_model_serving_code(self, config: ModelDeploymentConfig, build_context: Path):
+    def _prepare_model_serving_code(
+        self, config: ModelDeploymentConfig, build_context: Path
+    ):
         """Prepare model serving code for Docker build."""
         # Create requirements.txt
         requirements = [
@@ -951,14 +924,14 @@ CMD ["python", "model_server.py"]
             "numpy==1.21.0",
             "pandas==1.3.0",
             "scikit-learn==0.24.2",
-            "pydantic==1.8.2"
+            "pydantic==1.8.2",
         ]
 
-        if config.model_type == 'tensorflow':
+        if config.model_type == "tensorflow":
             requirements.append("tensorflow==2.6.0")
-        elif config.model_type == 'pytorch':
+        elif config.model_type == "pytorch":
             requirements.append("torch==1.9.0")
-        elif config.model_type == 'xgboost':
+        elif config.model_type == "xgboost":
             requirements.append("xgboost==1.4.0")
 
         with open(build_context / "requirements.txt", "w") as f:
@@ -1031,62 +1004,61 @@ class ModelMonitor:
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.redis_client = redis.Redis(host='redis', port=6379, db=1)
+        self.redis_client = redis.Redis(host="redis", port=6379, db=1)
 
-    async def monitor_predictions(self, model_name: str, model_version: str,
-                                  X: pd.DataFrame, y_true: np.ndarray,
-                                  y_pred: np.ndarray):
+    async def monitor_predictions(
+        self,
+        model_name: str,
+        model_version: str,
+        X: pd.DataFrame,
+        y_true: np.ndarray,
+        y_pred: np.ndarray,
+    ):
         """Monitor predictions and update metrics."""
         try:
             # Update counters
             prediction_counter.labels(
-                model=model_name,
-                version=model_version,
-                status='success'
+                model=model_name, version=model_version, status="success"
             ).inc(len(y_pred))
 
             # Calculate and update accuracy
             accuracy = (y_true == y_pred).mean()
-            model_accuracy.labels(
-                model=model_name,
-                version=model_version
-            ).set(accuracy)
+            model_accuracy.labels(model=model_name, version=model_version).set(accuracy)
 
             # Check for data drift
             drift_scores = await self._calculate_drift(model_name, X)
             for feature, score in drift_scores.items():
-                data_drift_score.labels(
-                    model=model_name,
-                    feature=feature
-                ).set(score)
+                data_drift_score.labels(model=model_name, feature=feature).set(score)
 
             # Store metrics in Redis for historical tracking
             timestamp = datetime.now().isoformat()
             metrics_data = {
-                'timestamp': timestamp,
-                'accuracy': accuracy,
-                'drift_scores': drift_scores,
-                'n_predictions': len(y_pred)
+                "timestamp": timestamp,
+                "accuracy": accuracy,
+                "drift_scores": drift_scores,
+                "n_predictions": len(y_pred),
             }
 
             self.redis_client.zadd(
                 f"metrics:{model_name}:{model_version}",
-                {json.dumps(metrics_data): datetime.now().timestamp()}
+                {json.dumps(metrics_data): datetime.now().timestamp()},
             )
 
             # Check if retraining is needed
             if accuracy < 0.8 or any(score > 0.15 for score in drift_scores.values()):
-                await self._trigger_retraining(model_name, model_version, accuracy, drift_scores)
+                await self._trigger_retraining(
+                    model_name, model_version, accuracy, drift_scores
+                )
 
         except Exception as e:
             self.logger.error(f"Error monitoring predictions: {e}")
             error_counter.labels(
-                model=model_name,
-                version=model_version,
-                error_type='monitoring'
+                model=model_name, version=model_version, error_type="monitoring"
             ).inc()
 
-    async def _calculate_drift(self, model_name: str, X: pd.DataFrame) -> Dict[str, float]:
+    async def _calculate_drift(
+        self, model_name: str, X: pd.DataFrame
+    ) -> Dict[str, float]:
         """Calculate data drift using various methods."""
         drift_scores = {}
 
@@ -1099,10 +1071,10 @@ class ModelMonitor:
             reference_stats = {}
             for column in X.columns:
                 reference_stats[column] = {
-                    'mean': float(X[column].mean()),
-                    'std': float(X[column].std()),
-                    'min': float(X[column].min()),
-                    'max': float(X[column].max())
+                    "mean": float(X[column].mean()),
+                    "std": float(X[column].std()),
+                    "min": float(X[column].min()),
+                    "max": float(X[column].max()),
                 }
             self.redis_client.set(reference_key, json.dumps(reference_stats))
             return {col: 0.0 for col in X.columns}
@@ -1114,16 +1086,15 @@ class ModelMonitor:
                 continue
 
             current_stats = {
-                'mean': float(X[column].mean()),
-                'std': float(X[column].std()),
-                'min': float(X[column].min()),
-                'max': float(X[column].max())
+                "mean": float(X[column].mean()),
+                "std": float(X[column].std()),
+                "min": float(X[column].min()),
+                "max": float(X[column].max()),
             }
 
             # Calculate drift score (simplified KL divergence)
             drift_score = self._calculate_kl_divergence(
-                reference_stats[column],
-                current_stats
+                reference_stats[column], current_stats
             )
 
             drift_scores[column] = drift_score
@@ -1133,50 +1104,66 @@ class ModelMonitor:
     def _calculate_kl_divergence(self, ref_stats: Dict, curr_stats: Dict) -> float:
         """Calculate simplified KL divergence between distributions."""
         # Simplified calculation using normal approximation
-        ref_mean = ref_stats['mean']
-        ref_std = max(ref_stats['std'], 0.001)
-        curr_mean = curr_stats['mean']
-        curr_std = max(curr_stats['std'], 0.001)
+        ref_mean = ref_stats["mean"]
+        ref_std = max(ref_stats["std"], 0.001)
+        curr_mean = curr_stats["mean"]
+        curr_std = max(curr_stats["std"], 0.001)
 
         # KL divergence for normal distributions
-        kl = np.log(curr_std / ref_std) + (ref_std**2 + (ref_mean - curr_mean)**2) / (2 * curr_std**2) - 0.5
+        kl = (
+            np.log(curr_std / ref_std)
+            + (ref_std**2 + (ref_mean - curr_mean) ** 2) / (2 * curr_std**2)
+            - 0.5
+        )
 
         return float(kl)
 
-    async def _trigger_retraining(self, model_name: str, model_version: str,
-                                  accuracy: float, drift_scores: Dict[str, float]):
+    async def _trigger_retraining(
+        self,
+        model_name: str,
+        model_version: str,
+        accuracy: float,
+        drift_scores: Dict[str, float],
+    ):
         """Trigger model retraining pipeline."""
         self.logger.warning(f"Triggering retraining for {model_name} v{model_version}")
-        self.logger.warning(f"Reason: Accuracy={accuracy:.3f}, Max drift={max(drift_scores.values()):.3f}")
+        self.logger.warning(
+            f"Reason: Accuracy={accuracy:.3f}, Max drift={max(drift_scores.values()):.3f}"
+        )
 
         # Trigger Airflow DAG
         async with aiohttp.ClientSession() as session:
             payload = {
-                'conf': {
-                    'model_name': model_name,
-                    'model_version': model_version,
-                    'trigger_reason': 'performance_degradation',
-                    'accuracy': accuracy,
-                    'drift_scores': drift_scores
+                "conf": {
+                    "model_name": model_name,
+                    "model_version": model_version,
+                    "trigger_reason": "performance_degradation",
+                    "accuracy": accuracy,
+                    "drift_scores": drift_scores,
                 }
             }
 
             try:
                 async with session.post(
-                    'http://airflow-webserver:8080/api/v1/dags/retrain_model/dagRuns',
+                    "http://airflow-webserver:8080/api/v1/dags/retrain_model/dagRuns",
                     json=payload,
-                    headers={'Content-Type': 'application/json'}
+                    headers={"Content-Type": "application/json"},
                 ) as response:
                     if response.status == 200:
-                        self.logger.info(f"Retraining triggered successfully for {model_name}")
+                        self.logger.info(
+                            f"Retraining triggered successfully for {model_name}"
+                        )
                     else:
-                        self.logger.error(f"Failed to trigger retraining: {response.status}")
+                        self.logger.error(
+                            f"Failed to trigger retraining: {response.status}"
+                        )
             except Exception as e:
                 self.logger.error(f"Error triggering retraining: {e}")
 
 
-def deploy_model_from_mlflow(model_name: str, model_version: str,
-                             environment: str = "staging") -> Dict:
+def deploy_model_from_mlflow(
+    model_name: str, model_version: str, environment: str = "staging"
+) -> Dict:
     """Deploy model from MLflow Model Registry."""
 
     # Get model URI from MLflow
@@ -1191,12 +1178,12 @@ def deploy_model_from_mlflow(model_name: str, model_version: str,
         model_name=model_name,
         model_version=model_version,
         model_uri=model_uri,
-        model_type=model_details.tags.get('model_type', 'sklearn'),
+        model_type=model_details.tags.get("model_type", "sklearn"),
         environment=environment,
         replicas=2 if environment == "staging" else 4,
         autoscaling=environment == "production",
         monitoring_enabled=True,
-        cache_enabled=True
+        cache_enabled=True,
     )
 
     # Deploy

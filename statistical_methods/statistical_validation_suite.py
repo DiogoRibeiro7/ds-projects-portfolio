@@ -122,7 +122,7 @@ class StatisticalValidator:
         print(f"Total tests: {len(results_df)}")
         print(f"Passed: {results_df['passed'].sum()}")
         print(f"Failed: {(~results_df['passed']).sum()}")
-        print(f"Pass rate: {results_df['passed'].mean()*100:.1f}%")
+        print(f"Pass rate: {results_df['passed'].mean() * 100:.1f}%")
 
         return results_df
 
@@ -147,7 +147,9 @@ class StatisticalValidator:
         our_stat_paired, our_p_paired = stats.ttest_rel(group1, group2)
         # Statsmodels doesn't have direct paired t-test, use scipy as reference
         self._add_result(
-            "Paired t-test (p-value)", our_p_paired, our_p_paired  # Self-validation
+            "Paired t-test (p-value)",
+            our_p_paired,
+            our_p_paired,  # Self-validation
         )
 
     def validate_proportion_tests(self):
@@ -697,7 +699,7 @@ def generate_validation_report():
         ["Total Tests", len(results_df)],
         ["Passed", results_df["passed"].sum()],
         ["Failed", (~results_df["passed"]).sum()],
-        ["Pass Rate", f"{results_df['passed'].mean()*100:.1f}%"],
+        ["Pass Rate", f"{results_df['passed'].mean() * 100:.1f}%"],
         ["Mean Rel Diff", f"{results_df['rel_diff'].mean():.4f}"],
         ["Max Rel Diff", f"{results_df['rel_diff'].max():.4f}"],
     ]

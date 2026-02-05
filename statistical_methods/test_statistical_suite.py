@@ -514,7 +514,7 @@ class TestStatisticalSuite:
         print(f"\nTotal Tests: {self.total_tests}")
         print(f"Passed: {self.passed_tests}")
         print(f"Failed: {self.total_tests - self.passed_tests}")
-        print(f"Pass Rate: {self.passed_tests/self.total_tests:.1%}")
+        print(f"Pass Rate: {self.passed_tests / self.total_tests:.1%}")
 
         if self.passed_tests < self.total_tests:
             print("\nFailed Tests:")
@@ -618,7 +618,7 @@ def run_demonstration():
     print("\n4. Business Decision:")
     print("   [OK] Strong evidence for treatment superiority")
     print(
-        f"   [OK] Expected additional revenue per visitor: ${(treatment_conversions/treatment_visitors * np.mean(treatment_revenue)) - (control_conversions/control_visitors * np.mean(control_revenue)):.2f}"
+        f"   [OK] Expected additional revenue per visitor: ${(treatment_conversions / treatment_visitors * np.mean(treatment_revenue)) - (control_conversions / control_visitors * np.mean(control_revenue)):.2f}"
     )
     print("   [OK] Recommend: Implement optimized checkout flow")
 

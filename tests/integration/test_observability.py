@@ -17,10 +17,11 @@ from src.utils.observability import (
     AlertManager,
     HealthChecker,
     PerformanceMonitor,
-    ErrorTracker
+    ErrorTracker,
 )
 
 pytestmark = pytest.mark.integration
+
 
 class TestLogger:
     """Test suite for logging functionality."""
@@ -28,57 +29,54 @@ class TestLogger:
     @pytest.fixture
     def logger(self):
         """Create logger instance."""
-        return Logger(
-            name="test_logger",
-            level=logging.INFO,
-            log_file="test.log"
-        )
+        return Logger(name="test_logger", level=logging.INFO, log_file="test.log")
 
     def test_log_levels(self, logger):
         """Test different log levels."""
-        with patch.object(logger._logger, 'debug') as mock_debug:
+        with patch.object(logger._logger, "debug") as mock_debug:
             logger.debug("Debug message")
             mock_debug.assert_called_once()
 
-        with patch.object(logger._logger, 'info') as mock_info:
+        with patch.object(logger._logger, "info") as mock_info:
             logger.info("Info message")
             mock_info.assert_called_once()
 
-        with patch.object(logger._logger, 'warning') as mock_warning:
+        with patch.object(logger._logger, "warning") as mock_warning:
             logger.warning("Warning message")
             mock_warning.assert_called_once()
 
-        with patch.object(logger._logger, 'error') as mock_error:
+        with patch.object(logger._logger, "error") as mock_error:
             logger.error("Error message")
             mock_error.assert_called_once()
 
     def test_structured_logging(self, logger):
         """Test structured logging with metadata."""
-        with patch.object(logger._logger, 'info') as mock_info:
-            logger.info("User action", extra={
-                'user_id': '123',
-                'action': 'login',
-                'ip_address': '192.168.1.1'
-            })
+        with patch.object(logger._logger, "info") as mock_info:
+            logger.info(
+                "User action",
+                extra={
+                    "user_id": "123",
+                    "action": "login",
+                    "ip_address": "192.168.1.1",
+                },
+            )
 
             call_args = mock_info.call_args
-            assert 'extra' in call_args.kwargs
-            assert call_args.kwargs['extra']['user_id'] == '123'
+            assert "extra" in call_args.kwargs
+            assert call_args.kwargs["extra"]["user_id"] == "123"
 
     def test_log_rotation(self, logger):
         """Test log file rotation."""
-        with patch('logging.handlers.RotatingFileHandler') as mock_handler:
+        with patch("logging.handlers.RotatingFileHandler") as mock_handler:
             rotating_logger = Logger(
                 name="rotating",
                 log_file="rotating.log",
-                max_bytes=1024*1024,  # 1MB
-                backup_count=5
+                max_bytes=1024 * 1024,  # 1MB
+                backup_count=5,
             )
 
             mock_handler.assert_called_with(
-                'rotating.log',
-                maxBytes=1024*1024,
-                backupCount=5
+                "rotating.log", maxBytes=1024 * 1024, backupCount=5
             )
 
     def test_json_logging(self):
@@ -87,23 +85,24 @@ class TestLogger:
 
         json_logger = JSONLogger("json_test")
 
-        with patch('sys.stdout.write') as mock_write:
-            json_logger.info("Test message", extra={'key': 'value'})
+        with patch("sys.stdout.write") as mock_write:
+            json_logger.info("Test message", extra={"key": "value"})
 
             # Verify JSON output
             call_args = mock_write.call_args
             log_entry = json.loads(call_args[0][0])
-            assert log_entry['message'] == "Test message"
-            assert log_entry['key'] == 'value'
+            assert log_entry["message"] == "Test message"
+            assert log_entry["key"] == "value"
 
     def test_context_logging(self, logger):
         """Test logging with context manager."""
-        with logger.context(request_id='req-123'):
-            with patch.object(logger._logger, 'info') as mock_info:
+        with logger.context(request_id="req-123"):
+            with patch.object(logger._logger, "info") as mock_info:
                 logger.info("Within context")
 
                 call_args = mock_info.call_args
-                assert 'request_id' in call_args.kwargs.get('extra', {})
+                assert "request_id" in call_args.kwargs.get("extra", {})
+
 
 class TestMetricsCollector:
     """Test suite for metrics collection."""
@@ -111,10 +110,7 @@ class TestMetricsCollector:
     @pytest.fixture
     def metrics(self):
         """Create metrics collector instance."""
-        return MetricsCollector(
-            namespace="test_app",
-            flush_interval=1
-        )
+        return MetricsCollector(namespace="test_app", flush_interval=1)
 
     def test_counter_metric(self, metrics):
         """Test counter metrics."""
@@ -123,9 +119,9 @@ class TestMetricsCollector:
         metrics.increment("api_calls", value=3, tags={"endpoint": "/posts"})
 
         stats = metrics.get_stats("api_calls")
-        assert stats['total'] == 5
-        assert stats['by_tags']['/users'] == 2
-        assert stats['by_tags']['/posts'] == 3
+        assert stats["total"] == 5
+        assert stats["by_tags"]["/users"] == 2
+        assert stats["by_tags"]["/posts"] == 3
 
     def test_gauge_metric(self, metrics):
         """Test gauge metrics."""
@@ -141,10 +137,10 @@ class TestMetricsCollector:
             metrics.histogram("response_time", np.random.normal(200, 50))
 
         stats = metrics.get_histogram_stats("response_time")
-        assert 'mean' in stats
-        assert 'median' in stats
-        assert 'p95' in stats
-        assert 'p99' in stats
+        assert "mean" in stats
+        assert "median" in stats
+        assert "p95" in stats
+        assert "p99" in stats
 
     def test_timer_metric(self, metrics):
         """Test timer metrics."""
@@ -152,7 +148,7 @@ class TestMetricsCollector:
             time.sleep(0.1)
 
         duration = metrics.get_timer_stats("operation_duration")
-        assert duration['last'] >= 0.1
+        assert duration["last"] >= 0.1
 
     def test_metric_aggregation(self, metrics):
         """Test metric aggregation over time windows."""
@@ -161,11 +157,7 @@ class TestMetricsCollector:
             metrics.increment("requests", timestamp=time.time() - i)
 
         # Get aggregated stats
-        aggregated = metrics.aggregate(
-            "requests",
-            window="1m",
-            aggregation="sum"
-        )
+        aggregated = metrics.aggregate("requests", window="1m", aggregation="sum")
 
         assert aggregated > 0
 
@@ -184,6 +176,7 @@ class TestMetricsCollector:
         p50 = metrics.get_percentile("latency", 50)
         p90 = metrics.get_percentile("latency", 90)
         assert p50 < p90
+
 
 class TestTracer:
     """Test suite for distributed tracing."""
@@ -255,6 +248,7 @@ class TestTracer:
         samples = [sampler_half.should_sample() for _ in range(1000)]
         assert 0.4 < sum(samples) / len(samples) < 0.6
 
+
 class TestAlertManager:
     """Test suite for alert management."""
 
@@ -269,28 +263,28 @@ class TestAlertManager:
             name="high_cpu",
             severity="warning",
             message="CPU usage above 80%",
-            metadata={"host": "server1", "cpu_usage": 85}
+            metadata={"host": "server1", "cpu_usage": 85},
         )
 
-        assert alert['name'] == "high_cpu"
-        assert alert['severity'] == "warning"
-        assert alert['metadata']['cpu_usage'] == 85
+        assert alert["name"] == "high_cpu"
+        assert alert["severity"] == "warning"
+        assert alert["metadata"]["cpu_usage"] == 85
 
     def test_alert_rules(self, alert_manager):
         """Test alert rule evaluation."""
         # Define rule
         alert_manager.add_rule(
             name="memory_alert",
-            condition=lambda metrics: metrics.get('memory_usage', 0) > 90,
+            condition=lambda metrics: metrics.get("memory_usage", 0) > 90,
             severity="critical",
-            message="Memory usage critical: {memory_usage}%"
+            message="Memory usage critical: {memory_usage}%",
         )
 
         # Trigger rule
-        alerts = alert_manager.evaluate_rules({'memory_usage': 95})
+        alerts = alert_manager.evaluate_rules({"memory_usage": 95})
         assert len(alerts) == 1
-        assert alerts[0]['severity'] == "critical"
-        assert "95%" in alerts[0]['message']
+        assert alerts[0]["severity"] == "critical"
+        assert "95%" in alerts[0]["message"]
 
     def test_alert_deduplication(self, alert_manager):
         """Test alert deduplication."""
@@ -317,18 +311,15 @@ class TestAlertManager:
 
     def test_alert_channels(self, alert_manager):
         """Test different alert channels."""
-        with patch('smtplib.SMTP') as mock_smtp:
+        with patch("smtplib.SMTP") as mock_smtp:
             alert_manager.configure_email_channel(
                 smtp_host="smtp.example.com",
                 from_email="alerts@example.com",
-                to_emails=["admin@example.com"]
+                to_emails=["admin@example.com"],
             )
 
             alert_manager.send_alert(
-                "test",
-                "critical",
-                "Test alert",
-                channels=["email"]
+                "test", "critical", "Test alert", channels=["email"]
             )
 
             mock_smtp.assert_called()
@@ -340,16 +331,17 @@ class TestAlertManager:
             levels=[
                 {"delay": 0, "contacts": ["oncall@example.com"]},
                 {"delay": 300, "contacts": ["manager@example.com"]},
-                {"delay": 900, "contacts": ["director@example.com"]}
-            ]
+                {"delay": 900, "contacts": ["director@example.com"]},
+            ],
         )
 
         escalation = alert_manager.get_escalation_contacts(
             "critical_escalation",
-            alert_age=600  # 10 minutes old
+            alert_age=600,  # 10 minutes old
         )
 
         assert "manager@example.com" in escalation
+
 
 class TestHealthChecker:
     """Test suite for health checking."""
@@ -361,6 +353,7 @@ class TestHealthChecker:
 
     def test_health_check_registration(self, health_checker):
         """Test registering health checks."""
+
         def database_check():
             return {"status": "healthy", "latency": 5}
 
@@ -374,23 +367,20 @@ class TestHealthChecker:
 
     def test_run_health_checks(self, health_checker):
         """Test running all health checks."""
+        health_checker.register_check("service1", lambda: {"status": "healthy"})
         health_checker.register_check(
-            "service1",
-            lambda: {"status": "healthy"}
-        )
-        health_checker.register_check(
-            "service2",
-            lambda: {"status": "unhealthy", "error": "Connection failed"}
+            "service2", lambda: {"status": "unhealthy", "error": "Connection failed"}
         )
 
         results = health_checker.run_all_checks()
 
-        assert results['overall_status'] == "unhealthy"
-        assert results['checks']['service1']['status'] == "healthy"
-        assert results['checks']['service2']['status'] == "unhealthy"
+        assert results["overall_status"] == "unhealthy"
+        assert results["checks"]["service1"]["status"] == "healthy"
+        assert results["checks"]["service2"]["status"] == "unhealthy"
 
     def test_health_check_timeout(self, health_checker):
         """Test health check timeout handling."""
+
         def slow_check():
             time.sleep(5)
             return {"status": "healthy"}
@@ -398,15 +388,15 @@ class TestHealthChecker:
         health_checker.register_check("slow", slow_check, timeout=1)
         results = health_checker.run_all_checks()
 
-        assert results['checks']['slow']['status'] == "timeout"
+        assert results["checks"]["slow"]["status"] == "timeout"
 
     def test_liveness_probe(self, health_checker):
         """Test liveness probe for container orchestration."""
         liveness = health_checker.liveness_probe()
 
-        assert 'status' in liveness
-        assert 'timestamp' in liveness
-        assert liveness['status'] in ["alive", "dead"]
+        assert "status" in liveness
+        assert "timestamp" in liveness
+        assert liveness["status"] in ["alive", "dead"]
 
     def test_readiness_probe(self, health_checker):
         """Test readiness probe."""
@@ -416,8 +406,9 @@ class TestHealthChecker:
 
         readiness = health_checker.readiness_probe()
 
-        assert readiness['ready'] == True
-        assert all(readiness['dependencies'].values())
+        assert readiness["ready"] == True
+        assert all(readiness["dependencies"].values())
+
 
 class TestPerformanceMonitor:
     """Test suite for performance monitoring."""
@@ -429,47 +420,46 @@ class TestPerformanceMonitor:
 
     def test_cpu_monitoring(self, perf_monitor):
         """Test CPU usage monitoring."""
-        with patch('psutil.cpu_percent') as mock_cpu:
+        with patch("psutil.cpu_percent") as mock_cpu:
             mock_cpu.return_value = 65.5
 
             cpu_stats = perf_monitor.get_cpu_stats()
 
-            assert cpu_stats['usage_percent'] == 65.5
-            assert 'cores' in cpu_stats
+            assert cpu_stats["usage_percent"] == 65.5
+            assert "cores" in cpu_stats
 
     def test_memory_monitoring(self, perf_monitor):
         """Test memory usage monitoring."""
-        with patch('psutil.virtual_memory') as mock_memory:
+        with patch("psutil.virtual_memory") as mock_memory:
             mock_memory.return_value = Mock(
-                percent=75.0,
-                used=8000000000,
-                total=16000000000
+                percent=75.0, used=8000000000, total=16000000000
             )
 
             memory_stats = perf_monitor.get_memory_stats()
 
-            assert memory_stats['usage_percent'] == 75.0
-            assert memory_stats['used_gb'] == pytest.approx(7.45, rel=0.1)
+            assert memory_stats["usage_percent"] == 75.0
+            assert memory_stats["used_gb"] == pytest.approx(7.45, rel=0.1)
 
     def test_disk_monitoring(self, perf_monitor):
         """Test disk I/O monitoring."""
         disk_stats = perf_monitor.get_disk_stats()
 
-        assert 'read_bytes' in disk_stats
-        assert 'write_bytes' in disk_stats
-        assert 'usage_percent' in disk_stats
+        assert "read_bytes" in disk_stats
+        assert "write_bytes" in disk_stats
+        assert "usage_percent" in disk_stats
 
     def test_network_monitoring(self, perf_monitor):
         """Test network I/O monitoring."""
         network_stats = perf_monitor.get_network_stats()
 
-        assert 'bytes_sent' in network_stats
-        assert 'bytes_received' in network_stats
-        assert 'packets_sent' in network_stats
-        assert 'packets_received' in network_stats
+        assert "bytes_sent" in network_stats
+        assert "bytes_received" in network_stats
+        assert "packets_sent" in network_stats
+        assert "packets_received" in network_stats
 
     def test_performance_profiling(self, perf_monitor):
         """Test code performance profiling."""
+
         @perf_monitor.profile
         def slow_function():
             time.sleep(0.1)
@@ -478,25 +468,22 @@ class TestPerformanceMonitor:
         result = slow_function()
         profile = perf_monitor.get_profile("slow_function")
 
-        assert profile['execution_time'] >= 0.1
-        assert profile['call_count'] == 1
+        assert profile["execution_time"] >= 0.1
+        assert profile["call_count"] == 1
 
     def test_resource_limits(self, perf_monitor):
         """Test resource limit monitoring."""
-        perf_monitor.set_limits({
-            'cpu': 80,
-            'memory': 90,
-            'disk': 85
-        })
+        perf_monitor.set_limits({"cpu": 80, "memory": 90, "disk": 85})
 
         violations = perf_monitor.check_limits()
 
         # Mock current usage to test violations
-        with patch.object(perf_monitor, 'get_cpu_stats') as mock_cpu:
-            mock_cpu.return_value = {'usage_percent': 85}
+        with patch.object(perf_monitor, "get_cpu_stats") as mock_cpu:
+            mock_cpu.return_value = {"usage_percent": 85}
 
             violations = perf_monitor.check_limits()
-            assert 'cpu' in violations
+            assert "cpu" in violations
+
 
 class TestErrorTracker:
     """Test suite for error tracking."""
@@ -512,14 +499,13 @@ class TestErrorTracker:
             raise ValueError("Test error")
         except ValueError as e:
             error_id = error_tracker.capture_exception(
-                e,
-                context={"user_id": "123", "endpoint": "/api/test"}
+                e, context={"user_id": "123", "endpoint": "/api/test"}
             )
 
         error = error_tracker.get_error(error_id)
-        assert error['type'] == "ValueError"
-        assert error['message'] == "Test error"
-        assert error['context']['user_id'] == "123"
+        assert error["type"] == "ValueError"
+        assert error["message"] == "Test error"
+        assert error["context"]["user_id"] == "123"
 
     def test_error_grouping(self, error_tracker):
         """Test error grouping by similarity."""
@@ -533,7 +519,7 @@ class TestErrorTracker:
         groups = error_tracker.get_error_groups()
         # Should group similar errors together
         assert len(groups) == 1
-        assert groups[0]['count'] == 5
+        assert groups[0]["count"] == 5
 
     def test_error_rate_tracking(self, error_tracker):
         """Test error rate calculation."""
@@ -546,7 +532,7 @@ class TestErrorTracker:
 
     def test_error_notifications(self, error_tracker):
         """Test error notification triggers."""
-        with patch.object(error_tracker, 'send_notification') as mock_notify:
+        with patch.object(error_tracker, "send_notification") as mock_notify:
             error_tracker.set_notification_threshold(5)
 
             # Trigger threshold
@@ -559,7 +545,7 @@ class TestErrorTracker:
         """Test automatic recovery suggestions."""
         error_tracker.add_recovery_suggestion(
             error_pattern="connection.*timeout",
-            suggestion="Check network connectivity and retry"
+            suggestion="Check network connectivity and retry",
         )
 
         try:

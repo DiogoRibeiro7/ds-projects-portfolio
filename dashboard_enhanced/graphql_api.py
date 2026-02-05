@@ -499,6 +499,7 @@ class DashboardMutation(Mutation):
 
     class Arguments:
         """Incoming dashboard configuration."""
+
         input = UpdateDashboardInput(required=True)
 
     dashboard = Field(DashboardType)
@@ -522,6 +523,7 @@ class CreateChartMutation(Mutation):
 
     class Arguments:
         """Creation payload for a chart."""
+
         input = CreateChartInput(required=True)
 
     chart = Field(ChartDataType)
@@ -544,6 +546,7 @@ class DeleteChartMutation(Mutation):
 
     class Arguments:
         """Identity of the chart to delete."""
+
         id = String(required=True)
 
     success = Boolean()
@@ -559,6 +562,7 @@ class UpdateMetricMutation(Mutation):
 
     class Arguments:
         """Metric payload describing the new observation."""
+
         input = UpdateMetricInput(required=True)
 
     metric = Field(MetricType)

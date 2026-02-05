@@ -22,6 +22,7 @@ from scipy import stats
 try:
     import numba
     from numba import jit, prange
+
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
@@ -29,6 +30,7 @@ except ImportError:
 
 try:
     from joblib import Parallel, delayed
+
     JOBLIB_AVAILABLE = True
 except ImportError:
     JOBLIB_AVAILABLE = False
@@ -37,6 +39,7 @@ except ImportError:
 try:
     import dask.dataframe as dd
     import dask.array as da
+
     DASK_AVAILABLE = True
 except ImportError:
     DASK_AVAILABLE = False
@@ -44,6 +47,7 @@ except ImportError:
 
 try:
     import numexpr as ne
+
     NUMEXPR_AVAILABLE = True
 except ImportError:
     NUMEXPR_AVAILABLE = False
@@ -64,8 +68,7 @@ DATA_QUALITY_BASE_SCORE = 100
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -73,12 +76,14 @@ logger = logging.getLogger(__name__)
 # Performance monitoring decorator
 def monitor_performance(func):
     """Decorator to monitor function performance."""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         start_time = time.time()
         start_memory = 0
         try:
             import psutil
+
             process = psutil.Process()
             start_memory = process.memory_info().rss / 1024 / 1024  # MB
         except ImportError:
@@ -90,6 +95,7 @@ def monitor_performance(func):
         end_memory = 0
         try:
             import psutil
+
             process = psutil.Process()
             end_memory = process.memory_info().rss / 1024 / 1024  # MB
         except ImportError:
@@ -101,6 +107,7 @@ def monitor_performance(func):
         )
 
         return result
+
     return wrapper
 
 
@@ -141,6 +148,7 @@ class OptimizedDataProcessor:
         if use_gpu:
             try:
                 import cupy as cp
+
                 self.gpu_available = True
                 logger.info("GPU acceleration enabled")
             except ImportError:
@@ -151,7 +159,9 @@ class OptimizedDataProcessor:
 
     @staticmethod
     @jit(nopython=True) if NUMBA_AVAILABLE else lambda f: f
-    def fast_outlier_detection(values: np.ndarray, threshold: float = 3.0) -> np.ndarray:
+    def fast_outlier_detection(
+        values: np.ndarray, threshold: float = 3.0
+    ) -> np.ndarray:
         """Numba-optimized outlier detection using z-score method.
 
         Parameters
@@ -178,9 +188,7 @@ class OptimizedDataProcessor:
     @staticmethod
     @jit(nopython=True, parallel=True) if NUMBA_AVAILABLE else lambda f: f
     def fast_grouped_aggregation(
-        values: np.ndarray,
-        groups: np.ndarray,
-        operation: str = "mean"
+        values: np.ndarray, groups: np.ndarray, operation: str = "mean"
     ) -> np.ndarray:
         """Numba-optimized grouped aggregation.
 
@@ -217,8 +225,7 @@ class OptimizedDataProcessor:
     @staticmethod
     @jit(nopython=True) if NUMBA_AVAILABLE else lambda f: f
     def fast_variance_reduction(
-        metric: np.ndarray,
-        covariate: np.ndarray
+        metric: np.ndarray, covariate: np.ndarray
     ) -> Tuple[np.ndarray, float]:
         """Numba-optimized CUPED variance reduction.
 
@@ -268,7 +275,7 @@ class OptimizedDataProcessor:
         df: pd.DataFrame,
         metric_col: str,
         covariate_col: str,
-        group_col: Optional[str] = None
+        group_col: Optional[str] = None,
     ) -> pd.DataFrame:
         """Parallel CUPED application for large datasets.
 
@@ -298,8 +305,7 @@ class OptimizedDataProcessor:
             # Stratified CUPED by group
             def process_group(group_data):
                 adjusted, theta = self.fast_variance_reduction(
-                    group_data[metric_col].values,
-                    group_data[covariate_col].values
+                    group_data[metric_col].values, group_data[covariate_col].values
                 )
                 group_data[f"{metric_col}_cuped"] = adjusted
                 group_data["cuped_theta"] = theta
@@ -307,8 +313,7 @@ class OptimizedDataProcessor:
 
             groups = df.groupby(group_col)
             results = Parallel(n_jobs=self.n_jobs)(
-                delayed(process_group)(group_df)
-                for _, group_df in groups
+                delayed(process_group)(group_df) for _, group_df in groups
             )
 
             df_result = pd.concat(results, ignore_index=True)
@@ -319,8 +324,7 @@ class OptimizedDataProcessor:
 
             def process_chunk(chunk):
                 adjusted, theta = self.fast_variance_reduction(
-                    chunk[metric_col].values,
-                    chunk[covariate_col].values
+                    chunk[metric_col].values, chunk[covariate_col].values
                 )
                 chunk[f"{metric_col}_cuped"] = adjusted
                 chunk["cuped_theta"] = theta
@@ -345,7 +349,7 @@ class OptimizedDataProcessor:
         self,
         df: pd.DataFrame,
         group_col: str,
-        agg_funcs: Dict[str, Union[str, List[str]]]
+        agg_funcs: Dict[str, Union[str, List[str]]],
     ) -> pd.DataFrame:
         """Memory-efficient groupby for large datasets using chunking or Dask.
 
@@ -365,7 +369,7 @@ class OptimizedDataProcessor:
         """
         # Convert group column to categorical for memory savings
         df_optimized = df.copy()
-        df_optimized[group_col] = df_optimized[group_col].astype('category')
+        df_optimized[group_col] = df_optimized[group_col].astype("category")
 
         # For very large datasets, use Dask
         if len(df) > 1_000_000 and DASK_AVAILABLE:
@@ -402,9 +406,7 @@ class OptimizedDataProcessor:
         return result
 
     def vectorized_feature_engineering(
-        self,
-        df: pd.DataFrame,
-        config: Dict[str, Any]
+        self, df: pd.DataFrame, config: Dict[str, Any]
     ) -> pd.DataFrame:
         """Vectorized feature engineering for maximum speed.
 
@@ -424,67 +426,59 @@ class OptimizedDataProcessor:
 
         # Use numpy operations for speed
         for feature_name, feature_config in config.items():
-            operation = feature_config.get('operation')
+            operation = feature_config.get("operation")
 
-            if operation == 'ratio':
-                numerator = df_features[feature_config['numerator']].values
-                denominator = df_features[feature_config['denominator']].values
+            if operation == "ratio":
+                numerator = df_features[feature_config["numerator"]].values
+                denominator = df_features[feature_config["denominator"]].values
                 # Avoid division by zero
                 df_features[feature_name] = np.where(
-                    denominator != 0,
-                    numerator / denominator,
-                    0
+                    denominator != 0, numerator / denominator, 0
                 )
 
-            elif operation == 'interaction':
-                cols = feature_config['columns']
+            elif operation == "interaction":
+                cols = feature_config["columns"]
                 df_features[feature_name] = np.prod(
-                    [df_features[col].values for col in cols],
-                    axis=0
+                    [df_features[col].values for col in cols], axis=0
                 )
 
-            elif operation == 'polynomial':
-                col = feature_config['column']
-                degree = feature_config.get('degree', 2)
+            elif operation == "polynomial":
+                col = feature_config["column"]
+                degree = feature_config.get("degree", 2)
                 df_features[feature_name] = df_features[col].values ** degree
 
-            elif operation == 'binning':
-                col = feature_config['column']
-                bins = feature_config['bins']
+            elif operation == "binning":
+                col = feature_config["column"]
+                bins = feature_config["bins"]
                 df_features[feature_name] = pd.cut(
-                    df_features[col],
-                    bins=bins,
-                    labels=False
+                    df_features[col], bins=bins, labels=False
                 )
 
-            elif operation == 'rolling' and 'group' in feature_config:
+            elif operation == "rolling" and "group" in feature_config:
                 # Efficient rolling operations
-                group_col = feature_config['group']
-                window = feature_config['window']
-                col = feature_config['column']
+                group_col = feature_config["group"]
+                window = feature_config["window"]
+                col = feature_config["column"]
 
-                df_features[feature_name] = df_features.groupby(group_col)[col].transform(
-                    lambda x: x.rolling(window=window, min_periods=1).mean()
-                )
+                df_features[feature_name] = df_features.groupby(group_col)[
+                    col
+                ].transform(lambda x: x.rolling(window=window, min_periods=1).mean())
 
-            elif operation == 'complex' and NUMEXPR_AVAILABLE:
+            elif operation == "complex" and NUMEXPR_AVAILABLE:
                 # Use numexpr for complex expressions
-                expression = feature_config['expression']
+                expression = feature_config["expression"]
                 local_dict = {
-                    col: df_features[col].values
-                    for col in feature_config['columns']
+                    col: df_features[col].values for col in feature_config["columns"]
                 }
-                df_features[feature_name] = ne.evaluate(expression, local_dict=local_dict)
+                df_features[feature_name] = ne.evaluate(
+                    expression, local_dict=local_dict
+                )
 
         return df_features
 
     @lru_cache(maxsize=128)
     def cached_aggregation(
-        self,
-        cache_key: str,
-        df_hash: int,
-        group_col: str,
-        agg_func: str
+        self, cache_key: str, df_hash: int, group_col: str, agg_func: str
     ) -> pd.Series:
         """Cached aggregation results for repeated operations.
 
@@ -524,7 +518,7 @@ class OptimizedDataProcessor:
         df_optimized = df.copy()
 
         # Optimize integers
-        for col in df_optimized.select_dtypes(include=['int64']).columns:
+        for col in df_optimized.select_dtypes(include=["int64"]).columns:
             col_min = df_optimized[col].min()
             col_max = df_optimized[col].max()
 
@@ -544,15 +538,15 @@ class OptimizedDataProcessor:
                     df_optimized[col] = df_optimized[col].astype(np.int32)
 
         # Optimize floats
-        for col in df_optimized.select_dtypes(include=['float64']).columns:
-            df_optimized[col] = pd.to_numeric(df_optimized[col], downcast='float')
+        for col in df_optimized.select_dtypes(include=["float64"]).columns:
+            df_optimized[col] = pd.to_numeric(df_optimized[col], downcast="float")
 
         # Convert low-cardinality strings to categories
-        for col in df_optimized.select_dtypes(include=['object']).columns:
+        for col in df_optimized.select_dtypes(include=["object"]).columns:
             num_unique = df_optimized[col].nunique()
             num_total = len(df_optimized[col])
             if num_unique / num_total < 0.5:  # Less than 50% unique
-                df_optimized[col] = df_optimized[col].astype('category')
+                df_optimized[col] = df_optimized[col].astype("category")
 
         # Log memory savings
         mem_before = df.memory_usage(deep=True).sum() / 1024 / 1024  # MB
@@ -570,7 +564,7 @@ class OptimizedDataProcessor:
         df: pd.DataFrame,
         columns: List[str],
         method: str = "zscore",
-        threshold: float = 3.0
+        threshold: float = 3.0,
     ) -> pd.DataFrame:
         """Parallel outlier detection across multiple columns.
 
@@ -596,9 +590,7 @@ class OptimizedDataProcessor:
             for col in columns:
                 if col in df_clean.columns:
                     outliers = _detect_outliers(
-                        df_clean[col],
-                        method=method,
-                        threshold=threshold
+                        df_clean[col], method=method, threshold=threshold
                     )
                     df_clean = df_clean[~outliers]
             return df_clean
@@ -609,17 +601,12 @@ class OptimizedDataProcessor:
 
             if method == "zscore" and NUMBA_AVAILABLE:
                 return pd.Series(
-                    self.fast_outlier_detection(
-                        df[col_name].values,
-                        threshold
-                    ),
-                    index=df.index
+                    self.fast_outlier_detection(df[col_name].values, threshold),
+                    index=df.index,
                 )
             else:
                 return _detect_outliers(
-                    df[col_name],
-                    method=method,
-                    threshold=threshold
+                    df[col_name], method=method, threshold=threshold
                 )
 
         # Parallel outlier detection
@@ -643,9 +630,7 @@ class OptimizedDataProcessor:
 
     @monitor_performance
     def batch_process_experiments(
-        self,
-        experiments: List[pd.DataFrame],
-        processing_config: Dict[str, Any]
+        self, experiments: List[pd.DataFrame], processing_config: Dict[str, Any]
     ) -> List[pd.DataFrame]:
         """Batch process multiple experiments in parallel.
 
@@ -677,9 +662,7 @@ class OptimizedDataProcessor:
         return processed
 
     def process_single_experiment(
-        self,
-        df: pd.DataFrame,
-        config: Dict[str, Any]
+        self, df: pd.DataFrame, config: Dict[str, Any]
     ) -> pd.DataFrame:
         """Process a single experiment with all optimizations.
 
@@ -699,29 +682,28 @@ class OptimizedDataProcessor:
         df_processed = self.optimize_dataframe_dtypes(df)
 
         # Outlier detection
-        if config.get('remove_outliers', False):
-            metric_cols = config.get('metric_columns', [])
+        if config.get("remove_outliers", False):
+            metric_cols = config.get("metric_columns", [])
             df_processed = self.parallel_outlier_detection(
                 df_processed,
                 metric_cols,
-                method=config.get('outlier_method', 'zscore'),
-                threshold=config.get('outlier_threshold', 3.0)
+                method=config.get("outlier_method", "zscore"),
+                threshold=config.get("outlier_threshold", 3.0),
             )
 
         # CUPED variance reduction
-        if config.get('apply_cuped', False):
+        if config.get("apply_cuped", False):
             df_processed = self.parallel_apply_cuped(
                 df_processed,
-                config['metric_column'],
-                config['covariate_column'],
-                config.get('group_column')
+                config["metric_column"],
+                config["covariate_column"],
+                config.get("group_column"),
             )
 
         # Feature engineering
-        if config.get('engineer_features', False):
+        if config.get("engineer_features", False):
             df_processed = self.vectorized_feature_engineering(
-                df_processed,
-                config['feature_config']
+                df_processed, config["feature_config"]
             )
 
         return df_processed

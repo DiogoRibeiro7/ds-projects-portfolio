@@ -211,7 +211,7 @@ class NotebookOptimizer:
         time2 = time.perf_counter() - start
         print(f"  Time: {time2:.3f}s")
 
-        print(f"Speedup: {time1/time2:.1f}x")
+        print(f"Speedup: {time1 / time2:.1f}x")
 
     def demonstrate_io_optimization(self) -> None:
         """Demonstrate I/O optimization techniques."""

@@ -17,9 +17,15 @@ from scipy.stats import boxcox, yeojohnson
 from scipy.spatial import distance
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import (
-    StandardScaler, MinMaxScaler, RobustScaler,
-    MaxAbsScaler, QuantileTransformer, PowerTransformer,
-    Normalizer, PolynomialFeatures, KBinsDiscretizer
+    StandardScaler,
+    MinMaxScaler,
+    RobustScaler,
+    MaxAbsScaler,
+    QuantileTransformer,
+    PowerTransformer,
+    Normalizer,
+    PolynomialFeatures,
+    KBinsDiscretizer,
 )
 from sklearn.impute import SimpleImputer, KNNImputer, IterativeImputer
 from sklearn.experimental import enable_iterative_imputer
@@ -34,8 +40,10 @@ from sklearn.feature_selection import VarianceThreshold
 
 # Advanced imputation
 from fancyimpute import (
-    SoftImpute, MatrixFactorization,
-    BiScaler, NuclearNormMinimization
+    SoftImpute,
+    MatrixFactorization,
+    BiScaler,
+    NuclearNormMinimization,
 )
 
 # Time series
@@ -55,7 +63,10 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PreprocessingConfig:
     """Configuration for preprocessing pipeline"""
-    outlier_method: str = "isolation_forest"  # iqr, zscore, isolation_forest, lof, dbscan
+
+    outlier_method: str = (
+        "isolation_forest"  # iqr, zscore, isolation_forest, lof, dbscan
+    )
     outlier_threshold: float = 0.05
     imputation_strategy: str = "knn"  # mean, median, mode, knn, iterative, matrix
     scaling_method: str = "standard"  # standard, minmax, robust, quantile, power
@@ -115,15 +126,13 @@ class OutlierDetector:
 
     def _detect_zscore(self, X: np.ndarray, threshold: float = 3) -> np.ndarray:
         """Z-score based outlier detection"""
-        z_scores = np.abs(stats.zscore(X, axis=0, nan_policy='omit'))
+        z_scores = np.abs(stats.zscore(X, axis=0, nan_policy="omit"))
         return np.any(z_scores > threshold, axis=1)
 
     def _detect_isolation_forest(self, X: np.ndarray) -> np.ndarray:
         """Isolation Forest outlier detection"""
         self.detector = IsolationForest(
-            contamination=self.contamination,
-            random_state=42,
-            n_jobs=-1
+            contamination=self.contamination, random_state=42, n_jobs=-1
         )
         predictions = self.detector.fit_predict(X)
         return predictions == -1
@@ -131,8 +140,7 @@ class OutlierDetector:
     def _detect_lof(self, X: np.ndarray) -> np.ndarray:
         """Local Outlier Factor detection"""
         self.detector = LocalOutlierFactor(
-            contamination=self.contamination,
-            novelty=False
+            contamination=self.contamination, novelty=False
         )
         predictions = self.detector.fit_predict(X)
         return predictions == -1
@@ -140,24 +148,31 @@ class OutlierDetector:
     def _detect_elliptic_envelope(self, X: np.ndarray) -> np.ndarray:
         """Elliptic Envelope outlier detection"""
         self.detector = EllipticEnvelope(
-            contamination=self.contamination,
-            random_state=42
+            contamination=self.contamination, random_state=42
         )
         predictions = self.detector.fit_predict(X)
         return predictions == -1
 
-    def _detect_dbscan(self, X: np.ndarray, eps: float = 0.5, min_samples: int = 5) -> np.ndarray:
+    def _detect_dbscan(
+        self, X: np.ndarray, eps: float = 0.5, min_samples: int = 5
+    ) -> np.ndarray:
         """DBSCAN-based outlier detection"""
         clustering = DBSCAN(eps=eps, min_samples=min_samples)
         labels = clustering.fit_predict(X)
         return labels == -1  # Noise points are labeled as -1
 
-    def remove_outliers(self, df: pd.DataFrame, outlier_mask: np.ndarray) -> pd.DataFrame:
+    def remove_outliers(
+        self, df: pd.DataFrame, outlier_mask: np.ndarray
+    ) -> pd.DataFrame:
         """Remove detected outliers"""
         return df[~outlier_mask].reset_index(drop=True)
 
-    def cap_outliers(self, df: pd.DataFrame, lower_percentile: float = 1,
-                     upper_percentile: float = 99) -> pd.DataFrame:
+    def cap_outliers(
+        self,
+        df: pd.DataFrame,
+        lower_percentile: float = 1,
+        upper_percentile: float = 99,
+    ) -> pd.DataFrame:
         """Cap outliers to percentile values"""
         df_capped = df.copy()
         numeric_cols = df.select_dtypes(include=[np.number]).columns
@@ -169,8 +184,9 @@ class OutlierDetector:
 
         return df_capped
 
-    def transform_outliers(self, df: pd.DataFrame, outlier_mask: np.ndarray,
-                          strategy: str = "median") -> pd.DataFrame:
+    def transform_outliers(
+        self, df: pd.DataFrame, outlier_mask: np.ndarray, strategy: str = "median"
+    ) -> pd.DataFrame:
         """Transform outliers using various strategies"""
         df_transformed = df.copy()
         numeric_cols = df.select_dtypes(include=[np.number]).columns
@@ -220,18 +236,20 @@ class AdvancedImputer:
     def _simple_impute(self, X: pd.DataFrame) -> pd.DataFrame:
         """Simple imputation (mean, median, mode)"""
         numeric_cols = X.select_dtypes(include=[np.number]).columns
-        categorical_cols = X.select_dtypes(include=['object', 'category']).columns
+        categorical_cols = X.select_dtypes(include=["object", "category"]).columns
 
         X_imputed = X.copy()
 
         # Numeric columns
         if len(numeric_cols) > 0:
-            imputer = SimpleImputer(strategy=self.kwargs.get('numeric_strategy', 'median'))
+            imputer = SimpleImputer(
+                strategy=self.kwargs.get("numeric_strategy", "median")
+            )
             X_imputed[numeric_cols] = imputer.fit_transform(X[numeric_cols])
 
         # Categorical columns
         if len(categorical_cols) > 0:
-            imputer = SimpleImputer(strategy='most_frequent')
+            imputer = SimpleImputer(strategy="most_frequent")
             X_imputed[categorical_cols] = imputer.fit_transform(X[categorical_cols])
 
         return X_imputed
@@ -245,8 +263,8 @@ class AdvancedImputer:
 
         X_imputed = X.copy()
         imputer = KNNImputer(
-            n_neighbors=self.kwargs.get('n_neighbors', 5),
-            weights=self.kwargs.get('weights', 'distance')
+            n_neighbors=self.kwargs.get("n_neighbors", 5),
+            weights=self.kwargs.get("weights", "distance"),
         )
 
         X_imputed[numeric_cols] = imputer.fit_transform(X[numeric_cols])
@@ -262,11 +280,10 @@ class AdvancedImputer:
         X_imputed = X.copy()
         imputer = IterativeImputer(
             estimator=RandomForestRegressor(
-                n_estimators=self.kwargs.get('n_estimators', 10),
-                random_state=42
+                n_estimators=self.kwargs.get("n_estimators", 10), random_state=42
             ),
-            max_iter=self.kwargs.get('max_iter', 10),
-            random_state=42
+            max_iter=self.kwargs.get("max_iter", 10),
+            random_state=42,
         )
 
         X_imputed[numeric_cols] = imputer.fit_transform(X[numeric_cols])
@@ -284,8 +301,7 @@ class AdvancedImputer:
         # Use SoftImpute for matrix factorization
         X_numeric = X[numeric_cols].values
         X_complete = SoftImpute(
-            max_iters=self.kwargs.get('max_iters', 100),
-            verbose=False
+            max_iters=self.kwargs.get("max_iters", 100), verbose=False
         ).fit_transform(X_numeric)
 
         X_imputed[numeric_cols] = X_complete
@@ -293,7 +309,7 @@ class AdvancedImputer:
 
     def _forward_fill(self, X: pd.DataFrame) -> pd.DataFrame:
         """Forward fill imputation (for time series)"""
-        return X.fillna(method='ffill').fillna(method='bfill')
+        return X.fillna(method="ffill").fillna(method="bfill")
 
     def _interpolate(self, X: pd.DataFrame) -> pd.DataFrame:
         """Interpolation imputation"""
@@ -302,8 +318,7 @@ class AdvancedImputer:
 
         for col in numeric_cols:
             X_imputed[col] = X[col].interpolate(
-                method=self.kwargs.get('method', 'linear'),
-                limit_direction='both'
+                method=self.kwargs.get("method", "linear"), limit_direction="both"
             )
 
         return X_imputed
@@ -317,7 +332,9 @@ class AdvancedImputer:
         """Create binary indicators for missing values"""
         missing_mask = X.isnull()
         missing_indicators = missing_mask.astype(int)
-        missing_indicators.columns = [f"{col}_missing" for col in missing_indicators.columns]
+        missing_indicators.columns = [
+            f"{col}_missing" for col in missing_indicators.columns
+        ]
         return missing_indicators
 
 
@@ -345,9 +362,9 @@ class DataTransformer:
         elif self.method == "robust":
             self.transformer = RobustScaler()
         elif self.method == "quantile":
-            self.transformer = QuantileTransformer(output_distribution='normal')
+            self.transformer = QuantileTransformer(output_distribution="normal")
         elif self.method == "power":
-            self.transformer = PowerTransformer(method='yeo-johnson')
+            self.transformer = PowerTransformer(method="yeo-johnson")
         elif self.method == "normalize":
             self.transformer = Normalizer()
         elif self.method == "log":
@@ -364,7 +381,9 @@ class DataTransformer:
             raise ValueError(f"Unknown transformation method: {self.method}")
 
         if self.transformer:
-            X_transformed[numeric_cols] = self.transformer.fit_transform(X[numeric_cols])
+            X_transformed[numeric_cols] = self.transformer.fit_transform(
+                X[numeric_cols]
+            )
 
         return X_transformed
 
@@ -425,7 +444,7 @@ class DataTransformer:
         numeric_cols = X.select_dtypes(include=[np.number]).columns
 
         for col in numeric_cols:
-            transformer = PowerTransformer(method='yeo-johnson')
+            transformer = PowerTransformer(method="yeo-johnson")
             X_transformed[col] = transformer.fit_transform(X[[col]])
             self.fitted_transformers[col] = transformer
 
@@ -437,7 +456,7 @@ class DataTransformer:
         numeric_cols = X.select_dtypes(include=[np.number]).columns
 
         for col in numeric_cols:
-            X_transformed[col] = X[col].rank(method='average') / len(X)
+            X_transformed[col] = X[col].rank(method="average") / len(X)
 
         return X_transformed
 
@@ -451,7 +470,7 @@ class DataTransformer:
 
         # Create column names
         n_components_kept = X_pca.shape[1]
-        pca_cols = [f"PC{i+1}" for i in range(n_components_kept)]
+        pca_cols = [f"PC{i + 1}" for i in range(n_components_kept)]
 
         # Create DataFrame
         X_pca_df = pd.DataFrame(X_pca, columns=pca_cols, index=X.index)
@@ -468,8 +487,9 @@ class FeatureEngineer:
     def __init__(self):
         self.generated_features = []
 
-    def create_polynomial_features(self, X: pd.DataFrame, degree: int = 2,
-                                  include_bias: bool = False) -> pd.DataFrame:
+    def create_polynomial_features(
+        self, X: pd.DataFrame, degree: int = 2, include_bias: bool = False
+    ) -> pd.DataFrame:
         """Create polynomial features"""
         numeric_cols = X.select_dtypes(include=[np.number]).columns
 
@@ -485,19 +505,22 @@ class FeatureEngineer:
         # Create DataFrame
         X_poly_df = pd.DataFrame(X_poly, columns=feature_names, index=X.index)
 
-        return pd.concat([X, X_poly_df.iloc[:, len(numeric_cols):]], axis=1)
+        return pd.concat([X, X_poly_df.iloc[:, len(numeric_cols) :]], axis=1)
 
-    def create_interaction_features(self, X: pd.DataFrame,
-                                  columns: Optional[List[str]] = None) -> pd.DataFrame:
+    def create_interaction_features(
+        self, X: pd.DataFrame, columns: Optional[List[str]] = None
+    ) -> pd.DataFrame:
         """Create interaction features between columns"""
         if columns is None:
             numeric_cols = X.select_dtypes(include=[np.number]).columns
-            columns = numeric_cols[:min(5, len(numeric_cols))]  # Limit to prevent explosion
+            columns = numeric_cols[
+                : min(5, len(numeric_cols))
+            ]  # Limit to prevent explosion
 
         X_interactions = X.copy()
 
         for i, col1 in enumerate(columns):
-            for col2 in columns[i+1:]:
+            for col2 in columns[i + 1 :]:
                 # Multiplication interaction
                 interaction_name = f"{col1}_x_{col2}"
                 X_interactions[interaction_name] = X[col1] * X[col2]
@@ -508,8 +531,13 @@ class FeatureEngineer:
 
         return X_interactions
 
-    def create_binned_features(self, X: pd.DataFrame, columns: List[str] = None,
-                              n_bins: int = 5, strategy: str = 'quantile') -> pd.DataFrame:
+    def create_binned_features(
+        self,
+        X: pd.DataFrame,
+        columns: List[str] = None,
+        n_bins: int = 5,
+        strategy: str = "quantile",
+    ) -> pd.DataFrame:
         """Create binned/discretized features"""
         if columns is None:
             columns = X.select_dtypes(include=[np.number]).columns
@@ -517,13 +545,16 @@ class FeatureEngineer:
         X_binned = X.copy()
 
         for col in columns:
-            binner = KBinsDiscretizer(n_bins=n_bins, encode='ordinal', strategy=strategy)
+            binner = KBinsDiscretizer(
+                n_bins=n_bins, encode="ordinal", strategy=strategy
+            )
             X_binned[f"{col}_binned"] = binner.fit_transform(X[[col]])
 
         return X_binned
 
-    def create_statistical_features(self, X: pd.DataFrame,
-                                  window_sizes: List[int] = None) -> pd.DataFrame:
+    def create_statistical_features(
+        self, X: pd.DataFrame, window_sizes: List[int] = None
+    ) -> pd.DataFrame:
         """Create statistical aggregation features"""
         if window_sizes is None:
             window_sizes = [3, 5, 10]
@@ -534,15 +565,24 @@ class FeatureEngineer:
         for window in window_sizes:
             for col in numeric_cols:
                 # Rolling statistics
-                X_stats[f"{col}_rolling_mean_{window}"] = X[col].rolling(window, min_periods=1).mean()
-                X_stats[f"{col}_rolling_std_{window}"] = X[col].rolling(window, min_periods=1).std()
-                X_stats[f"{col}_rolling_max_{window}"] = X[col].rolling(window, min_periods=1).max()
-                X_stats[f"{col}_rolling_min_{window}"] = X[col].rolling(window, min_periods=1).min()
+                X_stats[f"{col}_rolling_mean_{window}"] = (
+                    X[col].rolling(window, min_periods=1).mean()
+                )
+                X_stats[f"{col}_rolling_std_{window}"] = (
+                    X[col].rolling(window, min_periods=1).std()
+                )
+                X_stats[f"{col}_rolling_max_{window}"] = (
+                    X[col].rolling(window, min_periods=1).max()
+                )
+                X_stats[f"{col}_rolling_min_{window}"] = (
+                    X[col].rolling(window, min_periods=1).min()
+                )
 
         return X_stats
 
-    def create_lag_features(self, X: pd.DataFrame, columns: List[str] = None,
-                           lags: List[int] = None) -> pd.DataFrame:
+    def create_lag_features(
+        self, X: pd.DataFrame, columns: List[str] = None, lags: List[int] = None
+    ) -> pd.DataFrame:
         """Create lag features for time series"""
         if lags is None:
             lags = [1, 2, 3, 7, 14, 30]
@@ -558,8 +598,9 @@ class FeatureEngineer:
 
         return X_lagged
 
-    def create_datetime_features(self, X: pd.DataFrame,
-                                datetime_column: str) -> pd.DataFrame:
+    def create_datetime_features(
+        self, X: pd.DataFrame, datetime_column: str
+    ) -> pd.DataFrame:
         """Extract features from datetime column"""
         X_datetime = X.copy()
 
@@ -583,8 +624,12 @@ class FeatureEngineer:
         X_datetime[f"{datetime_column}_minute"] = dt.dt.minute
 
         # Cyclical encoding for periodic features
-        X_datetime[f"{datetime_column}_month_sin"] = np.sin(2 * np.pi * dt.dt.month / 12)
-        X_datetime[f"{datetime_column}_month_cos"] = np.cos(2 * np.pi * dt.dt.month / 12)
+        X_datetime[f"{datetime_column}_month_sin"] = np.sin(
+            2 * np.pi * dt.dt.month / 12
+        )
+        X_datetime[f"{datetime_column}_month_cos"] = np.cos(
+            2 * np.pi * dt.dt.month / 12
+        )
         X_datetime[f"{datetime_column}_day_sin"] = np.sin(2 * np.pi * dt.dt.day / 31)
         X_datetime[f"{datetime_column}_day_cos"] = np.cos(2 * np.pi * dt.dt.day / 31)
 
@@ -597,16 +642,20 @@ class FeatureEngineer:
         if text_column not in X.columns:
             return X
 
-        text_series = X[text_column].fillna('')
+        text_series = X[text_column].fillna("")
 
         # Basic text statistics
         X_text[f"{text_column}_length"] = text_series.str.len()
         X_text[f"{text_column}_word_count"] = text_series.str.split().str.len()
-        X_text[f"{text_column}_unique_words"] = text_series.str.split().apply(lambda x: len(set(x)) if x else 0)
-        X_text[f"{text_column}_char_count"] = text_series.str.replace(' ', '').str.len()
-        X_text[f"{text_column}_digit_count"] = text_series.str.count(r'\d')
-        X_text[f"{text_column}_upper_count"] = text_series.str.count(r'[A-Z]')
-        X_text[f"{text_column}_special_count"] = text_series.str.count(r'[^a-zA-Z0-9\s]')
+        X_text[f"{text_column}_unique_words"] = text_series.str.split().apply(
+            lambda x: len(set(x)) if x else 0
+        )
+        X_text[f"{text_column}_char_count"] = text_series.str.replace(" ", "").str.len()
+        X_text[f"{text_column}_digit_count"] = text_series.str.count(r"\d")
+        X_text[f"{text_column}_upper_count"] = text_series.str.count(r"[A-Z]")
+        X_text[f"{text_column}_special_count"] = text_series.str.count(
+            r"[^a-zA-Z0-9\s]"
+        )
 
         return X_text
 
@@ -618,7 +667,9 @@ class DataAugmenter:
         self.strategy = strategy
         self.augmenter = None
 
-    def augment_data(self, X: pd.DataFrame, y: pd.Series) -> Tuple[pd.DataFrame, pd.Series]:
+    def augment_data(
+        self, X: pd.DataFrame, y: pd.Series
+    ) -> Tuple[pd.DataFrame, pd.Series]:
         """Augment data to handle class imbalance"""
         if self.strategy == "smote":
             self.augmenter = SMOTE(random_state=42)
@@ -653,8 +704,9 @@ class DataAugmenter:
 
         return X_noisy
 
-    def mixup(self, X: pd.DataFrame, y: pd.Series,
-              alpha: float = 0.2, n_samples: int = None) -> Tuple[pd.DataFrame, pd.Series]:
+    def mixup(
+        self, X: pd.DataFrame, y: pd.Series, alpha: float = 0.2, n_samples: int = None
+    ) -> Tuple[pd.DataFrame, pd.Series]:
         """Mixup augmentation"""
         if n_samples is None:
             n_samples = len(X)
@@ -688,8 +740,7 @@ class PreprocessingPipeline:
     def __init__(self, config: PreprocessingConfig = None):
         self.config = config or PreprocessingConfig()
         self.outlier_detector = OutlierDetector(
-            method=config.outlier_method,
-            contamination=config.outlier_threshold
+            method=config.outlier_method, contamination=config.outlier_threshold
         )
         self.imputer = AdvancedImputer(strategy=config.imputation_strategy)
         self.transformer = DataTransformer(method=config.scaling_method)
@@ -699,7 +750,9 @@ class PreprocessingPipeline:
         self.pipeline_steps = []
         self.fitted = False
 
-    def fit_transform(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> Tuple[pd.DataFrame, Optional[pd.Series]]:
+    def fit_transform(
+        self, X: pd.DataFrame, y: Optional[pd.Series] = None
+    ) -> Tuple[pd.DataFrame, Optional[pd.Series]]:
         """Fit and transform the complete preprocessing pipeline"""
         X_processed = X.copy()
         y_processed = y.copy() if y is not None else None
@@ -708,13 +761,13 @@ class PreprocessingPipeline:
         logger.info("Detecting and handling outliers...")
         outlier_mask = self.outlier_detector.fit_detect(X_processed)
         X_processed = self.outlier_detector.cap_outliers(X_processed)
-        self.pipeline_steps.append(('outlier_detection', outlier_mask.sum()))
+        self.pipeline_steps.append(("outlier_detection", outlier_mask.sum()))
 
         # Step 2: Missing data imputation
         logger.info("Imputing missing values...")
         missing_before = X_processed.isnull().sum().sum()
         X_processed = self.imputer.fit_transform(X_processed)
-        self.pipeline_steps.append(('imputation', missing_before))
+        self.pipeline_steps.append(("imputation", missing_before))
 
         # Step 3: Feature engineering
         if self.config.feature_engineering:
@@ -732,19 +785,25 @@ class PreprocessingPipeline:
             X_processed = self.feature_engineer.create_interaction_features(X_processed)
 
             n_features_after = X_processed.shape[1]
-            self.pipeline_steps.append(('feature_engineering', n_features_after - n_features_before))
+            self.pipeline_steps.append(
+                ("feature_engineering", n_features_after - n_features_before)
+            )
 
         # Step 4: Data transformation
         logger.info(f"Applying {self.config.scaling_method} transformation...")
         X_processed = self.transformer.fit_transform(X_processed)
-        self.pipeline_steps.append(('transformation', self.config.scaling_method))
+        self.pipeline_steps.append(("transformation", self.config.scaling_method))
 
         # Step 5: Handle class imbalance (if target provided)
         if y_processed is not None and self.config.handle_imbalance:
             logger.info("Handling class imbalance...")
             original_size = len(X_processed)
-            X_processed, y_processed = self.augmenter.augment_data(X_processed, y_processed)
-            self.pipeline_steps.append(('augmentation', len(X_processed) - original_size))
+            X_processed, y_processed = self.augmenter.augment_data(
+                X_processed, y_processed
+            )
+            self.pipeline_steps.append(
+                ("augmentation", len(X_processed) - original_size)
+            )
 
         self.fitted = True
 
@@ -763,19 +822,23 @@ class PreprocessingPipeline:
         X_processed = self.outlier_detector.cap_outliers(X_processed)
 
         # Apply imputation
-        X_processed = self.imputer.fit_transform(X_processed)  # Should use fitted imputer
+        X_processed = self.imputer.fit_transform(
+            X_processed
+        )  # Should use fitted imputer
 
         # Apply transformation
-        X_processed = self.transformer.fit_transform(X_processed)  # Should use fitted transformer
+        X_processed = self.transformer.fit_transform(
+            X_processed
+        )  # Should use fitted transformer
 
         return X_processed
 
     def get_pipeline_summary(self) -> Dict[str, Any]:
         """Get summary of preprocessing pipeline"""
         return {
-            'config': self.config.__dict__,
-            'steps': self.pipeline_steps,
-            'fitted': self.fitted
+            "config": self.config.__dict__,
+            "steps": self.pipeline_steps,
+            "fitted": self.fitted,
         }
 
 
@@ -785,20 +848,22 @@ if __name__ == "__main__":
     np.random.seed(42)
     n_samples = 1000
 
-    df = pd.DataFrame({
-        'numeric1': np.random.normal(100, 15, n_samples),
-        'numeric2': np.random.exponential(50, n_samples),
-        'numeric3': np.random.uniform(0, 100, n_samples),
-        'categorical': np.random.choice(['A', 'B', 'C'], n_samples),
-        'target': np.random.choice([0, 1], n_samples, p=[0.9, 0.1])  # Imbalanced
-    })
+    df = pd.DataFrame(
+        {
+            "numeric1": np.random.normal(100, 15, n_samples),
+            "numeric2": np.random.exponential(50, n_samples),
+            "numeric3": np.random.uniform(0, 100, n_samples),
+            "categorical": np.random.choice(["A", "B", "C"], n_samples),
+            "target": np.random.choice([0, 1], n_samples, p=[0.9, 0.1]),  # Imbalanced
+        }
+    )
 
     # Add missing values
-    df.loc[np.random.choice(df.index, 100, replace=False), 'numeric1'] = np.nan
-    df.loc[np.random.choice(df.index, 50, replace=False), 'numeric2'] = np.nan
+    df.loc[np.random.choice(df.index, 100, replace=False), "numeric1"] = np.nan
+    df.loc[np.random.choice(df.index, 50, replace=False), "numeric2"] = np.nan
 
     # Add outliers
-    df.loc[np.random.choice(df.index, 20, replace=False), 'numeric1'] = 500
+    df.loc[np.random.choice(df.index, 20, replace=False), "numeric1"] = 500
 
     # Create preprocessing pipeline
     config = PreprocessingConfig(
@@ -807,14 +872,14 @@ if __name__ == "__main__":
         scaling_method="robust",
         feature_engineering=True,
         handle_imbalance=True,
-        imbalance_strategy="smote"
+        imbalance_strategy="smote",
     )
 
     pipeline = PreprocessingPipeline(config)
 
     # Fit and transform
-    X = df.drop('target', axis=1)
-    y = df['target']
+    X = df.drop("target", axis=1)
+    y = df["target"]
 
     X_processed, y_processed = pipeline.fit_transform(X, y)
 

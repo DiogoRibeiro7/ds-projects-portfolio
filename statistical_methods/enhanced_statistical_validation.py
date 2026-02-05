@@ -86,54 +86,43 @@ class StatisticalValidator:
         results = []
 
         test_cases = [
-            {
-                'name': 'Equal proportions',
-                'x1': 50, 'n1': 100, 'x2': 50, 'n2': 100
-            },
-            {
-                'name': 'Different proportions',
-                'x1': 30, 'n1': 100, 'x2': 45, 'n2': 100
-            },
-            {
-                'name': 'Large samples',
-                'x1': 500, 'n1': 1000, 'x2': 550, 'n2': 1000
-            },
-            {
-                'name': 'Unequal sizes',
-                'x1': 20, 'n1': 50, 'x2': 60, 'n2': 150
-            }
+            {"name": "Equal proportions", "x1": 50, "n1": 100, "x2": 50, "n2": 100},
+            {"name": "Different proportions", "x1": 30, "n1": 100, "x2": 45, "n2": 100},
+            {"name": "Large samples", "x1": 500, "n1": 1000, "x2": 550, "n2": 1000},
+            {"name": "Unequal sizes", "x1": 20, "n1": 50, "x2": 60, "n2": 150},
         ]
 
         for case in test_cases:
             # Our implementation (simplified for comparison)
-            p1 = case['x1'] / case['n1']
-            p2 = case['x2'] / case['n2']
-            p_pooled = (case['x1'] + case['x2']) / (case['n1'] + case['n2'])
+            p1 = case["x1"] / case["n1"]
+            p2 = case["x2"] / case["n2"]
+            p_pooled = (case["x1"] + case["x2"]) / (case["n1"] + case["n2"])
 
-            se = np.sqrt(p_pooled * (1 - p_pooled) * (1/case['n1'] + 1/case['n2']))
+            se = np.sqrt(p_pooled * (1 - p_pooled) * (1 / case["n1"] + 1 / case["n2"]))
             z_ours = (p2 - p1) / se if se > 0 else 0
             p_ours = 2 * (1 - stats.norm.cdf(abs(z_ours)))
 
             # Statsmodels reference
             z_ref, p_ref = proportions_ztest(
-                [case['x1'], case['x2']],
-                [case['n1'], case['n2']]
+                [case["x1"], case["x2"]], [case["n1"], case["n2"]]
             )
 
             # Compare results
             abs_error = abs(p_ours - p_ref)
             rel_error = abs_error / p_ref if p_ref > 0 else abs_error
 
-            results.append(ValidationResult(
-                test_name=f"Proportion test: {case['name']}",
-                our_result=p_ours,
-                reference_result=p_ref,
-                absolute_error=abs_error,
-                relative_error=rel_error,
-                passed=abs_error < self.tolerance,
-                tolerance=self.tolerance,
-                details={'z_score_ours': z_ours, 'z_score_ref': z_ref}
-            ))
+            results.append(
+                ValidationResult(
+                    test_name=f"Proportion test: {case['name']}",
+                    our_result=p_ours,
+                    reference_result=p_ref,
+                    absolute_error=abs_error,
+                    relative_error=rel_error,
+                    passed=abs_error < self.tolerance,
+                    tolerance=self.tolerance,
+                    details={"z_score_ours": z_ours, "z_score_ref": z_ref},
+                )
+            )
 
         return results
 
@@ -142,30 +131,36 @@ class StatisticalValidator:
         results = []
 
         test_cases = [
-            {'successes': 30, 'trials': 100, 'confidence': 0.95},
-            {'successes': 5, 'trials': 20, 'confidence': 0.95},
-            {'successes': 100, 'trials': 1000, 'confidence': 0.99}
+            {"successes": 30, "trials": 100, "confidence": 0.95},
+            {"successes": 5, "trials": 20, "confidence": 0.95},
+            {"successes": 100, "trials": 1000, "confidence": 0.99},
         ]
 
         for case in test_cases:
             # Our implementation (normal approximation)
-            p = case['successes'] / case['trials']
-            se = np.sqrt(p * (1 - p) / case['trials'])
-            z = stats.norm.ppf(1 - (1 - case['confidence']) / 2)
+            p = case["successes"] / case["trials"]
+            se = np.sqrt(p * (1 - p) / case["trials"])
+            z = stats.norm.ppf(1 - (1 - case["confidence"]) / 2)
             ci_ours = (p - z * se, p + z * se)
 
             # Statsmodels reference (multiple methods)
             ci_normal = proportion_confint(
-                case['successes'], case['trials'],
-                alpha=1-case['confidence'], method='normal'
+                case["successes"],
+                case["trials"],
+                alpha=1 - case["confidence"],
+                method="normal",
             )
             ci_wilson = proportion_confint(
-                case['successes'], case['trials'],
-                alpha=1-case['confidence'], method='wilson'
+                case["successes"],
+                case["trials"],
+                alpha=1 - case["confidence"],
+                method="wilson",
             )
             ci_jeffrey = proportion_confint(
-                case['successes'], case['trials'],
-                alpha=1-case['confidence'], method='jeffreys'
+                case["successes"],
+                case["trials"],
+                alpha=1 - case["confidence"],
+                method="jeffreys",
             )
 
             # Compare with Wilson (generally recommended)
@@ -173,21 +168,23 @@ class StatisticalValidator:
             abs_error_upper = abs(ci_ours[1] - ci_wilson[1])
             max_error = max(abs_error_lower, abs_error_upper)
 
-            results.append(ValidationResult(
-                test_name=f"CI: n={case['trials']}, x={case['successes']}",
-                our_result=ci_ours[1] - ci_ours[0],  # Width
-                reference_result=ci_wilson[1] - ci_wilson[0],  # Width
-                absolute_error=max_error,
-                relative_error=max_error / (ci_wilson[1] - ci_wilson[0]),
-                passed=max_error < 0.05,  # Looser tolerance for CI
-                tolerance=0.05,
-                details={
-                    'ci_ours': ci_ours,
-                    'ci_normal': ci_normal,
-                    'ci_wilson': ci_wilson,
-                    'ci_jeffrey': ci_jeffrey
-                }
-            ))
+            results.append(
+                ValidationResult(
+                    test_name=f"CI: n={case['trials']}, x={case['successes']}",
+                    our_result=ci_ours[1] - ci_ours[0],  # Width
+                    reference_result=ci_wilson[1] - ci_wilson[0],  # Width
+                    absolute_error=max_error,
+                    relative_error=max_error / (ci_wilson[1] - ci_wilson[0]),
+                    passed=max_error < 0.05,  # Looser tolerance for CI
+                    tolerance=0.05,
+                    details={
+                        "ci_ours": ci_ours,
+                        "ci_normal": ci_normal,
+                        "ci_wilson": ci_wilson,
+                        "ci_jeffrey": ci_jeffrey,
+                    },
+                )
+            )
 
         return results
 
@@ -196,9 +193,9 @@ class StatisticalValidator:
         results = []
 
         test_cases = [
-            {'effect_size': 0.5, 'alpha': 0.05, 'power': 0.8},
-            {'effect_size': 0.2, 'alpha': 0.05, 'power': 0.8},
-            {'effect_size': 0.8, 'alpha': 0.01, 'power': 0.9}
+            {"effect_size": 0.5, "alpha": 0.05, "power": 0.8},
+            {"effect_size": 0.2, "alpha": 0.05, "power": 0.8},
+            {"effect_size": 0.8, "alpha": 0.01, "power": 0.9},
         ]
 
         power_analysis = TTestPower()
@@ -206,30 +203,32 @@ class StatisticalValidator:
         for case in test_cases:
             # Statsmodels reference
             n_ref = power_analysis.solve_power(
-                effect_size=case['effect_size'],
-                power=case['power'],
-                alpha=case['alpha']
+                effect_size=case["effect_size"],
+                power=case["power"],
+                alpha=case["alpha"],
             )
 
             # Our simplified calculation
-            z_alpha = stats.norm.ppf(1 - case['alpha']/2)
-            z_beta = stats.norm.ppf(case['power'])
-            n_ours = ((z_alpha + z_beta) / case['effect_size']) ** 2
+            z_alpha = stats.norm.ppf(1 - case["alpha"] / 2)
+            z_beta = stats.norm.ppf(case["power"])
+            n_ours = ((z_alpha + z_beta) / case["effect_size"]) ** 2
 
             # Compare
             abs_error = abs(n_ours - n_ref)
             rel_error = abs_error / n_ref
 
-            results.append(ValidationResult(
-                test_name=f"Power: d={case['effect_size']}, α={case['alpha']}",
-                our_result=n_ours,
-                reference_result=n_ref,
-                absolute_error=abs_error,
-                relative_error=rel_error,
-                passed=rel_error < 0.05,  # 5% relative error tolerance
-                tolerance=0.05,
-                details={'power': case['power']}
-            ))
+            results.append(
+                ValidationResult(
+                    test_name=f"Power: d={case['effect_size']}, α={case['alpha']}",
+                    our_result=n_ours,
+                    reference_result=n_ref,
+                    absolute_error=abs_error,
+                    relative_error=rel_error,
+                    passed=rel_error < 0.05,  # 5% relative error tolerance
+                    tolerance=0.05,
+                    details={"power": case["power"]},
+                )
+            )
 
         return results
 
@@ -246,16 +245,18 @@ class StatisticalValidator:
 
         max_error = np.max(np.abs(cdf_ours - cdf_ref))
 
-        results.append(ValidationResult(
-            test_name="Normal CDF",
-            our_result=np.mean(cdf_ours),
-            reference_result=np.mean(cdf_ref),
-            absolute_error=max_error,
-            relative_error=max_error,
-            passed=max_error < 1e-10,
-            tolerance=1e-10,
-            details={'n_points': len(x)}
-        ))
+        results.append(
+            ValidationResult(
+                test_name="Normal CDF",
+                our_result=np.mean(cdf_ours),
+                reference_result=np.mean(cdf_ref),
+                absolute_error=max_error,
+                relative_error=max_error,
+                passed=max_error < 1e-10,
+                tolerance=1e-10,
+                details={"n_points": len(x)},
+            )
+        )
 
         # Test t-distribution for different degrees of freedom
         for df in [1, 5, 10, 30, 100]:
@@ -267,20 +268,24 @@ class StatisticalValidator:
 
             max_error = np.max(np.abs(pdf_ours - pdf_ref))
 
-            results.append(ValidationResult(
-                test_name=f"T-distribution PDF (df={df})",
-                our_result=np.mean(pdf_ours),
-                reference_result=np.mean(pdf_ref),
-                absolute_error=max_error,
-                relative_error=max_error,
-                passed=max_error < 1e-10,
-                tolerance=1e-10,
-                details={'df': df}
-            ))
+            results.append(
+                ValidationResult(
+                    test_name=f"T-distribution PDF (df={df})",
+                    our_result=np.mean(pdf_ours),
+                    reference_result=np.mean(pdf_ref),
+                    absolute_error=max_error,
+                    relative_error=max_error,
+                    passed=max_error < 1e-10,
+                    tolerance=1e-10,
+                    details={"df": df},
+                )
+            )
 
         return results
 
-    def validate_monte_carlo_simulations(self, n_simulations: int = 10000) -> List[ValidationResult]:
+    def validate_monte_carlo_simulations(
+        self, n_simulations: int = 10000
+    ) -> List[ValidationResult]:
         """Validate Monte Carlo simulation accuracy."""
         results = []
 
@@ -294,16 +299,18 @@ class StatisticalValidator:
         pi_estimate = 4 * points_in_circle / n_simulations
         pi_error = abs(pi_estimate - np.pi)
 
-        results.append(ValidationResult(
-            test_name="Monte Carlo π estimation",
-            our_result=pi_estimate,
-            reference_result=np.pi,
-            absolute_error=pi_error,
-            relative_error=pi_error / np.pi,
-            passed=pi_error < 0.1,  # Loose tolerance for Monte Carlo
-            tolerance=0.1,
-            details={'n_simulations': n_simulations}
-        ))
+        results.append(
+            ValidationResult(
+                test_name="Monte Carlo π estimation",
+                our_result=pi_estimate,
+                reference_result=np.pi,
+                absolute_error=pi_error,
+                relative_error=pi_error / np.pi,
+                passed=pi_error < 0.1,  # Loose tolerance for Monte Carlo
+                tolerance=0.1,
+                details={"n_simulations": n_simulations},
+            )
+        )
 
         # Test 2: Central Limit Theorem validation
         sample_means = []
@@ -322,16 +329,18 @@ class StatisticalValidator:
         mean_error = abs(observed_mean - expected_mean)
         std_error = abs(observed_std - expected_std)
 
-        results.append(ValidationResult(
-            test_name="CLT validation (mean)",
-            our_result=observed_mean,
-            reference_result=expected_mean,
-            absolute_error=mean_error,
-            relative_error=mean_error / expected_mean,
-            passed=mean_error < 0.01,
-            tolerance=0.01,
-            details={'observed_std': observed_std, 'expected_std': expected_std}
-        ))
+        results.append(
+            ValidationResult(
+                test_name="CLT validation (mean)",
+                our_result=observed_mean,
+                reference_result=expected_mean,
+                absolute_error=mean_error,
+                relative_error=mean_error / expected_mean,
+                passed=mean_error < 0.01,
+                tolerance=0.01,
+                details={"observed_std": observed_std, "expected_std": expected_std},
+            )
+        )
 
         return results
 
@@ -356,20 +365,22 @@ class StatisticalValidator:
 
         error = abs(posterior_mean_analytical - posterior_mean_mc)
 
-        results.append(ValidationResult(
-            test_name="Beta-Binomial posterior mean",
-            our_result=posterior_mean_mc,
-            reference_result=posterior_mean_analytical,
-            absolute_error=error,
-            relative_error=error / posterior_mean_analytical,
-            passed=error < 0.01,
-            tolerance=0.01,
-            details={
-                'prior': (prior_alpha, prior_beta),
-                'data': (successes, trials),
-                'posterior': (post_alpha, post_beta)
-            }
-        ))
+        results.append(
+            ValidationResult(
+                test_name="Beta-Binomial posterior mean",
+                our_result=posterior_mean_mc,
+                reference_result=posterior_mean_analytical,
+                absolute_error=error,
+                relative_error=error / posterior_mean_analytical,
+                passed=error < 0.01,
+                tolerance=0.01,
+                details={
+                    "prior": (prior_alpha, prior_beta),
+                    "data": (successes, trials),
+                    "posterior": (post_alpha, post_beta),
+                },
+            )
+        )
 
         # Credible interval validation
         ci_analytical = stats.beta.ppf([0.025, 0.975], post_alpha, post_beta)
@@ -377,16 +388,18 @@ class StatisticalValidator:
 
         ci_error = np.max(np.abs(ci_analytical - ci_mc))
 
-        results.append(ValidationResult(
-            test_name="Beta-Binomial credible interval",
-            our_result=ci_mc[1] - ci_mc[0],  # Width
-            reference_result=ci_analytical[1] - ci_analytical[0],  # Width
-            absolute_error=ci_error,
-            relative_error=ci_error / (ci_analytical[1] - ci_analytical[0]),
-            passed=ci_error < 0.01,
-            tolerance=0.01,
-            details={'ci_analytical': ci_analytical, 'ci_mc': ci_mc}
-        ))
+        results.append(
+            ValidationResult(
+                test_name="Beta-Binomial credible interval",
+                our_result=ci_mc[1] - ci_mc[0],  # Width
+                reference_result=ci_analytical[1] - ci_analytical[0],  # Width
+                absolute_error=ci_error,
+                relative_error=ci_error / (ci_analytical[1] - ci_analytical[0]),
+                passed=ci_error < 0.01,
+                tolerance=0.01,
+                details={"ci_analytical": ci_analytical, "ci_mc": ci_mc},
+            )
+        )
 
         return results
 
@@ -420,20 +433,22 @@ class StatisticalValidator:
         holm_count = np.sum(holm_rejected)
         bonf_count = np.sum(bonferroni_rejected)
 
-        results.append(ValidationResult(
-            test_name="Holm >= Bonferroni rejections",
-            our_result=float(holm_count),
-            reference_result=float(bonf_count),
-            absolute_error=0 if holm_count >= bonf_count else 1,
-            relative_error=0 if holm_count >= bonf_count else 1,
-            passed=holm_count >= bonf_count,
-            tolerance=0,
-            details={
-                'n_tests': n_tests,
-                'bonferroni_rejected': bonf_count,
-                'holm_rejected': holm_count
-            }
-        ))
+        results.append(
+            ValidationResult(
+                test_name="Holm >= Bonferroni rejections",
+                our_result=float(holm_count),
+                reference_result=float(bonf_count),
+                absolute_error=0 if holm_count >= bonf_count else 1,
+                relative_error=0 if holm_count >= bonf_count else 1,
+                passed=holm_count >= bonf_count,
+                tolerance=0,
+                details={
+                    "n_tests": n_tests,
+                    "bonferroni_rejected": bonf_count,
+                    "holm_rejected": holm_count,
+                },
+            )
+        )
 
         # FDR control validation (Benjamini-Hochberg)
         sorted_p_bh = sorted_p.copy()
@@ -445,21 +460,26 @@ class StatisticalValidator:
 
         if threshold_indices:
             max_idx = max(threshold_indices)
-            bh_rejected = sorted_indices[:max_idx + 1]
+            bh_rejected = sorted_indices[: max_idx + 1]
         else:
             bh_rejected = []
 
         # BH should control FDR at alpha level
-        results.append(ValidationResult(
-            test_name="Benjamini-Hochberg FDR control",
-            our_result=float(len(bh_rejected)),
-            reference_result=float(n_tests * alpha),  # Expected rejections under null
-            absolute_error=abs(len(bh_rejected) - n_tests * alpha),
-            relative_error=abs(len(bh_rejected) - n_tests * alpha) / (n_tests * alpha),
-            passed=True,  # FDR control is probabilistic
-            tolerance=1.0,
-            details={'bh_rejected': len(bh_rejected), 'p_values': p_values}
-        ))
+        results.append(
+            ValidationResult(
+                test_name="Benjamini-Hochberg FDR control",
+                our_result=float(len(bh_rejected)),
+                reference_result=float(
+                    n_tests * alpha
+                ),  # Expected rejections under null
+                absolute_error=abs(len(bh_rejected) - n_tests * alpha),
+                relative_error=abs(len(bh_rejected) - n_tests * alpha)
+                / (n_tests * alpha),
+                passed=True,  # FDR control is probabilistic
+                tolerance=1.0,
+                details={"bh_rejected": len(bh_rejected), "p_values": p_values},
+            )
+        )
 
         return results
 
@@ -475,39 +495,43 @@ class StatisticalValidator:
             calculated = stats.norm.ppf(q)
             error = abs(calculated - z)
 
-            results.append(ValidationResult(
-                test_name=f"Normal quantile Φ^(-1)({q})",
-                our_result=calculated,
-                reference_result=z,
-                absolute_error=error,
-                relative_error=error / z if z != 0 else error,
-                passed=error < 1e-4,
-                tolerance=1e-4,
-                details={'quantile': q}
-            ))
+            results.append(
+                ValidationResult(
+                    test_name=f"Normal quantile Φ^(-1)({q})",
+                    our_result=calculated,
+                    reference_result=z,
+                    absolute_error=error,
+                    relative_error=error / z if z != 0 else error,
+                    passed=error < 1e-4,
+                    tolerance=1e-4,
+                    details={"quantile": q},
+                )
+            )
 
         # Test case 2: Chi-square critical values
         chi2_critical = {
             (1, 0.05): 3.841,
             (2, 0.05): 5.991,
             (5, 0.05): 11.070,
-            (10, 0.05): 18.307
+            (10, 0.05): 18.307,
         }
 
         for (df, alpha), expected in chi2_critical.items():
             calculated = stats.chi2.ppf(1 - alpha, df)
             error = abs(calculated - expected)
 
-            results.append(ValidationResult(
-                test_name=f"χ² critical value (df={df}, α={alpha})",
-                our_result=calculated,
-                reference_result=expected,
-                absolute_error=error,
-                relative_error=error / expected,
-                passed=error < 0.01,
-                tolerance=0.01,
-                details={'df': df, 'alpha': alpha}
-            ))
+            results.append(
+                ValidationResult(
+                    test_name=f"χ² critical value (df={df}, α={alpha})",
+                    our_result=calculated,
+                    reference_result=expected,
+                    absolute_error=error,
+                    relative_error=error / expected,
+                    passed=error < 0.01,
+                    tolerance=0.01,
+                    details={"df": df, "alpha": alpha},
+                )
+            )
 
         return results
 
@@ -525,8 +549,11 @@ class StatisticalValidator:
             ("Statistical Distributions", self.validate_statistical_distributions),
             ("Monte Carlo Simulations", self.validate_monte_carlo_simulations),
             ("Bayesian Methods", self.validate_bayesian_methods),
-            ("Multiple Testing Corrections", self.validate_multiple_testing_corrections),
-            ("Known Test Cases", self.validate_known_test_cases)
+            (
+                "Multiple Testing Corrections",
+                self.validate_multiple_testing_corrections,
+            ),
+            ("Known Test Cases", self.validate_known_test_cases),
         ]
 
         for category, validation_func in validations:
@@ -534,16 +561,18 @@ class StatisticalValidator:
             try:
                 results = validation_func()
                 for r in results:
-                    all_results.append({
-                        'category': category,
-                        'test': r.test_name,
-                        'our_result': r.our_result,
-                        'reference': r.reference_result,
-                        'abs_error': r.absolute_error,
-                        'rel_error': r.relative_error,
-                        'passed': r.passed,
-                        'tolerance': r.tolerance
-                    })
+                    all_results.append(
+                        {
+                            "category": category,
+                            "test": r.test_name,
+                            "our_result": r.our_result,
+                            "reference": r.reference_result,
+                            "abs_error": r.absolute_error,
+                            "rel_error": r.relative_error,
+                            "passed": r.passed,
+                            "tolerance": r.tolerance,
+                        }
+                    )
             except Exception as e:
                 print(f"    Error in {category}: {e}")
 
@@ -555,79 +584,96 @@ class StatisticalValidator:
 
         # Pass/Fail by category
         ax = axes[0, 0]
-        category_stats = report_df.groupby('category')['passed'].agg(['sum', 'count'])
-        category_stats['pass_rate'] = category_stats['sum'] / category_stats['count']
+        category_stats = report_df.groupby("category")["passed"].agg(["sum", "count"])
+        category_stats["pass_rate"] = category_stats["sum"] / category_stats["count"]
 
         categories = category_stats.index
-        pass_rates = category_stats['pass_rate'].values
+        pass_rates = category_stats["pass_rate"].values
 
-        colors = ['green' if r > 0.9 else 'orange' if r > 0.7 else 'red'
-                 for r in pass_rates]
+        colors = [
+            "green" if r > 0.9 else "orange" if r > 0.7 else "red" for r in pass_rates
+        ]
 
         ax.barh(range(len(categories)), pass_rates, color=colors)
         ax.set_yticks(range(len(categories)))
         ax.set_yticklabels(categories)
-        ax.set_xlabel('Pass Rate')
-        ax.set_title('Validation Pass Rates by Category')
+        ax.set_xlabel("Pass Rate")
+        ax.set_title("Validation Pass Rates by Category")
         ax.set_xlim(0, 1)
 
-        for i, (rate, count) in enumerate(zip(pass_rates, category_stats['count'])):
-            ax.text(rate + 0.01, i, f'{rate:.1%} ({int(category_stats["sum"].iloc[i])}/{count})',
-                   va='center')
+        for i, (rate, count) in enumerate(zip(pass_rates, category_stats["count"])):
+            ax.text(
+                rate + 0.01,
+                i,
+                f"{rate:.1%} ({int(category_stats['sum'].iloc[i])}/{count})",
+                va="center",
+            )
 
         # Error distribution
         ax = axes[0, 1]
-        passed = report_df[report_df['passed']]
-        failed = report_df[~report_df['passed']]
+        passed = report_df[report_df["passed"]]
+        failed = report_df[~report_df["passed"]]
 
         if not passed.empty:
-            ax.hist(np.log10(passed['abs_error'] + 1e-10), bins=30, alpha=0.7,
-                   label='Passed', color='green', density=True)
+            ax.hist(
+                np.log10(passed["abs_error"] + 1e-10),
+                bins=30,
+                alpha=0.7,
+                label="Passed",
+                color="green",
+                density=True,
+            )
         if not failed.empty:
-            ax.hist(np.log10(failed['abs_error'] + 1e-10), bins=30, alpha=0.7,
-                   label='Failed', color='red', density=True)
+            ax.hist(
+                np.log10(failed["abs_error"] + 1e-10),
+                bins=30,
+                alpha=0.7,
+                label="Failed",
+                color="red",
+                density=True,
+            )
 
-        ax.set_xlabel('Log10(Absolute Error)')
-        ax.set_ylabel('Density')
-        ax.set_title('Error Distribution')
+        ax.set_xlabel("Log10(Absolute Error)")
+        ax.set_ylabel("Density")
+        ax.set_title("Error Distribution")
         ax.legend()
 
         # Relative errors by test
         ax = axes[1, 0]
-        top_errors = report_df.nlargest(10, 'rel_error')
+        top_errors = report_df.nlargest(10, "rel_error")
 
-        ax.barh(range(len(top_errors)), top_errors['rel_error'].values)
+        ax.barh(range(len(top_errors)), top_errors["rel_error"].values)
         ax.set_yticks(range(len(top_errors)))
-        ax.set_yticklabels(top_errors['test'].values, fontsize=8)
-        ax.set_xlabel('Relative Error')
-        ax.set_title('Top 10 Tests by Relative Error')
+        ax.set_yticklabels(top_errors["test"].values, fontsize=8)
+        ax.set_xlabel("Relative Error")
+        ax.set_title("Top 10 Tests by Relative Error")
 
         # Summary statistics
         ax = axes[1, 1]
-        ax.axis('off')
+        ax.axis("off")
 
         summary_text = f"""
         Validation Summary
         ==================
 
         Total Tests: {len(report_df)}
-        Passed: {report_df['passed'].sum()} ({100*report_df['passed'].mean():.1f}%)
-        Failed: {(~report_df['passed']).sum()} ({100*(~report_df['passed']).mean():.1f}%)
+        Passed: {report_df["passed"].sum()} ({100 * report_df["passed"].mean():.1f}%)
+        Failed: {(~report_df["passed"]).sum()} ({100 * (~report_df["passed"]).mean():.1f}%)
 
         Error Statistics:
-        - Mean Absolute Error: {report_df['abs_error'].mean():.6f}
-        - Median Absolute Error: {report_df['abs_error'].median():.6f}
-        - Max Absolute Error: {report_df['abs_error'].max():.6f}
+        - Mean Absolute Error: {report_df["abs_error"].mean():.6f}
+        - Median Absolute Error: {report_df["abs_error"].median():.6f}
+        - Max Absolute Error: {report_df["abs_error"].max():.6f}
 
-        - Mean Relative Error: {report_df['rel_error'].mean():.4%}
-        - Median Relative Error: {report_df['rel_error'].median():.4%}
-        - Max Relative Error: {report_df['rel_error'].max():.4%}
+        - Mean Relative Error: {report_df["rel_error"].mean():.4%}
+        - Median Relative Error: {report_df["rel_error"].median():.4%}
+        - Max Relative Error: {report_df["rel_error"].max():.4%}
 
-        Categories Tested: {report_df['category'].nunique()}
-        Perfect Categories: {sum(category_stats['pass_rate'] == 1.0)}
+        Categories Tested: {report_df["category"].nunique()}
+        Perfect Categories: {sum(category_stats["pass_rate"] == 1.0)}
         """
 
-        ax.text(0.1, 0.5, summary_text, fontsize=10, family='monospace', va='center')
+        ax.text(0.1, 0.5, summary_text, fontsize=10, family="monospace", va="center")
 
         plt.tight_layout()
         plt.show()
@@ -645,7 +691,7 @@ class TheoreticalValidator:
         estimator: Callable,
         true_param: float,
         data_generator: Callable,
-        n_simulations: int = 1000
+        n_simulations: int = 1000,
     ) -> Dict[str, Any]:
         """
         Validate if an estimator is unbiased.
@@ -677,14 +723,14 @@ class TheoreticalValidator:
         p_value = 2 * (1 - stats.t.cdf(abs(t_stat), n_simulations - 1))
 
         return {
-            'mean_estimate': mean_estimate,
-            'true_param': true_param,
-            'bias': bias,
-            'variance': variance,
-            'mse': mse,
-            'is_unbiased': p_value > 0.05,
-            'p_value': p_value,
-            'n_simulations': n_simulations
+            "mean_estimate": mean_estimate,
+            "true_param": true_param,
+            "bias": bias,
+            "variance": variance,
+            "mse": mse,
+            "is_unbiased": p_value > 0.05,
+            "p_value": p_value,
+            "n_simulations": n_simulations,
         }
 
     def validate_consistency(
@@ -692,7 +738,7 @@ class TheoreticalValidator:
         estimator: Callable,
         true_param: float,
         sample_sizes: List[int],
-        n_simulations: int = 100
+        n_simulations: int = 100,
     ) -> pd.DataFrame:
         """
         Validate if an estimator is consistent.
@@ -720,20 +766,22 @@ class TheoreticalValidator:
             bias = np.mean(estimates) - true_param
             variance = np.var(estimates)
 
-            results.append({
-                'sample_size': n,
-                'bias': bias,
-                'variance': variance,
-                'mse': bias**2 + variance
-            })
+            results.append(
+                {
+                    "sample_size": n,
+                    "bias": bias,
+                    "variance": variance,
+                    "mse": bias**2 + variance,
+                }
+            )
 
         results_df = pd.DataFrame(results)
 
         # Check if MSE decreases with sample size
-        correlation = np.corrcoef(results_df['sample_size'], results_df['mse'])[0, 1]
+        correlation = np.corrcoef(results_df["sample_size"], results_df["mse"])[0, 1]
         is_consistent = correlation < -0.8  # Strong negative correlation
 
-        results_df['is_consistent'] = is_consistent
+        results_df["is_consistent"] = is_consistent
 
         return results_df
 
@@ -751,10 +799,10 @@ if __name__ == "__main__":
     report = validator.generate_validation_report()
 
     print("\nValidation Report Summary:")
-    print(report.groupby('category')[['passed']].agg(['sum', 'count', 'mean']))
+    print(report.groupby("category")[["passed"]].agg(["sum", "count", "mean"]))
 
     # Display failed tests
-    failed_tests = report[~report['passed']]
+    failed_tests = report[~report["passed"]]
     if not failed_tests.empty:
         print("\nFailed Tests:")
         for _, row in failed_tests.iterrows():
@@ -785,7 +833,7 @@ if __name__ == "__main__":
         mean_estimator,
         true_param=5.0,
         sample_sizes=[10, 50, 100, 500, 1000],
-        n_simulations=100
+        n_simulations=100,
     )
 
     print("\n  Consistency test:")

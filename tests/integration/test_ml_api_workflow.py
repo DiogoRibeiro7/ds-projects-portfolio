@@ -95,7 +95,9 @@ class StubCacheManager:
     def set(self, key: str, value: Dict[str, Any], ttl: int = 3600):
         self.store[key] = value
 
-    def generate_cache_key(self, features: Dict[str, Any], model_name: str, model_version: str):
+    def generate_cache_key(
+        self, features: Dict[str, Any], model_name: str, model_version: str
+    ):
         return f"{model_name}:{model_version}:{tuple(sorted(features.items()))}"
 
 

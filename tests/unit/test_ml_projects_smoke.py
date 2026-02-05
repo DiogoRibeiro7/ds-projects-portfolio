@@ -41,7 +41,9 @@ def test_recommendation_system_smoke():
     module = _load_module("recommendation_system_train", path)
 
     interactions = module.make_interactions(n_users=40, n_items=30, random_state=13)
-    train_interactions, test_interactions = module.train_test_split_interactions(interactions, random_state=13)
+    train_interactions, test_interactions = module.train_test_split_interactions(
+        interactions, random_state=13
+    )
     hit_rate = module.evaluate_hit_rate(train_interactions, test_interactions, k=5)
 
     assert 0 <= hit_rate <= 1
@@ -72,7 +74,9 @@ def test_diff_in_diff_smoke():
     path = Path("projects/causal_inference/campaign_diff_in_diff/train.py")
     module = _load_module("diff_in_diff_train", path)
 
-    df = module.make_panel_data(n_units=80, n_periods=6, treatment_effect=4.0, random_state=19)
+    df = module.make_panel_data(
+        n_units=80, n_periods=6, treatment_effect=4.0, random_state=19
+    )
     results = module.diff_in_diff(df)
 
     assert "effect" in results

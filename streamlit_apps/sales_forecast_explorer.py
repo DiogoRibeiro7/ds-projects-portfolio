@@ -8,7 +8,9 @@ st.set_page_config(page_title="Sales Forecast Explorer", layout="wide")
 
 st.title("Sales Forecast Explorer")
 
-st.markdown("Explore a synthetic daily sales series and compare baseline vs. ARIMA forecasts.")
+st.markdown(
+    "Explore a synthetic daily sales series and compare baseline vs. ARIMA forecasts."
+)
 
 with st.sidebar:
     n_days = st.slider("History (days)", 180, 1095, 730, 30)
@@ -30,11 +32,15 @@ def make_series(days: int, noise_scale: float, random_state: int = 42) -> pd.Ser
 
 def forecast_naive(train: pd.Series, horizon: int) -> pd.Series:
     last_value = train.iloc[-1]
-    forecast_index = pd.date_range(train.index[-1] + pd.Timedelta(days=1), periods=horizon, freq="D")
+    forecast_index = pd.date_range(
+        train.index[-1] + pd.Timedelta(days=1), periods=horizon, freq="D"
+    )
     return pd.Series([last_value] * horizon, index=forecast_index, name="naive")
 
 
-def forecast_arima(train: pd.Series, horizon: int, order: tuple[int, int, int]) -> pd.Series:
+def forecast_arima(
+    train: pd.Series, horizon: int, order: tuple[int, int, int]
+) -> pd.Series:
     model = ARIMA(train, order=order)
     fitted = model.fit()
     return fitted.forecast(steps=horizon)

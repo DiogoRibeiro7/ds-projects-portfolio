@@ -15,12 +15,13 @@ from dashboard_enhanced.dashboard_framework import (
     InteractiveDashboard,
     RealtimeDashboard,
     ChartBuilder,
-    DataConnector
+    DataConnector,
 )
 from dashboard_enhanced.app import create_app
 from dashboard_enhanced.graphql_api import schema, Query
 
 pytestmark = pytest.mark.integration
+
 
 class TestDashboardBase:
     """Test suite for base dashboard functionality."""
@@ -56,24 +57,25 @@ class TestDashboardBase:
 
     def test_add_callback(self, dashboard):
         """Test callback registration."""
-        @dashboard.callback(
-            output="graph-output",
-            inputs=["input-value"]
-        )
+
+        @dashboard.callback(output="graph-output", inputs=["input-value"])
         def update_graph(value):
-            return {"data": [{"x": [1, 2], "y": [value, value*2]}]}
+            return {"data": [{"x": [1, 2], "y": [value, value * 2]}]}
 
         assert len(dashboard.callbacks) == 1
 
     def test_theme_configuration(self, dashboard):
         """Test theme configuration."""
-        dashboard.set_theme({
-            "primary_color": "#007bff",
-            "background_color": "#f8f9fa",
-            "font_family": "Arial"
-        })
+        dashboard.set_theme(
+            {
+                "primary_color": "#007bff",
+                "background_color": "#f8f9fa",
+                "font_family": "Arial",
+            }
+        )
 
         assert dashboard.theme["primary_color"] == "#007bff"
+
 
 class TestInteractiveDashboard:
     """Test suite for interactive dashboard features."""
@@ -88,7 +90,7 @@ class TestInteractiveDashboard:
         interactive_dashboard.add_filter(
             filter_id="date-filter",
             filter_type="date_range",
-            options={"start_date": "2024-01-01", "end_date": "2024-12-31"}
+            options={"start_date": "2024-01-01", "end_date": "2024-12-31"},
         )
 
         assert "date-filter" in interactive_dashboard.filters
@@ -100,18 +102,16 @@ class TestInteractiveDashboard:
             dropdown_id="metric-dropdown",
             options=[
                 {"label": "Revenue", "value": "revenue"},
-                {"label": "Users", "value": "users"}
+                {"label": "Users", "value": "users"},
             ],
-            default_value="revenue"
+            default_value="revenue",
         )
 
         assert "metric-dropdown" in interactive_dashboard.dropdowns
 
     def test_cross_filtering(self, interactive_dashboard):
         """Test cross-filtering between components."""
-        interactive_dashboard.enable_cross_filtering([
-            "chart1", "chart2", "table1"
-        ])
+        interactive_dashboard.enable_cross_filtering(["chart1", "chart2", "table1"])
 
         assert interactive_dashboard.cross_filtering_enabled
         assert len(interactive_dashboard.cross_filter_components) == 3
@@ -128,6 +128,7 @@ class TestInteractiveDashboard:
             interactive_dashboard.export_data(data, format="excel")
             mock_excel.assert_called_once()
 
+
 class TestRealtimeDashboard:
     """Test suite for real-time dashboard functionality."""
 
@@ -136,7 +137,7 @@ class TestRealtimeDashboard:
         """Create real-time dashboard."""
         return RealtimeDashboard(
             name="realtime_test",
-            update_interval=1000  # 1 second
+            update_interval=1000,  # 1 second
         )
 
     def test_websocket_connection(self, realtime_dashboard):
@@ -151,9 +152,7 @@ class TestRealtimeDashboard:
         mock_data_source.get_data.return_value = {"value": 42}
 
         realtime_dashboard.add_data_stream(
-            stream_id="metrics",
-            data_source=mock_data_source,
-            update_interval=500
+            stream_id="metrics", data_source=mock_data_source, update_interval=500
         )
 
         assert "metrics" in realtime_dashboard.data_streams
@@ -161,10 +160,7 @@ class TestRealtimeDashboard:
     def test_auto_refresh(self, realtime_dashboard):
         """Test auto-refresh mechanism."""
         component = dcc.Graph(id="live-graph")
-        realtime_dashboard.add_auto_refresh_component(
-            component,
-            refresh_interval=1000
-        )
+        realtime_dashboard.add_auto_refresh_component(component, refresh_interval=1000)
 
         assert component in realtime_dashboard.auto_refresh_components
 
@@ -179,6 +175,7 @@ class TestRealtimeDashboard:
         assert len(buffer_data) == 100
         assert buffer_data[-1] == 149
 
+
 class TestChartBuilder:
     """Test suite for chart building utilities."""
 
@@ -190,19 +187,18 @@ class TestChartBuilder:
     @pytest.fixture
     def sample_data(self):
         """Create sample data for charts."""
-        return pd.DataFrame({
-            "date": pd.date_range("2024-01-01", periods=30),
-            "value": np.random.randn(30).cumsum() + 100,
-            "category": np.random.choice(["A", "B", "C"], 30)
-        })
+        return pd.DataFrame(
+            {
+                "date": pd.date_range("2024-01-01", periods=30),
+                "value": np.random.randn(30).cumsum() + 100,
+                "category": np.random.choice(["A", "B", "C"], 30),
+            }
+        )
 
     def test_line_chart(self, chart_builder, sample_data):
         """Test line chart creation."""
         fig = chart_builder.create_line_chart(
-            data=sample_data,
-            x="date",
-            y="value",
-            title="Test Line Chart"
+            data=sample_data, x="date", y="value", title="Test Line Chart"
         )
 
         assert isinstance(fig, go.Figure)
@@ -214,7 +210,7 @@ class TestChartBuilder:
             data=sample_data.groupby("category")["value"].sum().reset_index(),
             x="category",
             y="value",
-            title="Test Bar Chart"
+            title="Test Bar Chart",
         )
 
         assert isinstance(fig, go.Figure)
@@ -228,7 +224,7 @@ class TestChartBuilder:
             y="value",
             color="category",
             size="value",
-            title="Test Scatter"
+            title="Test Scatter",
         )
 
         assert isinstance(fig, go.Figure)
@@ -239,12 +235,11 @@ class TestChartBuilder:
         correlation_matrix = pd.DataFrame(
             np.random.rand(5, 5),
             columns=["A", "B", "C", "D", "E"],
-            index=["A", "B", "C", "D", "E"]
+            index=["A", "B", "C", "D", "E"],
         )
 
         fig = chart_builder.create_heatmap(
-            data=correlation_matrix,
-            title="Correlation Heatmap"
+            data=correlation_matrix, title="Correlation Heatmap"
         )
 
         assert isinstance(fig, go.Figure)
@@ -255,18 +250,16 @@ class TestChartBuilder:
         style = {
             "color_palette": ["#FF6B6B", "#4ECDC4", "#45B7D1"],
             "font_size": 14,
-            "show_grid": False
+            "show_grid": False,
         }
 
         fig = chart_builder.create_line_chart(
-            data=sample_data,
-            x="date",
-            y="value",
-            style=style
+            data=sample_data, x="date", y="value", style=style
         )
 
         assert fig.layout.font.size == 14
         assert not fig.layout.xaxis.showgrid
+
 
 class TestDataConnector:
     """Test suite for data connector functionality."""
@@ -279,9 +272,7 @@ class TestDataConnector:
     def test_database_connection(self, data_connector):
         """Test database connection."""
         with patch("sqlalchemy.create_engine") as mock_engine:
-            data_connector.connect_database(
-                "postgresql://user:pass@localhost/db"
-            )
+            data_connector.connect_database("postgresql://user:pass@localhost/db")
             mock_engine.assert_called_once()
 
     def test_api_connection(self, data_connector):
@@ -289,9 +280,7 @@ class TestDataConnector:
         with patch("requests.get") as mock_get:
             mock_get.return_value.json.return_value = {"data": [1, 2, 3]}
 
-            data = data_connector.fetch_from_api(
-                "https://api.example.com/data"
-            )
+            data = data_connector.fetch_from_api("https://api.example.com/data")
 
             assert data["data"] == [1, 2, 3]
 
@@ -320,6 +309,7 @@ class TestDataConnector:
             mock_fetch.assert_called_once()
             assert result1 == result2
 
+
 class TestGraphQLAPI:
     """Test suite for GraphQL API."""
 
@@ -327,6 +317,7 @@ class TestGraphQLAPI:
     def graphql_client(self):
         """Create GraphQL test client."""
         from graphene.test import Client
+
         return Client(schema)
 
     def test_dashboard_query(self, graphql_client):
@@ -346,7 +337,7 @@ class TestGraphQLAPI:
         with patch.object(Query, "resolve_dashboard") as mock_resolve:
             mock_resolve.return_value = {
                 "name": "Test Dashboard",
-                "components": [{"id": "chart1", "type": "line"}]
+                "components": [{"id": "chart1", "type": "line"}],
             }
 
             result = graphql_client.execute(query)
@@ -372,7 +363,7 @@ class TestGraphQLAPI:
         with patch.object(Query, "resolve_metrics") as mock_resolve:
             mock_resolve.return_value = [
                 {"date": "2024-01-01", "value": 100},
-                {"date": "2024-01-02", "value": 110}
+                {"date": "2024-01-02", "value": 110},
             ]
 
             result = graphql_client.execute(query)
@@ -399,6 +390,7 @@ class TestGraphQLAPI:
 
         assert result["data"]["updateDashboard"]["success"]
 
+
 class TestDashboardIntegration:
     """Integration tests for dashboard functionality."""
 
@@ -417,10 +409,7 @@ class TestDashboardIntegration:
         dashboard.add_filter("date-filter", "date_range")
 
         # Set up callbacks
-        @dashboard.callback(
-            output="main-chart",
-            inputs=["date-filter"]
-        )
+        @dashboard.callback(output="main-chart", inputs=["date-filter"])
         def update_chart(date_range):
             return {"data": [{"x": [1, 2], "y": [3, 4]}]}
 
@@ -435,21 +424,20 @@ class TestDashboardIntegration:
         dashboard = DashboardBase("performance_test")
 
         # Create large dataset
-        large_data = pd.DataFrame({
-            "x": range(10000),
-            "y": np.random.randn(10000)
-        })
+        large_data = pd.DataFrame({"x": range(10000), "y": np.random.randn(10000)})
 
         chart_builder = ChartBuilder()
         fig = chart_builder.create_line_chart(large_data, "x", "y")
 
         # Measure rendering time
         import time
+
         start = time.time()
         dashboard.add_component(dcc.Graph(figure=fig), "large-chart")
         elapsed = time.time() - start
 
         assert elapsed < 1.0  # Should render in less than 1 second
+
 
 class TestDashboardSecurity:
     """Test suite for dashboard security features."""

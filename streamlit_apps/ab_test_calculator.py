@@ -54,4 +54,6 @@ try:
 except ValueError as exc:
     st.error(f"Input error: {exc}")
 
-st.caption("Uses functions from src.statistics.core for consistency with the main toolkit.")
+st.caption(
+    "Uses functions from src.statistics.core for consistency with the main toolkit."
+)

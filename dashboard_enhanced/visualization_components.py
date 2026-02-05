@@ -23,11 +23,24 @@ import plotly.io as pio
 # Bokeh imports
 from bokeh.plotting import figure, output_file, show
 from bokeh.models import (
-    HoverTool, ColumnDataSource, CustomJS, Slider,
-    RangeSlider, Select, DatePicker, CheckboxGroup,
-    DataTable, DateFormatter, TableColumn,
-    WheelZoomTool, ResetTool, PanTool, SaveTool,
-    BoxZoomTool, TapTool, CrosshairTool
+    HoverTool,
+    ColumnDataSource,
+    CustomJS,
+    Slider,
+    RangeSlider,
+    Select,
+    DatePicker,
+    CheckboxGroup,
+    DataTable,
+    DateFormatter,
+    TableColumn,
+    WheelZoomTool,
+    ResetTool,
+    PanTool,
+    SaveTool,
+    BoxZoomTool,
+    TapTool,
+    CrosshairTool,
 )
 from bokeh.layouts import column, row, gridplot
 from bokeh.palettes import Category20, Viridis256
@@ -62,7 +75,7 @@ class InteractiveVisualizations:
         y_cols: List[str],
         title: str = "Animated Time Series",
         play_button: bool = True,
-        range_slider: bool = True
+        range_slider: bool = True,
     ) -> go.Figure:
         """
         Create animated time series visualization.
@@ -87,17 +100,16 @@ class InteractiveVisualizations:
                 go.Scatter(
                     x=df[x_col],
                     y=df[col],
-                    mode='lines+markers',
+                    mode="lines+markers",
                     name=col,
                     line=dict(
-                        color=self.color_palette[i % len(self.color_palette)],
-                        width=2
+                        color=self.color_palette[i % len(self.color_palette)], width=2
                     ),
                     marker=dict(size=6),
-                    hovertemplate='<b>%{fullData.name}</b><br>' +
-                                  'Date: %{x|%Y-%m-%d}<br>' +
-                                  'Value: %{y:.2f}<br>' +
-                                  '<extra></extra>'
+                    hovertemplate="<b>%{fullData.name}</b><br>"
+                    + "Date: %{x|%Y-%m-%d}<br>"
+                    + "Value: %{y:.2f}<br>"
+                    + "<extra></extra>",
                 )
             )
 
@@ -108,10 +120,10 @@ class InteractiveVisualizations:
             for col in y_cols:
                 frame_data.append(
                     go.Scatter(
-                        x=df[x_col][:k+1],
-                        y=df[col][:k+1],
-                        mode='lines+markers',
-                        name=col
+                        x=df[x_col][: k + 1],
+                        y=df[col][: k + 1],
+                        mode="lines+markers",
+                        name=col,
                     )
                 )
             frames.append(go.Frame(data=frame_data, name=str(k)))
@@ -120,20 +132,18 @@ class InteractiveVisualizations:
 
         # Update layout
         fig.update_layout(
-            title={
-                'text': title,
-                'x': 0.5,
-                'xanchor': 'center'
-            },
+            title={"text": title, "x": 0.5, "xanchor": "center"},
             xaxis=dict(
                 title=x_col,
                 rangeslider=dict(visible=range_slider) if range_slider else None,
-                type='date' if pd.api.types.is_datetime64_any_dtype(df[x_col]) else None
+                type="date"
+                if pd.api.types.is_datetime64_any_dtype(df[x_col])
+                else None,
             ),
-            yaxis=dict(title='Value'),
-            hovermode='x unified',
+            yaxis=dict(title="Value"),
+            hovermode="x unified",
             template=self.theme,
-            height=500
+            height=500,
         )
 
         # Add animation controls
@@ -147,67 +157,79 @@ class InteractiveVisualizations:
                             dict(
                                 label="▶ Play",
                                 method="animate",
-                                args=[None, {
-                                    "frame": {"duration": self.animation_duration, "redraw": True},
-                                    "fromcurrent": True,
-                                    "transition": {"duration": 100}
-                                }]
+                                args=[
+                                    None,
+                                    {
+                                        "frame": {
+                                            "duration": self.animation_duration,
+                                            "redraw": True,
+                                        },
+                                        "fromcurrent": True,
+                                        "transition": {"duration": 100},
+                                    },
+                                ],
                             ),
                             dict(
                                 label="⏸ Pause",
                                 method="animate",
-                                args=[[None], {
-                                    "frame": {"duration": 0, "redraw": False},
-                                    "mode": "immediate",
-                                    "transition": {"duration": 0}
-                                }]
-                            )
+                                args=[
+                                    [None],
+                                    {
+                                        "frame": {"duration": 0, "redraw": False},
+                                        "mode": "immediate",
+                                        "transition": {"duration": 0},
+                                    },
+                                ],
+                            ),
                         ],
                         x=0.1,
                         y=1.15,
                         xanchor="left",
-                        yanchor="top"
+                        yanchor="top",
                     )
                 ],
-                sliders=[{
-                    'steps': [
-                        {
-                            'args': [
-                                [f.name],
-                                {'frame': {'duration': self.animation_duration, 'redraw': True},
-                                 'mode': 'immediate',
-                                 'transition': {'duration': 100}}
-                            ],
-                            'label': str(k),
-                            'method': 'animate'
-                        }
-                        for k, f in enumerate(fig.frames)
-                    ],
-                    'active': 0,
-                    'y': -0.1,
-                    'len': 0.9,
-                    'x': 0.05,
-                    'xanchor': 'left',
-                    'y': 0,
-                    'yanchor': 'top',
-                    'transition': {'duration': 100},
-                    'currentvalue': {
-                        'font': {'size': 12},
-                        'prefix': 'Frame: ',
-                        'visible': True,
-                        'xanchor': 'center'
+                sliders=[
+                    {
+                        "steps": [
+                            {
+                                "args": [
+                                    [f.name],
+                                    {
+                                        "frame": {
+                                            "duration": self.animation_duration,
+                                            "redraw": True,
+                                        },
+                                        "mode": "immediate",
+                                        "transition": {"duration": 100},
+                                    },
+                                ],
+                                "label": str(k),
+                                "method": "animate",
+                            }
+                            for k, f in enumerate(fig.frames)
+                        ],
+                        "active": 0,
+                        "y": -0.1,
+                        "len": 0.9,
+                        "x": 0.05,
+                        "xanchor": "left",
+                        "y": 0,
+                        "yanchor": "top",
+                        "transition": {"duration": 100},
+                        "currentvalue": {
+                            "font": {"size": 12},
+                            "prefix": "Frame: ",
+                            "visible": True,
+                            "xanchor": "center",
+                        },
                     }
-                }]
+                ],
             )
 
         # Add accessibility features
         if self.accessibility_mode:
             fig.update_layout(
-                font=dict(size=14),
-                hoverlabel=dict(
-                    font_size=14,
-                    font_family="Arial"
-                )
+                font=dict(size=14), hoverlabel=dict(font_size=14, font_family="Arial")
             )
 
         return fig
@@ -220,7 +242,7 @@ class InteractiveVisualizations:
         z_col: str,
         color_col: Optional[str] = None,
         size_col: Optional[str] = None,
-        title: str = "3D Scatter Plot"
+        title: str = "3D Scatter Plot",
     ) -> go.Figure:
         """
         Create interactive 3D scatter plot.
@@ -237,27 +259,23 @@ class InteractiveVisualizations:
         """
         # Prepare marker properties
         marker_dict = {
-            'size': 5,
-            'opacity': 0.8,
-            'line': {'width': 0.5, 'color': 'white'}
+            "size": 5,
+            "opacity": 0.8,
+            "line": {"width": 0.5, "color": "white"},
         }
 
         if size_col:
-            marker_dict['size'] = df[size_col]
-            marker_dict['sizemode'] = 'diameter'
-            marker_dict['sizeref'] = 2. * max(df[size_col]) / (40.**2)
-            marker_dict['sizemin'] = 4
+            marker_dict["size"] = df[size_col]
+            marker_dict["sizemode"] = "diameter"
+            marker_dict["sizeref"] = 2.0 * max(df[size_col]) / (40.0**2)
+            marker_dict["sizemin"] = 4
 
         if color_col:
-            marker_dict['color'] = df[color_col]
-            marker_dict['colorscale'] = 'Viridis'
-            marker_dict['showscale'] = True
-            marker_dict['colorbar'] = dict(
-                title=color_col,
-                thickness=15,
-                len=0.7,
-                x=1.02,
-                y=0.5
+            marker_dict["color"] = df[color_col]
+            marker_dict["colorscale"] = "Viridis"
+            marker_dict["showscale"] = True
+            marker_dict["colorbar"] = dict(
+                title=color_col, thickness=15, len=0.7, x=1.02, y=0.5
             )
 
         # Create 3D scatter
@@ -267,35 +285,29 @@ class InteractiveVisualizations:
                     x=df[x_col],
                     y=df[y_col],
                     z=df[z_col],
-                    mode='markers',
+                    mode="markers",
                     marker=marker_dict,
                     text=df.index,
-                    hovertemplate=f'<b>{x_col}</b>: %{{x:.2f}}<br>' +
-                                  f'<b>{y_col}</b>: %{{y:.2f}}<br>' +
-                                  f'<b>{z_col}</b>: %{{z:.2f}}<br>' +
-                                  '<extra></extra>'
+                    hovertemplate=f"<b>{x_col}</b>: %{{x:.2f}}<br>"
+                    + f"<b>{y_col}</b>: %{{y:.2f}}<br>"
+                    + f"<b>{z_col}</b>: %{{z:.2f}}<br>"
+                    + "<extra></extra>",
                 )
             ]
         )
 
         # Update layout
         fig.update_layout(
-            title={
-                'text': title,
-                'x': 0.5,
-                'xanchor': 'center'
-            },
+            title={"text": title, "x": 0.5, "xanchor": "center"},
             scene=dict(
                 xaxis_title=x_col,
                 yaxis_title=y_col,
                 zaxis_title=z_col,
-                camera=dict(
-                    eye=dict(x=1.5, y=1.5, z=1.5)
-                )
+                camera=dict(eye=dict(x=1.5, y=1.5, z=1.5)),
             ),
             template=self.theme,
             height=600,
-            margin=dict(l=0, r=0, t=40, b=0)
+            margin=dict(l=0, r=0, t=40, b=0),
         )
 
         return fig
@@ -306,7 +318,7 @@ class InteractiveVisualizations:
         source_col: str,
         target_col: str,
         value_col: str,
-        title: str = "Sankey Diagram"
+        title: str = "Sankey Diagram",
     ) -> go.Figure:
         """
         Create interactive Sankey diagram for flow visualization.
@@ -326,8 +338,10 @@ class InteractiveVisualizations:
         node_dict = {node: i for i, node in enumerate(all_nodes)}
 
         # Create node colors
-        node_colors = [self.color_palette[i % len(self.color_palette)]
-                      for i in range(len(all_nodes))]
+        node_colors = [
+            self.color_palette[i % len(self.color_palette)]
+            for i in range(len(all_nodes))
+        ]
 
         # Prepare Sankey data
         fig = go.Figure(
@@ -339,31 +353,27 @@ class InteractiveVisualizations:
                         line=dict(color="black", width=0.5),
                         label=all_nodes,
                         color=node_colors,
-                        hovertemplate='<b>%{label}</b><br>' +
-                                      'Total: %{value}<br>' +
-                                      '<extra></extra>'
+                        hovertemplate="<b>%{label}</b><br>"
+                        + "Total: %{value}<br>"
+                        + "<extra></extra>",
                     ),
                     link=dict(
                         source=[node_dict[s] for s in df[source_col]],
                         target=[node_dict[t] for t in df[target_col]],
                         value=df[value_col],
-                        hovertemplate='%{source.label} → %{target.label}<br>' +
-                                      'Value: %{value}<br>' +
-                                      '<extra></extra>'
-                    )
+                        hovertemplate="%{source.label} → %{target.label}<br>"
+                        + "Value: %{value}<br>"
+                        + "<extra></extra>",
+                    ),
                 )
             ]
         )
 
         fig.update_layout(
-            title={
-                'text': title,
-                'x': 0.5,
-                'xanchor': 'center'
-            },
+            title={"text": title, "x": 0.5, "xanchor": "center"},
             font_size=12,
             template=self.theme,
-            height=500
+            height=500,
         )
 
         return fig
@@ -373,7 +383,7 @@ class InteractiveVisualizations:
         df: pd.DataFrame,
         path_cols: List[str],
         value_col: str,
-        title: str = "Sunburst Chart"
+        title: str = "Sunburst Chart",
     ) -> go.Figure:
         """
         Create interactive sunburst chart for hierarchical data.
@@ -393,22 +403,19 @@ class InteractiveVisualizations:
             values=value_col,
             title=title,
             color=value_col,
-            color_continuous_scale='RdYlBu_r',
-            hover_data={value_col: ':.2f'}
+            color_continuous_scale="RdYlBu_r",
+            hover_data={value_col: ":.2f"},
         )
 
         fig.update_traces(
-            hovertemplate='<b>%{label}</b><br>' +
-                          'Value: %{value:.2f}<br>' +
-                          'Percentage: %{percentRoot}<br>' +
-                          '<extra></extra>',
-            textinfo="label+percent parent"
+            hovertemplate="<b>%{label}</b><br>"
+            + "Value: %{value:.2f}<br>"
+            + "Percentage: %{percentRoot}<br>"
+            + "<extra></extra>",
+            textinfo="label+percent parent",
         )
 
-        fig.update_layout(
-            height=600,
-            template=self.theme
-        )
+        fig.update_layout(height=600, template=self.theme)
 
         return fig
 
@@ -417,7 +424,7 @@ class InteractiveVisualizations:
         df: pd.DataFrame,
         dimensions: List[str],
         color_col: Optional[str] = None,
-        title: str = "Parallel Coordinates"
+        title: str = "Parallel Coordinates",
     ) -> go.Figure:
         """
         Create parallel coordinates plot for multi-dimensional data.
@@ -434,7 +441,7 @@ class InteractiveVisualizations:
         # Prepare dimensions
         dims = []
         for dim in dimensions:
-            if df[dim].dtype == 'object':
+            if df[dim].dtype == "object":
                 # Categorical dimension
                 vals = df[dim].unique()
                 dims.append(
@@ -442,16 +449,14 @@ class InteractiveVisualizations:
                         label=dim,
                         values=[list(vals).index(v) for v in df[dim]],
                         tickvals=list(range(len(vals))),
-                        ticktext=vals
+                        ticktext=vals,
                     )
                 )
             else:
                 # Numerical dimension
                 dims.append(
                     dict(
-                        label=dim,
-                        values=df[dim],
-                        range=[df[dim].min(), df[dim].max()]
+                        label=dim, values=df[dim], range=[df[dim].min(), df[dim].max()]
                     )
                 )
 
@@ -460,27 +465,18 @@ class InteractiveVisualizations:
         if color_col:
             line_dict = dict(
                 color=df[color_col],
-                colorscale='Viridis',
+                colorscale="Viridis",
                 showscale=True,
                 cmin=df[color_col].min(),
-                cmax=df[color_col].max()
+                cmax=df[color_col].max(),
             )
 
-        fig = go.Figure(
-            data=go.Parcoords(
-                line=line_dict,
-                dimensions=dims
-            )
-        )
+        fig = go.Figure(data=go.Parcoords(line=line_dict, dimensions=dims))
 
         fig.update_layout(
-            title={
-                'text': title,
-                'x': 0.5,
-                'xanchor': 'center'
-            },
+            title={"text": title, "x": 0.5, "xanchor": "center"},
             template=self.theme,
-            height=500
+            height=500,
         )
 
         return fig
@@ -490,7 +486,7 @@ class InteractiveVisualizations:
         df: pd.DataFrame,
         x_col: str,
         y_col: str,
-        title: str = "Interactive Bokeh Plot"
+        title: str = "Interactive Bokeh Plot",
     ) -> figure:
         """
         Create interactive Bokeh plot with tools and widgets.
@@ -517,11 +513,8 @@ class InteractiveVisualizations:
             CrosshairTool(),
             TapTool(),
             HoverTool(
-                tooltips=[
-                    (x_col, f"@{x_col}{{0.00}}"),
-                    (y_col, f"@{y_col}{{0.00}}")
-                ]
-            )
+                tooltips=[(x_col, f"@{x_col}{{0.00}}"), (y_col, f"@{y_col}{{0.00}}")]
+            ),
         ]
 
         p = figure(
@@ -531,28 +524,23 @@ class InteractiveVisualizations:
             tools=tools,
             width=800,
             height=400,
-            toolbar_location="above"
+            toolbar_location="above",
         )
 
         # Add circle glyph
         p.circle(
-            x_col, y_col,
+            x_col,
+            y_col,
             source=source,
             size=10,
             color="navy",
             alpha=0.7,
             hover_color="red",
-            hover_alpha=1.0
+            hover_alpha=1.0,
         )
 
         # Add line
-        p.line(
-            x_col, y_col,
-            source=source,
-            line_width=2,
-            color="darkblue",
-            alpha=0.5
-        )
+        p.line(x_col, y_col, source=source, line_width=2, color="darkblue", alpha=0.5)
 
         # Style the plot
         p.title.text_font_size = "16pt"
@@ -565,9 +553,7 @@ class InteractiveVisualizations:
         return p
 
     def create_data_storytelling_template(
-        self,
-        story_data: List[Dict[str, Any]],
-        title: str = "Data Story"
+        self, story_data: List[Dict[str, Any]], title: str = "Data Story"
     ) -> go.Figure:
         """
         Create a data storytelling template with multiple visualizations.
@@ -588,13 +574,18 @@ class InteractiveVisualizations:
         fig = make_subplots(
             rows=n_rows,
             cols=n_cols,
-            subplot_titles=[s.get('title', f'Story {i+1}')
-                          for i, s in enumerate(story_data)],
-            specs=[[{'type': s.get('type', 'scatter')}
-                   for s in story_data[i*n_cols:(i+1)*n_cols]]
-                  for i in range(n_rows)],
+            subplot_titles=[
+                s.get("title", f"Story {i + 1}") for i, s in enumerate(story_data)
+            ],
+            specs=[
+                [
+                    {"type": s.get("type", "scatter")}
+                    for s in story_data[i * n_cols : (i + 1) * n_cols]
+                ]
+                for i in range(n_rows)
+            ],
             vertical_spacing=0.15,
-            horizontal_spacing=0.1
+            horizontal_spacing=0.1,
         )
 
         # Add each story element
@@ -602,36 +593,38 @@ class InteractiveVisualizations:
             row = idx // n_cols + 1
             col = idx % n_cols + 1
 
-            if story.get('type') == 'bar':
+            if story.get("type") == "bar":
                 fig.add_trace(
                     go.Bar(
-                        x=story['x'],
-                        y=story['y'],
-                        name=story.get('name', ''),
-                        marker_color=story.get('color', self.color_palette[idx])
+                        x=story["x"],
+                        y=story["y"],
+                        name=story.get("name", ""),
+                        marker_color=story.get("color", self.color_palette[idx]),
                     ),
-                    row=row, col=col
+                    row=row,
+                    col=col,
                 )
             else:  # Default to scatter
                 fig.add_trace(
                     go.Scatter(
-                        x=story['x'],
-                        y=story['y'],
-                        mode=story.get('mode', 'lines+markers'),
-                        name=story.get('name', ''),
-                        line=dict(color=story.get('color', self.color_palette[idx]))
+                        x=story["x"],
+                        y=story["y"],
+                        mode=story.get("mode", "lines+markers"),
+                        name=story.get("name", ""),
+                        line=dict(color=story.get("color", self.color_palette[idx])),
                     ),
-                    row=row, col=col
+                    row=row,
+                    col=col,
                 )
 
             # Add annotations for storytelling
-            if 'annotation' in story:
+            if "annotation" in story:
                 fig.add_annotation(
-                    text=story['annotation'],
-                    xref=f"x{idx+1}",
-                    yref=f"y{idx+1}",
-                    x=story.get('ann_x', story['x'][len(story['x'])//2]),
-                    y=story.get('ann_y', max(story['y'])),
+                    text=story["annotation"],
+                    xref=f"x{idx + 1}",
+                    yref=f"y{idx + 1}",
+                    x=story.get("ann_x", story["x"][len(story["x"]) // 2]),
+                    y=story.get("ann_y", max(story["y"])),
                     showarrow=True,
                     arrowhead=2,
                     arrowsize=1,
@@ -642,21 +635,16 @@ class InteractiveVisualizations:
                     bordercolor="black",
                     borderwidth=1,
                     bgcolor="white",
-                    opacity=0.9
+                    opacity=0.9,
                 )
 
         # Update layout
         fig.update_layout(
-            title={
-                'text': title,
-                'x': 0.5,
-                'xanchor': 'center',
-                'font': {'size': 20}
-            },
+            title={"text": title, "x": 0.5, "xanchor": "center", "font": {"size": 20}},
             showlegend=True,
             template=self.theme,
             height=400 * n_rows,
-            hovermode='closest'
+            hovermode="closest",
         )
 
         return fig
@@ -666,7 +654,7 @@ class InteractiveVisualizations:
         df: pd.DataFrame,
         chart_type: str = "bar",
         title: str = "Accessible Chart",
-        **kwargs
+        **kwargs,
     ) -> go.Figure:
         """
         Create a chart with enhanced accessibility features.
@@ -682,14 +670,14 @@ class InteractiveVisualizations:
         """
         # High contrast color palette for accessibility
         accessible_colors = [
-            '#000000',  # Black
-            '#0066CC',  # Blue
-            '#CC0000',  # Red
-            '#00CC00',  # Green
-            '#CC6600',  # Orange
-            '#6600CC',  # Purple
-            '#CC0066',  # Magenta
-            '#00CCCC',  # Cyan
+            "#000000",  # Black
+            "#0066CC",  # Blue
+            "#CC0000",  # Red
+            "#00CC00",  # Green
+            "#CC6600",  # Orange
+            "#6600CC",  # Purple
+            "#CC0066",  # Magenta
+            "#00CCCC",  # Cyan
         ]
 
         # Create base figure based on type
@@ -700,7 +688,7 @@ class InteractiveVisualizations:
                         x=df.index,
                         y=df.iloc[:, 0],
                         marker_color=accessible_colors[0],
-                        marker_pattern_shape="/"  # Add pattern for colorblind users
+                        marker_pattern_shape="/",  # Add pattern for colorblind users
                     )
                 ]
             )
@@ -711,17 +699,21 @@ class InteractiveVisualizations:
                     go.Scatter(
                         x=df.index,
                         y=df[col],
-                        mode='lines+markers',
+                        mode="lines+markers",
                         name=col,
                         line=dict(
                             color=accessible_colors[i % len(accessible_colors)],
                             width=3,
-                            dash=['solid', 'dash', 'dot'][i % 3]  # Different line styles
+                            dash=["solid", "dash", "dot"][
+                                i % 3
+                            ],  # Different line styles
                         ),
                         marker=dict(
                             size=10,
-                            symbol=['circle', 'square', 'diamond'][i % 3]  # Different markers
-                        )
+                            symbol=["circle", "square", "diamond"][
+                                i % 3
+                            ],  # Different markers
+                        ),
                     )
                 )
         else:  # scatter
@@ -730,13 +722,13 @@ class InteractiveVisualizations:
                     go.Scatter(
                         x=df.iloc[:, 0],
                         y=df.iloc[:, 1],
-                        mode='markers',
+                        mode="markers",
                         marker=dict(
                             size=12,
                             color=accessible_colors[0],
-                            symbol='circle-open',
-                            line=dict(width=2)
-                        )
+                            symbol="circle-open",
+                            line=dict(width=2),
+                        ),
                     )
                 ]
             )
@@ -744,54 +736,51 @@ class InteractiveVisualizations:
         # Update layout for accessibility
         fig.update_layout(
             title={
-                'text': title,
-                'x': 0.5,
-                'xanchor': 'center',
-                'font': {'size': 20, 'family': 'Arial, sans-serif'}
+                "text": title,
+                "x": 0.5,
+                "xanchor": "center",
+                "font": {"size": 20, "family": "Arial, sans-serif"},
             },
-            font=dict(
-                size=14,
-                family='Arial, sans-serif'
-            ),
+            font=dict(size=14, family="Arial, sans-serif"),
             xaxis=dict(
-                title=kwargs.get('x_title', 'X Axis'),
+                title=kwargs.get("x_title", "X Axis"),
                 titlefont=dict(size=16),
                 tickfont=dict(size=14),
                 showgrid=True,
                 gridwidth=1,
-                gridcolor='LightGray',
+                gridcolor="LightGray",
                 showline=True,
                 linewidth=2,
-                linecolor='Black'
+                linecolor="Black",
             ),
             yaxis=dict(
-                title=kwargs.get('y_title', 'Y Axis'),
+                title=kwargs.get("y_title", "Y Axis"),
                 titlefont=dict(size=16),
                 tickfont=dict(size=14),
                 showgrid=True,
                 gridwidth=1,
-                gridcolor='LightGray',
+                gridcolor="LightGray",
                 showline=True,
                 linewidth=2,
-                linecolor='Black'
+                linecolor="Black",
             ),
-            paper_bgcolor='white',
-            plot_bgcolor='white',
-            hovermode='closest',
+            paper_bgcolor="white",
+            plot_bgcolor="white",
+            hovermode="closest",
             hoverlabel=dict(
                 bgcolor="white",
                 font_size=16,
                 font_family="Arial, sans-serif",
-                bordercolor="black"
+                bordercolor="black",
             ),
             template=None,  # No template for maximum control
             height=500,
             # Add aria-label
-            title_text=f"<span aria-label='{title} chart'>{title}</span>"
+            title_text=f"<span aria-label='{title} chart'>{title}</span>",
         )
 
         # Add text annotations for screen readers
-        if kwargs.get('add_annotations', True):
+        if kwargs.get("add_annotations", True):
             # Add data summary
             summary = f"Chart showing {len(df)} data points. "
             if chart_type == "bar":
@@ -805,17 +794,13 @@ class InteractiveVisualizations:
                 x=0,
                 y=1.1,
                 showarrow=False,
-                font=dict(size=1)  # Invisible but present for screen readers
+                font=dict(size=1),  # Invisible but present for screen readers
             )
 
         return fig
 
     def export_chart_with_description(
-        self,
-        fig: go.Figure,
-        filename: str,
-        alt_text: str,
-        long_description: str
+        self, fig: go.Figure, filename: str, alt_text: str, long_description: str
     ) -> Dict[str, str]:
         """
         Export chart with accessibility descriptions.
@@ -836,9 +821,9 @@ class InteractiveVisualizations:
         # Export as interactive HTML with ARIA labels
         html_path = f"{filename}.html"
         html_string = fig.to_html(
-            include_plotlyjs='cdn',
+            include_plotlyjs="cdn",
             div_id="accessible-chart",
-            config={'displayModeBar': True}
+            config={"displayModeBar": True},
         )
 
         # Add ARIA labels and descriptions
@@ -863,23 +848,23 @@ class InteractiveVisualizations:
         </html>
         """
 
-        with open(html_path, 'w', encoding='utf-8') as f:
+        with open(html_path, "w", encoding="utf-8") as f:
             f.write(accessible_html)
 
         # Create text description file
         txt_path = f"{filename}_description.txt"
-        with open(txt_path, 'w', encoding='utf-8') as f:
+        with open(txt_path, "w", encoding="utf-8") as f:
             f.write(f"Alternative Text: {alt_text}\n\n")
             f.write(f"Detailed Description:\n{long_description}\n")
 
         logger.info(f"Exported accessible chart to {filename}")
 
         return {
-            'image': img_path,
-            'html': html_path,
-            'description': txt_path,
-            'alt_text': alt_text,
-            'long_description': long_description
+            "image": img_path,
+            "html": html_path,
+            "description": txt_path,
+            "alt_text": alt_text,
+            "long_description": long_description,
         }
 
 
@@ -892,100 +877,104 @@ def create_demo_visualizations():
 
     # Generate sample data
     np.random.seed(42)
-    dates = pd.date_range('2024-01-01', periods=30)
+    dates = pd.date_range("2024-01-01", periods=30)
 
-    df_time = pd.DataFrame({
-        'date': dates,
-        'metric_1': np.cumsum(np.random.randn(30)) + 100,
-        'metric_2': np.cumsum(np.random.randn(30)) + 150,
-        'metric_3': np.cumsum(np.random.randn(30)) + 200
-    })
+    df_time = pd.DataFrame(
+        {
+            "date": dates,
+            "metric_1": np.cumsum(np.random.randn(30)) + 100,
+            "metric_2": np.cumsum(np.random.randn(30)) + 150,
+            "metric_3": np.cumsum(np.random.randn(30)) + 200,
+        }
+    )
 
     # Create animated time series
     fig_animated = viz.create_animated_time_series(
         df_time,
-        x_col='date',
-        y_cols=['metric_1', 'metric_2', 'metric_3'],
-        title='Animated Metrics Over Time'
+        x_col="date",
+        y_cols=["metric_1", "metric_2", "metric_3"],
+        title="Animated Metrics Over Time",
     )
 
     # Create 3D scatter
-    df_3d = pd.DataFrame({
-        'x': np.random.randn(100),
-        'y': np.random.randn(100),
-        'z': np.random.randn(100),
-        'value': np.random.uniform(0, 100, 100)
-    })
+    df_3d = pd.DataFrame(
+        {
+            "x": np.random.randn(100),
+            "y": np.random.randn(100),
+            "z": np.random.randn(100),
+            "value": np.random.uniform(0, 100, 100),
+        }
+    )
 
     fig_3d = viz.create_interactive_3d_scatter(
         df_3d,
-        x_col='x',
-        y_col='y',
-        z_col='z',
-        color_col='value',
-        title='3D Scatter Visualization'
+        x_col="x",
+        y_col="y",
+        z_col="z",
+        color_col="value",
+        title="3D Scatter Visualization",
     )
 
     # Create Sankey diagram
-    df_flow = pd.DataFrame({
-        'source': ['A', 'A', 'B', 'B', 'C'],
-        'target': ['X', 'Y', 'X', 'Z', 'Y'],
-        'value': [10, 15, 20, 10, 25]
-    })
+    df_flow = pd.DataFrame(
+        {
+            "source": ["A", "A", "B", "B", "C"],
+            "target": ["X", "Y", "X", "Z", "Y"],
+            "value": [10, 15, 20, 10, 25],
+        }
+    )
 
     fig_sankey = viz.create_sankey_diagram(
         df_flow,
-        source_col='source',
-        target_col='target',
-        value_col='value',
-        title='Flow Visualization'
+        source_col="source",
+        target_col="target",
+        value_col="value",
+        title="Flow Visualization",
     )
 
     # Create data story
     story_data = [
         {
-            'title': 'Revenue Growth',
-            'x': list(range(10)),
-            'y': np.cumsum(np.random.uniform(5, 15, 10)),
-            'type': 'scatter',
-            'annotation': 'Strong growth trend',
-            'ann_x': 7,
-            'ann_y': 80
+            "title": "Revenue Growth",
+            "x": list(range(10)),
+            "y": np.cumsum(np.random.uniform(5, 15, 10)),
+            "type": "scatter",
+            "annotation": "Strong growth trend",
+            "ann_x": 7,
+            "ann_y": 80,
         },
         {
-            'title': 'User Segments',
-            'x': ['Segment A', 'Segment B', 'Segment C'],
-            'y': [45, 30, 25],
-            'type': 'bar',
-            'annotation': 'Segment A dominates'
-        }
+            "title": "User Segments",
+            "x": ["Segment A", "Segment B", "Segment C"],
+            "y": [45, 30, 25],
+            "type": "bar",
+            "annotation": "Segment A dominates",
+        },
     ]
 
     fig_story = viz.create_data_storytelling_template(
-        story_data,
-        title='Q1 2024 Business Overview'
+        story_data, title="Q1 2024 Business Overview"
     )
 
     # Create accessible chart
-    df_access = pd.DataFrame({
-        'Category': ['A', 'B', 'C', 'D'],
-        'Value': [23, 45, 12, 67]
-    })
+    df_access = pd.DataFrame(
+        {"Category": ["A", "B", "C", "D"], "Value": [23, 45, 12, 67]}
+    )
 
     fig_accessible = viz.create_accessibility_chart(
-        df_access.set_index('Category'),
-        chart_type='bar',
-        title='Category Performance',
-        x_title='Categories',
-        y_title='Performance Score'
+        df_access.set_index("Category"),
+        chart_type="bar",
+        title="Category Performance",
+        x_title="Categories",
+        y_title="Performance Score",
     )
 
     return {
-        'animated': fig_animated,
-        '3d_scatter': fig_3d,
-        'sankey': fig_sankey,
-        'story': fig_story,
-        'accessible': fig_accessible
+        "animated": fig_animated,
+        "3d_scatter": fig_3d,
+        "sankey": fig_sankey,
+        "story": fig_story,
+        "accessible": fig_accessible,
     }
 
 
@@ -994,6 +983,6 @@ if __name__ == "__main__":
     demo_figs = create_demo_visualizations()
 
     # Show one of the figures
-    demo_figs['animated'].show()
+    demo_figs["animated"].show()
 
     logger.info("Demo visualizations created successfully")

@@ -1317,7 +1317,7 @@ class BayesianAnalyzer:
                 alpha = 1 - level
                 lower = np.percentile(samples, 100 * alpha / 2)
                 upper = np.percentile(samples, 100 * (1 - alpha / 2))
-                results[f"credible_interval_{int(level*100)}"] = (lower, upper)
+                results[f"credible_interval_{int(level * 100)}"] = (lower, upper)
 
             # Highest Posterior Density (HPD) intervals
             results["hpd_interval_95"] = self._calculate_hpd_interval(samples, 0.95)
@@ -1446,9 +1446,9 @@ class BayesianAnalyzer:
                     else:
                         recommendations[f"effect_{true_effect:.3f}"] = ">10000"
 
-                results["sample_size_recommendations"][
-                    f"power_{target_power}"
-                ] = recommendations
+                results["sample_size_recommendations"][f"power_{target_power}"] = (
+                    recommendations
+                )
 
             # Robustness analysis across different priors
             prior_specifications = [
@@ -2957,7 +2957,6 @@ class RealTimeMonitor:
                         or (now - last_flush) >= flush_interval
                         and len(data_buffer) > 0
                     ):
-
                         # Process buffered data
                         await self._process_data_batch(
                             experiment_id, data_buffer.copy()
@@ -3159,7 +3158,6 @@ class RealTimeMonitor:
                 # Required fields validation
                 required_fields = ["experiment_id", "user_id", "timestamp", "group"]
                 if all(field in record for field in required_fields):
-
                     # Data type validation
                     record["timestamp"] = pd.to_datetime(record["timestamp"])
 
@@ -4082,7 +4080,6 @@ class UpliftModelingEngine:
                 if hasattr(model["model_treated"], "feature_importances_") and hasattr(
                     model["model_control"], "feature_importances_"
                 ):
-
                     imp_treated = model["model_treated"].feature_importances_
                     imp_control = model["model_control"].feature_importances_
                     avg_importance = (imp_treated + imp_control) / 2
@@ -4464,7 +4461,6 @@ class UpliftModelingEngine:
                         feature in subgroups["high_uplift"]["feature_profile"]
                         and feature in subgroups["low_uplift"]["feature_profile"]
                     ):
-
                         high_val = subgroups["high_uplift"]["feature_profile"][feature]
                         low_val = subgroups["low_uplift"]["feature_profile"][feature]
                         feature_differences[feature] = high_val - low_val
@@ -4861,7 +4857,7 @@ class ExperimentMLOps:
             if sample_size < required_sample:
                 power_warnings.append(
                     f"Sample size {sample_size} may be insufficient. "
-                    f"Recommended: {required_sample} for {power*100}% power"
+                    f"Recommended: {required_sample} for {power * 100}% power"
                 )
 
             validation_results["checks"]["statistical_power"] = {
@@ -8161,7 +8157,9 @@ class ExperimentReportingEngine:
                     magnitude = (
                         "small"
                         if abs(cohens_d) < 0.5
-                        else "medium" if abs(cohens_d) < 0.8 else "large"
+                        else "medium"
+                        if abs(cohens_d) < 0.8
+                        else "large"
                     )
                     direction = "positive" if cohens_d > 0 else "negative"
                     summary_parts.append(
@@ -8184,7 +8182,7 @@ class ExperimentReportingEngine:
             conversion_lift = experiment_results.get("conversion_lift", None)
             if conversion_lift:
                 summary_parts.append(
-                    f"- **Conversion Rate Lift:** {conversion_lift*100:.2f}%"
+                    f"- **Conversion Rate Lift:** {conversion_lift * 100:.2f}%"
                 )
 
             # Recommendations
@@ -8815,7 +8813,9 @@ class ExperimentReportingEngine:
             "trend": (
                 "improving"
                 if late_success > early_success
-                else "declining" if late_success < early_success else "stable"
+                else "declining"
+                if late_success < early_success
+                else "stable"
             ),
         }
 
@@ -10564,7 +10564,7 @@ def demonstrate_comprehensive_platform():
         print(f"{'Sample Size':<15} {'Execution Time (ms)':<20}")
         print("-" * 35)
         for res in benchmark_results:
-            print(f"{res['sample_size']:<15} {res['execution_time']*1000:<20.2f}")
+            print(f"{res['sample_size']:<15} {res['execution_time'] * 1000:<20.2f}")
 
     except Exception as e:
         print(f"Error in benchmark: {e}")
@@ -10594,7 +10594,7 @@ class AdvancedExperimentationPlatform:
 
     def create_experiment(self, config: Dict) -> str:
         """Create comprehensive experiment with auto method selection."""
-        experiment_id = f'exp_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+        experiment_id = f"exp_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         return experiment_id
 
     def run_analysis(self, experiment_id: str, data: pd.DataFrame) -> Dict:

@@ -15,7 +15,10 @@ from typing import List, Dict, Any, Callable
 import json
 from pathlib import Path
 
-from modern_bank_churn.ml_pipeline_orchestrator import MLPipelineOrchestrator, PipelineConfig
+from modern_bank_churn.ml_pipeline_orchestrator import (
+    MLPipelineOrchestrator,
+    PipelineConfig,
+)
 from modern_bank_churn.feature_engineering import FeatureEngineer
 from statistical_methods.statistical_analyzer import StatisticalAnalyzer
 from dashboard_enhanced.dashboard_framework import EnhancedDashboard, DashboardConfig
@@ -25,13 +28,14 @@ from dashboard_enhanced.dashboard_framework import EnhancedDashboard, DashboardC
 # Performance Benchmarks
 # ============================================================================
 
+
 @pytest.fixture
 def performance_baselines():
     """Load performance baselines from previous runs."""
     baseline_file = Path(__file__).parent / "performance_baselines.json"
 
     if baseline_file.exists():
-        with open(baseline_file, 'r') as f:
+        with open(baseline_file, "r") as f:
             return json.load(f)
 
     # Default baselines if no previous data
@@ -55,13 +59,14 @@ def save_performance_results():
 
     # Save results after test
     results_file = Path(__file__).parent / "performance_results.json"
-    with open(results_file, 'w') as f:
+    with open(results_file, "w") as f:
         json.dump(results, f, indent=2)
 
 
 # ============================================================================
 # ML Pipeline Performance Tests
 # ============================================================================
+
 
 class TestMLPipelinePerformance:
     """Test ML pipeline performance."""
@@ -76,10 +81,10 @@ class TestMLPipelinePerformance:
 
         # Configure pipeline
         config = PipelineConfig(
-            feature_selection_method='mutual_info',
-            model_type='random_forest',
+            feature_selection_method="mutual_info",
+            model_type="random_forest",
             hyperparameter_tuning=False,
-            cross_validation_folds=2
+            cross_validation_folds=2,
         )
 
         def run_pipeline():
@@ -90,9 +95,9 @@ class TestMLPipelinePerformance:
         result = benchmark(run_pipeline)
 
         # Save results
-        save_performance_results['ml_pipeline_small'] = {
-            'time': benchmark.stats['mean'],
-            'memory': self._measure_memory(run_pipeline)
+        save_performance_results["ml_pipeline_small"] = {
+            "time": benchmark.stats["mean"],
+            "memory": self._measure_memory(run_pipeline),
         }
 
     @pytest.mark.performance
@@ -104,10 +109,10 @@ class TestMLPipelinePerformance:
         data = self._generate_dataset(n_samples)
 
         config = PipelineConfig(
-            feature_selection_method='mutual_info',
-            model_type='xgboost',
+            feature_selection_method="mutual_info",
+            model_type="xgboost",
             hyperparameter_tuning=False,
-            cross_validation_folds=3
+            cross_validation_folds=3,
         )
 
         def run_pipeline():
@@ -116,9 +121,9 @@ class TestMLPipelinePerformance:
 
         result = benchmark(run_pipeline)
 
-        save_performance_results['ml_pipeline_medium'] = {
-            'time': benchmark.stats['mean'],
-            'memory': self._measure_memory(run_pipeline)
+        save_performance_results["ml_pipeline_medium"] = {
+            "time": benchmark.stats["mean"],
+            "memory": self._measure_memory(run_pipeline),
         }
 
     @pytest.mark.performance
@@ -130,10 +135,10 @@ class TestMLPipelinePerformance:
         data = self._generate_dataset(n_samples)
 
         config = PipelineConfig(
-            feature_selection_method='mutual_info',
-            model_type='lightgbm',
+            feature_selection_method="mutual_info",
+            model_type="lightgbm",
             hyperparameter_tuning=False,
-            cross_validation_folds=2
+            cross_validation_folds=2,
         )
 
         def run_pipeline():
@@ -142,23 +147,25 @@ class TestMLPipelinePerformance:
 
         result = benchmark(run_pipeline)
 
-        save_performance_results['ml_pipeline_large'] = {
-            'time': benchmark.stats['mean'],
-            'memory': self._measure_memory(run_pipeline)
+        save_performance_results["ml_pipeline_large"] = {
+            "time": benchmark.stats["mean"],
+            "memory": self._measure_memory(run_pipeline),
         }
 
     def _generate_dataset(self, n_samples: int) -> pd.DataFrame:
         """Generate synthetic dataset for testing."""
         np.random.seed(42)
-        return pd.DataFrame({
-            'feature1': np.random.randn(n_samples),
-            'feature2': np.random.randn(n_samples),
-            'feature3': np.random.randn(n_samples),
-            'feature4': np.random.randn(n_samples),
-            'feature5': np.random.randn(n_samples),
-            'category': np.random.choice(['A', 'B', 'C'], n_samples),
-            'target': np.random.choice([0, 1], n_samples)
-        })
+        return pd.DataFrame(
+            {
+                "feature1": np.random.randn(n_samples),
+                "feature2": np.random.randn(n_samples),
+                "feature3": np.random.randn(n_samples),
+                "feature4": np.random.randn(n_samples),
+                "feature5": np.random.randn(n_samples),
+                "category": np.random.choice(["A", "B", "C"], n_samples),
+                "target": np.random.choice([0, 1], n_samples),
+            }
+        )
 
     def _measure_memory(self, func: Callable) -> float:
         """Measure memory usage of a function."""
@@ -169,6 +176,7 @@ class TestMLPipelinePerformance:
 # ============================================================================
 # Feature Engineering Performance Tests
 # ============================================================================
+
 
 class TestFeatureEngineeringPerformance:
     """Test feature engineering performance."""
@@ -185,22 +193,22 @@ class TestFeatureEngineeringPerformance:
         result = benchmark(create_features)
 
         # Assert performance threshold
-        assert benchmark.stats['mean'] < 2.0, "Feature creation too slow"
+        assert benchmark.stats["mean"] < 2.0, "Feature creation too slow"
 
     @pytest.mark.performance
     @pytest.mark.benchmark(group="feature-engineering")
     def test_feature_selection_speed(self, benchmark, sample_dataframe):
         """Test feature selection speed."""
         engineer = FeatureEngineer()
-        X = sample_dataframe.drop('churn', axis=1).select_dtypes(include=[np.number])
-        y = sample_dataframe['churn']
+        X = sample_dataframe.drop("churn", axis=1).select_dtypes(include=[np.number])
+        y = sample_dataframe["churn"]
 
         def select_features():
-            return engineer.select_features(X, y, method='mutual_info', k=10)
+            return engineer.select_features(X, y, method="mutual_info", k=10)
 
         result = benchmark(select_features)
 
-        assert benchmark.stats['mean'] < 1.0, "Feature selection too slow"
+        assert benchmark.stats["mean"] < 1.0, "Feature selection too slow"
 
     @pytest.mark.performance
     def test_parallel_feature_engineering(self, sample_dataframe):
@@ -224,12 +232,15 @@ class TestFeatureEngineeringPerformance:
         parallel_time = time.time() - start_time
 
         # Parallel should be faster
-        assert parallel_time < sequential_time * 0.8, "Parallel processing not efficient"
+        assert parallel_time < sequential_time * 0.8, (
+            "Parallel processing not efficient"
+        )
 
 
 # ============================================================================
 # Statistical Analysis Performance Tests
 # ============================================================================
+
 
 class TestStatisticalPerformance:
     """Test statistical analysis performance."""
@@ -245,7 +256,7 @@ class TestStatisticalPerformance:
 
         result = benchmark(generate_summary)
 
-        assert benchmark.stats['mean'] < 0.5, "Statistical summary too slow"
+        assert benchmark.stats["mean"] < 0.5, "Statistical summary too slow"
 
     @pytest.mark.performance
     @pytest.mark.benchmark(group="statistics")
@@ -254,24 +265,25 @@ class TestStatisticalPerformance:
         from statistical_methods.hypothesis_tester import HypothesisTester
 
         tester = HypothesisTester()
-        group1 = sample_dataframe[sample_dataframe['churn'] == 0]['balance']
-        group2 = sample_dataframe[sample_dataframe['churn'] == 1]['balance']
+        group1 = sample_dataframe[sample_dataframe["churn"] == 0]["balance"]
+        group2 = sample_dataframe[sample_dataframe["churn"] == 1]["balance"]
 
         def run_tests():
             results = []
             results.append(tester.t_test(group1, group2))
             results.append(tester.mann_whitney_u(group1, group2))
-            results.append(tester.anova(sample_dataframe, 'geography', 'balance'))
+            results.append(tester.anova(sample_dataframe, "geography", "balance"))
             return results
 
         result = benchmark(run_tests)
 
-        assert benchmark.stats['mean'] < 1.0, "Hypothesis testing too slow"
+        assert benchmark.stats["mean"] < 1.0, "Hypothesis testing too slow"
 
 
 # ============================================================================
 # Dashboard Performance Tests
 # ============================================================================
+
 
 class TestDashboardPerformance:
     """Test dashboard performance."""
@@ -279,10 +291,7 @@ class TestDashboardPerformance:
     @pytest.mark.performance
     def test_dashboard_initialization_speed(self):
         """Test dashboard initialization speed."""
-        config = DashboardConfig(
-            app_name='Test Dashboard',
-            enable_realtime=False
-        )
+        config = DashboardConfig(app_name="Test Dashboard", enable_realtime=False)
 
         start_time = time.time()
         dashboard = EnhancedDashboard(config)
@@ -293,7 +302,9 @@ class TestDashboardPerformance:
     @pytest.mark.performance
     def test_data_rendering_speed(self, sample_dataframe):
         """Test data rendering speed."""
-        from dashboard_enhanced.visualization_components import InteractiveVisualizations
+        from dashboard_enhanced.visualization_components import (
+            InteractiveVisualizations,
+        )
 
         viz = InteractiveVisualizations()
 
@@ -302,16 +313,13 @@ class TestDashboardPerformance:
         # Create multiple visualizations
         fig1 = viz.create_animated_time_series(
             sample_dataframe.head(100),
-            x_col='customer_id',
-            y_cols=['balance'],
-            title='Test'
+            x_col="customer_id",
+            y_cols=["balance"],
+            title="Test",
         )
 
         fig2 = viz.create_interactive_3d_scatter(
-            sample_dataframe.head(100),
-            x_col='age',
-            y_col='balance',
-            z_col='tenure'
+            sample_dataframe.head(100), x_col="age", y_col="balance", z_col="tenure"
         )
 
         render_time = time.time() - start_time
@@ -328,7 +336,7 @@ class TestDashboardPerformance:
         async def send_messages(websocket):
             nonlocal messages_sent
             for i in range(1000):
-                await websocket.send(json.dumps({'id': i, 'data': 'test'}))
+                await websocket.send(json.dumps({"id": i, "data": "test"}))
                 messages_sent += 1
                 await asyncio.sleep(0.001)
 
@@ -351,6 +359,7 @@ class TestDashboardPerformance:
 # Memory Leak Tests
 # ============================================================================
 
+
 class TestMemoryLeaks:
     """Test for memory leaks in long-running processes."""
 
@@ -363,15 +372,16 @@ class TestMemoryLeaks:
 
         # Run pipeline multiple times
         for i in range(10):
-            data = pd.DataFrame({
-                'a': np.random.randn(1000),
-                'b': np.random.randn(1000),
-                'target': np.random.choice([0, 1], 1000)
-            })
+            data = pd.DataFrame(
+                {
+                    "a": np.random.randn(1000),
+                    "b": np.random.randn(1000),
+                    "target": np.random.choice([0, 1], 1000),
+                }
+            )
 
             config = PipelineConfig(
-                cross_validation_folds=2,
-                hyperparameter_tuning=False
+                cross_validation_folds=2, hyperparameter_tuning=False
             )
 
             orchestrator = MLPipelineOrchestrator(config)
@@ -379,6 +389,7 @@ class TestMemoryLeaks:
 
             # Force garbage collection
             import gc
+
             gc.collect()
 
         final_memory = tracemalloc.get_traced_memory()[0]
@@ -386,7 +397,9 @@ class TestMemoryLeaks:
 
         # Memory increase should be minimal
         memory_increase = (final_memory - initial_memory) / 1024 / 1024  # MB
-        assert memory_increase < 100, f"Memory leak detected: {memory_increase:.2f} MB increase"
+        assert memory_increase < 100, (
+            f"Memory leak detected: {memory_increase:.2f} MB increase"
+        )
 
     @pytest.mark.performance
     def test_data_processing_memory_leak(self):
@@ -402,17 +415,21 @@ class TestMemoryLeaks:
             del processed
 
         import gc
+
         gc.collect()
 
         final_memory = process.memory_info().rss / 1024 / 1024  # MB
         memory_increase = final_memory - initial_memory
 
-        assert memory_increase < 50, f"Memory leak in data processing: {memory_increase:.2f} MB"
+        assert memory_increase < 50, (
+            f"Memory leak in data processing: {memory_increase:.2f} MB"
+        )
 
 
 # ============================================================================
 # Scalability Tests
 # ============================================================================
+
 
 class TestScalability:
     """Test system scalability."""
@@ -425,10 +442,9 @@ class TestScalability:
         sizes = [1000, 2000, 4000, 8000]
 
         for size in sizes:
-            data = pd.DataFrame({
-                'x': np.random.randn(size),
-                'y': np.random.randn(size)
-            })
+            data = pd.DataFrame(
+                {"x": np.random.randn(size), "y": np.random.randn(size)}
+            )
 
             start_time = time.time()
             # Simple processing
@@ -439,7 +455,7 @@ class TestScalability:
 
         # Check if scaling is approximately linear
         # Time should roughly double when size doubles
-        scaling_factors = [times[i+1] / times[i] for i in range(len(times)-1)]
+        scaling_factors = [times[i + 1] / times[i] for i in range(len(times) - 1)]
 
         # Allow some deviation from perfect linear scaling
         for factor in scaling_factors:
@@ -448,10 +464,11 @@ class TestScalability:
     @pytest.mark.performance
     def test_concurrent_request_handling(self):
         """Test handling of concurrent requests."""
+
         def process_request(request_id):
             """Simulate request processing."""
             time.sleep(0.01)  # Simulate processing time
-            return {'id': request_id, 'status': 'completed'}
+            return {"id": request_id, "status": "completed"}
 
         # Sequential processing
         start_time = time.time()
@@ -474,6 +491,7 @@ class TestScalability:
 # ============================================================================
 # Resource Usage Tests
 # ============================================================================
+
 
 class TestResourceUsage:
     """Test resource usage limits."""
@@ -513,7 +531,9 @@ class TestResourceUsage:
         file_path.unlink()
 
         # Check I/O performance
-        file_size_mb = file_path.stat().st_size / 1024 / 1024 if file_path.exists() else 100
+        file_size_mb = (
+            file_path.stat().st_size / 1024 / 1024 if file_path.exists() else 100
+        )
         write_speed = file_size_mb / write_time  # MB/s
         read_speed = file_size_mb / read_time  # MB/s
 
@@ -524,6 +544,7 @@ class TestResourceUsage:
 # ============================================================================
 # Regression Tests
 # ============================================================================
+
 
 class TestPerformanceRegression:
     """Test for performance regression against baselines."""
@@ -542,12 +563,12 @@ class TestPerformanceRegression:
                 baseline = performance_baselines[test_name]
 
                 # Allow 20% degradation
-                if current['time'] > baseline['time'] * 1.2:
+                if current["time"] > baseline["time"] * 1.2:
                     regressions.append(
                         f"{test_name}: time {current['time']:.2f}s > {baseline['time'] * 1.2:.2f}s"
                     )
 
-                if current['memory'] > baseline['memory'] * 1.2:
+                if current["memory"] > baseline["memory"] * 1.2:
                     regressions.append(
                         f"{test_name}: memory {current['memory']:.1f}MB > {baseline['memory'] * 1.2:.1f}MB"
                     )
@@ -566,16 +587,18 @@ class TestPerformanceRegression:
 
         # Test small ML pipeline
         start_time = time.time()
-        data = pd.DataFrame({
-            'x': np.random.randn(100),
-            'y': np.random.randn(100),
-            'target': np.random.choice([0, 1], 100)
-        })
+        data = pd.DataFrame(
+            {
+                "x": np.random.randn(100),
+                "y": np.random.randn(100),
+                "target": np.random.choice([0, 1], 100),
+            }
+        )
         # Simulate pipeline run
         time.sleep(0.1)
-        results['ml_pipeline_small'] = {
-            'time': time.time() - start_time,
-            'memory': psutil.Process().memory_info().rss / 1024 / 1024
+        results["ml_pipeline_small"] = {
+            "time": time.time() - start_time,
+            "memory": psutil.Process().memory_info().rss / 1024 / 1024,
         }
 
         return results

@@ -994,7 +994,9 @@ class ComplianceReporting:
             use_case=model_card.use_case,
             training_data=json.dumps(model_card.training_data, indent=2),
             performance_metrics=json.dumps(model_card.performance_metrics, indent=2),
-            limitations="\n".join(f"- {l}" for l in model_card.limitations),
+            limitations="\n".join(
+                f"- {limitation}" for limitation in model_card.limitations
+            ),
             ethical_considerations="\n".join(
                 f"- {e}" for e in model_card.ethical_considerations
             ),

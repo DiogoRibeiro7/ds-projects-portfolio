@@ -1,0 +1,117 @@
+============================================================
+PERFORMANCE BENCHMARK REPORT
+============================================================
+
+Generated: 2025-12-30 13:59:51
+Total benchmarks: 17
+
+SUMMARY STATISTICS
+----------------------------------------
+Average execution time: 0.0238s
+Average memory usage: 0.83 MB
+Average CPU usage: 63.01%
+
+DETAILED RESULTS
+----------------------------------------
+
+original_bootstrap:
+  Execution time: 0.1005s
+  Memory peak: 0.17 MB
+  CPU usage: 103.53%
+  Iterations: 3
+
+optimized_bootstrap:
+  Execution time: 0.0003s
+  Memory peak: 0.01 MB
+  CPU usage: 0.00%
+  Iterations: 3
+
+original_conversion:
+  Execution time: 0.0122s
+  Memory peak: 5.07 MB
+  CPU usage: 103.78%
+  Iterations: 5
+
+vectorized_conversion:
+  Execution time: 0.0042s
+  Memory peak: 3.55 MB
+  CPU usage: 146.62%
+  Iterations: 5
+
+original_hourly:
+  Execution time: 0.0207s
+  Memory peak: 1.52 MB
+  CPU usage: 100.90%
+  Iterations: 3
+
+vectorized_hourly:
+  Execution time: 0.0027s
+  Memory peak: 2.29 MB
+  CPU usage: 0.00%
+  Iterations: 3
+
+original_similarity:
+  Execution time: 0.1161s
+  Memory peak: 0.09 MB
+  CPU usage: 100.80%
+  Iterations: 2
+
+vectorized_similarity:
+  Execution time: 0.0006s
+  Memory peak: 0.89 MB
+  CPU usage: 0.00%
+  Iterations: 2
+
+original_topk:
+  Execution time: 0.0052s
+  Memory peak: 0.03 MB
+  CPU usage: 125.26%
+  Iterations: 5
+
+optimized_topk:
+  Execution time: 0.0002s
+  Memory peak: 0.10 MB
+  CPU usage: 0.00%
+  Iterations: 5
+
+original_rolling:
+  Execution time: 0.0533s
+  Memory peak: 0.11 MB
+  CPU usage: 97.27%
+  Iterations: 3
+
+pandas_rolling:
+  Execution time: 0.0003s
+  Memory peak: 0.03 MB
+  CPU usage: 0.00%
+  Iterations: 3
+
+numba_rolling:
+  Execution time: 0.0072s
+  Memory peak: 0.03 MB
+  CPU usage: 70.23%
+  Iterations: 3
+
+original_seasonal:
+  Execution time: 0.0755s
+  Memory peak: 0.14 MB
+  CPU usage: 103.45%
+  Iterations: 2
+
+vectorized_seasonal:
+  Execution time: 0.0008s
+  Memory peak: 0.06 MB
+  CPU usage: 0.00%
+  Iterations: 2
+
+original_autocorr:
+  Execution time: 0.0041s
+  Memory peak: 0.00 MB
+  CPU usage: 119.38%
+  Iterations: 10
+
+numpy_autocorr:
+  Execution time: 0.0001s
+  Memory peak: 0.04 MB
+  CPU usage: 0.00%
+  Iterations: 10

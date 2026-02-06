@@ -1,0 +1,49 @@
+# Core Data Science Stack
+numpy>=2.3.5,<2.4  # Limited by numba compatibility
+pandas>=2.3.3
+scipy>=1.16.3
+matplotlib>=3.10.8
+seaborn>=0.13.2
+
+# Statistical Analysis
+statsmodels>=0.12.0
+scikit-learn>=1.6.1,<1.7  # Limited by scikit-survival compatibility
+
+# Interactive Visualization
+plotly>=5.0.0
+dash>=2.0.0
+
+# Data Processing & File Support
+openpyxl>=3.0.0
+xlsxwriter>=3.0.0
+pyarrow>=5.0.0
+
+# Configuration & Serialization
+pyyaml>=6.0
+toml>=0.10.0
+jsonschema>=4.0.0
+
+# Enhanced Data Processing
+chardet>=4.0.0
+python-dateutil>=2.8.0
+
+# Progress & Logging
+tqdm>=4.60.0
+rich>=10.0.0
+
+# Jupyter Environment
+jupyter>=1.0.0
+jupyterlab>=3.0.0
+ipykernel>=6.0.0
+ipywidgets>=7.6.0
+
+# Testing and Development
+pytest>=6.0.0
+pytest-cov>=3.0.0
+
+# API & Web Services
+requests>=2.25.0
+urllib3>=2.6.2  # Fixed compression vulnerabilities
+
+# Database Connectivity
+sqlalchemy>=1.4.0

@@ -103,7 +103,6 @@ dmypy.json
 # Data Science specific
 # Large datasets
 *.csv
-*.txt
 *.tsv
 *.json
 *.parquet
@@ -125,6 +124,7 @@ dmypy.json
 data/raw/
 data/processed/
 data/external/
+**/data/
 
 # Temporary files
 temp/

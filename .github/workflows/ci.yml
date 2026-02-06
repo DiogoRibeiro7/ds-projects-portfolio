@@ -37,6 +37,7 @@ jobs:
           fi
           python -m pip install ruff==0.14.0
           python -m pip install hypothesis
+          python -m pip install hypothesis
       - name: Check formatting
         run: ruff format --check .
       - name: Lint

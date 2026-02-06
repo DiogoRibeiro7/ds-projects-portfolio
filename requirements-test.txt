@@ -1,0 +1,116 @@
+# Testing Requirements for Data Science Portfolio
+
+# Core testing frameworks
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-xdist==3.5.0  # Parallel test execution
+pytest-timeout==2.2.0
+pytest-benchmark==4.0.0
+pytest-mock==3.12.0
+pytest-asyncio==0.21.1
+
+# Property-based testing
+hypothesis==6.92.1
+hypothesis-jsonschema==0.23.1
+hypothesis[numpy]==6.92.1
+hypothesis[pandas]==6.92.1
+
+# Mutation testing
+mutmut==2.4.4
+cosmic-ray==8.3.5
+
+# Data testing
+great-expectations==0.18.7
+pandera==0.17.2
+deepchecks==0.17.5
+evidently==0.4.10
+
+# Integration testing
+testcontainers==3.7.1
+pytest-docker==2.0.1
+requests-mock==1.11.0
+responses==0.24.1
+
+# Notebook testing
+nbval==0.10.0
+nbmake==1.4.6
+papermill==2.5.0
+testbook==0.4.2
+
+# Performance testing
+locust==2.17.0
+pytest-profiling==1.7.0
+memory-profiler==0.61.0
+py-spy==0.3.14
+
+# Security testing
+bandit==1.7.5
+safety==3.0.1
+pip-audit==2.6.1
+semgrep==1.48.0
+
+# Mocking and fixtures
+faker==20.1.0
+factory-boy==3.3.0
+freezegun==1.3.1
+responses==0.24.1
+
+# Code quality
+black==23.12.0
+isort==5.13.2
+flake8==6.1.0
+mypy==1.7.1
+pylint==3.0.3
+radon==6.0.1  # Cyclomatic complexity
+
+# Coverage and reporting
+coverage==7.3.3
+coverage-badge==1.1.0
+pytest-html==4.1.1
+pytest-json-report==1.5.0
+allure-pytest==2.13.2
+
+# Test data generation
+mimesis==12.1.0
+synthetic==2.4.0
+sdv==1.7.0  # Synthetic Data Vault
+
+# Database testing
+pytest-postgresql==5.0.0
+pytest-mongodb==2.4.0
+fakeredis==2.20.1
+
+# API testing
+pytest-httpserver==1.0.8
+httpretty==1.1.4
+vcrpy==5.1.0
+
+# Browser testing (for dashboards)
+pytest-playwright==0.4.3
+selenium==4.16.0
+pytest-selenium==4.1.0
+
+# Parallel and distributed testing
+pytest-parallel==0.1.1
+pytest-split==0.8.1
+
+# Test reporting
+pytest-reportlog==0.4.0
+pytest-json==0.4.0
+junitparser==3.1.0
+
+# Continuous testing
+pytest-watch==4.2.0
+pytest-testmon==2.1.0  # Only run tests affected by changes
+
+# Snapshot testing
+pytest-snapshot==0.9.0
+syrupy==4.6.0
+
+# Contract testing
+pact-python==2.1.1
+schemathesis==3.23.0
+
+# Load testing
+artillery==2.0.0
+k6==0.0.1  # via subprocess

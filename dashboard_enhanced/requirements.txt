@@ -57,7 +57,7 @@ imagehash==4.3.1
 opencv-python==4.8.1
 
 # Development Tools
-black==23.11.0
+black==24.3.0
 flake8==6.1.0
 mypy==1.7.0
 ipython==8.17.2

@@ -4,7 +4,7 @@ matplotlib-inline==0.2.1
 mlflow==3.8.1
 mlflow-skinny==3.8.1
 mlflow-tracing==3.8.1
-nbconvert==7.16.6
+nbconvert==7.17.0
 numpy==2.3.5
 osqp==0.6.7.post3
 pandas==2.3.3
@@ -16,4 +16,4 @@ scipy==1.16.3
 seaborn==0.13.2
 sqlparse==0.5.5
 starlette==0.50.0
-urllib3==2.6.2
+urllib3==2.6.3

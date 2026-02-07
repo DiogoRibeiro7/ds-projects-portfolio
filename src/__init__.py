@@ -20,11 +20,16 @@ from .statistics.core import (
     calculate_sample_size,
     two_prop_ztest,
 )
-from .vizualization.plots import (
-    ExperimentDashboard,
-    plot_conversion_funnel,
-    plot_experiment_results,
-)
+try:
+    from .vizualization.plots import (
+        ExperimentDashboard,
+        plot_conversion_funnel,
+        plot_experiment_results,
+    )
+except Exception:
+    ExperimentDashboard = None
+    plot_conversion_funnel = None
+    plot_experiment_results = None
 
 __all__ = [
     "ExperimentAnalyzer",

@@ -9,7 +9,7 @@ plotly==5.17.0
 bokeh==3.8.2
 
 # Flask and API
-Flask==3.0.0
+Flask==3.1.2
 flask-restful==0.3.10
 flask-cors==6.0.0
 flask-limiter==3.5.0

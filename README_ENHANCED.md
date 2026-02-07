@@ -1,6 +1,6 @@
 # 🚀 Data Science Portfolio - Comprehensive Documentation
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/Documentation-Available-brightgreen.svg)](./docs)
 [![Tests](https://img.shields.io/badge/Tests-Passing-success.svg)](./tests)
@@ -181,7 +181,7 @@ ds-projects-portfolio/
 
 ### Prerequisites
 
-- Python 3.10 or higher
+- Python 3.11 or higher
 - Git
 - 8GB RAM minimum (16GB recommended)
 - 10GB free disk space
@@ -473,7 +473,7 @@ jobs:
 
 ```dockerfile
 # Dockerfile
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 COPY requirements.txt .

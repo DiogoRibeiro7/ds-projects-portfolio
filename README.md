@@ -19,7 +19,7 @@ Use it to explore best practices, run demos, or build new project configurations
 pip install -r requirements-dev.txt
 ```
 
-> Python 3.10–3.12 on Ubuntu/macOS/Windows is supported (see matrix below).
+> Python 3.11–3.12 on Ubuntu/macOS/Windows is supported (see matrix below).
 
 ## Quickstart (Commands 2 & 3)
 
@@ -52,7 +52,7 @@ Need to handle messy/outlier-heavy experiments? See [docs/ROBUSTNESS.md](docs/RO
 
 | Category | Supported | Notes |
 | --- | --- | --- |
-| Python | 3.10 / 3.11 / 3.12 | Matches GitHub Actions matrix |
+| Python | 3.11 / 3.12 | Matches GitHub Actions matrix |
 | OS | Ubuntu-latest / macOS-latest / Windows-latest | CI validated |
 | Tooling | pip, pytest 9.x, Ruff, nbval, Hypothesis | Installed via `requirements-dev.txt` |
 

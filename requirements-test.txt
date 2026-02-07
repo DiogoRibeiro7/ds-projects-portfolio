@@ -57,7 +57,7 @@ responses==0.24.1
 
 # Code quality
 black==24.3.0
-isort==5.13.2
+isort==7.0.0
 flake8==6.1.0
 mypy==1.7.1
 pylint==3.0.3

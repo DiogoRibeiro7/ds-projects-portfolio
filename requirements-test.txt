@@ -32,7 +32,7 @@ requests-mock==1.11.0
 responses==0.24.1
 
 # Notebook testing
-nbval==0.10.0
+nbval==0.11.0
 nbmake==1.5.5
 papermill==2.5.0
 testbook==0.4.2

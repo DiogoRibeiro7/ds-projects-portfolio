@@ -109,7 +109,7 @@ syrupy==4.6.0
 
 # Contract testing
 pact-python==2.1.1
-schemathesis==3.23.0
+schemathesis==4.9.5
 
 # Load testing
 artillery==2.0.0

@@ -30,7 +30,6 @@ types-python-dateutil>=2.8.19
 
 # Security Scanning
 bandit[toml]>=1.7.5
-safety>=2.3.5
 pip-audit>=2.6.1
 
 # Documentation

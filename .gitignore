@@ -159,6 +159,7 @@ cache/
 # Output directories
 outputs/
 results/
+test_results/
 
 # Secrets and config
 secrets.json

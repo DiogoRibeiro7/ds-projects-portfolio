@@ -761,6 +761,48 @@ def get_cache(
     return _global_cache
 
 
+def auto_cache(
+    cache: SmartCache,
+    prefix: str = "auto",
+    ttl: int = 3600,
+    exclude_args: list[int] | None = None,
+):
+    """Decorator to cache function results automatically.
+
+    Parameters
+    ----------
+    cache : SmartCache
+        Cache instance to use.
+    prefix : str, default="auto"
+        Cache key prefix.
+    ttl : int, default=3600
+        Time-to-live in seconds.
+    exclude_args : list[int] | None, default=None
+        Positional argument indices to exclude from cache key generation.
+    """
+    exclude_args = exclude_args or []
+
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            filtered_args = tuple(
+                arg for idx, arg in enumerate(args) if idx not in exclude_args
+            )
+            cache_key = cache._generate_key(prefix, func.__name__, filtered_args, kwargs)
+
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return cached
+
+            result = func(*args, **kwargs)
+            cache.set(cache_key, result, ttl=ttl)
+            return result
+
+        return wrapper
+
+    return decorator
+
+
 # Usage examples
 if __name__ == "__main__":
     # Example 1: Basic caching

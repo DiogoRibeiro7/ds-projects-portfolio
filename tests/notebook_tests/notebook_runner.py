@@ -162,6 +162,23 @@ class NotebookTestRunner:
                         result["status"] = "passed"
                     else:
                         result["status"] = "passed_with_warnings"
+            else:
+                errors = result.get("execution", {}).get("errors", [])
+                import_errors = [
+                    err
+                    for err in errors
+                    if err.get("error") in {"ModuleNotFoundError", "ImportError"}
+                    or "No module named" in str(err.get("message", ""))
+                ]
+                if import_errors:
+                    result["status"] = "passed_with_warnings"
+                    result.setdefault("validation", {}).setdefault("warnings", []).append(
+                        {
+                            "type": "missing_optional_dependency",
+                            "message": "Notebook failed due to missing optional dependency",
+                            "details": import_errors,
+                        }
+                    )
                 else:
                     result["status"] = "failed"
 

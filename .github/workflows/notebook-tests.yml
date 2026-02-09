@@ -62,7 +62,7 @@ jobs:
         pip install -r requirements-core.txt
         pip install nbval pytest-notebook nbconvert nbformat papermill pytest-html pytest-xdist memory_profiler
         # Extra deps used in notebooks (keep minimal to reduce CI flakiness)
-        pip install lightgbm optuna shap lifelines
+        pip install lightgbm optuna shap lifelines plotly
 
     - name: Validate notebooks (quick check)
       run: |

@@ -400,6 +400,11 @@ def index():
     return render_template("dashboard.html")
 
 
+def create_app() -> Flask:
+    """Factory for tests and external integrations."""
+    return app
+
+
 @app.route("/api/auth/login", methods=["POST"])
 @limiter.limit("5 per minute")
 def login():

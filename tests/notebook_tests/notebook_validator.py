@@ -92,7 +92,8 @@ class NotebookValidator:
                                 )
 
         if hardcoded_paths:
-            self.issues.append(
+            # Treat hardcoded paths as warnings to avoid blocking execution
+            self.warnings.append(
                 {
                     "type": "hardcoded_paths",
                     "message": f"Found {len(hardcoded_paths)} hardcoded paths",

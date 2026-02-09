@@ -2,12 +2,12 @@
 
 import hashlib
 
+import pytest
 import great_expectations as gx
 import numpy as np
 import pandas as pd
 
 pa = pytest.importorskip("pandera")
-import pytest
 from faker import Faker
 from great_expectations.core import ExpectationConfiguration, ExpectationSuite
 from great_expectations.core.batch import RuntimeBatchRequest

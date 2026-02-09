@@ -17,7 +17,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-import aioredis
+try:
+    import redis.asyncio as aioredis
+except Exception:
+    aioredis = None
 import dash
 import dash_bootstrap_components as dbc
 import numpy as np

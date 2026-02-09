@@ -28,7 +28,11 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash import Input, Output, State, callback_context, dcc, html
 from dash.exceptions import PreventUpdate
-from dash_extensions import WebSocket
+
+try:
+    from dash_extensions import WebSocket
+except Exception:  # pragma: no cover - optional dependency
+    WebSocket = None
 from flask_caching import Cache
 from flask_cors import CORS
 from pptx import Presentation

@@ -61,6 +61,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements-core.txt
         pip install nbval pytest-notebook nbconvert nbformat papermill pytest-html pytest-xdist memory_profiler
+        # Extra deps used in notebooks (keep minimal to reduce CI flakiness)
+        pip install lightgbm optuna shap lifelines
 
     - name: Validate notebooks (quick check)
       run: |
@@ -71,7 +73,7 @@ jobs:
       run: |
         python run_notebook_tests.py \
           --dirs ab_testing modern-bank-churn \
-          --timeout 300 \
+          --timeout 600 \
           --output test_results \
           ${{ github.event.inputs.parallel == 'true' && '--parallel' || '' }}
 

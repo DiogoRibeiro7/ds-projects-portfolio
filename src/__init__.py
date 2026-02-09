@@ -21,6 +21,15 @@ from .statistics.core import (
     two_prop_ztest,
 )
 
+from typing import Any, Callable, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .vizualization.plots import ExperimentDashboard as _ExperimentDashboard
+
+ExperimentDashboard: Optional[type["_ExperimentDashboard"]]
+plot_conversion_funnel: Optional[Callable[..., Any]]
+plot_experiment_results: Optional[Callable[..., Any]]
+
 try:
     from .vizualization.plots import (
         ExperimentDashboard,

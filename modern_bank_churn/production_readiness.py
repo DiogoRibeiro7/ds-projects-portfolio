@@ -4,11 +4,11 @@ import sys
 from importlib import util
 from pathlib import Path
 
-_source = (
-    Path(__file__).resolve().parent.parent
-    / "modern-bank-churn"
-    / "production_readiness.py"
-)
+_base = Path(__file__).resolve().parent.parent / "modern-bank-churn"
+if str(_base) not in sys.path:
+    sys.path.insert(0, str(_base))
+
+_source = _base / "production_readiness.py"
 _spec = util.spec_from_file_location("modern_bank_churn._production_readiness", _source)
 if _spec is None or _spec.loader is None:
     raise ImportError(f"Unable to load module from {_source}")

@@ -1,12 +1,12 @@
-"""Data quality testing with Great Expectations and other validation tools.
-"""
+"""Data quality testing with Great Expectations and other validation tools."""
 
 import hashlib
 
 import great_expectations as gx
 import numpy as np
 import pandas as pd
-import pandera as pa
+
+pa = pytest.importorskip("pandera")
 import pytest
 from faker import Faker
 from great_expectations.core import ExpectationConfiguration, ExpectationSuite

@@ -1,5 +1,4 @@
-"""Test suite for dashboard components.
-"""
+"""Test suite for dashboard components."""
 
 from unittest.mock import Mock, patch
 
@@ -7,7 +6,11 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
 import pytest
-from dash import Dash, dcc, html
+
+dash = pytest.importorskip("dash")
+Dash = dash.Dash
+dcc = dash.dcc
+html = dash.html
 
 from dashboard_enhanced.app import create_app
 from dashboard_enhanced.dashboard_framework import (

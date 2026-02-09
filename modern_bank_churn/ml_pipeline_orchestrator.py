@@ -4,11 +4,11 @@ import sys
 from importlib import util
 from pathlib import Path
 
-_source = (
-    Path(__file__).resolve().parent.parent
-    / "modern-bank-churn"
-    / "ml_pipeline_orchestrator.py"
-)
+_base = Path(__file__).resolve().parent.parent / "modern-bank-churn"
+if str(_base) not in sys.path:
+    sys.path.insert(0, str(_base))
+
+_source = _base / "ml_pipeline_orchestrator.py"
 _spec = util.spec_from_file_location(
     "modern_bank_churn._ml_pipeline_orchestrator", _source
 )

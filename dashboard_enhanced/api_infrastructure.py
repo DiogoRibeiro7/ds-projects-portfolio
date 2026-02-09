@@ -21,7 +21,6 @@ import pandas as pd
 import redis
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from flask_graphql import GraphQLView
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -574,14 +573,47 @@ class DashboardAPI:
         # Create schema
         schema = Schema(query=Query, mutation=Mutation)
 
-        # Add GraphQL view
+        # Add GraphQL endpoint without flask-graphql dependency
+        def _graphql_view():
+            if request.method == "GET":
+                return """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>GraphiQL</title>
+                    <style>body { margin: 0; }</style>
+                </head>
+                <body>
+                    <div id="root"></div>
+                    <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+                    <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+                    <script src="https://unpkg.com/graphiql/graphiql.min.js"></script>
+                    <link rel="stylesheet" href="https://unpkg.com/graphiql/graphiql.min.css" />
+                    <script>
+                        ReactDOM.render(
+                            React.createElement(GraphiQL, {
+                                fetcher: GraphiQL.createFetcher({url: '/graphql'}),
+                            }),
+                            document.getElementById('root')
+                        );
+                    </script>
+                </body>
+                </html>
+                """
+
+            payload = request.get_json() or {}
+            query = payload.get("query")
+            variables = payload.get("variables")
+            result = schema.execute(query, variable_values=variables)
+            response = {"data": result.data}
+            if result.errors:
+                response["errors"] = [str(e) for e in result.errors]
+            return jsonify(response)
+
         self.app.add_url_rule(
             "/graphql",
-            view_func=GraphQLView.as_view(
-                "graphql",
-                schema=schema,
-                graphiql=True,  # Enable GraphiQL interface
-            ),
+            view_func=_graphql_view,
+            methods=["GET", "POST"],
         )
 
     def _setup_websocket(self):

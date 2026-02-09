@@ -146,6 +146,7 @@ Examples:
         output_dir=args.output,
         timeout=config.config["timeout"],
         parallel=args.parallel,
+        skip_execution_patterns=config.config.get("skip_execution_patterns", []),
     )
 
     # Find notebooks

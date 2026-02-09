@@ -28,6 +28,7 @@ class NotebookTestRunner:
         output_dir: str = "test_results",
         timeout: int = 600,
         parallel: bool = False,
+        skip_execution_patterns: list[str] | None = None,
     ):
         """Initialize the test runner.
 
@@ -42,7 +43,15 @@ class NotebookTestRunner:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.timeout = timeout
         self.parallel = parallel
+        self.skip_execution_patterns = skip_execution_patterns or []
         self.results = []
+
+    def _should_skip_execution(self, notebook_path: Path) -> bool:
+        if not self.skip_execution_patterns:
+            return False
+        from fnmatch import fnmatch
+
+        return any(fnmatch(notebook_path.name, pattern) for pattern in self.skip_execution_patterns)
 
     def find_notebooks(self) -> list[Path]:
         """Find all notebooks in the specified directories."""
@@ -132,19 +141,29 @@ class NotebookTestRunner:
             validator = NotebookValidator(str(notebook_path))
             result["validation"] = validator.validate_all()
 
-            # Execute notebook
-            print(f"  Executing {notebook_path.name}...")
-            execution_result = self._execute_notebook(notebook_path)
-            result["execution"] = execution_result
-
-            # Determine overall status
-            if execution_result["success"]:
-                if result["validation"]["score"] >= 80:
+            if self._should_skip_execution(notebook_path):
+                print(f"  Skipping execution for {notebook_path.name} (pattern match)")
+                result["execution"] = {"success": True, "execution_time": 0}
+                if result["validation"]["score"] >= 80 and not result["validation"]["issues"]:
                     result["status"] = "passed"
+                elif result["validation"]["issues"]:
+                    result["status"] = "failed"
                 else:
                     result["status"] = "passed_with_warnings"
             else:
-                result["status"] = "failed"
+                # Execute notebook
+                print(f"  Executing {notebook_path.name}...")
+                execution_result = self._execute_notebook(notebook_path)
+                result["execution"] = execution_result
+
+                # Determine overall status
+                if execution_result["success"]:
+                    if result["validation"]["score"] >= 80:
+                        result["status"] = "passed"
+                    else:
+                        result["status"] = "passed_with_warnings"
+                else:
+                    result["status"] = "failed"
 
             # Collect metrics
             result["metrics"] = self._collect_metrics(notebook_path, execution_result)

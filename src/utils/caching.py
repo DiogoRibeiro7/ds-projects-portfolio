@@ -788,7 +788,9 @@ def auto_cache(
             filtered_args = tuple(
                 arg for idx, arg in enumerate(args) if idx not in exclude_args
             )
-            cache_key = cache._generate_key(prefix, func.__name__, filtered_args, kwargs)
+            cache_key = cache._generate_key(
+                prefix, func.__name__, filtered_args, kwargs
+            )
 
             cached = cache.get(cache_key)
             if cached is not None:

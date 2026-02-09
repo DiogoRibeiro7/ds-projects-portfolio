@@ -257,7 +257,9 @@ class AWSIntegration(CloudStorageInterface):
     def batch_predict_sagemaker(self, model_endpoint: str, data: list[list[float]]):
         return [0.0 for _ in data]
 
-    def invoke_lambda(self, function_name: str, payload: dict[str, Any]) -> dict[str, Any]:
+    def invoke_lambda(
+        self, function_name: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
         response = self.lambda_client.invoke(
             FunctionName=function_name,
             Payload=json.dumps(payload).encode("utf-8"),
@@ -512,9 +514,7 @@ class GCPIntegration(CloudStorageInterface):
         return list(job.result())
 
     def predict_ai_platform(self, model_name: str, instances: list[list[float]]):
-        response = self.ai_platform_client.predict(
-            name=model_name, instances=instances
-        )
+        response = self.ai_platform_client.predict(name=model_name, instances=instances)
         return response.get("predictions")
 
     def publish_message(self, topic: str, message: dict[str, Any]) -> str:
@@ -764,10 +764,15 @@ class AzureIntegration(CloudStorageInterface):
     ) -> list[dict[str, Any]]:
         db_client = self.cosmos_client.get_database_client(database)
         container_client = db_client.get_container_client(container)
-        return list(container_client.query_items(query=query, enable_cross_partition_query=True))
+        return list(
+            container_client.query_items(query=query, enable_cross_partition_query=True)
+        )
 
     def deploy_azure_ml_model(
-        self, model_name: str, endpoint_name: str, instance_type: str = "Standard_DS2_v2"
+        self,
+        model_name: str,
+        endpoint_name: str,
+        instance_type: str = "Standard_DS2_v2",
     ) -> str:
         if self.ml_client is None:
             raise RuntimeError("Azure ML client not configured")
@@ -1083,7 +1088,11 @@ class CloudDataPipeline:
         for _ in range(max_retries):
             try:
                 result = self.execute_pipeline(pipeline_id)
-                return result if result is not None else {"status": "completed", "pipeline_id": pipeline_id}
+                return (
+                    result
+                    if result is not None
+                    else {"status": "completed", "pipeline_id": pipeline_id}
+                )
             except Exception as exc:
                 last_error = exc
         if last_error:

@@ -7,11 +7,22 @@ import warnings
 from dataclasses import dataclass, field
 from typing import Any
 
-import lightgbm as lgb
+try:
+    import lightgbm as lgb
+except Exception:  # pragma: no cover - optional dependency
+    lgb = None
 import numpy as np
-import optuna
+
+try:
+    import optuna
+except Exception:  # pragma: no cover - optional dependency
+    optuna = None
 import pandas as pd
-import xgboost as xgb
+
+try:
+    import xgboost as xgb
+except Exception:  # pragma: no cover - optional dependency
+    xgb = None
 from sklearn.base import BaseEstimator, clone
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import (
@@ -32,7 +43,8 @@ from sklearn.model_selection import (
 )
 
 warnings.filterwarnings("ignore")
-optuna.logging.set_verbosity(optuna.logging.WARNING)
+if optuna is not None:
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 
 @dataclass
@@ -578,8 +590,7 @@ class HyperparameterOptimizer:
 
 
 class ModelCalibrator:
-    """Model calibration for improved probability estimates.
-    """
+    """Model calibration for improved probability estimates."""
 
     def __init__(
         self,
@@ -679,8 +690,7 @@ class ModelCalibrator:
 
 
 class UncertaintyQuantifier:
-    """Uncertainty quantification for model predictions.
-    """
+    """Uncertainty quantification for model predictions."""
 
     def __init__(
         self,

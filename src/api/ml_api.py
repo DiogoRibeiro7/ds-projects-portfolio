@@ -14,18 +14,60 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import aioredis
-import mlflow
-import mlflow.pyfunc
+try:
+    import redis.asyncio as aioredis
+except Exception:
+    aioredis = None
+
+try:
+    import mlflow
+    import mlflow.pyfunc
+except Exception:
+    mlflow = None
 import numpy as np
 import pandas as pd
-import prometheus_client
-import shap
-import uvloop
+
+try:
+    import prometheus_client
+except Exception:
+    prometheus_client = None
+
+try:
+    import shap
+except Exception:
+    shap = None
+
+try:
+    import uvloop
+except Exception:
+    uvloop = None
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from prometheus_client import Counter, Gauge, Histogram
+
+if prometheus_client is not None:
+    from prometheus_client import Counter, Gauge, Histogram
+else:
+
+    class _NoopMetric:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def labels(self, *args, **kwargs):
+            return self
+
+        def inc(self, *args, **kwargs):
+            pass
+
+        def observe(self, *args, **kwargs):
+            pass
+
+        def set(self, *args, **kwargs):
+            pass
+
+    Counter = _NoopMetric
+    Gauge = _NoopMetric
+    Histogram = _NoopMetric
 from pydantic import BaseModel, Field, validator
 
 # Configure logging
@@ -35,7 +77,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Set event loop policy for better performance
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+if uvloop is not None:
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 # Prometheus metrics
 request_count = Counter(
@@ -266,6 +309,10 @@ class CacheManager:
 
     async def connect(self):
         """Connect to Redis"""
+        if aioredis is None:
+            logger.warning("aioredis not available - Redis cache disabled")
+            self.redis = None
+            return
         try:
             self.redis = await aioredis.create_redis_pool(
                 self.redis_url, minsize=5, maxsize=20

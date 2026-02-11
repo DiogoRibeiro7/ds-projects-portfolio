@@ -35,8 +35,13 @@ except Exception:  # pragma: no cover - optional dependency
     WebSocket = None
 from flask_caching import Cache
 from flask_cors import CORS
-from pptx import Presentation
-from pptx.util import Inches
+
+try:
+    from pptx import Presentation
+    from pptx.util import Inches
+except Exception:  # pragma: no cover - optional dependency
+    Presentation = None
+    Inches = None
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet

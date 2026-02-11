@@ -76,7 +76,7 @@ synthetic==2.4.0
 sdv==1.7.0  # Synthetic Data Vault
 
 # Database testing
-pytest-postgresql==5.0.0
+pytest-postgresql==8.0.0
 pytest-mongodb==2.4.0
 fakeredis==2.20.1
 

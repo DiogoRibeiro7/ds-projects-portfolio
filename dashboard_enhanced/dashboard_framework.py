@@ -157,6 +157,10 @@ class EnhancedDashboard:
                 "CACHE_DEFAULT_TIMEOUT": self.config.cache_timeout,
             },
         )
+        # Bind memoized method after cache initialization to avoid NameError at import time.
+        self.get_data = self.cache.memoize(timeout=self.config.cache_timeout)(
+            self.get_data
+        )
 
         # Initialize Redis for real-time data (optional)
         self.redis_client = None
@@ -344,7 +348,6 @@ class EnhancedDashboard:
         self.data_sources[source_id] = source_func
         logger.info(f"Registered data source: {source_id}")
 
-    @cache.memoize(timeout=300)
     def get_data(self, source_id: str, filters: dict | None = None) -> pd.DataFrame:
         """Get data from a registered source with caching.
 

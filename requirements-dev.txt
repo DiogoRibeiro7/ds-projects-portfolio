@@ -52,6 +52,7 @@ nbformat>=5.9.2
 ipywidgets>=8.1.0
 plotly>=5.0.0
 matplotlib>=3.8.0
+shap>=0.45.0
 
 # Dashboard/Integration Testing
 dash>=2.15.0
@@ -75,6 +76,13 @@ lightgbm>=4.0.0
 fastapi>=0.110.0
 reportlab>=4.0.0
 structlog>=23.1.0
+opentelemetry-api>=1.23.0
+opentelemetry-sdk>=1.23.0
+opentelemetry-exporter-otlp-proto-grpc>=1.23.0
+opentelemetry-exporter-prometheus>=0.44b0
+opentelemetry-instrumentation-psycopg2>=0.44b0
+opentelemetry-instrumentation-redis>=0.44b0
+opentelemetry-instrumentation-requests>=0.44b0
 
 # Performance and Profiling
 memory-profiler>=0.61.0

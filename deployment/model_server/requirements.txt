@@ -58,7 +58,7 @@ click==8.1.7
 rich==13.7.0
 
 # Security
-cryptography==44.0.1
+cryptography==46.0.5
 pyjwt==2.8.0
 passlib[bcrypt]==1.7.4
 

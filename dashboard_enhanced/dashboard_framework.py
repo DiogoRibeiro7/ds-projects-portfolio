@@ -11,7 +11,7 @@ import io
 import json
 import logging
 import webbrowser
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path

@@ -31,13 +31,25 @@ import structlog
 from opentelemetry import metrics, trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
-from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
-from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+try:
+    from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
+except Exception:  # pragma: no cover - optional dependency
+    Psycopg2Instrumentor = None
+
+try:
+    from opentelemetry.instrumentation.redis import RedisInstrumentor
+except Exception:  # pragma: no cover - optional dependency
+    RedisInstrumentor = None
+
+try:
+    from opentelemetry.instrumentation.requests import RequestsInstrumentor
+except Exception:  # pragma: no cover - optional dependency
+    RequestsInstrumentor = None
 
 # Metrics
 from prometheus_client import (
@@ -137,7 +149,7 @@ class ObservabilityManager:
 
     def _setup_tracing(self):
         """Configure OpenTelemetry tracing"""
-        resource = Resource.create(
+        self.resource = Resource.create(
             {
                 "service.name": self.service_name,
                 "service.version": "1.0.0",
@@ -146,7 +158,7 @@ class ObservabilityManager:
         )
 
         # Create tracer provider
-        tracer_provider = TracerProvider(resource=resource)
+        tracer_provider = TracerProvider(resource=self.resource)
 
         # Add OTLP exporter
         otlp_exporter = OTLPSpanExporter(
@@ -207,17 +219,20 @@ class ObservabilityManager:
 
         # Create meter for OpenTelemetry metrics
         meter_provider = MeterProvider(
-            resource=resource, metric_readers=[PrometheusMetricReader()]
+            resource=self.resource, metric_readers=[PrometheusMetricReader()]
         )
         metrics.set_meter_provider(meter_provider)
         self.meter = metrics.get_meter(__name__)
 
     def _setup_instrumentation(self):
         """Setup automatic instrumentation"""
-        # Instrument libraries
-        RequestsInstrumentor().instrument()
-        RedisInstrumentor().instrument()
-        Psycopg2Instrumentor().instrument()
+        # Instrument libraries (optional)
+        if RequestsInstrumentor is not None:
+            RequestsInstrumentor().instrument()
+        if RedisInstrumentor is not None:
+            RedisInstrumentor().instrument()
+        if Psycopg2Instrumentor is not None:
+            Psycopg2Instrumentor().instrument()
         # Note: FastAPI and SQLAlchemy instrumentors should be called with instances
 
     @contextmanager

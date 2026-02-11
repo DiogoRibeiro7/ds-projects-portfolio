@@ -51,6 +51,7 @@ nbconvert>=7.8.0
 nbformat>=5.9.2
 ipywidgets>=8.1.0
 plotly>=5.0.0
+matplotlib>=3.8.0
 
 # Dashboard/Integration Testing
 dash>=2.15.0
@@ -72,6 +73,8 @@ scikit-learn>=1.6.1,<1.8
 dash-extensions>=1.0.1
 lightgbm>=4.0.0
 fastapi>=0.110.0
+reportlab>=4.0.0
+structlog>=23.1.0
 
 # Performance and Profiling
 memory-profiler>=0.61.0

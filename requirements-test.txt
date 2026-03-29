@@ -68,7 +68,7 @@ coverage==7.3.3
 coverage-badge==1.1.2
 pytest-html==4.1.1
 pytest-json-report==1.5.0
-allure-pytest==2.13.2
+allure-pytest==2.15.3
 
 # Test data generation
 mimesis==12.1.0

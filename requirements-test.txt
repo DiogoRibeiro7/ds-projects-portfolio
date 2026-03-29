@@ -27,7 +27,7 @@ evidently==0.4.10
 
 # Integration testing
 testcontainers==3.7.1
-pytest-docker==2.0.1
+pytest-docker==3.2.5
 requests-mock==1.11.0
 responses==0.24.1
 

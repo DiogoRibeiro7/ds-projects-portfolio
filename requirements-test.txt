@@ -26,7 +26,7 @@ deepchecks==0.17.5
 evidently==0.4.10
 
 # Integration testing
-testcontainers==3.7.1
+testcontainers==4.14.2
 pytest-docker==3.2.5
 requests-mock==1.11.0
 responses==0.24.1

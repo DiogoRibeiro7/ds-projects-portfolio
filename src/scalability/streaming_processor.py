@@ -6,8 +6,6 @@ import json
 import logging
 import time
 from collections import deque
-
-from src.utils.logging_utils import configure_pipeline_logging, get_pipeline_logger
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -45,6 +43,8 @@ from pyspark.sql.types import (
     StructType,
     TimestampType,
 )
+
+from src.utils.logging_utils import configure_pipeline_logging, get_pipeline_logger
 
 # AWS Kinesis
 try:

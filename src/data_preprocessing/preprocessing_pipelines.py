@@ -6,15 +6,11 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from src.utils.logging_utils import configure_pipeline_logging, get_pipeline_logger
-
 import numpy as np
 import pandas as pd
 
 # Advanced imputation
-from fancyimpute import (
-    SoftImpute,
-)
+from fancyimpute import SoftImpute
 from imblearn.combine import SMOTEENN, SMOTETomek
 
 # Data augmentation
@@ -38,6 +34,8 @@ from sklearn.preprocessing import (
     RobustScaler,
     StandardScaler,
 )
+
+from src.utils.logging_utils import configure_pipeline_logging, get_pipeline_logger
 
 # Time series
 

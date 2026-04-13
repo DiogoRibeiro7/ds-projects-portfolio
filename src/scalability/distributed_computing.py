@@ -6,8 +6,6 @@ import logging
 import os
 import time
 from collections.abc import Callable
-
-from src.utils.logging_utils import configure_pipeline_logging, get_pipeline_logger
 from dataclasses import dataclass
 from typing import Any
 
@@ -28,6 +26,8 @@ from ray.train import ScalingConfig
 from ray.train.xgboost import XGBoostTrainer
 from ray.tune.schedulers import ASHAScheduler
 from ray.tune.search.optuna import OptunaSearch
+
+from src.utils.logging_utils import configure_pipeline_logging, get_pipeline_logger
 
 # GPU acceleration
 try:

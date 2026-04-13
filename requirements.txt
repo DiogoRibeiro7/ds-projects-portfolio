@@ -6,7 +6,7 @@ matplotlib>=3.10.8
 seaborn>=0.13.2
 
 # Statistical Analysis
-statsmodels>=0.12.0
+statsmodels>=0.14.4  # >=0.14.4 required for scipy>=1.14 compatibility
 scikit-learn>=1.6.1,<1.8  # Limited by scikit-survival compatibility
 
 # Interactive Visualization (implemented TODOs)

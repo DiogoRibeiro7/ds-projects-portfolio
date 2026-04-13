@@ -24,11 +24,7 @@ except ImportError:
     MEMORY_PROFILER_AVAILABLE = False
     warnings.warn("memory_profiler not available - memory benchmarking disabled")
 
-from .cleaning import (
-    OptimizedDataProcessor,
-    _detect_outliers,
-    apply_cuped,
-)
+from .cleaning import OptimizedDataProcessor, _detect_outliers, apply_cuped
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -335,7 +331,12 @@ class PerformanceBenchmark:
         if sizes is None:
             sizes = [10000, 50000, 100000, 500000]
 
-        results: BenchmarkResults = {"sizes": sizes, "before_mb": [], "after_mb": [], "reduction_pct": []}
+        results: BenchmarkResults = {
+            "sizes": sizes,
+            "before_mb": [],
+            "after_mb": [],
+            "reduction_pct": [],
+        }
 
         for size in sizes:
             logger.info(f"Benchmarking memory optimization for {size} rows...")
@@ -417,9 +418,9 @@ class PerformanceBenchmark:
             def standard_features():
                 df_feat = df.copy()
                 df_feat["ratio_feature"] = df_feat.apply(
-                    lambda x: x["metric_0"] / x["metric_1"]
-                    if x["metric_1"] != 0
-                    else 0,
+                    lambda x: (
+                        x["metric_0"] / x["metric_1"] if x["metric_1"] != 0 else 0
+                    ),
                     axis=1,
                 )
                 df_feat["interaction_feature"] = df_feat.apply(

@@ -113,4 +113,4 @@ schemathesis==4.9.5
 
 # Load testing
 artillery==2.0.0
-k6==0.0.1  # via subprocess
+k6==1.1.0  # via subprocess

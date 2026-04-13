@@ -9,6 +9,7 @@ import logging
 import multiprocessing
 import time
 import warnings
+from collections.abc import Mapping
 from datetime import datetime
 from functools import lru_cache, wraps
 from typing import Any, cast
@@ -335,8 +336,8 @@ class OptimizedDataProcessor:
             df_result = pd.concat(results, ignore_index=True)
 
         # Calculate variance reduction
-        var_original = df[metric_col].var()
-        var_adjusted = df_result[f"{metric_col}_cuped"].var()
+        var_original = float(df[metric_col].var())
+        var_adjusted = float(df_result[f"{metric_col}_cuped"].var())
         variance_reduction = (var_original - var_adjusted) / var_original
 
         logger.info(f"Parallel CUPED: {variance_reduction:.1%} variance reduction")
@@ -347,7 +348,7 @@ class OptimizedDataProcessor:
         self,
         df: pd.DataFrame,
         group_col: str,
-        agg_funcs: dict[str, str | list[str]],
+        agg_funcs: Mapping[str, str | list[str]],
     ) -> pd.DataFrame:
         """Memory-efficient groupby for large datasets using chunking or Dask.
 

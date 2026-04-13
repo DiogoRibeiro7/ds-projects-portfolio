@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 try:
-    import memory_profiler
+    import memory_profiler  # type: ignore[import]
 
     MEMORY_PROFILER_AVAILABLE = True
 except ImportError:
@@ -35,6 +35,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+BenchmarkResults = dict[str, Any]
+
+
 class PerformanceBenchmark:
     """Comprehensive performance benchmarking for data processing operations."""
 
@@ -50,7 +53,7 @@ class PerformanceBenchmark:
         """
         self.n_runs = n_runs
         self.save_results = save_results
-        self.results = {}
+        self.results: BenchmarkResults = {}
         self.processor = OptimizedDataProcessor()
 
     def generate_test_data(
@@ -130,7 +133,7 @@ class PerformanceBenchmark:
             end = time.perf_counter()
             times.append(end - start)
 
-        return np.mean(times)
+        return float(np.mean(times))
 
     def measure_memory(self, func: Callable, *args, **kwargs) -> dict[str, float]:
         """Measure memory usage of a function.
@@ -152,7 +155,7 @@ class PerformanceBenchmark:
         if not MEMORY_PROFILER_AVAILABLE:
             return {"peak_memory_mb": 0, "memory_increment_mb": 0}
 
-        from memory_profiler import memory_usage
+        from memory_profiler import memory_usage  # type: ignore[import]
 
         # Baseline memory
         baseline = memory_usage()[0]
@@ -181,7 +184,7 @@ class PerformanceBenchmark:
         if sizes is None:
             sizes = [1000, 10000, 50000, 100000]
 
-        results = {"sizes": sizes, "standard": [], "optimized": []}
+        results: BenchmarkResults = {"sizes": sizes, "standard": [], "optimized": []}
 
         for size in sizes:
             logger.info(f"Benchmarking outlier detection for {size} rows...")
@@ -235,7 +238,7 @@ class PerformanceBenchmark:
         if sizes is None:
             sizes = [1000, 10000, 50000, 100000]
 
-        results = {"sizes": sizes, "standard": [], "optimized": []}
+        results: BenchmarkResults = {"sizes": sizes, "standard": [], "optimized": []}
 
         for size in sizes:
             logger.info(f"Benchmarking CUPED for {size} rows...")
@@ -280,7 +283,7 @@ class PerformanceBenchmark:
         if sizes is None:
             sizes = [10000, 100000, 500000, 1000000]
 
-        results = {"sizes": sizes, "standard": [], "optimized": []}
+        results: BenchmarkResults = {"sizes": sizes, "standard": [], "optimized": []}
 
         for size in sizes:
             logger.info(f"Benchmarking groupby for {size} rows...")
@@ -332,7 +335,7 @@ class PerformanceBenchmark:
         if sizes is None:
             sizes = [10000, 50000, 100000, 500000]
 
-        results = {"sizes": sizes, "before_mb": [], "after_mb": [], "reduction_pct": []}
+        results: BenchmarkResults = {"sizes": sizes, "before_mb": [], "after_mb": [], "reduction_pct": []}
 
         for size in sizes:
             logger.info(f"Benchmarking memory optimization for {size} rows...")
@@ -379,7 +382,7 @@ class PerformanceBenchmark:
         if sizes is None:
             sizes = [1000, 10000, 50000, 100000]
 
-        results = {"sizes": sizes, "standard": [], "vectorized": []}
+        results: BenchmarkResults = {"sizes": sizes, "standard": [], "vectorized": []}
 
         for size in sizes:
             logger.info(f"Benchmarking feature engineering for {size} rows...")

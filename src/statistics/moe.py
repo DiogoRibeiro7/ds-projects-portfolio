@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 import numpy as np
-from numpy import erf
+from scipy.special import erf
 
 
 def _softmax(z: np.ndarray) -> np.ndarray:
@@ -17,7 +17,7 @@ def _softmax(z: np.ndarray) -> np.ndarray:
 
 
 def _normal_pdf(y: np.ndarray, mean: np.ndarray, sigma: float) -> np.ndarray:
-    sigma = np.asarray(sigma, dtype=float)
+    sigma = float(np.asarray(sigma, dtype=float))
     coeff = 1.0 / (np.sqrt(2.0 * np.pi) * sigma)
     return coeff * np.exp(-0.5 * ((y - mean) / sigma) ** 2)
 

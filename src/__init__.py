@@ -8,7 +8,7 @@ __author__ = "Diogo Ribeiro"
 __email__ = "dfr@esmad.ipp.pt"
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Optional
+from typing import Any
 
 from .data_processing.cleaning import (
     apply_cuped,
@@ -24,10 +24,7 @@ from .statistics.core import (
     two_prop_ztest,
 )
 
-if TYPE_CHECKING:
-    from .vizualization.plots import ExperimentDashboard as _ExperimentDashboard
-
-ExperimentDashboard: type["_ExperimentDashboard"] | None
+ExperimentDashboard: type | None
 plot_conversion_funnel: Callable[..., Any] | None
 plot_experiment_results: Callable[..., Any] | None
 

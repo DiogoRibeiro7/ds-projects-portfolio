@@ -87,7 +87,7 @@ def fit_constant_monotone_quantiles(
     if data.ndim != 1:
         raise ValueError("y must be 1D")
     levels = np.asarray(list(quantile_levels), dtype=float)
-    head = MonotoneQuantileHead(levels)
+    head = MonotoneQuantileHead(levels.tolist())
     base = np.median(data)
     s = np.zeros(head.n_quantiles)
     for _ in range(epochs):

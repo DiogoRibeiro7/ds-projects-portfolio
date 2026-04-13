@@ -44,7 +44,7 @@ xlsxwriter==3.1.9
 Pillow==12.1.1
 
 # Testing
-pytest==7.4.3
+pytest==9.0.3
 pytest-asyncio==0.21.1
 selenium==4.15.2
 playwright==1.40.0

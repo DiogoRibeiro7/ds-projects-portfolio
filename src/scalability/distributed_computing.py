@@ -6,6 +6,8 @@ import logging
 import os
 import time
 from collections.abc import Callable
+
+from src.utils.logging_utils import configure_pipeline_logging, get_pipeline_logger
 from dataclasses import dataclass
 from typing import Any
 
@@ -41,9 +43,9 @@ except ImportError:
     GPU_AVAILABLE = False
     logging.warning("GPU libraries not available, using CPU implementations")
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Configure centralized pipeline logging
+configure_pipeline_logging()
+logger = get_pipeline_logger(__name__)
 
 
 @dataclass

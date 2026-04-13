@@ -9,7 +9,6 @@
 # TODO(diogo): Document model selection criteria and tradeoffs
 # TODO(diogo): Add minimal smoke tests for each project package
 # TODO(diogo): Create template for experiment readme summaries
-# TODO(diogo): Add centralized logging utilities for pipelines
 # TODO(diogo): Set up lightweight data versioning guidelines
 # TODO(diogo): Add benchmark report generation script
 # TODO(diogo): Improve README navigation with project index

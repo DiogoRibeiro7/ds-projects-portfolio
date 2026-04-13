@@ -6,6 +6,8 @@ import json
 import logging
 import time
 from collections import deque
+
+from src.utils.logging_utils import configure_pipeline_logging, get_pipeline_logger
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -64,9 +66,9 @@ try:
 except ImportError:
     PULSAR_AVAILABLE = False
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Configure centralized pipeline logging
+configure_pipeline_logging()
+logger = get_pipeline_logger(__name__)
 
 
 class StreamType(Enum):

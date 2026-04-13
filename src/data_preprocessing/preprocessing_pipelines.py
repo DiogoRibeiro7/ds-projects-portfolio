@@ -6,6 +6,8 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
+from src.utils.logging_utils import configure_pipeline_logging, get_pipeline_logger
+
 import numpy as np
 import pandas as pd
 
@@ -39,9 +41,9 @@ from sklearn.preprocessing import (
 
 # Time series
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Configure centralized pipeline logging
+configure_pipeline_logging()
+logger = get_pipeline_logger(__name__)
 
 
 @dataclass

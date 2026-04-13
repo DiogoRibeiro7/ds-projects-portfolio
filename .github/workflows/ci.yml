@@ -37,8 +37,11 @@ jobs:
           fi
           python -m pip install ruff==0.14.0
           python -m pip install hypothesis
-      - name: Check formatting
-        run: ruff format --check .
+      - name: Check formatting consistency
+        run: |
+          black --check .
+          isort --check-only .
+          ruff format --check .
       - name: Lint
         run: ruff check .
 

@@ -11,8 +11,6 @@
 # TODO(diogo): Create template for experiment readme summaries
 # TODO(diogo): Add centralized logging utilities for pipelines
 # TODO(diogo): Set up lightweight data versioning guidelines
-# TODO(diogo): Add CI step to check formatting consistency
-# TODO(diogo): Create sample dataset download script with checksums
 # TODO(diogo): Add benchmark report generation script
 # TODO(diogo): Improve README navigation with project index
 # TODO(diogo): Create deployment checklist for streamlit apps

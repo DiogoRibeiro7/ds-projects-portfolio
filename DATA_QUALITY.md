@@ -3,6 +3,23 @@
 ## Overview
 A comprehensive data quality management system with advanced validation, profiling, preprocessing, and monitoring capabilities. This enterprise-grade solution ensures data integrity, tracks lineage, and provides real-time quality monitoring through an interactive dashboard.
 
+## 📝 New Dataset Onboarding Checklist
+The following checklist helps ensure every new dataset is reviewed consistently before it is used in analysis or production.
+
+- [ ] Verify source and ownership metadata are documented.
+- [ ] Confirm the dataset schema is defined and versioned.
+- [ ] Check for duplicate records and enforce uniqueness constraints.
+- [ ] Assess missing value rates and document imputation strategy.
+- [ ] Validate date and time fields for consistency and timezone correctness.
+- [ ] Confirm categorical values adhere to expected domains.
+- [ ] Run schema validation against sample records.
+- [ ] Profile distributions for key numeric fields and compare to expected ranges.
+- [ ] Flag and investigate outliers before modeling.
+- [ ] Confirm referential integrity for joined datasets.
+- [ ] Generate a data quality report and review any severity warnings.
+- [ ] Store dataset checksums or fingerprints for future integrity checks.
+- [ ] Document any known data quality limitations or caveats.
+
 ## ✅ Features Implemented
 
 ### 1. **Data Quality Framework** (`src/data_quality/quality_framework.py`)

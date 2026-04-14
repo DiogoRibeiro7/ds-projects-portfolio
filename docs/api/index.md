@@ -17,6 +17,7 @@ visualization
 :caption: Machine Learning
 
 ml_api
+ml_api_usage
 automl
 ```
 

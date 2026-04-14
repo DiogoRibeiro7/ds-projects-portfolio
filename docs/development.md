@@ -24,10 +24,13 @@
 | Performance    | `pytest tests/performance --benchmark-only`           |
 | Docs           | `(cd docs && make html)`                              |
 
-> NOTE: Running `mypy` across the production packages currently fails because of
-> third-party libraries without stubs and legacy modules that still need type
-> annotations. The CI type-check job focuses on the documentation tooling until
-> that debt is addressed.
+> NOTE: Full `mypy` coverage across production packages is still blocked by legacy type debt and missing third-party stubs. Use Python 3.11 for local type-checking:
+>
+> ```bash
+> py -3.11 -m mypy src tools --python-version 3.11 --ignore-missing-imports
+> ```
+>
+> The CI type-check job is configured to run in Python 3.11. When the remaining typing gaps are addressed, this command can be tightened to remove `--ignore-missing-imports`.
 
 CI runs every target above (see `.github/workflows/ci.yml`), so matching the
 matrix locally is the fastest path to a green pull request.

@@ -149,7 +149,38 @@ dashboard.add_chart('geo_map', chart_type='choropleth')
 dashboard.run()
 ```
 
-## 📚 API Reference
+## � Baseline Metrics for Portfolio Dashboards
+
+A portfolio dashboard is most effective when it combines business outcomes with operational health. Define baseline metrics before launch so every chart and KPI has a consistent reference point.
+
+### Recommended baseline metrics
+
+- `conversion_rate`: baseline conversion or adoption rate for core funnel actions.
+- `retention_rate`: expected retention over a standard period (e.g. 30-day retention).
+- `revenue_trend`: revenue or value growth normalized to a baseline period.
+- `engagement_score`: composite measure of active sessions, feature use, or time on task.
+- `churn_rate`: percentage of users, customers, or accounts leaving the portfolio.
+- `average_session_duration`: session length benchmark for healthy engagement.
+- `cost_per_acquisition`: acquisition efficiency relative to revenue or margin.
+- `forecast_accuracy`: model or business forecast performance versus baseline expectations.
+- `operational_health`: data freshness, pipeline latency, and error-rate guardrails.
+
+### How to define baseline metrics
+
+1. Align baseline selection with portfolio objectives: growth, retention, monetization, or efficiency.
+2. Use a stable historical window (e.g. last 30 or 90 days) as the baseline period.
+3. Include both primary business metrics and guardrail metrics to avoid unintended regressions.
+4. Display both absolute values and relative change versus baseline for quick decision making.
+5. Annotate dashboards with the baseline date range, data source, and update cadence.
+
+### Practical dashboard guidance
+
+- Show baseline values alongside current performance on key cards or KPI tiles.
+- Use trend charts with shaded baseline bands to indicate expected ranges.
+- Keep metric definitions consistent across portfolio dashboards so stakeholders can compare programs easily.
+- Refresh baseline snapshots periodically to reflect seasonality or strategy changes, while keeping historical comparisons intact.
+
+## �📚 API Reference
 
 ### EnhancedDashboard
 

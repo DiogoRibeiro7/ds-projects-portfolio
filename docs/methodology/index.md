@@ -13,6 +13,9 @@ statistical_tests
 causal_inference
 machine_learning
 business_metrics
+evaluation_metrics_standardization
+experiment_readme_template
+feature_store_usage
 ```
 
 Use these guides to align experiments, models, and business decisions with

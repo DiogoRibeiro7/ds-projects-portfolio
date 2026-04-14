@@ -318,6 +318,17 @@ class PerformanceBenchmark:
 
         return str(report_path)
 
+    def load_results(self, json_file: str | Path) -> None:
+        """Load benchmark results from a saved JSON file."""
+        source = Path(json_file)
+        if not source.exists():
+            raise FileNotFoundError(f"Benchmark JSON file not found: {source}")
+
+        with source.open("r", encoding="utf-8") as f:
+            raw_results = json.load(f)
+
+        self.results = [BenchmarkResult(**result) for result in raw_results]
+
 
 class RegressionTester:
     """Performance regression testing."""

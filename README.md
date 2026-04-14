@@ -60,6 +60,8 @@ Need to handle messy/outlier-heavy experiments? See [docs/ROBUSTNESS.md](docs/RO
 
 Active. CI runs lint + unit/integration/regression on every PR and a nightly slow suite. Regression baselines live in `tests/regression/baselines/` and are regenerated with `python scripts/generate_regression_baselines.py`.
 
+Benchmark reports can be generated from saved benchmark JSON data with `python scripts/generate_benchmark_report.py <benchmark_json>`.
+
 ## Repository Layout
 
 ```

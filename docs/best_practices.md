@@ -41,27 +41,58 @@ data['f1'] = data['col1'] * data['col2']
 ```
 
 ### 3. Data Versioning
-Track data lineage:
+Track dataset changes in a lightweight, reproducible way:
+
+- Use immutable raw data snapshots and append-only version metadata.
+- Store dataset metadata alongside each snapshot: source, schema, timestamp, owner, checksum, and quality status.
+- Keep derivation logic separate from raw data; do not overwrite original source files.
+- Prefer a simple manifest-based workflow before adopting heavier tools like DVC or Delta Lake.
+
+#### Lightweight data versioning workflow
+
+1. Save each dataset snapshot in a versioned folder or with a timestamped filename.
+2. Create a manifest entry for every snapshot that records the dataset hash, row count, schema, and tags.
+3. Use a small utility to compare versions and identify schema or row-count drift.
+4. Keep version metadata in source control when it is small and high-value.
+5. Archive or cleanup old versions according to retention policies.
 
 ```python
 import hashlib
 import json
+from datetime import datetime
+from pathlib import Path
 
-def create_data_version(data, metadata):
-    """Create versioned data with tracking."""
-    version = {
-        'hash': hashlib.md5(pd.util.hash_pandas_object(data).values).hexdigest(),
-        'shape': data.shape,
-        'columns': list(data.columns),
-        'created_at': datetime.now().isoformat(),
-        'metadata': metadata
+
+def compute_dataframe_hash(df):
+    hash_value = hashlib.md5(pd.util.hash_pandas_object(df, index=True).values).hexdigest()
+    return hash_value
+
+
+def write_version_manifest(dataset_name, version_id, df, metadata, output_dir="data_versions"):
+    manifest = {
+        "dataset": dataset_name,
+        "version": version_id,
+        "hash": compute_dataframe_hash(df),
+        "shape": list(df.shape),
+        "columns": list(df.columns),
+        "created_at": datetime.now().isoformat(),
+        "metadata": metadata,
     }
-
-    with open(f'data_versions/{version["hash"]}.json', 'w') as f:
-        json.dump(version, f)
-
-    return version['hash']
+    path = Path(output_dir) / dataset_name
+    path.mkdir(parents=True, exist_ok=True)
+    manifest_path = path / f"manifest_{version_id}.json"
+    with manifest_path.open("w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2)
+    return manifest_path
 ```
+
+#### Practical guidelines
+
+- `dataset_name`: use a stable, descriptive identifier.
+- `version_id`: use semver, dates, or incremental counters like `2026-04-14` or `v1.0`.
+- `metadata`: include source file(s), extraction query, upstream dependency version, and validation results.
+- For small teams, a JSON manifest plus versioned CSV/Parquet snapshots is usually enough.
+- For larger projects, adopt DVC or other tooling once the lightweight workflow is stable.
 
 ## Model Development
 

@@ -4,7 +4,7 @@
 # Core Dashboard Framework
 dash==2.15.0
 dash-bootstrap-components==1.5.0
-dash-extensions==1.0.1
+dash-extensions==2.0.5
 plotly==6.6.0
 bokeh==3.8.2
 

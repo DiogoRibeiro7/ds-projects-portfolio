@@ -20,7 +20,7 @@ mutmut==2.4.4
 cosmic-ray==8.3.5
 
 # Data testing
-great-expectations==0.18.7
+great-expectations==1.16.1
 pandera==0.17.2
 deepchecks==0.17.5
 evidently==0.4.10

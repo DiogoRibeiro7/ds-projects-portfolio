@@ -50,7 +50,7 @@ pip-audit==2.6.1
 semgrep==1.48.0
 
 # Mocking and fixtures
-faker==20.1.0
+faker==40.13.0
 factory-boy==3.3.3
 freezegun==1.5.5
 responses==0.24.1

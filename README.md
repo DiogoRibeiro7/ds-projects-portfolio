@@ -30,6 +30,20 @@ python examples/run_demo.py  # minimal demo dataset + conversion analysis
 
 These are the only three commands needed for a new contributor: install deps, run the quality gate, run the demo.
 
+## SHAP Notebook Env (Healthcare)
+
+`notebooks/healthcare_analysis.ipynb` includes SHAP explainability cells. If your current environment has a NumPy/Numba mismatch (for example `NumPy 2.4`), use the pinned notebook stack:
+
+```bash
+python -m venv .venv-healthcare
+.\.venv-healthcare\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements-notebook-healthcare-shap.txt
+python -m ipykernel install --user --name healthcare-shap --display-name "Python (healthcare-shap)"
+```
+
+Then open the notebook and select the `Python (healthcare-shap)` kernel.
+
 ## Minimal Example
 
 `examples/run_demo.py` builds a deterministic A/B dataset, cleans it, and runs `ExperimentAnalyzer.analyze_conversion`. Run:

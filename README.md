@@ -46,6 +46,8 @@ For multimodal regression, check out the Mixture-of-Experts demo:
 python examples/moe_multimodal_demo.py
 ```
 
+For a full exploratory data analysis workflow, open `examples/eda_end_to_end.ipynb`. It walks through dataset inspection, missing-value checks, feature distributions, correlation analysis, and modeling readiness.
+
 Need to handle messy/outlier-heavy experiments? See [docs/ROBUSTNESS.md](docs/ROBUSTNESS.md) for trimming and Huber options built into `ExperimentAnalyzer`.
 
 ## Support Matrix
@@ -73,7 +75,7 @@ Benchmark reports can be generated from saved benchmark JSON data with `python s
 ├── statistical_methods/       # Advanced stats utilities
 ├── docs/                      # Architecture notes & guides
 ├── scripts/                   # Operational scripts (baseline generation, etc.)
-├── examples/                  # Runnable demos (see run_demo.py)
+├── examples/                  # Runnable demos and notebooks (see run_demo.py, eda_end_to_end.ipynb)
 └── notebooks/                 # Analysis notebooks (see ab_testing/, etc.)
 ```
 

@@ -1,0 +1,14 @@
+"""Outlier and anomaly detection utilities for customer segmentation."""
+import pandas as pd
+from sklearn.ensemble import IsolationForest
+
+
+def detect_outliers(df: pd.DataFrame, feature_cols=None, contamination=0.1, random_state=42):
+    """Detect outliers using Isolation Forest. Returns a DataFrame with an 'anomaly' column."""
+    if feature_cols is None:
+        feature_cols = [col for col in df.columns if df[col] not in ["customer_id", "cluster", "cluster_label"] and df[col].dtype in ['float64', 'int64']]
+    iso = IsolationForest(contamination=contamination, random_state=random_state)
+    preds = iso.fit_predict(df[feature_cols])
+    df_out = df.copy()
+    df_out["anomaly"] = (preds == -1).astype(int)
+    return df_out

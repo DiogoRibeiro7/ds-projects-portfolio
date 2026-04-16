@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 try:
-    import memory_profiler  # type: ignore[import]
+    import memory_profiler  # type: ignore[import-untyped]
 
     MEMORY_PROFILER_AVAILABLE = True
 except ImportError:

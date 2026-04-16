@@ -1,10 +1,10 @@
 """Advanced clustering pipeline with model selection and explainability."""
-import pandas as pd
-from sklearn.cluster import KMeans, AgglomerativeClustering
-from sklearn.metrics import silhouette_score
 import joblib
-import shap
 import numpy as np
+import pandas as pd
+import shap
+from sklearn.cluster import AgglomerativeClustering, KMeans
+from sklearn.metrics import silhouette_score
 
 from .feature_engineering import build_feature_pipeline
 

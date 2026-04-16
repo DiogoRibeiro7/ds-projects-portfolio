@@ -1,6 +1,7 @@
 """Automated cluster labeling and summary statistics."""
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 
 def label_clusters(df: pd.DataFrame, cluster_col: str = "cluster") -> pd.DataFrame:
     """Assigns descriptive labels to clusters based on mean feature values."""
@@ -19,4 +20,5 @@ def cluster_summary_stats(df: pd.DataFrame, cluster_col: str = "cluster") -> pd.
     """Return summary statistics for each cluster with labels."""
     feature_cols = [col for col in df.columns if col not in ["customer_id", cluster_col, "cluster_label"]]
     summary = df.groupby([cluster_col, "cluster_label"])[feature_cols].agg(['mean', 'std', 'min', 'max', 'count'])
+    return summary.reset_index()
     return summary.reset_index()

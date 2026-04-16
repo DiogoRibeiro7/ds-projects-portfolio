@@ -1,5 +1,7 @@
 import pandas as pd
+
 from projects.advanced_customer_segmentation.pipeline import anomaly_detection
+
 
 def test_detect_outliers():
     df = pd.DataFrame({
@@ -14,5 +16,7 @@ def test_detect_outliers():
         'cluster_label': ['age_high', 'income_high', 'spending_score_high', 'income_high', 'income_high']
     })
     df_out = anomaly_detection.detect_outliers(df)
+    assert 'anomaly' in df_out.columns
+    assert set(df_out['anomaly'].unique()).issubset({0, 1})
     assert 'anomaly' in df_out.columns
     assert set(df_out['anomaly'].unique()).issubset({0, 1})

@@ -1,8 +1,8 @@
 """Feature engineering for advanced customer segmentation."""
 import pandas as pd
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 def build_feature_pipeline():

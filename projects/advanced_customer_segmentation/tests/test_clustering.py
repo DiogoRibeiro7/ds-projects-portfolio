@@ -1,5 +1,7 @@
 import pandas as pd
+
 from projects.advanced_customer_segmentation.pipeline import clustering
+
 
 def test_select_best_clustering():
     df = pd.DataFrame({
@@ -13,5 +15,7 @@ def test_select_best_clustering():
     preprocessor = clustering.build_feature_pipeline()
     X = preprocessor.fit_transform(df)
     model, best_k, best_score = clustering.select_best_clustering(X, cluster_range=(2, 3))
+    assert best_k in [2, 3]
+    assert best_score > 0
     assert best_k in [2, 3]
     assert best_score > 0

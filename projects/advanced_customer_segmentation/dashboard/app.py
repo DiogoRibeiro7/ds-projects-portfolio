@@ -1,14 +1,16 @@
 """Advanced Streamlit dashboard for customer segmentation with explainability."""
-import streamlit as st
+import os
+
+import joblib
+import numpy as np
 import pandas as pd
 import plotly.express as px
-import joblib
 import shap
-import numpy as np
-import os
-from .cohort_analysis import cohort_summary, cluster_profile
-from ..pipeline.cluster_labeling import label_clusters, cluster_summary_stats
+import streamlit as st
+
 from ..pipeline.anomaly_detection import detect_outliers
+from ..pipeline.cluster_labeling import cluster_summary_stats, label_clusters
+from .cohort_analysis import cluster_profile, cohort_summary
 
 st.set_page_config(page_title="Advanced Customer Segmentation", layout="wide")
 st.title("👥 Advanced Customer Segmentation Dashboard")
@@ -41,11 +43,14 @@ shap_path = os.path.join(data_dir, "shap_values.npy")
 
 def process_external_data(uploaded_file):
     import tempfile
+
     import pandas as pd
-    from ..pipeline.feature_engineering import build_feature_pipeline
-    from ..pipeline.clustering import select_best_clustering
-    from ..pipeline.cluster_labeling import label_clusters
+
     from ..pipeline.anomaly_detection import detect_outliers
+    from ..pipeline.cluster_labeling import label_clusters
+    from ..pipeline.clustering import select_best_clustering
+    from ..pipeline.feature_engineering import build_feature_pipeline
+
     # Read uploaded CSV
     df = pd.read_csv(uploaded_file)
     # Feature engineering
@@ -144,6 +149,7 @@ st.download_button("Download CSV", filtered_df.to_csv(index=False), file_name="c
 
 # Excel download
 import io
+
 excel_buffer = io.BytesIO()
 with pd.ExcelWriter(excel_buffer, engine="xlsxwriter") as writer:
     filtered_df.to_excel(writer, index=False, sheet_name="Segmented Data")
@@ -157,11 +163,14 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
-# PDF download (simple table report)
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
+
+# PDF download (simple table report)
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
+
+
 def create_pdf(dataframe):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
@@ -182,6 +191,15 @@ def create_pdf(dataframe):
     ]))
     elements.append(t)
     doc.build(elements)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+st.download_button(
+    label="Download PDF",
+    data=create_pdf(filtered_df),
+    file_name="customers_segmented.pdf",
+    mime="application/pdf"
+)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf

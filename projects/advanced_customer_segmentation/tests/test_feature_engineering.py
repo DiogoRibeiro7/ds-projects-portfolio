@@ -1,5 +1,7 @@
 import pandas as pd
+
 from projects.advanced_customer_segmentation.pipeline import feature_engineering
+
 
 def test_transform_features():
     df = pd.DataFrame({
@@ -11,5 +13,7 @@ def test_transform_features():
         'region': ['North', 'South']
     })
     features = feature_engineering.transform_features(df)
+    assert features.shape[0] == 2
+    assert features.shape[1] > 0
     assert features.shape[0] == 2
     assert features.shape[1] > 0

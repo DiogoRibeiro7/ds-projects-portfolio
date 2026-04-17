@@ -90,9 +90,6 @@ Open `notebooks/healthcare_analysis.ipynb` and select the `Python (healthcare-sh
 ├── scripts/                   # repo maintenance scripts
 ├── tests/                     # automated tests
 ├── deployment/                # deploy manifests and configs
-├── docker/                    # Docker support
-├── helm/                      # Helm charts
-├── kubernetes/                # Kubernetes examples
 └── tools/                     # developer tooling
 ```
 

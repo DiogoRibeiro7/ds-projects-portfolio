@@ -172,7 +172,7 @@ ds-projects-portfolio/
 │   ├── statistics/                  # Statistical methods
 │   └── visualization/               # Plotting utilities
 │
-├── 🐳 docker/                        # Docker configurations
+├── 🐳 deployment/docker/           # Docker configurations
 ├── ⚙️ configs/                       # Configuration files
 └── 📋 requirements/                  # Dependencies
 ```

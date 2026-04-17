@@ -43,7 +43,7 @@ WORKDIR /app
 COPY --chown=mlapi:mlapi modern_bank_churn/ ./modern_bank_churn/
 COPY --chown=mlapi:mlapi statistical_methods/ ./statistical_methods/
 COPY --chown=mlapi:mlapi src/ ./src/
-COPY --chown=mlapi:mlapi deploy/configs/ml_api_config.yaml ./config.yaml
+COPY --chown=mlapi:mlapi deployment/deploy/configs/ml_api_config.yaml ./config.yaml
 
 # Create directories for models and logs
 RUN mkdir -p /app/models /app/logs /app/data && \

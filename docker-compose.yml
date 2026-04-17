@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-mldb}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./deploy/scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./deployment/deploy/scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     networks:
@@ -64,7 +64,7 @@ services:
   ml-api:
     build:
       context: .
-      dockerfile: docker/Dockerfile.ml-api
+      dockerfile: deployment/docker/Dockerfile.ml-api
     container_name: ds-portfolio-ml-api
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-mluser}:${POSTGRES_PASSWORD:-mlpassword}@postgres:5432/${POSTGRES_DB:-mldb}
@@ -103,7 +103,7 @@ services:
   dashboard:
     build:
       context: .
-      dockerfile: docker/Dockerfile.dashboard
+      dockerfile: deployment/docker/Dockerfile.dashboard
     container_name: ds-portfolio-dashboard
     environment:
       API_URL: http://ml-api:8000
@@ -133,7 +133,7 @@ services:
   automl:
     build:
       context: .
-      dockerfile: docker/Dockerfile.automl
+      dockerfile: deployment/docker/Dockerfile.automl
     container_name: ds-portfolio-automl
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-mluser}:${POSTGRES_PASSWORD:-mlpassword}@postgres:5432/${POSTGRES_DB:-mldb}
@@ -185,7 +185,7 @@ services:
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
     volumes:
-      - ./deploy/configs/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./deployment/deploy/configs/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     ports:
       - "9090:9090"
@@ -201,7 +201,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
       GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
     volumes:
-      - ./deploy/configs/grafana/provisioning:/etc/grafana/provisioning
+      - ./deployment/deploy/configs/grafana/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
     ports:
       - "3000:3000"

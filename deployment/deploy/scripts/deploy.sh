@@ -73,17 +73,17 @@ build_images() {
     # Build ML API image
     log_info "Building ML API image..."
     docker build -t ${REGISTRY}/ds-portfolio-ml-api:${VERSION} \
-        -f docker/Dockerfile.ml-api .
+        -f deployment/docker/Dockerfile.ml-api .
 
     # Build Dashboard image
     log_info "Building Dashboard image..."
     docker build -t ${REGISTRY}/ds-portfolio-dashboard:${VERSION} \
-        -f docker/Dockerfile.dashboard .
+        -f deployment/docker/Dockerfile.dashboard .
 
     # Build AutoML image
     log_info "Building AutoML image..."
     docker build -t ${REGISTRY}/ds-portfolio-automl:${VERSION} \
-        -f docker/Dockerfile.automl .
+        -f deployment/docker/Dockerfile.automl .
 
     log_success "Docker images built successfully"
 }
@@ -103,7 +103,7 @@ push_images() {
 create_namespace() {
     log_info "Creating namespace ${NAMESPACE}..."
 
-    kubectl apply -f kubernetes/namespace.yaml
+    kubectl apply -f deployment/kubernetes/legacy/namespace.yaml
 
     # Wait for namespace to be active
     kubectl wait --for=condition=Active namespace/${NAMESPACE} --timeout=30s
@@ -118,7 +118,7 @@ deploy_configs() {
     # Check if secrets exist, create if not
     if ! kubectl get secret ml-portfolio-secrets -n ${NAMESPACE} &> /dev/null; then
         log_info "Creating secrets..."
-        kubectl apply -f kubernetes/configmap.yaml
+        kubectl apply -f deployment/kubernetes/legacy/configmap.yaml
     else
         log_warning "Secrets already exist, skipping..."
     fi
@@ -130,7 +130,7 @@ deploy_configs() {
 deploy_storage() {
     log_info "Deploying database and storage..."
 
-    kubectl apply -f kubernetes/database.yaml
+    kubectl apply -f deployment/kubernetes/legacy/database.yaml
 
     # Wait for database to be ready
     log_info "Waiting for database to be ready..."
@@ -146,9 +146,9 @@ deploy_ml_api() {
 
     # Update image tag
     sed -i "s|your-registry/ds-portfolio-ml-api:latest|${REGISTRY}/ds-portfolio-ml-api:${VERSION}|g" \
-        kubernetes/ml-api-deployment.yaml
+        deployment/kubernetes/legacy/ml-api-deployment.yaml
 
-    kubectl apply -f kubernetes/ml-api-deployment.yaml
+    kubectl apply -f deployment/kubernetes/legacy/ml-api-deployment.yaml
 
     # Wait for deployment to be ready
     kubectl rollout status deployment/ml-api -n ${NAMESPACE} --timeout=300s
@@ -162,9 +162,9 @@ deploy_automl() {
 
     # Update image tag
     sed -i "s|your-registry/ds-portfolio-automl:latest|${REGISTRY}/ds-portfolio-automl:${VERSION}|g" \
-        kubernetes/automl-deployment.yaml
+        deployment/kubernetes/legacy/automl-deployment.yaml
 
-    kubectl apply -f kubernetes/automl-deployment.yaml
+    kubectl apply -f deployment/kubernetes/legacy/automl-deployment.yaml
 
     # Wait for Ray head to be ready
     kubectl wait --for=condition=ready pod -l app=automl-ray-head -n ${NAMESPACE} --timeout=300s
@@ -176,7 +176,7 @@ deploy_automl() {
 deploy_ingress() {
     log_info "Deploying Ingress..."
 
-    kubectl apply -f kubernetes/ingress.yaml
+    kubectl apply -f deployment/kubernetes/legacy/ingress.yaml
 
     # Get ingress IP
     INGRESS_IP=$(kubectl get ingress ml-portfolio-ingress -n ${NAMESPACE} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')

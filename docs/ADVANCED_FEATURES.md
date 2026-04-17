@@ -42,16 +42,16 @@ best_model = results.best_model
 ### 2. **Deployment Infrastructure**
 
 #### Docker Containers
-- **ML API** (`docker/Dockerfile.ml-api`)
+- **ML API** (`deployment/docker/Dockerfile.ml-api`)
   - Multi-stage builds for optimization
   - Non-root user for security
   - Health checks and resource limits
 
-- **Dashboard** (`docker/Dockerfile.dashboard`)
+- **Dashboard** (`deployment/docker/Dockerfile.dashboard`)
   - Streamlit-based interactive UI
   - Real-time model monitoring
 
-- **AutoML Service** (`docker/Dockerfile.automl`)
+- **AutoML Service** (`deployment/docker/Dockerfile.automl`)
   - GPU support with CUDA
   - Ray cluster for distributed computing
 
@@ -63,10 +63,10 @@ best_model = results.best_model
 - **Service mesh ready** architecture
 - **Pod disruption budgets** for high availability
 
-#### Helm Chart (`helm/ml-portfolio/`)
+#### Helm Chart (`deployment/helm/ml-portfolio/`)
 ```bash
 # Deploy entire platform with one command
-helm install ml-portfolio ./helm/ml-portfolio \
+helm install ml-portfolio ./deployment/helm/ml-portfolio \
   --namespace ml-portfolio \
   --set global.domain=your-domain.com \
   --set mlApi.image.repository=your-registry/ml-api
@@ -229,7 +229,7 @@ model_uri = platform.upload_model("model.pkl", "xgboost_v1")
 endpoint = platform.deploy_model(model_uri, "production-endpoint")
 ```
 
-### 8. **MLflow Integration** (`deploy/configs/mlflow_config.yaml`)
+### 8. **MLflow Integration** (`deployment/deploy/configs/mlflow_config.yaml`)
 
 #### Model Lifecycle Management
 - **Experiment tracking** with metrics and parameters
@@ -239,7 +239,7 @@ endpoint = platform.deploy_model(model_uri, "production-endpoint")
 - **Canary deployments** with traffic splitting
 - **Blue-green deployments** for zero-downtime
 
-### 9. **Production Deployment Script** (`deploy/scripts/deploy.sh`)
+### 9. **Production Deployment Script** (`deployment/deploy/scripts/deploy.sh`)
 
 #### Automated Deployment Pipeline
 ```bash
@@ -339,7 +339,7 @@ make docker-build
 make docker-push
 
 # 2. Deploy with Helm
-helm install ml-portfolio ./helm/ml-portfolio \
+helm install ml-portfolio ./deployment/helm/ml-portfolio \
   --namespace ml-portfolio \
   --create-namespace
 

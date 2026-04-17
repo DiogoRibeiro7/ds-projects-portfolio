@@ -185,7 +185,7 @@ def main():
     print("1. Review and fix the syntax errors manually")
     print("2. Add the erfcinv import fix to affected notebooks")
     print("3. Re-run the tests:")
-    print("   python run_notebook_tests.py --dirs ab_testing modern-bank-churn")
+    print("   python scripts/run_notebook_tests.py --dirs ab_testing modern-bank-churn")
     print("\n[OK] Quick fixes complete!")
 
 

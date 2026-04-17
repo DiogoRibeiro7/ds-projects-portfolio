@@ -18,14 +18,14 @@ locally against the latest sources.
 | `tests/` | 11 | 0 | 0 | Added package-level docstring plus clarified fixtures. |
 | `time-series/` | 2 | 0 | 0 | Added docstring for `prepare_metrla_graph_data_fixed.main`. |
 
-## Root-Level Modules
+## Script Entry Points
 
-| Module | Docstring Present |
+| Script | Docstring Present |
 | --- | --- |
-| `advanced_experimentation_platform.py` | ✅ |
-| `analyze_experiment.py` | ✅ |
-| `fix_notebook_issues.py` | ✅ |
-| `run_notebook_tests.py` | ✅ |
+| `scripts/advanced_experimentation_platform.py` | ✅ |
+| `scripts/analyze_experiment.py` | ✅ |
+| `scripts/fix_notebook_issues.py` | ✅ |
+| `scripts/run_notebook_tests.py` | ✅ |
 | `setup.py` | ✅ |
 
 ## Top Public APIs With Examples

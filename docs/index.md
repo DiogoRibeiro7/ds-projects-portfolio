@@ -61,7 +61,7 @@ Run the most common workflows:
 
 ```bash
 # Launch statistical experiment analysis utilities
-python analyze_experiment.py --help
+python scripts/analyze_experiment.py --help
 
 # Spin up the dashboard locally
 python -m dashboard_enhanced.app

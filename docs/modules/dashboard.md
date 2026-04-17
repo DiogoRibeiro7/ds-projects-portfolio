@@ -984,4 +984,4 @@ dashboard.enable_monitoring()
 
 ---
 
-For more information, see the [main documentation](../../README_ENHANCED.md).
+For more information, see the [main documentation](../README_ENHANCED.md).

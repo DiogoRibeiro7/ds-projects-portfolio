@@ -8,6 +8,6 @@ Interactive dashboards for experimentation and forecasting.
 
 ## Run
 ```bash
-streamlit run streamlit_apps/ab_test_calculator.py
-streamlit run streamlit_apps/sales_forecast_explorer.py
+streamlit run ab_test_calculator.py
+streamlit run sales_forecast_explorer.py
 ```

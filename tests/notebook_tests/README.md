@@ -50,19 +50,19 @@ pre-commit install
 
 ```bash
 # Run validation only (fast)
-python run_notebook_tests.py --validate-only
+python scripts/run_notebook_tests.py --validate-only
 
 # Run full tests (validation + execution)
-python run_notebook_tests.py --dirs ab_testing modern-bank-churn
+python scripts/run_notebook_tests.py --dirs ab_testing modern-bank-churn
 
 # Run tests in parallel
-python run_notebook_tests.py --parallel
+python scripts/run_notebook_tests.py --parallel
 
 # Generate report from existing results
-python run_notebook_tests.py --report-only results.json
+python scripts/run_notebook_tests.py --report-only results.json
 
 # Custom configuration
-python run_notebook_tests.py --config my_config.json --timeout 300
+python scripts/run_notebook_tests.py --config my_config.json --timeout 300
 ```
 
 ### Python API
@@ -152,7 +152,7 @@ repos:
     hooks:
       - id: notebook-validation
         name: Validate Jupyter Notebooks
-        entry: python run_notebook_tests.py --validate-only
+        entry: python scripts/run_notebook_tests.py --validate-only
         language: system
         files: \.ipynb$
 ```
@@ -245,9 +245,9 @@ tests/notebook_tests/
 ├── test_config.json        # Configuration
 └── README.md              # This file
 
-run_notebook_tests.py       # Main CLI entry point
-.github/workflows/          # CI/CD workflows
-.pre-commit-config.yaml     # Pre-commit hooks
+scripts/run_notebook_tests.py  # Main CLI entry point
+.github/workflows/            # CI/CD workflows
+.pre-commit-config.yaml       # Pre-commit hooks
 ```
 
 ## Contributing

@@ -6,8 +6,8 @@
 
 This monorepo hosts the reusable code, notebooks, and APIs that the DS Platform team uses to prototype and productionize experimentation-heavy ML projects. It bundles:
 
-- statistical tooling (`src/statistics/core.py`, `statistical_methods/`)
-- data pipelines and model orchestrators (`src/data_processing/`, `modern-bank-churn/`)
+- statistical tooling (`src/statistics/core.py`, `projects/statistical_methods/`)
+- data pipelines and model orchestrators (`src/data_processing/`, `projects/mlops/modern_bank_churn/`)
 - serving infrastructure (FastAPI app under `src/api/`)
 - dashboards, docs, and notebooks
 
@@ -84,13 +84,16 @@ Benchmark reports can be generated from saved benchmark JSON data with `python s
 .
 ├── src/                       # Core Python packages (APIs, utilities, stats)
 ├── tests/                     # Unit, integration, regression, perf, notebooks
-├── projects/                  # Portfolio-ready ML projects
-├── modern-bank-churn/         # MLOps/orchestration reference project
-├── statistical_methods/       # Advanced stats utilities
 ├── docs/                      # Architecture notes & guides
+├── examples/                  # Runnable demos and notebooks
+├── notebooks/                 # Analysis notebooks and exploration notebooks
+├── projects/                  # Portfolio-ready ML projects, demos, and legacy experiments
 ├── scripts/                   # Operational scripts (baseline generation, etc.)
-├── examples/                  # Runnable demos and notebooks (see run_demo.py, eda_end_to_end.ipynb)
-└── notebooks/                 # Analysis notebooks (see ab_testing/, etc.)
+├── deployment/                # Deployment manifests and infrastructure support
+├── docker/                    # Container definitions and Docker support
+├── helm/                      # Helm charts for Kubernetes deployment
+├── kubernetes/                # Kubernetes manifests and examples
+└── tools/                     # Developer tooling and repository utilities
 ```
 
 ## Common Commands
@@ -123,8 +126,8 @@ Command | Description
 
 ## Streamlit Dashboards
 
-- `streamlit run streamlit_apps/ab_test_calculator.py`
-- `streamlit run streamlit_apps/sales_forecast_explorer.py`
+- `streamlit run projects/streamlit_apps/ab_test_calculator.py`
+- `streamlit run projects/streamlit_apps/sales_forecast_explorer.py`
 
 ## Support / Questions
 

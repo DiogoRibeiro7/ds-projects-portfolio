@@ -55,8 +55,8 @@ matrix locally is the fastest path to a green pull request.
 ### Sample Data Cache
 
 ```bash
-python fix_notebook_issues.py --download-datasets
-python run_notebook_tests.py --dirs modern-bank-churn ab_testing
+python scripts/fix_notebook_issues.py --download-datasets
+python scripts/run_notebook_tests.py --dirs modern-bank-churn ab_testing
 ```
 
 ### Dashboard

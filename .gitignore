@@ -76,6 +76,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.venv-healthcare/
 env/
 venv/
 ENV/
@@ -96,6 +97,7 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+mypy_output*.txt
 
 # Pyre type checker
 .pyre/
@@ -160,6 +162,7 @@ cache/
 outputs/
 results/
 test_results/
+docs/_build/
 
 # Secrets and config
 secrets.json

@@ -801,4 +801,4 @@ For more details, see:
 - [ML Pipeline Module](modules/ml_pipeline.md)
 - [Statistical Methods Module](modules/statistics.md)
 - [Dashboard Module](modules/dashboard.md)
-- [Main Documentation](../README_ENHANCED.md)
+- [Main Documentation](README_ENHANCED.md)

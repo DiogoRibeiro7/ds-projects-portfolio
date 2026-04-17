@@ -66,12 +66,12 @@ jobs:
 
     - name: Validate notebooks (quick check)
       run: |
-        python run_notebook_tests.py --validate-only --dirs ab_testing modern-bank-churn
+        python scripts/run_notebook_tests.py --validate-only --dirs ab_testing modern-bank-churn
 
     - name: Run notebook execution tests
       if: github.event.inputs.validate_only != 'true'
       run: |
-        python run_notebook_tests.py \
+        python scripts/run_notebook_tests.py \
           --dirs ab_testing modern-bank-churn \
           --timeout 600 \
           --output test_results \

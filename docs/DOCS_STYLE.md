@@ -15,8 +15,8 @@ Public symbols are anything meant to be imported or executed by consumers:
   `statistical_methods/`, `dashboard_enhanced/`, `modern-bank-churn/`,
   `performance_optimization/`, `recommendation-system/`, `time-series/`,
   `time_series/`, etc.).
-- Standalone scripts in the repository root (for example
-  `advanced_experimentation_platform.py`, `analyze_experiment.py`).
+- Standalone scripts in `scripts/` (for example
+  `scripts/advanced_experimentation_platform.py`, `scripts/analyze_experiment.py`).
 - Any module exported from `__init__.py`, referenced by documentation, invoked
   by CLI entry points (`pyproject.toml` / `src/api/ml_api.py`), or imported by
   automated jobs/tests/notebooks.

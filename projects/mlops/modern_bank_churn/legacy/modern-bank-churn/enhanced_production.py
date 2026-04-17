@@ -694,16 +694,29 @@ class ModelExplainer:
         fig, axes = plt.subplots(1, 2, figsize=(15, 5))
 
         # Waterfall plot
-        shap.plots.waterfall(shap_values[0], show=False)
         plt.sca(axes[0])
+        shap.plots.waterfall(shap_values[0], show=False)
 
         # Force plot (as matplotlib plot)
-        # Note: Force plot might not work in all environments
+        # Force plot is not always available in headless or restricted environments.
+        plt.sca(axes[1])
         try:
             shap.plots.force(shap_values[0], matplotlib=True, show=False)
-            plt.sca(axes[1])
-        except:
-            pass
+        except Exception as exc:
+            warnings.warn(
+                "SHAP force plot unavailable in this environment; "
+                "skipping force plot rendering."
+            )
+            axes[1].text(
+                0.5,
+                0.5,
+                "Force plot unavailable",
+                ha="center",
+                va="center",
+                fontsize=12,
+                color="gray",
+            )
+            axes[1].set_axis_off()
 
         plt.tight_layout()
         plt.show()

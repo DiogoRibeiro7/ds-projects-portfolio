@@ -1,7 +1,7 @@
 # Testing Requirements for Data Science Portfolio
 
 # Core testing frameworks
-pytest==7.4.3
+pytest==9.0.3
 pytest-cov==4.1.0
 pytest-xdist==3.5.0  # Parallel test execution
 pytest-timeout==2.2.0

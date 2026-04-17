@@ -2,138 +2,120 @@
 
 ![Fast CI](https://github.com/diogoribeiro7/ds-projects-portfolio/actions/workflows/ci.yml/badge.svg)
 
-## What & Why
+A structured monorepo for experimentation-heavy data science work: reusable analytics code, production-ready APIs, notebooks, dashboards, and project references.
 
-This monorepo hosts the reusable code, notebooks, and APIs that the DS Platform team uses to prototype and productionize experimentation-heavy ML projects. It bundles:
+## What is included
 
-- statistical tooling (`src/statistics/core.py`, `projects/statistical_methods/`)
-- data pipelines and model orchestrators (`src/data_processing/`, `projects/mlops/modern_bank_churn/`)
-- serving infrastructure (FastAPI app under `src/api/`)
-- dashboards, docs, and notebooks
+- `src/` — core Python packages for APIs, data processing, feature engineering, modeling, and statistical utilities.
+- `projects/` — portfolio projects, demos, and legacy reference implementations.
+- `docs/` — authoring, architecture notes, API docs, and team workflows.
+- `examples/` — executable demos and end-to-end notebooks.
+- `notebooks/` — analysis notebooks for healthcare, experimentation, and model exploration.
+- `scripts/` — utility scripts for tests, notebook maintenance, and repository workflows.
 
-Use it to explore best practices, run demos, or build new project configurations.
+## Quick start
 
-## Install (Command 1)
+1. Create a Python environment
 
 ```bash
+python -m venv .venv
+.venv\Scripts\Activate.ps1  # Windows
+# or source .venv/bin/activate  # macOS/Linux
+```
+
+2. Install dependencies
+
+```bash
+python -m pip install --upgrade pip
 pip install -r requirements-dev.txt
 ```
 
-> Python 3.11–3.12 on Ubuntu/macOS/Windows is supported (see matrix below).
-
-## Quickstart (Commands 2 & 3)
+3. Run the quality gate
 
 ```bash
-make check                 # lint + typecheck + fast tests (matches CI defaults)
-python examples/run_demo.py  # minimal demo dataset + conversion analysis
+make check
 ```
 
-These are the only three commands needed for a new contributor: install deps, run the quality gate, run the demo.
-
-## SHAP Notebook Env (Healthcare)
-
-`notebooks/healthcare_analysis.ipynb` includes SHAP explainability cells. If your current environment has a NumPy/Numba mismatch (for example `NumPy 2.4`), use the pinned notebook stack:
-
-```bash
-python -m venv .venv-healthcare
-.\.venv-healthcare\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements-notebook-healthcare-shap.txt
-python -m ipykernel install --user --name healthcare-shap --display-name "Python (healthcare-shap)"
-```
-
-Then open the notebook and select the `Python (healthcare-shap)` kernel.
-
-## Minimal Example
-
-`examples/run_demo.py` builds a deterministic A/B dataset, cleans it, and runs `ExperimentAnalyzer.analyze_conversion`. Run:
+4. Run a demo
 
 ```bash
 python examples/run_demo.py
 ```
 
-You will see the control/treatment conversion rates, lift, and p-value—handy for smoke testing the stack.
+## Recommended workflow
 
-For multimodal regression, check out the Mixture-of-Experts demo:
+- Use `make lint` for style and static analysis
+- Use `make typecheck` for `mypy` validation
+- Use `make test` for core unit/integration/regression coverage
+- Use `make docs` to build the documentation site under `docs/_build`
+
+## Notebook support
+
+This repo includes notebook-based exploration and analysis. For the healthcare SHAP notebook, use the pinned environment:
 
 ```bash
-python examples/moe_multimodal_demo.py
+python -m venv .venv-healthcare
+.venv-healthcare\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements-notebook-healthcare-shap.txt
+python -m ipykernel install --user --name healthcare-shap --display-name "Python (healthcare-shap)"
 ```
 
-For a full exploratory data analysis workflow, open `examples/eda_end_to_end.ipynb`. It walks through dataset inspection, missing-value checks, feature distributions, correlation analysis, and modeling readiness.
+Open `notebooks/healthcare_analysis.ipynb` and select the `Python (healthcare-shap)` kernel.
 
-Need to handle messy/outlier-heavy experiments? See [docs/ROBUSTNESS.md](docs/ROBUSTNESS.md) for trimming and Huber options built into `ExperimentAnalyzer`.
+## Useful scripts
 
-## Support Matrix
+- `scripts/run_tests.py` — run the standard Python test suite
+- `scripts/run_notebook_tests.py` — validate and execute notebook workflows
+- `scripts/fix_notebook_issues.py` — repair common notebook compatibility issues
 
-| Category | Supported | Notes |
-| --- | --- | --- |
-| Python | 3.11 / 3.12 | Matches GitHub Actions matrix |
-| OS | Ubuntu-latest / macOS-latest / Windows-latest | CI validated |
-| Tooling | pip, pytest 9.x, Ruff, nbval, Hypothesis | Installed via `requirements-dev.txt` |
+## Selected project references
 
-## Project Status
+- `projects/machine_learning/customer_segmentation/`
+- `projects/machine_learning/credit_risk_modeling/`
+- `projects/machine_learning/recommendation_system/`
+- `projects/time_series/sales_forecasting/`
+- `projects/mlops/modern_bank_churn/`
+- `projects/streamlit_apps/`
 
-Active. CI runs lint + unit/integration/regression on every PR and a nightly slow suite. Regression baselines live in `tests/regression/baselines/` and are regenerated with `python scripts/generate_regression_baselines.py`.
+## Repository layout
 
-Benchmark reports can be generated from saved benchmark JSON data with `python scripts/generate_benchmark_report.py <benchmark_json>`.
-
-## Repository Layout
-
-```
+```text
 .
-├── src/                       # Core Python packages (APIs, utilities, stats)
-├── tests/                     # Unit, integration, regression, perf, notebooks
-├── docs/                      # Architecture notes & guides
-├── examples/                  # Runnable demos and notebooks
-├── notebooks/                 # Analysis notebooks and exploration notebooks
-├── projects/                  # Portfolio-ready ML projects, demos, and legacy experiments
-├── scripts/                   # Operational scripts (baseline generation, etc.)
-├── deployment/                # Deployment manifests and infrastructure support
-├── docker/                    # Container definitions and Docker support
-├── helm/                      # Helm charts for Kubernetes deployment
-├── kubernetes/                # Kubernetes manifests and examples
-└── tools/                     # Developer tooling and repository utilities
+├── src/                       # reusable Python packages
+├── projects/                  # portfolio projects and reference implementations
+├── docs/                      # documentation and authoring source
+├── examples/                  # runnable examples and notebooks
+├── notebooks/                 # exploratory notebooks
+├── scripts/                   # repo maintenance scripts
+├── tests/                     # automated tests
+├── deployment/                # deploy manifests and configs
+├── docker/                    # Docker support
+├── helm/                      # Helm charts
+├── kubernetes/                # Kubernetes examples
+└── tools/                     # developer tooling
 ```
 
-## Common Commands
+## Commands summary
 
-Command | Description
+Command | Purpose
 --- | ---
-`make format` | Auto-format the codebase with Ruff
-`make lint` | Static analysis / style checks (Ruff)
-`make typecheck` | Mypy across `tools/` and `src/`
-`make test` | Fast pytest suite (unit + integration + regression, no `slow`)
-`make docs` | Build HTML docs via Sphinx (outputs to `docs/_build`)
-`make build` | Create distribution artifacts (`python -m build`)
-`make clean` | Remove caches, build artifacts, docs output
-`make check` | Runs `lint`, `typecheck`, and `test` — mirrors CI’s fast checks
-`make test-slow` | Execute the `slow`-tagged tests (nightly/opt-in)
+`make format` | Auto-format code using Ruff
+`make lint` | Run static analysis and lint checks
+`make typecheck` | Run `mypy` for type validation
+`make test` | Run unit/integration/regression tests
+`make docs` | Build Sphinx documentation
+`make build` | Build distribution artifacts
+`make clean` | Clean caches, build artifacts, and docs output
+`make check` | Run lint + typecheck + test
 
-## ML Projects
+## Support
 
-- [Customer segmentation (K-Means)](projects/machine_learning/customer_segmentation/README.md)
-- [Credit risk modeling (Logistic regression)](projects/machine_learning/credit_risk_modeling/README.md)
-- [Recommendation system (Item-based CF)](projects/machine_learning/recommendation_system/README.md)
+- Read `docs/index.md` to get started with the documentation
+- Use `docs/development.md` for development workflows and contribution guidance
+- Open a GitHub issue for questions or bugs
+- Refer to `CODEOWNERS` for ownership and review guidance
 
-## Time Series Projects
+---
 
-- [Sales forecasting (ARIMA + baseline)](projects/time_series/sales_forecasting/README.md)
-
-## Causal Inference Projects
-
-- [Campaign impact (Diff-in-Diff)](projects/causal_inference/campaign_diff_in_diff/README.md)
-
-## Streamlit Dashboards
-
-- `streamlit run projects/streamlit_apps/ab_test_calculator.py`
-- `streamlit run projects/streamlit_apps/sales_forecast_explorer.py`
-
-## Support / Questions
-
-- Open a GitHub issue (tag `question` for routing).
-- Ping the `#ds-platform` Slack channel.
-- For emergencies, contact the CODEOWNERS (see `CODEOWNERS`).
-- Need deeper lint/typecheck guidance? Read [docs/CODE_QUALITY.md](docs/CODE_QUALITY.md).
-
-Happy hacking!
+This repository is designed to be a stable playground for data science experimentation and a reusable foundation for production-ready workflows.

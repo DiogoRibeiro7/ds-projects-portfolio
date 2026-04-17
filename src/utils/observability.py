@@ -28,13 +28,25 @@ import psutil
 import structlog
 
 # OpenTelemetry imports
-from opentelemetry import metrics, trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.prometheus import PrometheusMetricReader
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+try:
+    from opentelemetry import metrics, trace
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    from opentelemetry.exporter.prometheus import PrometheusMetricReader
+    from opentelemetry.sdk.metrics import MeterProvider
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    OTEL_AVAILABLE = True
+except Exception:  # pragma: no cover - optional dependency
+    metrics = None
+    trace = None
+    OTLPSpanExporter = None
+    PrometheusMetricReader = None
+    MeterProvider = None
+    Resource = None
+    TracerProvider = None
+    BatchSpanProcessor = None
+    OTEL_AVAILABLE = False
 
 try:
     from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
@@ -51,8 +63,19 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     RequestsInstrumentor = None
 
+try:
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+except Exception:  # pragma: no cover - optional dependency
+    FastAPIInstrumentor = None
+
+try:
+    from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+except Exception:  # pragma: no cover - optional dependency
+    SQLAlchemyInstrumentor = None
+
 # Metrics
 from prometheus_client import (
+    CollectorRegistry,
     Counter,
     Gauge,
     Histogram,
@@ -83,20 +106,32 @@ class ObservabilityManager:
     """Centralized observability management"""
 
     def __init__(
-        self, service_name: str = "ml-portfolio", environment: str = "production"
+        self,
+        service_name: str = "ml-portfolio",
+        environment: str = "production",
+        fastapi_app: Any | None = None,
+        sqlalchemy_engine: Any | None = None,
     ):
         self.service_name = service_name
         self.environment = environment
+        self.fastapi_app = fastapi_app
+        self.sqlalchemy_engine = sqlalchemy_engine
         self.logger = None
         self.tracer = None
         self.meter = None
         self.metrics_registry = {}
+        self.registry = CollectorRegistry()
 
         # Initialize components
         self._setup_logging()
         self._setup_tracing()
         self._setup_metrics()
         self._setup_instrumentation()
+
+        if self.fastapi_app is not None:
+            self.instrument_fastapi(self.fastapi_app)
+        if self.sqlalchemy_engine is not None:
+            self.instrument_sqlalchemy(self.sqlalchemy_engine)
 
     def _setup_logging(self):
         """Configure structured logging"""
@@ -149,6 +184,11 @@ class ObservabilityManager:
 
     def _setup_tracing(self):
         """Configure OpenTelemetry tracing"""
+        if not OTEL_AVAILABLE:
+            logging.warning("OpenTelemetry is unavailable; tracing will be disabled.")
+            self.tracer = None
+            return
+
         self.resource = Resource.create(
             {
                 "service.name": self.service_name,
@@ -179,6 +219,7 @@ class ObservabilityManager:
             "requests_total",
             "Total number of requests",
             ["method", "endpoint", "status"],
+            registry=self.registry,
         )
 
         self.request_duration = Histogram(
@@ -186,6 +227,7 @@ class ObservabilityManager:
             "Request duration in seconds",
             ["method", "endpoint"],
             buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
+            registry=self.registry,
         )
 
         # ML-specific metrics
@@ -193,6 +235,7 @@ class ObservabilityManager:
             "model_predictions_total",
             "Total model predictions",
             ["model_name", "model_version"],
+            registry=self.registry,
         )
 
         self.model_prediction_duration = Histogram(
@@ -200,22 +243,28 @@ class ObservabilityManager:
             "Model prediction duration",
             ["model_name", "model_version"],
             buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0),
+            registry=self.registry,
         )
 
         self.data_drift_gauge = Gauge(
-            "data_drift_score", "Data drift score", ["feature_name"]
+            "data_drift_score", "Data drift score", ["feature_name"], registry=self.registry
         )
 
         self.model_accuracy_gauge = Gauge(
-            "model_accuracy", "Model accuracy score", ["model_name", "model_version"]
+            "model_accuracy", "Model accuracy score", ["model_name", "model_version"], registry=self.registry
         )
 
-        self.cache_hit_rate = Gauge("cache_hit_rate", "Cache hit rate", ["cache_type"])
+        self.cache_hit_rate = Gauge("cache_hit_rate", "Cache hit rate", ["cache_type"], registry=self.registry)
 
         # System metrics
-        self.cpu_usage = Gauge("cpu_usage_percent", "CPU usage percentage")
-        self.memory_usage = Gauge("memory_usage_bytes", "Memory usage in bytes")
-        self.disk_usage = Gauge("disk_usage_percent", "Disk usage percentage")
+        self.cpu_usage = Gauge("cpu_usage_percent", "CPU usage percentage", registry=self.registry)
+        self.memory_usage = Gauge("memory_usage_bytes", "Memory usage in bytes", registry=self.registry)
+        self.disk_usage = Gauge("disk_usage_percent", "Disk usage percentage", registry=self.registry)
+
+        if not OTEL_AVAILABLE:
+            logging.warning("OpenTelemetry is unavailable; metrics will be limited to Prometheus counters/gauges.")
+            self.meter = None
+            return
 
         # Create meter for OpenTelemetry metrics
         meter_provider = MeterProvider(
@@ -233,11 +282,32 @@ class ObservabilityManager:
             RedisInstrumentor().instrument()
         if Psycopg2Instrumentor is not None:
             Psycopg2Instrumentor().instrument()
-        # Note: FastAPI and SQLAlchemy instrumentors should be called with instances
+
+    def instrument_fastapi(self, app: Any) -> None:
+        """Instrument a FastAPI application instance."""
+        if FastAPIInstrumentor is None:
+            self.logger.warning("FastAPI instrumentation is unavailable")
+            return
+
+        FastAPIInstrumentor().instrument_app(app)
+        self.logger.info("FastAPI instrumentation enabled")
+
+    def instrument_sqlalchemy(self, engine: Any) -> None:
+        """Instrument a SQLAlchemy engine or connection instance."""
+        if SQLAlchemyInstrumentor is None:
+            self.logger.warning("SQLAlchemy instrumentation is unavailable")
+            return
+
+        SQLAlchemyInstrumentor().instrument(engine=engine)
+        self.logger.info("SQLAlchemy instrumentation enabled")
 
     @contextmanager
     def trace_span(self, name: str, attributes: dict[str, Any] | None = None):
         """Create a trace span"""
+        if self.tracer is None or trace is None:
+            yield None
+            return
+
         with self.tracer.start_as_current_span(name) as span:
             # Set trace context
             trace_id = format(span.get_span_context().trace_id, "032x")
@@ -254,7 +324,8 @@ class ObservabilityManager:
                 yield span
             except Exception as e:
                 span.record_exception(e)
-                span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+                if trace is not None:
+                    span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
                 raise
             finally:
                 trace_id_var.set(None)

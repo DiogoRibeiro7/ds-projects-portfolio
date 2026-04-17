@@ -2,9 +2,10 @@
 Includes unit tests, integration tests, end-to-end tests, performance tests, and visual regression tests.
 """
 
-import json
-import logging
+import base64
+import io
 import os
+import types
 import unittest
 from unittest.mock import Mock, patch
 
@@ -151,17 +152,72 @@ class TestExportManager(unittest.TestCase):
         self.assertEqual(result, b"PDF content")
         mock_pdfkit.from_string.assert_called_once()
 
-    @patch("app.Presentation")
-    def test_export_to_pptx(self, mock_presentation):
+    def test_export_to_pptx(self):
         """Test PowerPoint export."""
-        charts = [{"title": "Chart 1", "image": "base64_image_data"}]
-        # Mock presentation save
-        mock_prs = Mock()
-        mock_presentation.return_value = mock_prs
+        chart_image = base64.b64encode(b"fake_image_1").decode("utf-8")
+        charts = [{"title": "Chart 1", "image": chart_image}]
 
-        result = self.export_manager.export_to_pptx(charts)
-        self.assertIsNotNone(result)
-        mock_presentation.assert_called_once()
+        saved_presentations = []
+
+        class FakePlaceholder:
+            def __init__(self):
+                self.text = ""
+
+        class FakeShapes:
+            def __init__(self):
+                self.title = Mock()
+                self.title.text = ""
+                self.added_picture = None
+
+            def add_picture(self, stream, left, top, width=None):
+                self.added_picture = {
+                    "data": stream.read(),
+                    "left": left,
+                    "top": top,
+                    "width": width,
+                }
+                return Mock()
+
+        class FakeSlide:
+            def __init__(self):
+                self.shapes = FakeShapes()
+                self.placeholders = [Mock(), FakePlaceholder()]
+
+        class FakeSlides:
+            def __init__(self):
+                self.slides = []
+
+            def add_slide(self, layout):
+                slide = FakeSlide()
+                self.slides.append(slide)
+                return slide
+
+        class FakePresentation:
+            def __init__(self):
+                self.slides = FakeSlides()
+                self.slide_layouts = list(range(10))
+                saved_presentations.append(self)
+
+            def save(self, output):
+                output.write(b"fake-pptx-bytes")
+
+        fake_pptx = types.ModuleType("pptx")
+        fake_pptx.__path__ = ["pptx"]
+        fake_pptx.Presentation = FakePresentation
+
+        fake_pptx_util = types.ModuleType("pptx.util")
+        fake_pptx_util.Inches = lambda value: value
+
+        with patch.dict("sys.modules", {"pptx": fake_pptx, "pptx.util": fake_pptx_util}):
+            result = self.export_manager.export_to_pptx(charts)
+
+        self.assertEqual(result, b"fake-pptx-bytes")
+        self.assertEqual(len(saved_presentations), 1)
+        prs = saved_presentations[0]
+        self.assertEqual(len(prs.slides.slides), 2)
+        self.assertEqual(prs.slides.slides[0].shapes.title.text, "Dashboard Export")
+        self.assertEqual(prs.slides.slides[1].shapes.title.text, "Chart 1")
+        self.assertEqual(prs.slides.slides[1].shapes.added_picture["data"], b"fake_image_1")
 
 
 class TestBusinessLogic(unittest.TestCase):

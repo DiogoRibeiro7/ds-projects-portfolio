@@ -1,10 +1,14 @@
 """Corrected tests for dashboard components based on actual implementation."""
 
+import base64
+import io
 import json
 import os
 import sys
 import tempfile
+import types
 import unittest
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
@@ -182,39 +186,88 @@ class TestExportManager(unittest.TestCase):
         """Instantiate an export manager for each scenario."""
         self.exporter = ExportManager()
 
-    def test_export_to_png(self):
-        """Test PNG export."""
+    def test_export_to_pdf(self):
+        """Test PDF export."""
         html_content = "<div>Test Chart</div>"
-        # This will likely fail without proper plotly setup,
-        # but we test that the method exists
-        try:
-            result = self.exporter.export_to_png(html_content)
-            self.assertIsInstance(result, bytes)
-        except Exception:
-            # Expected if dependencies are not fully configured
-            pass
+        fake_pdfkit = types.ModuleType("pdfkit")
+        fake_pdfkit.from_string = Mock(return_value=b"fake-pdf-bytes")
 
-    def test_export_to_powerpoint(self):
+        with patch.dict("sys.modules", {"pdfkit": fake_pdfkit}):
+            result = self.exporter.export_to_pdf(html_content)
+
+        self.assertEqual(result, b"fake-pdf-bytes")
+
+    def test_export_to_pptx(self):
         """Test PowerPoint export with proper structure."""
-        images = [b"fake_image_1", b"fake_image_2"]
-        titles = ["Chart 1", "Chart 2"]
+        chart_image = base64.b64encode(b"fake_image_1").decode("utf-8")
+        charts = [{"title": "Chart 1", "image": chart_image}]
 
-        with tempfile.NamedTemporaryFile(suffix=".pptx", delete=False) as tmp:
-            output_path = tmp.name
+        saved_presentations = []
 
-        try:
-            # Note: This test checks the method exists and basic structure
-            # Full testing would require mocking the pptx library
-            result_path = self.exporter.export_to_powerpoint(
-                images, titles, output_path
-            )
-            self.assertEqual(result_path, output_path)
-        except Exception:
-            # Expected if pptx operations fail
-            pass
-        finally:
-            if os.path.exists(output_path):
-                os.remove(output_path)
+        class FakePlaceholder:
+            def __init__(self):
+                self.text = ""
+
+        class FakeShapes:
+            def __init__(self):
+                self.title = Mock()
+                self.title.text = ""
+                self.added_picture = None
+
+            def add_picture(self, stream, left, top, width=None):
+                self.added_picture = {
+                    "data": stream.read(),
+                    "left": left,
+                    "top": top,
+                    "width": width,
+                }
+                return Mock()
+
+        class FakeSlide:
+            def __init__(self):
+                self.shapes = FakeShapes()
+                self.placeholders = [Mock(), FakePlaceholder()]
+
+        class FakeSlides:
+            def __init__(self):
+                self.slides = []
+
+            def add_slide(self, layout):
+                slide = FakeSlide()
+                self.slides.append(slide)
+                return slide
+
+        class FakePresentation:
+            def __init__(self):
+                self.slides = FakeSlides()
+                self.slide_layouts = list(range(10))
+                saved_presentations.append(self)
+
+            def save(self, output):
+                output.write(b"fake-pptx-bytes")
+
+        fake_pptx = types.ModuleType("pptx")
+        fake_pptx.__path__ = ["pptx"]
+        fake_pptx.Presentation = FakePresentation
+
+        fake_pptx_util = types.ModuleType("pptx.util")
+        fake_pptx_util.Inches = lambda value: value
+
+        fake_modules = {
+            "pptx": fake_pptx,
+            "pptx.util": fake_pptx_util,
+        }
+
+        with patch.dict("sys.modules", fake_modules):
+            result = self.exporter.export_to_pptx(charts)
+
+        self.assertEqual(result, b"fake-pptx-bytes")
+        self.assertEqual(len(saved_presentations), 1)
+        prs = saved_presentations[0]
+        self.assertEqual(len(prs.slides.slides), 2)
+        self.assertEqual(prs.slides.slides[0].shapes.title.text, "Dashboard Export")
+        self.assertEqual(prs.slides.slides[1].shapes.title.text, "Chart 1")
+        self.assertEqual(prs.slides.slides[1].shapes.added_picture["data"], b"fake_image_1")
 
 
 if __name__ == "__main__":

@@ -62,6 +62,17 @@ python -m ipykernel install --user --name healthcare-shap --display-name "Python
 ```
 
 Open `notebooks/healthcare_analysis.ipynb` and select the `Python (healthcare-shap)` kernel.
+See `notebooks/README.md` for a full notebook catalog (level, use case, runtime).
+
+Additional domain notebooks:
+- `notebooks/finance_credit_risk_stress_testing.ipynb`
+- `notebooks/insurance_fraud_triage_optimization.ipynb`
+- `notebooks/life_science_clinical_response_safety.ipynb`
+
+Advanced domain notebooks:
+- `notebooks/finance_market_risk_var_backtesting.ipynb`
+- `notebooks/insurance_reserving_triangle_chainladder.ipynb`
+- `notebooks/life_science_survival_censoring_analysis.ipynb`
 
 ## Useful scripts
 

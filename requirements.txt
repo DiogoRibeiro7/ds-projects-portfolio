@@ -71,7 +71,7 @@ markdown>=3.3.0        # Markdown processing
 # Performance & Optimization (implemented TODOs)
 numba>=0.56.0          # JIT compilation
 bottleneck>=1.3.0      # Fast NumPy array functions
-numexpr>=2.7.0         # Fast numerical expression evaluation
+numexpr>=2.14.1         # Fast numerical expression evaluation
 
 # Database Connectivity (future expansion)
 sqlalchemy>=1.4.0      # Database ORM

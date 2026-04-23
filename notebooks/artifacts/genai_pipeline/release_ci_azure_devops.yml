@@ -1,0 +1,17 @@
+
+trigger:
+- main
+stages:
+- stage: Validate
+  jobs:
+  - job: Tests
+    steps:
+    - script: pip install -r requirements-test.txt
+    - script: pytest -q tests/unit
+    - script: pytest -q tests/integration
+- stage: Canary
+  dependsOn: Validate
+  jobs:
+  - job: Analyze
+    steps:
+    - script: echo run canary analysis

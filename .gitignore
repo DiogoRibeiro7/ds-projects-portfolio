@@ -53,6 +53,9 @@ coverage.xml
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Notebook artefacts: cached raw data (re-downloaded by the notebook on first run)
+notebooks/artifacts/energy_forecast/household_power_consumption.*
+
 # IPython
 profile_default/
 ipython_config.py

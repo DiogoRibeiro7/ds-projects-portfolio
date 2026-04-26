@@ -1,0 +1,119 @@
+=== cb-co-load-obd-49c58f ===
+BTS log    : n_rounds=10,000  context.shape=(10000, 84)  CTR=0.420%
+Random log : n_rounds=10,000  context.shape=(10000, 84)  CTR=0.380%
+n_actions  : 80
+
+=== cb-co-split-3e5980 ===
+BTS train  :  7000  CTR 0.457%
+BTS test   :  3000  CTR 0.333%
+
+=== cb-co-ctr-per-item-4cb33e ===
+Random log mean per-item CTR : 0.378%   max 2.632%   min 0.000%
+BTS log    mean per-item CTR : 0.419%   max 6.250%   min 0.000%
+Top-10 items by CTR (random log):
+action
+49    0.0263
+53    0.0190
+58    0.0179
+18    0.0168
+36    0.0164
+6     0.0153
+44    0.0147
+57    0.0134
+61    0.0096
+48    0.0087
+
+=== cb-co-fit-policies-b43e2c ===
+  fit uniform_random     in   0.0s
+  fit top_popular        in   0.0s
+  fit ipw_logistic       in   4.0s
+  fit linucb             in   0.1s
+  fit linear_thompson    in   0.1s
+  fit neural_thompson    in   1.4s
+
+=== cb-co-verify-dists-262431 ===
+  uniform_random     | dist shape (100, 80)  rowsum 1.0000..1.0000
+  top_popular        | dist shape (100, 80)  rowsum 1.0000..1.0000
+  ipw_logistic       | dist shape (100, 80)  rowsum 1.0000..1.0000
+  linucb             | dist shape (100, 80)  rowsum 1.0000..1.0000
+  linear_thompson    | dist shape (100, 80)  rowsum 1.0000..1.0000
+  neural_thompson    | dist shape (100, 80)  rowsum 1.0000..1.0000
+
+=== cb-co-dm-qhat-525a2d ===
+q-hat regression fit in 1.6s
+q-hat predictions on BTS-test : shape (3000, 80), mean 0.0050
+
+=== cb-co-ground-truth-329d15 ===
+Ground-truth value V*(pi) on random log:
+  ipw_logistic        0.8488%   (lift over uniform-random +123.37%)
+  linucb              0.8000%   (lift over uniform-random +110.53%)
+  uniform_random      0.3800%   (lift over uniform-random +0.00%)
+  linear_thompson     0.2400%   (lift over uniform-random -36.84%)
+  neural_thompson     0.2000%   (lift over uniform-random -47.37%)
+  top_popular         0.0000%   (lift over uniform-random -100.00%)
+
+=== cb-co-ope-run-04eaca ===
+Values (CTR x 100). bias = OPE - V*. units = percentage points of CTR.
+                 V_star_(random_log)     DM    IPS  SNIPS     DR  bias_DM  bias_IPS  bias_SNIPS  bias_DR
+policy                                                                                                  
+uniform_random                 0.380  0.500  0.109  0.123  0.212    0.120    -0.271      -0.257   -0.168
+top_popular                    0.000  0.264  0.000  0.000  0.249    0.264     0.000       0.000    0.249
+ipw_logistic                   0.849  3.491  0.585  0.878  2.164    2.642    -0.263       0.029    1.315
+linucb                         0.800  0.264  0.000  0.000  0.226   -0.536    -0.800      -0.800   -0.574
+linear_thompson                0.240  0.320  0.000  0.000  0.156    0.080    -0.240      -0.240   -0.084
+neural_thompson                0.200  2.750  0.000  0.000  1.989    2.549    -0.200      -0.200    1.789
+
+=== cb-co-ope-mse-summary-6175d8 ===
+Estimator quality (across all 6 candidate policies, units = pp of CTR):
+              MAE    RMSE  max_abs_bias
+estimator                              
+DM         1.0320  1.5199        2.6424
+IPS        0.2958  0.3831        0.8000
+SNIPS      0.2544  0.3662        0.8000
+DR         0.6966  0.9449        1.7893
+
+=== cb-co-bootstrap-f75372 ===
+Winning estimator on this dataset: SNIPS
+            policy OPE_estimator  estimate_pp  ci_lo_pp  ci_hi_pp  V_star_pp
+0     ipw_logistic         SNIPS        0.855     0.079     1.960      0.849
+1   uniform_random         SNIPS        0.123     0.028     0.244      0.380
+2      top_popular         SNIPS        0.000     0.000     0.000      0.000
+3           linucb         SNIPS        0.000     0.000     0.000      0.800
+4  linear_thompson         SNIPS        0.000     0.000     0.000      0.240
+5  neural_thompson         SNIPS        0.000     0.000     0.000      0.200
+
+=== cb-co-hygiene-latency-b86335 ===
+            policy  us_per_decision
+0   uniform_random             0.17
+1      top_popular             0.11
+2     ipw_logistic             1.96
+3           linucb           770.14
+4  linear_thompson            36.90
+5  neural_thompson             2.18
+
+=== cb-co-hygiene-persist-7e73a5 ===
+Champion policy : ipw_logistic
+
+Persisted artefacts:
+  ipw_logistic.joblib                   54.6 KB
+  qhat_lgbm.joblib                    1218.0 KB
+  scaler.joblib                          2.6 KB
+
+=== cb-co-hygiene-drift-7219d3 ===
+   feature_idx  PSI(train_BTS_vs_random)  status
+0            0                    0.0008  stable
+1            1                    0.0000  stable
+2            2                    0.0008  stable
+3            3                    1.3743   alert
+4            4                    0.0000  stable
+5            5                    0.0000  stable
+6            6                    0.0000  stable
+7            7                    0.0000  stable
+
+=== cb-co-model-card-cf3768 ===
+Wrote model card to C:\Users\diogo\work_code\ds-projects-portfolio\notebooks\artifacts\contextual_bandits\model_card.json
+{
+  "name": "contextual_bandits_offline_evaluation",
+  "winning_estimator": "SNIPS",
+  "champion_policy": "ipw_logistic"
+}

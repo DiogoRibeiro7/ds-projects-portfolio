@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 # Add tests directory to path
-sys.path.insert(0, str(Path(__file__).parent / "tests" / "notebook_tests"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "tests" / "notebook_tests"))
 
 from notebook_runner import NotebookTestConfig, NotebookTestRunner
 from notebook_validator import NotebookValidator
@@ -27,7 +27,7 @@ Examples:
   python run_notebook_tests.py
 
   # Test specific directories
-  python run_notebook_tests.py --dirs ab_testing modern-bank-churn
+  python run_notebook_tests.py --dirs ab_testing archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn
 
   # Run tests in parallel (faster but uses more resources)
   python run_notebook_tests.py --parallel
@@ -49,7 +49,10 @@ Examples:
     parser.add_argument(
         "--dirs",
         nargs="+",
-        default=["ab_testing", "modern-bank-churn"],
+        default=[
+            "ab_testing",
+            "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn",
+        ],
         help="Directories containing notebooks to test",
     )
 

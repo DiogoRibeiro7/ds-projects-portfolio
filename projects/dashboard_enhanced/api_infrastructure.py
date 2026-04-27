@@ -1075,6 +1075,10 @@ class DashboardAPI:
         )
 
 
+# Backward-compatibility alias used by integration tests and older docs.
+APIInfrastructure = DashboardAPI
+
+
 if __name__ == "__main__":
     # Create and run API
     config = APIConfig(

@@ -172,6 +172,17 @@ results/
 test_results/
 docs/_build/
 
+# Repository hygiene: generated quality artifacts and local scratch
+archive/runtime/
+archive/tmp/
+_build_*.py
+coverage.xml
+htmlcov/
+notebooks/artifacts/**/production/
+notebooks/artifacts/**/runs/
+notebooks/artifacts/mlops/
+notebooks/mlruns/
+
 # Secrets and config
 secrets.json
 config.ini

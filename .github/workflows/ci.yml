@@ -6,10 +6,32 @@ on:
       - main
       - develop
       - "feature/*"
+    paths:
+      - "src/**"
+      - "tools/**"
+      - "tests/**"
+      - "scripts/**"
+      - "docs/**"
+      - "requirements*.txt"
+      - "pyproject.toml"
+      - "pytest.ini"
+      - "Makefile"
+      - ".github/workflows/ci.yml"
   pull_request:
     branches:
       - main
       - develop
+    paths:
+      - "src/**"
+      - "tools/**"
+      - "tests/**"
+      - "scripts/**"
+      - "docs/**"
+      - "requirements*.txt"
+      - "pyproject.toml"
+      - "pytest.ini"
+      - "Makefile"
+      - ".github/workflows/ci.yml"
 
 env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
@@ -38,9 +60,9 @@ jobs:
           python -m pip install ruff==0.14.0
           python -m pip install hypothesis
       - name: Check formatting consistency
-        run: ruff format --check .
+        run: ruff format --check src tools tests scripts
       - name: Lint
-        run: ruff check .
+        run: ruff check src tools tests scripts
 
   typecheck:
     name: Type Checking

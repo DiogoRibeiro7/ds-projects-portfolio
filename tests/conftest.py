@@ -4,6 +4,7 @@
 import os
 import sys
 import tempfile
+import types
 from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -21,6 +22,56 @@ from sqlalchemy.orm import sessionmaker
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "projects"))
+
+
+def _install_test_stub(name: str, module: types.ModuleType) -> None:
+    if name not in sys.modules:
+        sys.modules[name] = module
+
+
+if "flask_httpauth" not in sys.modules:
+    flask_httpauth_stub = types.ModuleType("flask_httpauth")
+
+    class _AuthBase:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def verify_password(self, func):
+            return func
+
+        def verify_token(self, func):
+            return func
+
+        def login_required(self, func):
+            return func
+
+    flask_httpauth_stub.HTTPBasicAuth = _AuthBase
+    flask_httpauth_stub.HTTPTokenAuth = _AuthBase
+    _install_test_stub("flask_httpauth", flask_httpauth_stub)
+
+if "flask_restful" not in sys.modules:
+    flask_restful_stub = types.ModuleType("flask_restful")
+
+    class _Api:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def add_resource(self, *args, **kwargs):
+            return None
+
+    class _Resource:
+        pass
+
+    flask_restful_stub.Api = _Api
+    flask_restful_stub.Resource = _Resource
+    _install_test_stub("flask_restful", flask_restful_stub)
+
+if "flask_swagger_ui" not in sys.modules:
+    flask_swagger_ui_stub = types.ModuleType("flask_swagger_ui")
+    flask_swagger_ui_stub.get_swaggerui_blueprint = lambda *args, **kwargs: None
+    _install_test_stub("flask_swagger_ui", flask_swagger_ui_stub)
 
 # Configure Hypothesis
 settings.register_profile("dev", max_examples=10, deadline=None)

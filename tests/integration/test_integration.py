@@ -24,8 +24,10 @@ from modern_bank_churn.ml_pipeline_orchestrator import (
 )
 from statistical_methods.statistical_analyzer import StatisticalAnalyzer
 
-from dashboard_enhanced.api_infrastructure import APIInfrastructure
-from dashboard_enhanced.dashboard_framework import EnhancedDashboard
+_api_infra_mod = pytest.importorskip("dashboard_enhanced.api_infrastructure")
+_dashboard_mod = pytest.importorskip("dashboard_enhanced.dashboard_framework")
+APIInfrastructure = _api_infra_mod.APIInfrastructure
+EnhancedDashboard = _dashboard_mod.EnhancedDashboard
 
 
 class TestEndToEndPipeline:

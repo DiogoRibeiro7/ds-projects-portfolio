@@ -9,10 +9,9 @@ import sys
 
 REPO_ROOT = os.path.abspath("..")
 sys.path.insert(0, REPO_ROOT)
+sys.path.insert(0, os.path.join(REPO_ROOT, "src"))
 
-# Allow direct imports from the legacy hyphenated directories.
-sys.path.insert(0, os.path.join(REPO_ROOT, "modern-bank-churn"))
-sys.path.insert(0, os.path.join(REPO_ROOT, "time-series"))
+# Legacy project content is archived under archive/legacy/projects.
 
 # ---------------------------------------------------------------------------
 # Lightweight stubs for optional third-party frameworks used in the API

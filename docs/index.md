@@ -30,6 +30,7 @@ api/index
 
 methodology/index
 tutorials/index
+REPO_STRUCTURE
 best_practices
 deployment
 DOCS_STYLE

@@ -28,6 +28,6 @@ livehtml:
 	sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)/html" $(SPHINXOPTS) $(O)
 
 apidoc:
-	sphinx-apidoc -f -o api/generated ../modern_bank_churn
+	sphinx-apidoc -f -o api/generated ../src/modern_bank_churn
 	sphinx-apidoc -f -o api/generated ../statistical_methods
 	sphinx-apidoc -f -o api/generated ../dashboard_enhanced

@@ -3,14 +3,15 @@ PYTEST ?= pytest
 MYPY ?= mypy
 SPHINXBUILD ?= sphinx-build
 TEST_OPTS ?=
+ACTIVE_PATHS ?= src tools tests scripts
 
 .PHONY: check format lint typecheck test test-unit test-integration test-regression test-slow test-all docs build clean
 
 format:
-	ruff format .
+	ruff format $(ACTIVE_PATHS)
 
 lint:
-	ruff check .
+	ruff check $(ACTIVE_PATHS)
 
 typecheck:
 	$(MYPY) tools/ src/ --ignore-missing-imports

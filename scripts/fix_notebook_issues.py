@@ -6,12 +6,17 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+LEGACY_CHURN_DIR = Path(
+    "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn"
+)
+LEGACY_CHURN_DATA_DIR = LEGACY_CHURN_DIR / "data"
+
 
 def create_sample_data_files():
     """Create sample data files for notebooks that need them."""
     # Create directories if they don't exist
     Path("ab_testing/data").mkdir(parents=True, exist_ok=True)
-    Path("modern-bank-churn/data").mkdir(parents=True, exist_ok=True)
+    LEGACY_CHURN_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     # Generate sample A/B testing data
     print("Creating sample A/B testing datasets...")
@@ -61,7 +66,7 @@ def create_sample_data_files():
     print("  [OK] Created pricing_ab.csv")
 
     # Fix the bank churn data column issue
-    churn_file = Path("modern-bank-churn/data/Churn_Modelling.csv")
+    churn_file = LEGACY_CHURN_DATA_DIR / "Churn_Modelling.csv"
     if churn_file.exists():
         print("\nFixing bank churn data...")
         df = pd.read_csv(churn_file)
@@ -166,7 +171,7 @@ def main():
     print("=" * 60)
 
     # Check current directory
-    if not Path("ab_testing").exists() and not Path("modern-bank-churn").exists():
+    if not Path("ab_testing").exists() and not LEGACY_CHURN_DIR.exists():
         print("ERROR: Run this script from the project root directory!")
         return
 
@@ -185,7 +190,10 @@ def main():
     print("1. Review and fix the syntax errors manually")
     print("2. Add the erfcinv import fix to affected notebooks")
     print("3. Re-run the tests:")
-    print("   python scripts/run_notebook_tests.py --dirs ab_testing modern-bank-churn")
+    print(
+        "   python scripts/run_notebook_tests.py --dirs ab_testing "
+        "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn"
+    )
     print("\n[OK] Quick fixes complete!")
 
 

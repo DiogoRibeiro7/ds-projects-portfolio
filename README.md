@@ -4,6 +4,8 @@
 
 A structured monorepo for experimentation-heavy data science work: reusable analytics code, production-ready APIs, notebooks, dashboards, and project references.
 
+Repository boundaries are enforced with an explicit structure contract in `docs/REPO_STRUCTURE.md`.
+
 ## What is included
 
 - `src/` — core Python packages for APIs, data processing, feature engineering, modeling, and statistical utilities.
@@ -86,8 +88,10 @@ Advanced domain notebooks:
 - `projects/machine_learning/credit_risk_modeling/`
 - `projects/machine_learning/recommendation_system/`
 - `projects/time_series/sales_forecasting/`
-- `projects/mlops/modern_bank_churn/`
+- `src/modern_bank_churn/`
 - `projects/streamlit_apps/`
+
+Archived legacy project material lives under `archive/legacy/projects/`.
 
 ## Repository layout
 
@@ -103,6 +107,17 @@ Advanced domain notebooks:
 ├── deployment/                # deploy manifests and configs
 └── tools/                     # developer tooling
 ```
+
+## Active Quality Scope
+
+The default quality gate (`make check` and CI lint/typecheck/test jobs) focuses on active code paths:
+
+- `src/`
+- `tools/`
+- `tests/`
+- `scripts/`
+
+Portfolio/reference areas (`projects/`, `notebooks/`, `tutorials/`, parts of `deployment/`) are kept in the monorepo but are not quality-gated by default.
 
 ## Commands summary
 

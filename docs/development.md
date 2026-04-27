@@ -56,7 +56,7 @@ matrix locally is the fastest path to a green pull request.
 
 ```bash
 python scripts/fix_notebook_issues.py --download-datasets
-python scripts/run_notebook_tests.py --dirs modern-bank-churn ab_testing
+python scripts/run_notebook_tests.py --dirs archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn ab_testing
 ```
 
 ### Dashboard

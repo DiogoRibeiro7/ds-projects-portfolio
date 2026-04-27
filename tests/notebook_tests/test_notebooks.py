@@ -15,7 +15,10 @@ from notebook_validator import NotebookValidator
 from report_generator import generate_html_report
 
 # Configuration
-NOTEBOOK_DIRS = ["ab_testing", "modern-bank-churn"]
+NOTEBOOK_DIRS = [
+    "ab_testing",
+    "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn",
+]
 CONFIG_PATH = Path(__file__).parent / "test_config.json"
 OUTPUT_DIR = Path(__file__).parent / "test_results"
 

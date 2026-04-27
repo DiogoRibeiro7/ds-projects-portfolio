@@ -53,7 +53,7 @@ pre-commit install
 python scripts/run_notebook_tests.py --validate-only
 
 # Run full tests (validation + execution)
-python scripts/run_notebook_tests.py --dirs ab_testing modern-bank-churn
+python scripts/run_notebook_tests.py --dirs ab_testing archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn
 
 # Run tests in parallel
 python scripts/run_notebook_tests.py --parallel
@@ -73,7 +73,10 @@ from tests.notebook_tests.report_generator import generate_html_report
 
 # Create runner
 runner = NotebookTestRunner(
-    notebook_dirs=["ab_testing", "modern-bank-churn"],
+    notebook_dirs=[
+        "ab_testing",
+        "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn",
+    ],
     output_dir="test_results",
     timeout=600,
     parallel=True

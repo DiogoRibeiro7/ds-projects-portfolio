@@ -180,6 +180,8 @@ coverage.xml
 htmlcov/
 notebooks/artifacts/**/production/
 notebooks/artifacts/**/runs/
+notebooks/artifacts/mlops/
+notebooks/mlruns/
 
 # Secrets and config
 secrets.json

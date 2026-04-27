@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pandas as pd
 import pytest
-from hypothesis import assume, given, settings
+from hypothesis import HealthCheck, assume, given, settings
 from hypothesis import strategies as st
-from hypothesis.extra.pandas import column, data_frames
+from hypothesis.extra.pandas import column, data_frames, range_indexes
 from modern_bank_churn.evaluation_enhancements import ModelEvaluator
 from modern_bank_churn.feature_engineering import FeatureEngineer
 from modern_bank_churn.ml_pipeline_orchestrator import (
@@ -114,7 +114,7 @@ class TestFeatureEngineer:
                 column("b", dtype=float),
                 column("c", dtype=int),
             ],
-            rows=st.integers(min_value=10, max_value=100),
+            index=range_indexes(min_size=10, max_size=100),
         )
     )
     def test_property_based_features(self, df):
@@ -409,15 +409,19 @@ class TestModelEvaluator:
         assert len(importance) == len(X_test.columns)
 
     @given(
-        y_true=st.lists(
-            st.integers(min_value=0, max_value=1), min_size=10, max_size=100
-        ),
-        y_pred=st.lists(
-            st.integers(min_value=0, max_value=1), min_size=10, max_size=100
+        pairs=st.lists(
+            st.tuples(
+                st.integers(min_value=0, max_value=1),
+                st.integers(min_value=0, max_value=1),
+            ),
+            min_size=10,
+            max_size=100,
         ),
     )
-    def test_property_based_metrics(self, y_true, y_pred):
+    def test_property_based_metrics(self, pairs):
         """Property-based test for metric calculation."""
+        y_true = [p[0] for p in pairs]
+        y_pred = [p[1] for p in pairs]
         assume(len(y_true) == len(y_pred))
 
         evaluator = ModelEvaluator()
@@ -530,6 +534,7 @@ class TestProductionPipeline:
         assert "avg_prediction_time" in metrics
         assert metrics["prediction_count"] == 10
 
+    @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
     @given(n_samples=st.integers(min_value=1, max_value=100))
     def test_batch_prediction(self, trained_model, n_samples):
         """Test batch prediction with various sizes."""

@@ -1,0 +1,20 @@
+{"query_id": "Q01", "query": "what is the waiting period for business interruption coverage?", "gold_doc_ids": ["KB-0015"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q02", "query": "how much can a desk adjuster authorise for a claim payment?", "gold_doc_ids": ["KB-0005"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q03", "query": "when should an adjuster refer a file to SIU?", "gold_doc_ids": ["KB-0022", "KB-0021"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q04", "query": "what are the red flags that suggest a fraudulent claim?", "gold_doc_ids": ["KB-0021"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q05", "query": "how long are claim files retained after closure?", "gold_doc_ids": ["KB-0027"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q06", "query": "what should I do when a customer calls upset about a claim decision?", "gold_doc_ids": ["KB-0035", "KB-0009"], "gold_answer": "", "difficulty": "medium", "tags": []}
+{"query_id": "Q07", "query": "is flood damage covered under the standard property policy?", "gold_doc_ids": ["KB-0014"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q08", "query": "what documentation is required to close a claim file?", "gold_doc_ids": ["KB-0003"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q09", "query": "what is the procedure for a GDPR subject-access request?", "gold_doc_ids": ["KB-0026"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q10", "query": "what happens when a CAT event is declared?", "gold_doc_ids": ["KB-0010"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q11", "query": "when is an AML check required on a claim payment?", "gold_doc_ids": ["KB-0030"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q12", "query": "what are the criteria for escalating to tier-2 customer service?", "gold_doc_ids": ["KB-0037"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q13", "query": "can I reopen a claim that was closed 18 months ago?", "gold_doc_ids": ["KB-0008"], "gold_answer": "", "difficulty": "medium", "tags": []}
+{"query_id": "Q14", "query": "what is the deductible for earthquake coverage?", "gold_doc_ids": ["KB-0016"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q15", "query": "how long must a complaint be handled within?", "gold_doc_ids": ["KB-0028", "KB-0039"], "gold_answer": "", "difficulty": "medium", "tags": []}
+{"query_id": "Q16", "query": "what does the TCF principle require from claims decisions?", "gold_doc_ids": ["KB-0031"], "gold_answer": "", "difficulty": "medium", "tags": []}
+{"query_id": "Q17", "query": "what is the workflow after SIU recommends denying a claim?", "gold_doc_ids": ["KB-0024", "KB-0022"], "gold_answer": "", "difficulty": "medium", "tags": []}
+{"query_id": "Q18", "query": "who can authorise a EUR 150,000 claim payment?", "gold_doc_ids": ["KB-0005"], "gold_answer": "", "difficulty": "hard", "tags": []}
+{"query_id": "Q19", "query": "what are the standard exclusions across all policies?", "gold_doc_ids": ["KB-0019"], "gold_answer": "", "difficulty": "easy", "tags": []}
+{"query_id": "Q20", "query": "what is the salvage procedure for a total-loss vehicle?", "gold_doc_ids": ["KB-0007"], "gold_answer": "", "difficulty": "easy", "tags": []}

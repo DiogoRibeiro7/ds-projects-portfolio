@@ -53,6 +53,14 @@ coverage.xml
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Notebook artefacts: cached raw data (re-downloaded by the notebook on first run)
+notebooks/artifacts/energy_forecast/household_power_consumption.*
+
+# Notebook artefacts: trained model weights (re-trained by the notebook on first run)
+*.pt
+notebooks/artifacts/*/distilbert_finetuned/
+notebooks/artifacts/*/distilbert_ner/
+
 # IPython
 profile_default/
 ipython_config.py

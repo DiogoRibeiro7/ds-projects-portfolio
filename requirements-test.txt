@@ -73,7 +73,7 @@ allure-pytest==2.15.3
 # Test data generation
 mimesis==12.1.0
 synthetic==2.4.0
-sdv==1.7.0  # Synthetic Data Vault
+sdv==1.36.0  # Synthetic Data Vault
 
 # Database testing
 pytest-postgresql==8.0.0

@@ -23,24 +23,30 @@ Every change merged to `main` should bump `CHANGELOG.md` under the `Unreleased` 
    git pull origin main
    ```
 2. **Decide the next version** (SemVer).
-3. **Update metadata**
+3. **Review release checklist**
+
+   - For PR-driven portfolio changes, attach and complete
+     [docs/PORTFOLIO_RELEASE_CHECKLIST.md](/docs/PORTFOLIO_RELEASE_CHECKLIST.md)
+     and include it in the PR description.
+
+4. **Update metadata**
    - Bump `project.version` in `pyproject.toml`.
    - Move `CHANGELOG.md` “Unreleased” entries under a new `## [x.y.z] - YYYY-MM-DD` header.
-4. **Run the quality gate**
+5. **Run the quality gate**
    ```bash
    make check
    make docs   # optional but recommended
    ```
-5. **Commit the release prep**
+6. **Commit the release prep**
    ```bash
    git commit -am "chore(release): vX.Y.Z"
    ```
-6. **Tag the release**
+7. **Tag the release**
    ```bash
    git tag -a vX.Y.Z -m "Release vX.Y.Z"
    git push origin main --tags
    ```
-7. **Build artifacts**
+8. **Build artifacts**
    ```bash
    make build
    ```

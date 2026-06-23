@@ -3,14 +3,14 @@ scikit-learn==1.5.0
 xgboost==2.0.2
 lightgbm==4.6.0
 tensorflow==2.14.0
-torch==2.8.0
+torch==2.12.1
 transformers==5.0.0rc3
 
 # Model serving
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
-python-multipart==0.0.22
+python-multipart==0.0.31
 
 # Data processing
 numpy==1.24.3
@@ -19,7 +19,7 @@ scipy==1.11.4
 polars==0.19.12
 
 # Model management
-mlflow==3.11.0rc1
+mlflow==3.11.1
 dvc==3.30.1
 wandb==0.16.0
 
@@ -39,7 +39,7 @@ sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 
 # Async support
-aiohttp==3.13.4
+aiohttp==3.14.1
 aiofiles==23.2.1
 asyncpg==0.29.0
 
@@ -53,17 +53,17 @@ azure-storage-blob==12.19.0
 python-json-logger==2.0.7
 structlog==23.2.0
 pyyaml==6.0.1
-python-dotenv==1.0.0
+python-dotenv==1.2.2
 click==8.1.7
 rich==13.7.0
 
 # Security
-cryptography==46.0.7
-pyjwt==2.8.0
+cryptography==48.0.1
+pyjwt==2.13.0
 passlib[bcrypt]==1.7.4
 
 # Testing (for CI/CD)
-pytest==7.4.3
+pytest==9.0.3
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
 hypothesis==6.92.0

@@ -178,9 +178,7 @@ archive/tmp/
 _build_*.py
 coverage.xml
 htmlcov/
-notebooks/artifacts/**/production/
-notebooks/artifacts/**/runs/
-notebooks/artifacts/mlops/
+notebooks/artifacts/
 notebooks/mlruns/
 
 # Secrets and config

@@ -57,11 +57,15 @@ matrix locally is the fastest path to a green pull request.
   - `test_results/`
   - `outputs/`, `results/`, `logs/`
   - `.pytest_cache/`, `.mypy_cache/`, `.venv/`, `__pycache__/`
-  - notebook runtime caches (`.ipynb_checkpoints/`, `notebooks/artifacts/**`)
+  - notebook runtime caches (`.ipynb_checkpoints/`, `notebooks/artifacts/`, `notebooks/mlruns/`)
 - Keep in version control only intentionally curated artifacts used by the
   portfolio narrative (source markdown, notebooks, and curated summaries).
-- If a generated artifact must be preserved, move it into an `archive/` subpath
-  and document the reason in a colocated `README.md`.
+- If a generated artifact must be preserved, prefer the explicit
+  `archive/runtime/` destination and keep only the minimum representative
+  evidence there.
+- Versioned generated artifacts are allowed only when the files are part of a
+  defined narrative deliverable (for example, benchmark outputs that are
+  directly referenced by project writeups).
 
 ## Local Debug Recipes
 

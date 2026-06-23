@@ -22,6 +22,7 @@ This repository is intentionally a monorepo, but not all directories have the sa
 
 - `archive/quality-reports/`: historical quality snapshots (e.g., mypy report dumps).
 - `archive/runtime/`: local/generated runtime outputs that should not be committed.
+- `archive/runtime/notebooks/artifacts/`: notebook runtime outputs moved out of active paths when useful for reproduction evidence.
 - `archive/legacy/projects/`: legacy project trees moved out of active project paths.
 - `artifacts/`: model/data artifacts kept only when intentionally versioned for portfolio evidence.
 - `notebooks/artifacts/**/production/`: notebook run traces and production-style run outputs; ignore by default.
@@ -31,4 +32,5 @@ This repository is intentionally a monorepo, but not all directories have the sa
 1. New reusable logic belongs in `src/`, not inside notebooks or project folders.
 2. CI quality gates (format/lint/typecheck/tests) should target active code paths first.
 3. Generated outputs must stay out of top-level root; place them under `archive/runtime/` or ignored artifact paths.
-4. Legacy project material should be moved into `archive/legacy/projects/`.
+4. Versioned generated artifacts are only allowed when they are explicit portfolio deliverables and documented in contributor/development policy.
+5. Legacy project material should be moved into `archive/legacy/projects/`.

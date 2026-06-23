@@ -47,7 +47,14 @@ This notebook analyses Portugal's GDP by the income approach using Eurostat data
 ### Public debt and the interest burden
 
 - general government gross debt (% of GDP) and interest paid (% of GDP and of revenue);
-- the implied average interest rate, linking the 2011–2014 debt squeeze to the 2012 break.
+- the implied average interest rate, linking the 2011–2014 debt squeeze to the 2012 break;
+- a debt-dynamics (r − g) rate-shock scenario projecting the debt path to 2035.
+
+### Dynamics, structure, and reproducibility
+
+- industry decomposition of the labour share with a within/between shift-share (NACE A10);
+- a small VAR / Granger-causality check on debt, growth, and the wage share;
+- live DBnomics fetches cached under `outputs/cache/`, a `requirements.txt`, and a data-source appendix.
 
 ## Requirements
 

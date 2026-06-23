@@ -211,7 +211,7 @@ config = PipelineConfig(
 - [API Reference](api/index.md)
 - [Usage Guide](usage.md)
 - [Installation Guide](installation.md)
-- [Documentation Style Guide](DOCS_STYLE.md)
+- [Documentation Style Guide](contributor/DOCS_STYLE.md)
 
 ## Getting Help
 

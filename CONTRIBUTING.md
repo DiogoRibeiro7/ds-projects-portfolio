@@ -52,7 +52,8 @@ Set `TEST_OPTS` to pass extra flags, e.g. `make test TEST_OPTS='-k feature_x'`.
 ## 4. Code Style
 
 - **Python**: Ruff (PEP8 + repo-specific rules). No unused imports, keep type hints on public APIs.
-- **Docstrings**: Google-style with Args/Returns/Raises. Include examples for high-usage functions; see `docs/DOCS_STYLE.md`.
+- **Docstrings**: Google-style with Args/Returns/Raises. Include examples for
+  high-usage functions; see `docs/contributor/DOCS_STYLE.md`.
 - **Notebooks**: Clear markdown sections (“Setup”, “EDA”, “Modeling”, “Recommendations”). Remove noisy outputs before committing.
 - **Config/JSON**: Keep sorted keys and trailing newlines.
 
@@ -98,6 +99,11 @@ For feature requests, outline the use case and which module(s) are involved.
    ```
 7. Upload `dist/` artifacts to the desired registry or publish them via the GitHub release page.
 
-**Automation**: Alternatively, use the “Release” GitHub Action. After updating version/changelog, run the workflow, provide the version, and it will run checks, build artifacts, tag, and create the release automatically (see `RELEASE.md` for details).
+**Automation**: Alternatively, use the “Release” GitHub Action. After updating
+version/changelog, run the workflow, provide the version, and it will run checks,
+build artifacts, tag, and create the release automatically (see
+`docs/contributor/RELEASE.md` for details).
 
-Thanks for contributing! Reach out in `#ds-platform` Slack or tag the CODEOWNERS if you get stuck. See also: [docs/CODE_QUALITY.md](docs/CODE_QUALITY.md) for detailed lint/format/type guidance.
+Thanks for contributing! Reach out in `#ds-platform` Slack or tag the CODEOWNERS
+if you get stuck. See also:
+[`docs/contributor/CODE_QUALITY.md`](docs/contributor/CODE_QUALITY.md) for detailed lint/format/type guidance.

@@ -32,7 +32,8 @@ For smaller, low-visibility changes (single typo fixes, internal refactors, docs
 - [ ] No generated runtime artifacts were introduced (e.g. `docs/_build`, `.ipynb_checkpoints`,
   `outputs`, `results`, `coverage`, `logs`).
 - [ ] Artifact policy is updated if needed in
-  [docs/development.md](docs/development.md), `.gitignore`, and/or workflow rules.
+  [docs/contributor/development.md](docs/contributor/development.md), `.gitignore`,
+  and/or workflow rules.
 
 ## Reviewer handoff
 

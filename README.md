@@ -4,7 +4,8 @@
 
 A structured monorepo for experimentation-heavy data science work: reusable analytics code, production-ready APIs, notebooks, dashboards, and project references.
 
-Repository boundaries are enforced with an explicit structure contract in `docs/REPO_STRUCTURE.md`.
+Repository boundaries are enforced with an explicit structure contract in
+[`docs/contributor/REPO_STRUCTURE.md`](docs/contributor/REPO_STRUCTURE.md).
 
 ## What is included
 
@@ -135,7 +136,9 @@ Command | Purpose
 ## Support
 
 - For portfolio viewers: read [`docs/README_ENHANCED.md`](docs/README_ENHANCED.md) and [`docs/index.md`](docs/index.md).
-- For contributors: use [`docs/internal.md`](docs/internal.md) and `docs/development.md` for contribution and maintenance workflows.
+- For contributors: use [`docs/internal.md`](docs/internal.md) and
+  [`docs/contributor/development.md`](docs/contributor/development.md) for contribution
+  and maintenance workflows.
 - Open a GitHub issue for questions or bugs
 - Refer to `CODEOWNERS` for ownership and review guidance
 

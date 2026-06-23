@@ -26,17 +26,17 @@ api/index
 :hidden:
 
 internal
-development
-CONTRIBUTING_DOCS
-DOCS_STYLE
-CODE_QUALITY
-DOC_COVERAGE
-TESTING
-TESTING_INFRASTRUCTURE
-CI_CD_PIPELINE
-REPO_STRUCTURE
-ROADMAP
-RELEASE
+contributor/development
+contributor/CONTRIBUTING_DOCS
+contributor/DOCS_STYLE
+contributor/CODE_QUALITY
+contributor/DOC_COVERAGE
+contributor/TESTING
+contributor/TESTING_INFRASTRUCTURE
+contributor/CI_CD_PIPELINE
+contributor/REPO_STRUCTURE
+contributor/ROADMAP
+contributor/RELEASE
 ```
 
 ## Why This Toolkit
@@ -86,9 +86,10 @@ graph TB
 
 ## Release Readiness Checklist
 
-- ✅ Docstrings + type hints enforced via Ruff/pydocstyle per `docs/DOCS_STYLE.md`.
+- ✅ Docstrings + type hints enforced via Ruff/pydocstyle per
+  `docs/contributor/DOCS_STYLE.md`.
 - ✅ CI runs lint, unit/integration/data tests, performance suites, and docs build.
-- ✅ Documentation coverage tracked in `docs/DOC_COVERAGE.md` and updated per PR.
+- ✅ Documentation coverage tracked in `docs/contributor/DOC_COVERAGE.md` and updated per PR.
 
 Use the navigation on the left to dive into specific guides or explore the API
 reference generated directly from the codebase.

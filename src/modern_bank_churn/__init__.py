@@ -1,4 +1,4 @@
-"""Compatibility package for modern-bank-churn modules."""
+"""Primary package entry-point for modern_bank_churn modules."""
 
 from __future__ import annotations
 

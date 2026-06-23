@@ -1,17 +1,24 @@
 ## Portfolio release checklist
 
-For portfolio-impacting PRs, please complete this checklist and include the
-result status in the PR description.
+For PRs that materially change portfolio-facing content, complete this section
+and copy the result into the PR description before opening:
 
-- [ ] Featured notebook list was reviewed/updated in [README](/README.md).
-- [ ] Representative notebooks were validated with provided run commands.
-- [ ] Demo/portfolio links were checked and still resolve.
-- [ ] Changes were visually reviewed for portfolio-facing presentation quality.
-- [ ] Documentation updates are complete and consistent with checklist in
-  [docs/PORTFOLIO_RELEASE_CHECKLIST.md](/docs/PORTFOLIO_RELEASE_CHECKLIST.md).
-- [ ] Generated runtime artifacts were not introduced or tracked (check `git status`).
+- [ ] This change is a major portfolio update (public README/docs/notebooks/projects/screenshots).
+- [ ] Covered items from
+  [docs/PORTFOLIO_RELEASE_CHECKLIST.md](/docs/PORTFOLIO_RELEASE_CHECKLIST.md)
+  were run and passed.
+- [ ] A final summary of portfolio impact is included for reviewer validation.
+- [ ] If any checks were skipped, each exception is documented with owner + reason.
 
-Optional for this PR:
+### Compact required checks
 
-- [ ] New demo or project references were smoke-tested end-to-end.
-- [ ] CI artifact size impact reviewed (`dist`, docs, notebook outputs).
+- [ ] Portfolio-facing links were verified (README/docs/project README/demos).
+- [ ] Featured project and notebook guidance was reviewed for this PR.
+- [ ] At least one representative demo run command was executed successfully.
+- [ ] No generated runtime artifacts were introduced or left tracked.
+
+### Optional checks (run when relevant)
+
+- [ ] `make check` completed after the changes.
+- [ ] `cd docs && make html` completed after doc changes.
+- [ ] Smoke tests executed for project/demo paths changed in this PR.

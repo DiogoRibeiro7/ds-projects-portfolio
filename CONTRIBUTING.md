@@ -45,9 +45,9 @@ Set `TEST_OPTS` to pass extra flags, e.g. `make test TEST_OPTS='-k feature_x'`.
    - mention related issues (`Fixes #123`)
 4. Request review from the CODEOWNERS group.
 5. Squash & merge after approval unless release notes require separate commits.
-6. For portfolio-impacting PRs, complete the
-   [portfolio release checklist](/docs/PORTFOLIO_RELEASE_CHECKLIST.md) and include
-   it in the PR description.
+6. For **major portfolio-impacting PRs**, complete the
+   [portfolio release checklist](/docs/PORTFOLIO_RELEASE_CHECKLIST.md), include
+   it in the PR description, and explicitly mark any skipped checks.
 
 ## 4. Code Style
 

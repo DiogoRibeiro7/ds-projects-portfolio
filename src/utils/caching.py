@@ -370,10 +370,17 @@ class SmartCache:
         """
         # Try memory cache first
         if key in self.memory_cache:
-            if self.enable_stats:
-                self.stats["memory_hits"] += 1
-            logger.debug(f"Memory cache hit: {key}")
-            return self.memory_cache[key]
+            cached = self.memory_cache[key]
+            value = cached[0] if isinstance(cached, tuple) and len(cached) == 2 else cached
+            expires_at = cached[1] if isinstance(cached, tuple) and len(cached) == 2 else None
+
+            if expires_at is not None and time.time() > expires_at:
+                del self.memory_cache[key]
+            else:
+                if self.enable_stats:
+                    self.stats["memory_hits"] += 1
+                logger.debug(f"Memory cache hit: {key}")
+                return value
 
         # Try Redis if available
         if self.redis_available:
@@ -437,12 +444,14 @@ class SmartCache:
             self.stats["cache_writes"] += 1
             self.stats["total_compute_time_saved"] += compute_time
 
+        expire_at = time.time() + ttl if ttl is not None else None
+
         # Determine size
         size = self._get_size(value)
 
         # Store in appropriate caches based on size
         if size < 1_000_000:  # < 1MB: all caches
-            self._add_to_memory_cache(key, value)
+            self._add_to_memory_cache(key, value, expires_at=expire_at)
             self._add_to_redis_cache(key, value, ttl)
             self._add_to_disk_cache(key, value, ttl)
         elif size < 10_000_000:  # < 10MB: Redis + disk
@@ -453,10 +462,10 @@ class SmartCache:
 
         logger.debug(f"Cached {key} (size: {size / 1024:.1f}KB)")
 
-    def _add_to_memory_cache(self, key: str, value: Any):
+    def _add_to_memory_cache(self, key: str, value: Any, expires_at: float | None = None):
         """Add value to memory cache."""
         try:
-            self.memory_cache[key] = value
+            self.memory_cache[key] = (value, expires_at)
         except Exception as e:
             logger.warning(f"Memory cache set error: {e}")
 
@@ -475,7 +484,7 @@ class SmartCache:
             if DISKCACHE_AVAILABLE:
                 self.disk_cache.set(key, value, expire=ttl)
             else:
-                self.disk_cache.set(key, value)
+                self.disk_cache.set(key, value, ttl)
         except Exception as e:
             logger.warning(f"Disk cache set error: {e}")
 
@@ -708,13 +717,16 @@ class SimpleFileCache:
                     return pickle.load(f)
         return None
 
-    def set(self, key: str, value: Any):
+    def set(self, key: str, value: Any, ttl: int | None = None):
         """Set value in cache."""
         file_path = self.cache_dir / f"{key}.pkl"
         with open(file_path, "wb") as f:
             pickle.dump(value, f, protocol=4)
 
-        self.index[key] = {"created": time.time(), "file": str(file_path)}
+        entry: dict[str, Any] = {"created": time.time(), "file": str(file_path)}
+        if ttl is not None:
+            entry["expire"] = time.time() + ttl
+        self.index[key] = entry
         self._save_index()
 
     def delete(self, key: str):

@@ -80,9 +80,7 @@ class TestSmartCache:
         # Wait for expiration
         time.sleep(2)
 
-        # Should be expired (depending on backend)
-        # Note: Memory cache doesn't expire automatically
-        # This would work with Redis backend
+        assert cache.get("expire_test") is None
 
     def test_cache_key_generation(self, cache):
         """Test cache key generation."""

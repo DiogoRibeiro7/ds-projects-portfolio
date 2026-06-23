@@ -15,7 +15,13 @@ code, notebooks, reproducible demos, and production-oriented references.
    python -m venv .venv
    .venv\Scripts\Activate.ps1  # Windows
    # or: source .venv/bin/activate  # macOS/Linux
-   pip install -r requirements-dev.txt
+   pip install -r requirements.txt
+   ```
+
+   Optional contributor stack:
+
+   ```bash
+   pip install -r requirements-dev.txt   # linting, type-checking, pre-commit, dev tooling
    ```
 
 2. Run the portfolio demo:

@@ -8,13 +8,17 @@ Thanks for helping improve the Data Science Projects Portfolio! This repo powers
 git clone https://github.com/<org>/ds-projects-portfolio.git
 cd ds-projects-portfolio
 python -m venv .venv && . .venv/Scripts/activate  # use `source .venv/bin/activate` on macOS/Linux
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 pre-commit install
 ```
 
 Optional extras:
 
-- `pip install -r requirements-test.txt` for notebook/perf tooling.
+- `pip install -r requirements-dev.txt` for contributor tooling
+  (lint, formatting, type-checking, docs tooling).
+- `pip install -r requirements-test.txt` for notebook and perf tooling.
+- `pip install -r requirements-notebook-healthcare-shap.txt` only when running
+  the standalone healthcare SHAP notebook environment.
 
 ## 2. Useful Commands
 

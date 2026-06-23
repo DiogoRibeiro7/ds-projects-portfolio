@@ -257,8 +257,9 @@ pytest tests/benchmarks/ --benchmark-only
 - `Dockerfile`: Container definitions
 - `docker-compose.yml`: Service orchestration
 - `requirements.txt`: Production dependencies
-- `requirements-dev.txt`: Development dependencies
-- `requirements-test.txt`: Test dependencies
+- `requirements-dev.txt`: Contributor/maintainer tools (lint, format, typecheck, pre-commit).
+- `requirements-test.txt`: Extended test and notebook validation stack.
+- `requirements-core.txt`: Internal CI baseline for notebook checks.
 - `.pre-commit-config.yaml`: Pre-commit hooks
 - `pyproject.toml`: Project configuration
 - `setup.py`: Package configuration

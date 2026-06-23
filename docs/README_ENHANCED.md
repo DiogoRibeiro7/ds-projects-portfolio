@@ -200,7 +200,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Optional: Install development dependencies
+# Optional: Install development dependencies (contributors only)
 pip install -r requirements-dev.txt
 ```
 

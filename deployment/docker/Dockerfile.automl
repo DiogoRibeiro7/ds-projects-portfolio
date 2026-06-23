@@ -51,7 +51,7 @@ COPY --chown=automl:automl src/automl/ ./src/automl/
 COPY --chown=automl:automl modern_bank_churn/ ./modern_bank_churn/
 COPY --chown=automl:automl statistical_methods/ ./statistical_methods/
 COPY --chown=automl:automl src/utils/ ./src/utils/
-COPY --chown=automl:automl deployment/deploy/configs/automl_config.yaml ./config.yaml
+COPY --chown=automl:automl archive/internal/deployment-platform/deploy/configs/automl_config.yaml ./config.yaml
 
 # Create directories for models, data, and Ray
 RUN mkdir -p /app/models /app/logs /app/data /app/ray_results /tmp/ray && \

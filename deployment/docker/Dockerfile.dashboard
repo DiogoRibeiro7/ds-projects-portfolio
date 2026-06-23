@@ -42,14 +42,14 @@ WORKDIR /app
 # Copy application code
 COPY --chown=dashboard:dashboard dashboard_enhanced/ ./dashboard_enhanced/
 COPY --chown=dashboard:dashboard src/utils/ ./src/utils/
-COPY --chown=dashboard:dashboard deployment/deploy/configs/dashboard_config.yaml ./config.yaml
+COPY --chown=dashboard:dashboard archive/internal/deployment-platform/deploy/configs/dashboard_config.yaml ./config.yaml
 
 # Create directories for cache and logs
 RUN mkdir -p /app/.streamlit /app/logs /app/cache && \
     chown -R dashboard:dashboard /app
 
 # Copy Streamlit configuration
-COPY --chown=dashboard:dashboard deployment/deploy/configs/streamlit_config.toml /app/.streamlit/config.toml
+COPY --chown=dashboard:dashboard archive/internal/deployment-platform/deploy/configs/streamlit_config.toml /app/.streamlit/config.toml
 
 # Switch to non-root user
 USER dashboard

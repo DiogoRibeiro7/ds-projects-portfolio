@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-mldb}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./deployment/deploy/scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./archive/internal/deployment-platform/deploy/scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     networks:
@@ -185,7 +185,7 @@ services:
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
     volumes:
-      - ./deployment/deploy/configs/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./archive/internal/deployment-platform/deploy/configs/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     ports:
       - "9090:9090"
@@ -201,7 +201,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
       GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
     volumes:
-      - ./deployment/deploy/configs/grafana/provisioning:/etc/grafana/provisioning
+      - ./archive/internal/deployment-platform/deploy/configs/grafana/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
     ports:
       - "3000:3000"

@@ -15,7 +15,9 @@ This repository is intentionally a monorepo, but not all directories have the sa
 - `projects/`: portfolio implementations and demos, including per-project experiments.
 - `notebooks/`: exploratory and domain notebooks.
 - `examples/`: runnable examples and notebook-facing demos.
-- `deployment/`: deployment references and environment-specific manifests.
+- `deployment/`: portfolio-facing deployment entry points (primarily `docker/` and `model_server/`).
+- `archive/internal/deployment-platform/`: legacy/ops deployment scaffolding
+  (configs, Helm charts, Kubernetes manifests, MLflow hooks, and utility scripts).
 - `tutorials/`: narrative learning material.
 
 ## Archive and generated outputs

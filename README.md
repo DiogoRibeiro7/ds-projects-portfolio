@@ -77,7 +77,7 @@ The complete notebook catalog (including archive/reference notebooks) remains in
 ├── examples/             # Runnable portfolio demos
 ├── tests/                # Automated test suite
 ├── scripts/              # Repo tooling
-├── deployment/           # Deployment examples and manifests
+├── deployment/           # Portfolio-facing deployment entry points
 └── archive/              # Historical artifacts and legacy references
 ```
 

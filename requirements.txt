@@ -50,7 +50,7 @@ ipywidgets>=7.6.0      # Interactive widgets
 
 # Data Quality & Profiling (implemented TODOs)
 pandas-profiling>=3.0.0  # Automated data profiling
-great-expectations==0.17.12  # Data validation framework
+great-expectations==1.17.0  # Data validation framework
 
 # Development Tools
 black>=21.0.0          # Code formatting

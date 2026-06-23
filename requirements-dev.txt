@@ -100,7 +100,7 @@ pytest-postgresql>=5.0.0
 fakeredis>=2.19.0
 
 # Data Testing
-great-expectations==0.17.12
+great-expectations==1.17.0
 pandera>=0.16.1
 
 # Build Tools

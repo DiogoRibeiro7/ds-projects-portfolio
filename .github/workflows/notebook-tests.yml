@@ -1,4 +1,4 @@
-name: Notebook Deep Checks
+name: Portfolio Deep Checks
 
 on:
   pull_request:

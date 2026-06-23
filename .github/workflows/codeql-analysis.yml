@@ -1,4 +1,4 @@
-name: Deep Security Checks
+name: Security & Compliance Deep Checks
 
 on:
   pull_request:

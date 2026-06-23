@@ -22,10 +22,13 @@ graph TB
 
 ## GitHub Actions Workflows
 
-### 1. Main CI/CD Pipeline (`ci.yml`)
+### 1. Portfolio fast track (`ci.yml`)
 
-The primary required workflow for every PR and push on portfolio tracks (`main`, `develop`, `feature/*`).
-It intentionally stays fast and focuses on formatting, typing, unit tests, and docs build.
+The required fast track for portfolio-focused changes.
+Triggers on `main`, `develop`, and `feature/*` changes for `src/`, `tools/`,
+`tests/`, `scripts/`, and `docs/`.
+
+Use this for routine reviewer feedback before merge.
 
 #### Jobs:
 
@@ -34,17 +37,17 @@ It intentionally stays fast and focuses on formatting, typing, unit tests, and d
 - **Tests**: Unit test matrix (Python 3.11 and 3.12).
 - **Docs Build**: `make docs`.
 
-### 2. Deep checks workflow (`notebook-tests.yml`, `codeql-analysis.yml`)
+### 2. Deep checks (`notebook-tests.yml`, `codeql-analysis.yml`)
 
-Optional workflows for deeper validation:
+Optional workflows for internal-quality validation (non-blocking unless explicitly enabled):
 
 - Notebook execution and quality checks.
 - CodeQL analysis.
 - Dependency review.
 - License scanning.
 
-These are manually runnable from GitHub Actions and can also be triggered on PRs
-by adding the `run-deep-ci` label.
+These workflows are manually runnable (workflow dispatch), run on weekly schedules,
+and can be triggered on PRs by adding the `run-deep-ci` label.
 
 ### 3. Release Pipeline (`release.yml`)
 
@@ -67,11 +70,10 @@ Features:
 - Automated pull request creation
 - Compatibility testing
 
-### 4. CodeQL Security Analysis (`codeql-analysis.yml`)
+### 4. Security & Compliance Deep Checks (`codeql-analysis.yml`)
 
-Advanced security analysis using GitHub's CodeQL.
+Advanced security and dependency governance checks for internal risk review.
 
-Features:
 - Static code analysis
 - Security vulnerability detection
 - License compliance checking

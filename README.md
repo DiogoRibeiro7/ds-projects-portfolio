@@ -2,147 +2,89 @@
 
 ![Fast CI](https://github.com/diogoribeiro7/ds-projects-portfolio/actions/workflows/ci.yml/badge.svg)
 
-A structured monorepo for experimentation-heavy data science work: reusable analytics code, production-ready APIs, notebooks, dashboards, and project references.
+A structured monorepo for portfolio-grade data science work: reusable modeling
+code, notebooks, reproducible demos, and production-oriented references.
 
-Repository boundaries are enforced with an explicit structure contract in
-[`docs/contributor/REPO_STRUCTURE.md`](docs/contributor/REPO_STRUCTURE.md).
+## Start here (first 2 minutes)
 
-## What is included
+1. Clone and bootstrap:
 
-- `src/` — core Python packages for APIs, data processing, feature engineering, modeling, and statistical utilities.
-- `projects/` — portfolio projects, demos, and legacy reference implementations.
-- `docs/` — authoring, architecture notes, API docs, and team workflows.
-- `examples/` — executable demos and end-to-end notebooks.
-- `notebooks/` — analysis notebooks for healthcare, experimentation, and model exploration.
-- `scripts/` — utility scripts for tests, notebook maintenance, and repository workflows.
+   ```bash
+   git clone https://github.com/diogoribeiro7/ds-projects-portfolio.git
+   cd ds-projects-portfolio
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1  # Windows
+   # or: source .venv/bin/activate  # macOS/Linux
+   pip install -r requirements-dev.txt
+   ```
 
-## Quick start
+2. Run the portfolio demo:
 
-1. Create a Python environment
+   ```bash
+   python examples/run_demo.py
+   ```
 
-```bash
-python -m venv .venv
-.venv\Scripts\Activate.ps1  # Windows
-# or source .venv/bin/activate  # macOS/Linux
-```
+3. Validate the repository check (optional but recommended):
 
-2. Install dependencies
+   ```bash
+   make check
+   ```
 
-```bash
-python -m pip install --upgrade pip
-pip install -r requirements-dev.txt
-```
+4. Open a featured notebook to evaluate portfolio quality quickly:
 
-3. Run the quality gate
+   - [`notebooks/healthcare_analysis.ipynb`](notebooks/healthcare_analysis.ipynb)
+   - [`notebooks/finance_credit_risk_stress_testing.ipynb`](notebooks/finance_credit_risk_stress_testing.ipynb)
 
-```bash
-make check
-```
+## What this portfolio demonstrates
 
-4. Run a demo
+This repository is centered on practical projects where technical quality is
+paired with clear storytelling:
 
-```bash
-python examples/run_demo.py
-```
+- Modeling reliability: healthcare explainability, credit-risk modeling, forecasting, and fraud detection.
+- Deployment-readiness: FastAPI workflows, MLOps drift management, and notebook-to-service transitions.
+- AI engineering: RAG, retrieval/eval service patterns, and controlled guardrails.
+- Decision quality: calibration, subgroup fairness, benchmarking, and governance-oriented reporting.
 
-## Recommended workflow
+## Featured portfolio set
 
-- Use `make lint` for style and static analysis
-- Use `make typecheck` for `mypy` validation
-- Use `make test` for core unit/integration/regression coverage
-- Use `make docs` to build the documentation site under `docs/_build`
+Use this short list first when reviewing:
 
-## Notebook support
+- [`notebooks/healthcare_analysis.ipynb`](notebooks/healthcare_analysis.ipynb) (healthcare)  
+- [`notebooks/life_science_medical_imaging_triage.ipynb`](notebooks/life_science_medical_imaging_triage.ipynb) (medical imaging)
+- [`notebooks/insurance_data_science.ipynb`](notebooks/insurance_data_science.ipynb) (insurance governance)
+- [`notebooks/finance_credit_risk_stress_testing.ipynb`](notebooks/finance_credit_risk_stress_testing.ipynb) (finance stress testing)
+- [`notebooks/genai_rag_pipeline.ipynb`](notebooks/genai_rag_pipeline.ipynb) (GenAI production pipeline)
+- [`notebooks/energy_load_probabilistic_forecasting.ipynb`](notebooks/energy_load_probabilistic_forecasting.ipynb) (time-series forecasting)
+- [`notebooks/mlops_mlflow_drift_lifecycle.ipynb`](notebooks/mlops_mlflow_drift_lifecycle.ipynb) (MLOps lifecycle)
 
-This repo includes notebook-based exploration and analysis. For the healthcare SHAP notebook, use the pinned environment:
-
-```bash
-python -m venv .venv-healthcare
-.venv-healthcare\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements-notebook-healthcare-shap.txt
-python -m ipykernel install --user --name healthcare-shap --display-name "Python (healthcare-shap)"
-```
-
-Open `notebooks/healthcare_analysis.ipynb` and select the `Python (healthcare-shap)` kernel.
-See `notebooks/README.md` for a full notebook catalog (level, use case, runtime).
-
-Featured portfolio notebooks to start with:
-- `notebooks/healthcare_analysis.ipynb`
-- `notebooks/life_science_medical_imaging_triage.ipynb`
-- `notebooks/insurance_data_science.ipynb`
-- `notebooks/finance_credit_risk_stress_testing.ipynb`
-- `notebooks/genai_rag_pipeline.ipynb`
-- `notebooks/energy_load_probabilistic_forecasting.ipynb`
-- `notebooks/mlops_mlflow_drift_lifecycle.ipynb`
-
-Archive/reference notebooks are listed in `notebooks/README.md` and remain available for review context.
-
-## Useful scripts
-
-- `scripts/run_tests.py` — run the standard Python test suite
-- `scripts/run_notebook_tests.py` — validate and execute notebook workflows
-- `scripts/fix_notebook_issues.py` — repair common notebook compatibility issues
-
-## Selected project references
-
-- `projects/machine_learning/customer_segmentation/`
-- `projects/machine_learning/credit_risk_modeling/`
-- `projects/machine_learning/recommendation_system/`
-- `projects/time_series/sales_forecasting/`
-- `src/modern_bank_churn/`
-- `projects/streamlit_apps/`
-
-Archived legacy project material lives under `archive/legacy/projects/`.
+The complete notebook catalog (including archive/reference notebooks) remains in
+[`notebooks/README.md`](notebooks/README.md).
 
 ## Repository layout
 
 ```text
 .
-├── src/                       # reusable Python packages
-├── projects/                  # portfolio projects and reference implementations
-├── docs/                      # documentation and authoring source
-├── examples/                  # runnable examples and notebooks
-├── notebooks/                 # exploratory notebooks
-├── scripts/                   # repo maintenance scripts
-├── tests/                     # automated tests
-├── deployment/                # deploy manifests and configs
-└── tools/                     # developer tooling
+├── src/                  # Core reusable packages
+├── docs/                 # Portfolio documentation and API reference
+├── notebooks/            # Portfolio notebooks (featured + archive)
+├── projects/             # Project writeups and reference implementations
+├── examples/             # Runnable portfolio demos
+├── tests/                # Automated test suite
+├── scripts/              # Repo tooling
+├── deployment/           # Deployment examples and manifests
+└── archive/              # Historical artifacts and legacy references
 ```
 
-## Active Quality Scope
+Repository scoping is documented in [`docs/contributor/REPO_STRUCTURE.md`](docs/contributor/REPO_STRUCTURE.md).
 
-The default quality gate (`make check` and CI lint/typecheck/test jobs) focuses on active code paths:
+## Read next
 
-- `src/`
-- `tools/`
-- `tests/`
-- `scripts/`
+- Portfolio visitors: [`docs/index.md`](docs/index.md) and
+  [`docs/README_ENHANCED.md`](docs/README_ENHANCED.md)
+- Contributors: [`docs/internal.md`](docs/internal.md),
+  [`docs/contributor/development.md`](docs/contributor/development.md)
+- If you spot an issue: open it on GitHub
 
-Portfolio/reference areas (`projects/`, `notebooks/`, `tutorials/`, parts of `deployment/`) are kept in the monorepo but are not quality-gated by default.
-
-## Commands summary
-
-Command | Purpose
---- | ---
-`make format` | Auto-format code using Ruff
-`make lint` | Run static analysis and lint checks
-`make typecheck` | Run `mypy` for type validation
-`make test` | Run unit/integration/regression tests
-`make docs` | Build Sphinx documentation
-`make build` | Build distribution artifacts
-`make clean` | Clean caches, build artifacts, and docs output
-`make check` | Run lint + typecheck + test
-
-## Support
-
-- For portfolio viewers: read [`docs/README_ENHANCED.md`](docs/README_ENHANCED.md) and [`docs/index.md`](docs/index.md).
-- For contributors: use [`docs/internal.md`](docs/internal.md) and
-  [`docs/contributor/development.md`](docs/contributor/development.md) for contribution
-  and maintenance workflows.
-- Open a GitHub issue for questions or bugs
-- Refer to `CODEOWNERS` for ownership and review guidance
-
----
-
-This repository is designed to be a stable playground for data science experimentation and a reusable foundation for production-ready workflows.
+This project is meant to stay portfolio-first: fast signal for reviewers, concise
+entry paths, and clear separation between maintained portfolio content and archive
+backlog.

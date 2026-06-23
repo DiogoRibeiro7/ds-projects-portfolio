@@ -1,5 +1,24 @@
 # Notebook Catalog
 
+## Featured notebooks (portfolio-first)
+
+Start here when evaluating this portfolio:
+
+- `healthcare_analysis.ipynb` — end-to-end healthcare explainability and calibration workflow.
+- `life_science_medical_imaging_triage.ipynb` — full medical-image triage example with CNN baselines, Grad-CAM, and fairness audit.
+- `insurance_data_science.ipynb` — pricing and segmentation benchmark with governance and drift checks.
+- `finance_credit_risk_stress_testing.ipynb` — stress-tested credit risk and default-threshold decision framework.
+- `genai_rag_pipeline.ipynb` — production-pattern RAG stack with tracing and traceability controls.
+- `energy_load_probabilistic_forecasting.ipynb` — probabilistic forecasting with uncertainty calibration.
+- `mlops_mlflow_drift_lifecycle.ipynb` — MLflow-based lifecycle and drift-triggered promotion flow.
+
+## Archive / reference notebooks
+
+All remaining notebooks are intentionally kept as reference material for reproducibility and breadth:
+
+- They remain accessible in this folder and should be treated as supplemental.
+- Use this list for deeper exploration after reviewing featured notebooks.
+
 Quick index of notebooks under `notebooks/`, with suggested usage and expected runtime on a standard laptop CPU.
 
 | Notebook | Domain | Level | Primary Use Case | Est. Runtime |

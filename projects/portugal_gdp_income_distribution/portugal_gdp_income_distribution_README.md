@@ -37,6 +37,18 @@ This notebook analyses Portugal's GDP by the income approach using Eurostat data
 - inequality and poverty (Gini, S80/S20, at-risk-of-poverty, AROPE);
 - the (weak) link between the functional and personal income distributions.
 
+### Extensions and robustness
+
+- self-employment-adjusted labour share (the gross-mixed-income correction);
+- cross-country comparison (Portugal vs Spain, Italy, Greece, euro area);
+- productivity vs real wages (decoupling) and GVA-based shares;
+- redistribution: inequality from market to disposable income.
+
+### Public debt and the interest burden
+
+- general government gross debt (% of GDP) and interest paid (% of GDP and of revenue);
+- the implied average interest rate, linking the 2011–2014 debt squeeze to the 2012 break.
+
 ## Requirements
 
 ```bash

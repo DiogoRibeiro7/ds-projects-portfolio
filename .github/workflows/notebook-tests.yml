@@ -1,251 +1,250 @@
-name: Notebook Tests
+name: Notebook Deep Checks
 
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - '**.ipynb'
-      - 'ab_testing/**'
-      - 'archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn/**'
-      - 'tests/notebook_tests/**'
-      - 'requirements*.txt'
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+    types:
+      - labeled
     paths:
-      - '**.ipynb'
-      - 'ab_testing/**'
-      - 'archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn/**'
+      - "**.ipynb"
+      - "ab_testing/**"
+      - "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn/**"
+      - "tests/notebook_tests/**"
   schedule:
-    # Run tests weekly on Sunday at 2 AM
-    - cron: '0 2 * * 0'
+    # Run tests weekly on Sunday at 2 AM.
+    - cron: "0 2 * * 0"
   workflow_dispatch:
     inputs:
       parallel:
-        description: 'Run tests in parallel'
+        description: "Run tests in parallel"
         required: false
-        default: 'false'
+        default: "false"
       validate_only:
-        description: 'Only run validation (no execution)'
+        description: "Only run validation (no execution)"
         required: false
-        default: 'false'
+        default: "false"
 
 jobs:
   test-notebooks:
+    name: Execute notebooks and pytest checks
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-deep-ci')
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.11"]
 
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Cache dependencies
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Clean old test results
-      run: |
-        rm -rf test_results
+      - name: Clean old test results
+        run: |
+          rm -rf test_results
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-core.txt
-        pip install nbval pytest-notebook nbconvert nbformat papermill pytest-html pytest-xdist memory_profiler
-        # Extra deps used in notebooks (keep minimal to reduce CI flakiness)
-        pip install lightgbm optuna shap lifelines plotly
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-core.txt
+          pip install nbval pytest-notebook nbconvert nbformat papermill pytest-html pytest-xdist memory_profiler
+          # Extra deps used in notebooks (keep minimal to reduce CI flakiness)
+          pip install lightgbm optuna shap lifelines plotly
 
-    - name: Validate notebooks (quick check)
-      run: |
-        python scripts/run_notebook_tests.py --validate-only --dirs ab_testing archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn
+      - name: Validate notebooks (quick check)
+        run: |
+          python scripts/run_notebook_tests.py --validate-only --dirs ab_testing archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn
 
-    - name: Run notebook execution tests
-      if: github.event.inputs.validate_only != 'true'
-      run: |
-        python scripts/run_notebook_tests.py \
-          --dirs ab_testing archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn \
-          --timeout 600 \
-          --output test_results \
-          ${{ github.event.inputs.parallel == 'true' && '--parallel' || '' }}
+      - name: Run notebook execution tests
+        if: github.event.inputs.validate_only != 'true'
+        run: |
+          python scripts/run_notebook_tests.py \
+            --dirs ab_testing archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn \
+            --timeout 600 \
+            --output test_results \
+            ${{ github.event.inputs.parallel == 'true' && '--parallel' || '' }}
 
-    - name: Run pytest notebook tests
-      if: github.event.inputs.validate_only != 'true'
-      run: |
-        pytest tests/notebook_tests/test_notebooks.py \
-          -v \
-          --tb=short \
-          -m "not slow" \
-          --html=test_results/pytest_report.html \
-          --self-contained-html
+      - name: Run pytest notebook tests
+        if: github.event.inputs.validate_only != 'true'
+        run: |
+          pytest tests/notebook_tests/test_notebooks.py \
+            -v \
+            --tb=short \
+            -m "not slow" \
+            --html=test_results/pytest_report.html \
+            --self-contained-html
 
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v7
-      with:
-        name: notebook-test-results-${{ matrix.python-version }}
-        path: test_results/
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: notebook-test-results-${{ matrix.python-version }}
+          path: test_results/
 
-    - name: Comment PR with results
-      if: github.event_name == 'pull_request' && always()
-      uses: actions/github-script@v9
-      with:
-        script: |
-          const fs = require('fs');
-          const path = require('path');
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
 
-          // Read test results if they exist
-          const resultsPath = 'test_results';
-          let comment = '## 📊 Notebook Test Results\n\n';
+            // Read test results if they exist
+            const resultsPath = "test_results";
+            let comment = "## 📊 Notebook Test Results\n\n";
 
-          try {
-            // Find the latest JSON results file by modified time
-            const files = fs.readdirSync(resultsPath)
-              .filter(f => f.startsWith('notebook_test_results_') && f.endsWith('.json'))
-              .map(f => ({ name: f, mtime: fs.statSync(path.join(resultsPath, f)).mtimeMs }))
-              .sort((a, b) => a.mtime - b.mtime);
-            const jsonFile = files.length ? files[files.length - 1].name : null;
+            try {
+              // Find the latest JSON results file by modified time
+              const files = fs.readdirSync(resultsPath)
+                .filter(f => f.startsWith("notebook_test_results_") && f.endsWith(".json"))
+                .map(f => ({ name: f, mtime: fs.statSync(path.join(resultsPath, f)).mtimeMs }))
+                .sort((a, b) => a.mtime - b.mtime);
+              const jsonFile = files.length ? files[files.length - 1].name : null;
 
-            if (jsonFile) {
-              const results = JSON.parse(fs.readFileSync(path.join(resultsPath, jsonFile), 'utf8'));
-              const summary = results.summary;
+              if (jsonFile) {
+                const results = JSON.parse(fs.readFileSync(path.join(resultsPath, jsonFile), "utf8"));
+                const summary = results.summary;
 
-              // Create status emoji
-              const statusEmoji = summary.pass_rate === 100 ? '✅' :
-                                  summary.pass_rate >= 70 ? '⚠️' : '❌';
+                // Create status emoji
+                const statusEmoji = summary.pass_rate === 100 ? "✅" :
+                                    summary.pass_rate >= 70 ? "⚠️" : "❌";
 
-              comment += `${statusEmoji} **Pass Rate: ${summary.pass_rate.toFixed(1)}%**\n\n`;
-              comment += `- Total Notebooks: ${summary.total_notebooks}\n`;
+                comment += `${statusEmoji} **Pass Rate: ${summary.pass_rate.toFixed(1)}%**\n\n`;
+                comment += `- Total Notebooks: ${summary.total_notebooks}\n`;
 
-              // Add status breakdown
-              if (summary.status_counts) {
-                comment += '\n**Status Breakdown:**\n';
-                for (const [status, count] of Object.entries(summary.status_counts)) {
-                  const statusDisplay = status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                  comment += `- ${statusDisplay}: ${count}\n`;
+                // Add status breakdown
+                if (summary.status_counts) {
+                  comment += "\n**Status Breakdown:**\n";
+                  for (const [status, count] of Object.entries(summary.status_counts)) {
+                    const statusDisplay = status.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+                    comment += `- ${statusDisplay}: ${count}\n`;
+                  }
                 }
-              }
 
-              // Add failed notebooks if any
-              if (summary.failed_notebooks && summary.failed_notebooks.length > 0) {
-                comment += '\n**❌ Failed Notebooks:**\n';
-                summary.failed_notebooks.forEach(failure => {
-                  comment += `- ${failure.notebook}\n`;
-                });
-              }
+                // Add failed notebooks if any
+                if (summary.failed_notebooks && summary.failed_notebooks.length > 0) {
+                  comment += "\n**❌ Failed Notebooks:**\n";
+                  summary.failed_notebooks.forEach(failure => {
+                    comment += `- ${failure.notebook}\n`;
+                  });
+                }
 
-              comment += `\n**Total Time:** ${summary.total_time.toFixed(2)} seconds\n`;
-            } else {
-              comment += '⚠️ No test results file found.\n';
+                comment += `\n**Total Time:** ${summary.total_time.toFixed(2)} seconds\n`;
+              } else {
+                comment += "⚠️ No test results file found.\n";
+              }
+            } catch (error) {
+              comment += `❌ Error reading test results: ${error.message}\n`;
             }
-          } catch (error) {
-            comment += `❌ Error reading test results: ${error.message}\n`;
-          }
 
-          comment += '\n[View full test report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})';
+            comment += "\n[View full test report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})";
 
-          // Post comment
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          });
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
 
-    - name: Check test results
-      if: always() && github.event.inputs.validate_only != 'true'
-      run: |
-        # Parse test results and fail if pass rate is too low
-        python -c "
-        import json
-        import sys
-        from pathlib import Path
+      - name: Check test results
+        if: always() && github.event.inputs.validate_only != 'true'
+        run: |
+          # Parse test results and fail if pass rate is too low
+          python -c "
+          import json
+          import sys
+          from pathlib import Path
 
-        results_dir = Path('test_results')
-        if not results_dir.exists():
-            print('No test results found')
-            sys.exit(1)
+          results_dir = Path('test_results')
+          if not results_dir.exists():
+              print('No test results found')
+              sys.exit(1)
 
-        # Find the latest results file (by modified time)
-        json_files = sorted(
-            results_dir.glob('notebook_test_results_*.json'),
-            key=lambda p: p.stat().st_mtime
-        )
-        if not json_files:
-            print('No JSON results file found')
-            sys.exit(1)
+          # Find the latest results file (by modified time)
+          json_files = sorted(
+              results_dir.glob('notebook_test_results_*.json'),
+              key=lambda p: p.stat().mtime
+          )
+          if not json_files:
+              print('No JSON results file found')
+              sys.exit(1)
 
-        with open(json_files[-1]) as f:
-            results = json.load(f)
+          with open(json_files[-1]) as f:
+              results = json.load(f)
 
-        summary = results.get('summary', {})
-        pass_rate = summary.get('pass_rate', 0)
+          summary = results.get('summary', {})
+          pass_rate = summary.get('pass_rate', 0)
 
-        print(f'Pass rate: {pass_rate:.1f}%')
+          print(f'Pass rate: {pass_rate:.1f}%')
 
-        if pass_rate < 70:
-            print(f'Tests failed: pass rate {pass_rate:.1f}% is below 70%')
-            sys.exit(1)
-        elif pass_rate < 100:
-            print(f'Tests passed with warnings: {pass_rate:.1f}%')
-        else:
-            print('All tests passed!')
-        "
+          if pass_rate < 70:
+              print(f'Tests failed: pass rate {pass_rate:.1f}% is below 70%')
+              sys.exit(1)
+          elif pass_rate < 100:
+              print(f'Tests passed with warnings: {pass_rate:.1f}%')
+          else:
+              print('All tests passed!')
+          "
 
   notebook-quality-check:
+    name: Notebook quality checks
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-deep-ci')
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install nbformat nbval
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install nbformat nbval
 
-    - name: Check notebook metadata
-      run: |
-        python -c "
-        import nbformat
-        from pathlib import Path
+      - name: Check notebook metadata
+        run: |
+          python -c "
+          import nbformat
+          from pathlib import Path
 
-        issues = []
-        for notebook_path in Path('.').glob('**/*.ipynb'):
-            if '.ipynb_checkpoints' in str(notebook_path):
-                continue
+          issues = []
+          for notebook_path in Path('.').glob('**/*.ipynb'):
+              if '.ipynb_checkpoints' in str(notebook_path):
+                  continue
 
-            with open(notebook_path) as f:
-                nb = nbformat.read(f, as_version=4)
+              with open(notebook_path) as f:
+                  nb = nbformat.read(f, as_version=4)
 
-            # Check for output in notebooks (should be cleared before commit)
-            for cell in nb.cells:
-                if cell.cell_type == 'code' and cell.outputs:
-                    issues.append(f'{notebook_path}: Contains output (should be cleared)')
-                    break
+              # Check for output in notebooks (should be cleared before commit)
+              for cell in nb.cells:
+                  if cell.cell_type == 'code' and cell.outputs:
+                      issues.append(f'{notebook_path}: Contains output (should be cleared)')
+                      break
 
-        if issues:
-            print('Issues found:')
-            for issue in issues:
-                print(f'  - {issue}')
-            exit(1)
-        else:
-            print('All notebooks passed quality checks')
-        "
+          if issues:
+              print('Issues found:')
+              for issue in issues:
+                  print(f'  - {issue}')
+              exit(1)
+          else:
+              print('All notebooks passed quality checks')
+          "
 
-    - name: Check for large notebooks
-      run: |
-        find . -name "*.ipynb" -size +10M -exec echo "Large notebook found: {}" \; -exec false \; || true
+      - name: Check for large notebooks
+        run: |
+          find . -name "*.ipynb" -size +10M -exec echo "Large notebook found: {}" \; -exec false \; || true

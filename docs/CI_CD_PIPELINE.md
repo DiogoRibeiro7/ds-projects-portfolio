@@ -24,22 +24,29 @@ graph TB
 
 ### 1. Main CI/CD Pipeline (`ci.yml`)
 
-The primary workflow that runs on every push and pull request.
+The primary required workflow for every PR and push on portfolio tracks (`main`, `develop`, `feature/*`).
+It intentionally stays fast and focuses on formatting, typing, unit tests, and docs build.
 
 #### Jobs:
 
-- **code-quality**: Runs linting, formatting checks, and code complexity analysis
-- **typecheck**: Static type checking with mypy
-- **test-matrix**: Tests across multiple Python versions (3.9-3.12) and OS (Ubuntu, Windows, macOS)
-- **notebook-validation**: Validates and executes Jupyter notebooks
-- **performance-benchmark**: Runs performance benchmarks and stores results
-- **test-integration**: Integration tests with PostgreSQL and Redis
-- **test-data**: Data quality validation tests
-- **security-scan**: Security vulnerability scanning
-- **build-documentation**: Builds and deploys documentation
-- **docker-build**: Builds and pushes Docker images
+- **Format & Lint**: Formatting and lint checks.
+- **Type Checking**: Static typing (`make typecheck`).
+- **Tests**: Unit test matrix (Python 3.11 and 3.12).
+- **Docs Build**: `make docs`.
 
-### 2. Release Pipeline (`release.yml`)
+### 2. Deep checks workflow (`notebook-tests.yml`, `codeql-analysis.yml`)
+
+Optional workflows for deeper validation:
+
+- Notebook execution and quality checks.
+- CodeQL analysis.
+- Dependency review.
+- License scanning.
+
+These are manually runnable from GitHub Actions and can also be triggered on PRs
+by adding the `run-deep-ci` label.
+
+### 3. Release Pipeline (`release.yml`)
 
 Handles version releases and deployments.
 

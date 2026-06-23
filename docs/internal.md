@@ -26,3 +26,13 @@ RELEASE
 - Review scope and structure in [`docs/REPO_STRUCTURE.md`](REPO_STRUCTURE.md).
 - Follow contribution workflow in [`docs/CONTRIBUTING_DOCS.md`](CONTRIBUTING_DOCS.md).
 - Keep docs and runtime checks healthy using [`docs/development.md`](development.md).
+
+## CI and checks for maintainers
+
+- Use the fast path on PRs through [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+- Run deep checks via:
+  - [`notebook-tests.yml`](../.github/workflows/notebook-tests.yml)
+  - [`codeql-analysis.yml`](../.github/workflows/codeql-analysis.yml)
+- Deep checks are optional and can be started either from the Actions UI (`Run workflow`) or by adding the `run-deep-ci` label to the PR.
+
+The repository uses this split to keep required checks fast while still allowing deeper validation before release.

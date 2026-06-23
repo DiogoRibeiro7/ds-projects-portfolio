@@ -1,16 +1,20 @@
-name: CodeQL Analysis
+name: Deep Security Checks
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches:
+      - main
+    types:
+      - labeled
   schedule:
-    - cron: '0 2 * * 1'  # Weekly on Monday at 2 AM
+    # Run once weekly on Monday at 2 AM.
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
 
 jobs:
   analyze:
-    name: Analyze
+    name: CodeQL analysis
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-deep-ci')
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -20,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['python']
+        language: ["python"]
 
     steps:
       - name: Checkout repository
@@ -41,8 +45,10 @@ jobs:
           category: "/language:${{matrix.language}}"
 
   dependency-review:
+    name: Dependency review
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-deep-ci')
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
@@ -54,14 +60,17 @@ jobs:
           deny-licenses: GPL-3.0, AGPL-3.0
 
   license-scan:
+    name: License audit
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-deep-ci')
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -87,13 +96,13 @@ jobs:
               license_name = pkg.get('License', '')
               for cl in copyleft:
                   if cl in license_name:
-                      found_copyleft.append(f\"{pkg['Name']}: {license_name}\")
+                      found_copyleft.append(f"{pkg['Name']}: {license_name}")
 
           if found_copyleft:
               print('⚠️ Found packages with copyleft licenses:')
               for item in found_copyleft:
                   print(f'  - {item}')
-              print('\\nPlease review license compatibility.')
+              print('\nPlease review license compatibility.')
           else:
               print('✅ No copyleft licenses found.')
           "

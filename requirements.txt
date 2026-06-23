@@ -63,7 +63,7 @@ flake8>=4.0.0          # Linting
 
 # Documentation & Reporting (implemented TODOs)
 notebook>=6.4.0
-nbconvert>=6.0.0       # Notebook conversion
+nbconvert>=7.17.1       # Notebook conversion
 jinja2>=3.0.0          # Template engine for reports
 weasyprint>=54.0       # HTML to PDF conversion (optional)
 markdown>=3.3.0        # Markdown processing
@@ -85,7 +85,7 @@ azure-storage-blob>=12.0.0   # Azure blob storage
 
 # API & Web Services (implemented TODOs)
 requests>=2.25.0
-urllib3>=2.6.2         # Fixed compression vulnerabilities
+urllib3>=2.7.0         # Fixed compression vulnerabilities
 httpx>=0.23.0          # Modern HTTP client
 
 # Time Series Analysis (future expansion)
@@ -143,7 +143,7 @@ nbsphinx>=0.8.0         # Jupyter notebook integration
 
 # Security Fixes Applied (2025-12-29)
 # The following packages were updated to fix security vulnerabilities:
-# - urllib3>=2.6.2 (CVE: compression vulnerabilities)
+# - urllib3>=2.7.0 (CVE: compression vulnerabilities)
 # - werkzeug>=3.1.4 (CVE: path traversal)
 # - mlflow>=3.8.1 (CVE: arbitrary code execution)
 # - pymongo>=4.15.5 (security fixes)

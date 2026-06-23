@@ -28,7 +28,7 @@ evidently==0.4.10
 # Integration testing
 testcontainers==4.14.2
 pytest-docker==3.2.5
-requests-mock==1.11.0
+requests-mock==1.12.1
 responses==0.24.1
 
 # Notebook testing

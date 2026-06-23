@@ -134,8 +134,8 @@ Command | Purpose
 
 ## Support
 
-- Read `docs/index.md` to get started with the documentation
-- Use `docs/development.md` for development workflows and contribution guidance
+- For portfolio viewers: read [`docs/README_ENHANCED.md`](docs/README_ENHANCED.md) and [`docs/index.md`](docs/index.md).
+- For contributors: use [`docs/internal.md`](docs/internal.md) and `docs/development.md` for contribution and maintenance workflows.
 - Open a GitHub issue for questions or bugs
 - Refer to `CODEOWNERS` for ownership and review guidance
 

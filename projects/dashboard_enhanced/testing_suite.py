@@ -799,12 +799,20 @@ class DashboardTestSuite:
         """Run performance tests."""
         logger.info("Running performance tests...")
 
-        # Note: Locust tests would typically be run via command line
-        # locust -f testing_suite.py DashboardUser --headless -u 10 -r 2 -t 30s
+        # Locust execution is intentionally external to avoid long-running command
+        # execution in every import/test run. Use the command below in CI or a controlled environment
+        # when load testing is needed.
+        command = "locust -f testing_suite.py DashboardUser --headless -u 10 -r 2 -t 30s"
 
         return {
-            "note": "Run locust tests via command line",
-            "command": "locust -f testing_suite.py DashboardUser --headless -u 10 -r 2 -t 30s",
+            "note": "Run locust tests via command line in CI or a controlled environment",
+            "command": command,
+            "runner": "locust",
+            "user_class": "DashboardUser",
+            "headless": True,
+            "users": 10,
+            "spawn_rate": 2,
+            "duration": "30s",
         }
 
     def run_visual_regression_tests(self) -> dict[str, Any]:

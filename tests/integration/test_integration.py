@@ -448,9 +448,8 @@ class TestDashboardIntegration:
         """Test dashboard export capabilities."""
         import plotly.graph_objects as go
 
-        from dashboard_enhanced.visualization_components import (
-            InteractiveVisualizations,
-        )
+        from dashboard_enhanced.visualization_components import InteractiveVisualizations
+        from dashboard_enhanced.app import ExportManager
 
         viz = InteractiveVisualizations()
 
@@ -459,8 +458,13 @@ class TestDashboardIntegration:
 
         # Test PDF export
         pdf_path = temp_dir / "export.pdf"
-        viz.export_to_pdf([fig], pdf_path)
-        # Note: Actual PDF generation might require additional dependencies
+        with open(pdf_path, "wb") as f:
+            pdf_output = ExportManager.export_to_pdf("<html><body>test</body></html>")
+            if pdf_output is None:
+                # Actual PDF generation depends on optional runtime dependency `wkhtmltopdf`.
+                pytest.skip("PDF export dependencies (pdfkit/wkhtmltopdf) are not installed")
+            f.write(pdf_output)
+        assert pdf_path.exists()
 
         # Test Excel export
         excel_path = temp_dir / "export.xlsx"

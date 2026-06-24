@@ -101,7 +101,7 @@ fakeredis>=2.19.0
 
 # Data Testing
 great-expectations==1.17.0
-pandera>=0.16.1
+pandera>=0.32.0
 
 # Build Tools
 build>=0.10.0

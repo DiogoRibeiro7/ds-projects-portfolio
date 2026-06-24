@@ -21,7 +21,7 @@ cosmic-ray==8.3.5
 
 # Data testing
 great-expectations==1.17.0
-pandera==0.17.2
+pandera==0.32.0
 deepchecks==0.17.5
 evidently==0.4.10
 

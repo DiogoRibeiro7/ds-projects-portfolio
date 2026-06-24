@@ -8,11 +8,9 @@
 :show-inheritance:
 ```
 
-```{note}
-The observability helpers rely on the full OpenTelemetry stack. Their automatic
-reference documentation will be added once the upstream package imports are
-stabilized in CI (see `docs/contributor/DOC_COVERAGE.md` for current status).
-```
+Note: The observability helpers rely on the full OpenTelemetry stack. Their
+automatic reference documentation will be added once the upstream package imports
+are stabilized in CI (see `docs/contributor/DOC_COVERAGE.md` for current status).
 
 ## Time-series Data Prep
 

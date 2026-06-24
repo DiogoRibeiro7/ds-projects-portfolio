@@ -40,6 +40,7 @@ code, notebooks, reproducible demos, and production-oriented references.
 
    - [`notebooks/healthcare_analysis.ipynb`](notebooks/healthcare_analysis.ipynb)
    - [`notebooks/finance_credit_risk_stress_testing.ipynb`](notebooks/finance_credit_risk_stress_testing.ipynb)
+   - [`examples/eda_end_to_end.ipynb`](examples/eda_end_to_end.ipynb)
 
 ## What this portfolio demonstrates
 
@@ -81,6 +82,11 @@ Use this map when you want to jump directly to a project area:
 The complete notebook catalog (including archive/reference notebooks) remains in
 [`notebooks/README.md`](notebooks/README.md).
 
+## End-to-end analytics examples
+
+- [`examples/eda_end_to_end.ipynb`](examples/eda_end_to_end.ipynb) for a complete
+  exploratory analysis walkthrough.
+
 ## Repository layout
 
 ```text
@@ -110,3 +116,4 @@ Repository scope contract is documented in
 This project is meant to stay portfolio-first: fast signal for reviewers, concise
 entry paths, and clear separation between maintained portfolio content and archive
 backlog.
+

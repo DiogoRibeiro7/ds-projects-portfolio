@@ -63,6 +63,21 @@ Use this short list first when reviewing:
 - [`notebooks/energy_load_probabilistic_forecasting.ipynb`](notebooks/energy_load_probabilistic_forecasting.ipynb) (time-series forecasting)
 - [`notebooks/mlops_mlflow_drift_lifecycle.ipynb`](notebooks/mlops_mlflow_drift_lifecycle.ipynb) (MLOps lifecycle)
 
+## Project index
+
+Use this map when you want to jump directly to a project area:
+
+- [churn_prediction](projects/churn_prediction/)
+- [customer segmentation](projects/customer_segmentation/)
+- [ab_testing](projects/ab_testing/)
+- [statistical_methods](projects/statistical_methods/)
+- [streamlit_apps](projects/streamlit_apps/)
+- [dashboard_enhanced](projects/dashboard_enhanced/)
+- [archive legacy MLOps notebooks](archive/legacy/projects/mlops/)
+- [deep_learning](projects/deep_learning/)
+- [nlp](projects/nlp/)
+- [performance_optimization](projects/performance_optimization/)
+
 The complete notebook catalog (including archive/reference notebooks) remains in
 [`notebooks/README.md`](notebooks/README.md).
 

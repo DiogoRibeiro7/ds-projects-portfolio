@@ -35,6 +35,38 @@
 CI runs every target above (see `.github/workflows/ci.yml`), so matching the
 matrix locally is the fastest path to a green pull request.
 
+## Reproducible environment snapshots
+
+From a clean environment, capture the exact dependency set before major edits:
+
+```bash
+# Conda (environment name: ds-portfolio)
+conda env export --name ds-portfolio > environment-export.yml
+
+# uv lockfile (prefer for deterministic Python package resolution)
+uv pip compile requirements-fixed.txt -o requirements.lock
+
+# pip frozen requirements for downstream consumers
+python -m pip freeze > requirements-freeze.txt
+```
+
+To restore from lock/repro files later:
+
+```bash
+# uv
+uv pip sync requirements.lock
+
+# conda
+conda env create -f environment-export.yml
+
+# pip
+python -m pip install -r requirements.lock
+```
+
+Prefer committing only one canonical snapshot file (`requirements.lock`) for
+automation and keeping human-readable environment files (`environment-export.yml`)
+for platform-specific reproduction.
+
 ## Releasing
 
 1. Ensure `DOC_COVERAGE.md` and `CHANGELOG` are updated.

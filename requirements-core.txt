@@ -43,7 +43,7 @@ pytest-cov>=3.0.0
 
 # API & Web Services
 requests>=2.25.0
-urllib3>=2.6.2  # Fixed compression vulnerabilities
+urllib3>=2.7.0  # Fixed compression vulnerabilities
 
 # Database Connectivity
 sqlalchemy>=1.4.0

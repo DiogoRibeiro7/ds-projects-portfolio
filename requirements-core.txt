@@ -16,7 +16,7 @@ dash>=2.0.0
 # Data Processing & File Support
 openpyxl>=3.0.0
 xlsxwriter>=3.0.0
-pyarrow>=5.0.0
+pyarrow>=24.0.0
 
 # Configuration & Serialization
 pyyaml>=6.0

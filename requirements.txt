@@ -63,7 +63,7 @@ flake8>=4.0.0          # Linting
 
 # Documentation & Reporting (implemented TODOs)
 notebook>=6.4.0
-nbconvert>=6.0.0       # Notebook conversion
+nbconvert>=7.17.1       # Notebook conversion
 jinja2>=3.0.0          # Template engine for reports
 weasyprint>=54.0       # HTML to PDF conversion (optional)
 markdown>=3.3.0        # Markdown processing

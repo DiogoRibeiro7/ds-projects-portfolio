@@ -139,7 +139,31 @@ study = optuna.create_study(direction='maximize')
 study.optimize(objective, n_trials=100)
 ```
 
-### 3. Model Versioning
+### 3. Model selection criteria and tradeoffs
+
+Use a structured scoring matrix before locking a model:
+
+- Define a primary business metric (e.g. recall for fraud detection, RMSE for forecasting).
+- Add secondary constraints (latency budget, interpretability, memory, and maintenance cost).
+- Compare at least two model families on the same cross-validation protocol and report the tradeoff table (quality, speed, complexity).
+- Prefer simpler models when gains are within an acceptable margin and operational cost is high.
+
+Example lightweight decision rule:
+
+```python
+candidates = [
+    {"name": "LogisticRegression", "metric": 0.82, "latency_ms": 4, "train_min": 1, "interpretability": "high"},
+    {"name": "XGBoost", "metric": 0.86, "latency_ms": 18, "train_min": 12, "interpretability": "medium"},
+]
+
+selected = max(
+    candidates,
+    key=lambda c: (c["metric"], -c["latency_ms"] if c["latency_ms"] < 25 else -999),
+)
+print("Selected model:", selected["name"])
+```
+
+### 4. Model Versioning
 Track all models:
 
 ```python

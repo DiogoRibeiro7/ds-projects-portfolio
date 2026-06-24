@@ -8,6 +8,7 @@ import sys
 import tempfile
 import types
 import unittest
+import time
 from unittest.mock import Mock, patch
 
 import numpy as np
@@ -91,15 +92,22 @@ class TestDataStreamer(unittest.TestCase):
 
     def test_start_stream(self):
         """Test stream starting (without actual threading)."""
-        # Note: This test only checks that the method doesn't crash
-        # Actual streaming would require integration testing
-        try:
-            self.streamer.streaming = True
-            # We can't easily test the actual streaming without a running socketio
-            # but we can verify the structure is set up
+        with patch("app.socketio.emit") as mock_emit:
+            self.streamer.start_stream("test-stream", interval=0)
+
             self.assertTrue(self.streamer.streaming)
-        finally:
-            self.streamer.streaming = False
+            self.assertIn("test-stream", self.streamer.data_generators)
+            self.assertIsNotNone(self.streamer.stream_thread)
+            self.assertTrue(self.streamer.stream_thread.is_alive())
+
+            time.sleep(0.01)
+            self.assertGreaterEqual(mock_emit.call_count, 1)
+
+            self.streamer.stop_stream("test-stream")
+            self.streamer.stream_thread.join(timeout=1.0)
+
+            self.assertNotIn("test-stream", self.streamer.data_generators)
+            self.assertFalse(self.streamer.stream_thread.is_alive())
 
 
 class TestDashboardConfig(unittest.TestCase):

@@ -18,6 +18,29 @@ Other dedicated directories (e.g., `tests/performance`, `tests/notebook_tests`) 
 - When adding stochastic logic, call `np.random.seed` / `random.seed` inside fixtures or use `pytest`'s `monkeypatch` so that default runs are reproducible.
 - `PYTHONHASHSEED=0` is set in CI to keep hashing deterministic.
 
+### Reproducibility seed management guide
+
+Use a consistent pattern across notebooks, scripts, and tests:
+
+1. Pin a single seed constant at the top of the entrypoint.
+2. Seed all randomness sources you use (`random`, `numpy`, framework-specific RNGs).
+3. Log the seed in output artifacts (model metadata, report files, notebook notes).
+4. If resuming experiments, expose seed override via configuration or CLI.
+
+Example for scripts:
+
+```python
+import random
+import numpy as np
+
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+```
+
+Notebook rule of thumb: keep a small "Configuration" cell with one `RANDOM_STATE`/`SEED`
+value and reuse it for every randomized step.
+
 ## Performance Budget
 
 - Default PR suite (`make test`) must finish in **<10 minutes** on GitHub Actions and <5 minutes locally on a modern laptop.

@@ -10,7 +10,7 @@ statsmodels>=0.14.4  # >=0.14.4 required for scipy>=1.14 compatibility
 scikit-learn>=1.6.1,<1.8  # Limited by scikit-survival compatibility
 
 # Interactive Visualization (implemented TODOs)
-plotly>=5.0.0
+plotly>=6.1.1
 dash>=2.0.0
 
 # Data Processing & File Support

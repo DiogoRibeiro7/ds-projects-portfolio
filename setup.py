@@ -61,7 +61,7 @@ setup(
             "nbsphinx>=0.8.0",
         ],
         "viz": [
-            "plotly>=5.0.0",
+            "plotly>=6.1.1",
             "altair>=4.0.0",
         ],
     },

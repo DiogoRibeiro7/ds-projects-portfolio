@@ -26,7 +26,7 @@ toml>=0.10.0            # TOML configuration files
 jsonschema>=4.0.0       # JSON schema validation
 
 # Enhanced Data Processing (implemented TODOs)
-chardet>=4.0.0          # Character encoding detection
+chardet>=7.4.3          # Character encoding detection
 python-dateutil>=2.8.0  # Enhanced date parsing
 
 # Memory Optimization (implemented TODOs)

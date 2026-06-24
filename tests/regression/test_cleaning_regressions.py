@@ -34,6 +34,7 @@ def test_clean_ab_data_handles_missing_metric_columns():
     assert len(cleaned) == len(df)
     step_names = {step["step"] for step in report["cleaning_steps"]}
     assert "duplicate_removal" not in step_names  # no duplicates removed
+    assert "outlier_removal" not in step_names
 
 
 def test_clean_ab_data_retains_group_balance_after_missing_values():

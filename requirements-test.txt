@@ -16,7 +16,7 @@ hypothesis[numpy]==6.151.5
 hypothesis[pandas]==6.92.1
 
 # Mutation testing
-mutmut==2.4.4
+mutmut==3.6.0
 cosmic-ray==8.3.5
 
 # Data testing

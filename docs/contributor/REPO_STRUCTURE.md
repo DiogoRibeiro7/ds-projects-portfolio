@@ -16,9 +16,10 @@ This repository is intentionally a monorepo, but not all directories have the sa
 - `notebooks/`: exploratory and domain notebooks.
 - `examples/`: runnable examples and notebook-facing demos.
 - `deployment/`: portfolio-facing deployment entry points (primarily `docker/` and `model_server/`).
-- `archive/internal/deployment-platform/`: legacy/ops deployment scaffolding
-  (configs, Helm charts, Kubernetes manifests, MLflow hooks, and utility scripts).
 - `tutorials/`: narrative learning material.
+
+This document intentionally keeps historical and internal scaffolding in `archive/` and
+explicitly marks `archive/internal/deployment-platform/` as non-portfolio deployment ops.
 
 ## Archive and generated outputs
 
@@ -28,6 +29,11 @@ This repository is intentionally a monorepo, but not all directories have the sa
 - `archive/legacy/projects/`: legacy project trees moved out of active project paths.
 - `artifacts/`: model/data artifacts kept only when intentionally versioned for portfolio evidence.
 - `notebooks/artifacts/**/production/`: notebook run traces and production-style run outputs; ignore by default.
+- `archive/internal/deployment-platform/`: legacy/ops deployment scaffolding
+  (configs, Helm charts, Kubernetes manifests, MLflow hooks, and utility scripts).
+
+For the public-facing contract and clear "keep vs archive" rule, see
+[`docs/PORTFOLIO_SCOPE.md`](../PORTFOLIO_SCOPE.md).
 
 ## Rules
 

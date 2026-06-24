@@ -81,7 +81,8 @@ The complete notebook catalog (including archive/reference notebooks) remains in
 └── archive/              # Historical artifacts and legacy references
 ```
 
-Repository scoping is documented in [`docs/contributor/REPO_STRUCTURE.md`](docs/contributor/REPO_STRUCTURE.md).
+Repository scope contract is documented in
+[`docs/PORTFOLIO_SCOPE.md`](docs/PORTFOLIO_SCOPE.md).
 
 ## Read next
 

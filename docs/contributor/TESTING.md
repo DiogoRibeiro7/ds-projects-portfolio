@@ -34,6 +34,28 @@ make test-regression      # regression/snapshot tests
 make test-slow            # slow-only suite (nightly equivalent)
 ```
 
+## Quickstart for local testing
+
+To verify a clean local state quickly:
+
+1. Install dev dependencies:
+
+   ```bash
+   python -m pip install -r requirements-dev.txt
+   ```
+
+2. Run the fast suite first:
+
+   ```bash
+   make test-unit
+   ```
+
+3. Expand when green:
+
+   ```bash
+   make test
+   ```
+
 All commands respect `PYTEST_ADDOPTS` / `TEST_OPTS`, so you can append flags via `make test TEST_OPTS='-k feature_x'`.
 
 CI runs unit+integration+regression on every PR and executes the slow suite on the scheduled nightly / manual dispatch workflow. Notebook/performance suites still live in `.github/workflows/*.yml` and can be triggered independently.

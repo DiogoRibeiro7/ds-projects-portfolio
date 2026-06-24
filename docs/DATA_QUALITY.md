@@ -20,6 +20,39 @@ The following checklist helps ensure every new dataset is reviewed consistently 
 - [ ] Store dataset checksums or fingerprints for future integrity checks.
 - [ ] Document any known data quality limitations or caveats.
 
+### Automated schema validation step
+
+Before analysis starts, run a schema gate in CI or notebooks to block invalid schema
+drift from entering the pipeline:
+
+```python
+from pathlib import Path
+import pandas as pd
+from src.data_quality.quality_framework import SchemaValidator
+
+df = pd.read_csv(Path("data/raw/new_dataset.csv"))
+validator = SchemaValidator()
+
+validator.register_schema(
+    "incoming_dataset",
+    {
+        "type": "object",
+        "properties": {
+            "customer_id": {"type": "string"},
+            "age": {"type": "number", "minimum": 0, "maximum": 120},
+            "score": {"type": "number"},
+        },
+        "required": ["customer_id", "age", "score"],
+    },
+)
+
+result = validator.validate_dataframe_schema(df, "incoming_dataset")
+assert result.passed, result.message
+```
+
+For a one-command local check, this guard can be wrapped in CI by running a small
+validation script and failing the pipeline when `result.passed` is false.
+
 ## ✅ Features Implemented
 
 ### 1. **Data Quality Framework** (`src/data_quality/quality_framework.py`)

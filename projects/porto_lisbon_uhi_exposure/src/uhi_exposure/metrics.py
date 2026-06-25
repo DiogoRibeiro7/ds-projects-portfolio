@@ -173,3 +173,110 @@ def compute_group_representation(
             )
 
     return pd.DataFrame.from_records(records)
+
+
+def compute_threshold_sensitivity(
+    df: pd.DataFrame,
+    thresholds: list[float] | np.ndarray,
+    columns: ExposureColumns | None = None,
+) -> pd.DataFrame:
+    """Compute exposed population share for a range of UHI thresholds."""
+    columns = columns or ExposureColumns()
+    validate_exposure_cells(df, columns)
+
+    records: list[dict[str, float | str]] = []
+    for city, city_df in df.groupby(columns.city, sort=True):
+        total_population = float(city_df[columns.population_total].sum())
+        for threshold in thresholds:
+            exposed_population = float(
+                city_df.loc[
+                    city_df[columns.uhi_intensity_celsius] >= float(threshold),
+                    columns.population_total,
+                ].sum()
+            )
+            records.append(
+                {
+                    "city": city,
+                    "threshold_celsius": float(threshold),
+                    "exposed_population": exposed_population,
+                    "exposed_population_share": _safe_divide(exposed_population, total_population),
+                }
+            )
+
+    return pd.DataFrame.from_records(records)
+
+
+def compute_group_representation_by_threshold(
+    df: pd.DataFrame,
+    thresholds: list[float] | np.ndarray,
+    columns: ExposureColumns | None = None,
+) -> pd.DataFrame:
+    """Compute representation ratios for each group across multiple thresholds."""
+    columns = columns or ExposureColumns()
+    records: list[pd.DataFrame] = []
+    for threshold in thresholds:
+        threshold_result = compute_group_representation(df, threshold=float(threshold), columns=columns)
+        threshold_result["threshold_celsius"] = float(threshold)
+        records.append(threshold_result)
+
+    return pd.concat(records, ignore_index=True)
+
+
+def compute_exposure_band_decomposition(
+    df: pd.DataFrame,
+    threshold: float = 2.0,
+    band_width: float = 0.1,
+    columns: ExposureColumns | None = None,
+) -> pd.DataFrame:
+    """Decompose exposed population into fine-grained UHI bands above the threshold."""
+    columns = columns or ExposureColumns()
+    prepared = add_exposure_flag(df, threshold=threshold, columns=columns)
+    exposed = prepared.loc[prepared[columns.is_uhi_exposed]].copy()
+    if exposed.empty:
+        return pd.DataFrame(
+            columns=[
+                "city",
+                "uhi_band",
+                "band_population",
+                "band_population_share_of_exposed",
+                "heat_excess_population",
+                "heat_excess_share_of_exposed",
+            ]
+        )
+
+    max_value = float(exposed[columns.uhi_intensity_celsius].max())
+    upper = np.ceil(max_value / band_width) * band_width + band_width
+    bins = np.arange(threshold, upper + band_width, band_width)
+    labels = [f"{start:.1f}-{end:.1f}" for start, end in zip(bins[:-1], bins[1:])]
+
+    exposed["uhi_band"] = pd.cut(
+        exposed[columns.uhi_intensity_celsius],
+        bins=bins,
+        labels=labels,
+        right=False,
+        include_lowest=True,
+    )
+    exposed["heat_excess_population"] = (
+        (exposed[columns.uhi_intensity_celsius] - threshold) * exposed[columns.population_total]
+    )
+
+    summary = (
+        exposed.groupby([columns.city, "uhi_band"], observed=False)
+        .agg(
+            band_population=(columns.population_total, "sum"),
+            heat_excess_population=("heat_excess_population", "sum"),
+        )
+        .reset_index()
+    )
+    summary = summary.loc[summary["band_population"] > 0].copy()
+    summary["band_population_share_of_exposed"] = summary.groupby(columns.city)[
+        "band_population"
+    ].transform(lambda values: values / values.sum())
+    summary["heat_excess_share_of_exposed"] = summary.groupby(columns.city)[
+        "heat_excess_population"
+    ].transform(lambda values: values / values.sum() if values.sum() > 0 else np.nan)
+    summary = summary.sort_values(
+        [columns.city, "band_population_share_of_exposed"],
+        ascending=[True, False],
+    )
+    return summary

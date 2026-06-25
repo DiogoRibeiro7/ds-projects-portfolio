@@ -11,6 +11,7 @@ from uhi_exposure.real_data import (
     intersect_grid_with_cities,
     validate_prepared_output,
 )
+from uhi_exposure.spatial import cell_id_to_geometry, parse_grid_cell_id
 
 
 def test_intersect_grid_with_cities_applies_area_weights() -> None:
@@ -115,3 +116,13 @@ def test_validate_prepared_output_requires_both_cities() -> None:
 
     with pytest.raises(ValueError, match="Expected cities"):
         validate_prepared_output(prepared)
+
+
+def test_parse_grid_cell_id_and_geometry() -> None:
+    easting, northing, resolution = parse_grid_cell_id("CRS3035RES1000mN1929000E2657000")
+    geometry = cell_id_to_geometry("CRS3035RES1000mN1929000E2657000")
+
+    assert easting == pytest.approx(2657000.0)
+    assert northing == pytest.approx(1929000.0)
+    assert resolution == pytest.approx(1000.0)
+    assert geometry.bounds == pytest.approx((2657000.0, 1929000.0, 2658000.0, 1930000.0))

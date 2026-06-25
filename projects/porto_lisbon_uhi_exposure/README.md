@@ -60,6 +60,16 @@ poetry run jupyter lab notebooks/porto_lisbon_uhi_exposure.ipynb
 
 The notebook is configured for the real prepared table by default.
 
+## Key findings
+
+With the current real-data pipeline and a `2.0 °C` exposure threshold:
+
+- Lisbon has a much lower exposed population share than Porto in the prepared table, about `1.05%` versus `6.42%`.
+- In Lisbon, the strongest overrepresentation in exposed areas is for `born_outside_eu`, with a representation ratio near `1.60`.
+- In Porto, `born_outside_eu`, `older_65_plus`, and `not_employed` are overrepresented in exposed areas, while `children_0_14` are underrepresented.
+
+These findings should be read together with the boundary and raster assumptions above. They are valid for the **Urban Audit city polygons** and the **published UHI model surface** used here, not for municipality-only definitions of Lisbon and Porto.
+
 ## Interpretation scope
 
 This is an exposure and spatial representation analysis. It does not estimate mortality, morbidity, or causal heat effects. It answers a narrower question: which groups are more concentrated in cells with higher modelled urban heat island intensity.

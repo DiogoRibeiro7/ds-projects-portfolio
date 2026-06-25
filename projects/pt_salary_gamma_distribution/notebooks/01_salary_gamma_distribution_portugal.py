@@ -290,6 +290,33 @@ display(winner_counts)
 # If Gamma wins rarely, the right conclusion is not that Gamma is useless. The right conclusion is narrower: Gamma may still be a decent approximation for the body of the distribution, but it is not the best full grouped-data summary across years.
 
 # %% [markdown]
+# ## How far ahead is the winning model?
+#
+# Saying that one model wins is not enough. The next question is whether it wins narrowly or decisively. The plot below compares the BIC gap between **Gamma** and **Lognormal** over time. Positive values mean Lognormal fits the grouped public distribution better.
+
+# %%
+bic_gap = (
+    fit_results.pivot(index="year", columns="model", values="bic")
+    .reset_index()
+    .assign(lognormal_minus_gamma=lambda df: df["gamma"] - df["lognormal"])
+)
+bic_gap.to_csv(PROCESSED_DIR / "bic_gap_gamma_vs_lognormal.csv", index=False)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.plot(bic_gap["year"], bic_gap["lognormal_minus_gamma"], marker="o", color="tab:purple")
+ax.axhline(0.0, color="black", linewidth=1, alpha=0.7)
+ax.set_title("BIC advantage of Lognormal over Gamma")
+ax.set_xlabel("Year")
+ax.set_ylabel("BIC(Gamma) - BIC(Lognormal)")
+ax.grid(True, alpha=0.3)
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "bic_gap_gamma_vs_lognormal.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# This matters because the notebook is not just reporting a symbolic winner. A large and persistent positive gap means the evidence against Gamma as the best grouped-data summary is not marginal. It is systematic.
+
+# %% [markdown]
 # ## Gamma parameter trends
 #
 # Even when Gamma is not the overall winner, its parameters can still provide a compact description of how skewness and scale evolve. That is useful if the goal is to understand whether the distribution becomes more compressed or more spread out over time.
@@ -466,6 +493,27 @@ for year in selected_years:
 # This is the most intuitive validation layer in the notebook. If a model fits the grouped counts but misses the upper-decile means badly, it is likely getting the **shape of the tail** wrong even if the bracket likelihood looks competitive.
 
 # %% [markdown]
+# ## Decile-fit error over time
+#
+# The next plot compresses the decile validation into one time series per model. Lower values mean the model is closer to the published mean earnings inside each decile.
+
+# %%
+fig, ax = plt.subplots(figsize=(10, 5))
+for model_name, model_df in decile_fit_summary.groupby("model"):
+    ax.plot(model_df["year"], model_df["mean_abs_relative_error"], marker="o", label=model_name)
+ax.set_title("Mean absolute decile error by model and year")
+ax.set_xlabel("Year")
+ax.set_ylabel("Mean absolute relative error")
+ax.grid(True, alpha=0.3)
+ax.legend()
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "decile_error_by_model_over_time.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# This is the clearest out-of-sample comparison in the notebook. If one model wins the grouped likelihood and also keeps lower decile-mean error over time, that is much stronger evidence than an information-criterion win alone.
+
+# %% [markdown]
 # ## Optional top-tail check: Pareto diagnostic
 #
 # This is not part of the main AIC/BIC competition. It is a tail-only diagnostic built from the highest salary brackets. The purpose is to see whether the upper tail behaves like something heavier than the main body models suggest.
@@ -488,6 +536,43 @@ display(tail_diagnostics.tail(10))
 
 # %% [markdown]
 # Lower Pareto alpha means a heavier top tail. This diagnostic should be read cautiously because it is built from grouped top bins, not individual top incomes. Still, it adds useful context when smooth full-distribution models systematically miss the last brackets.
+
+# %% [markdown]
+# ## Top-bracket concentration over time
+#
+# The top-tail story is easier to read when shown directly in worker shares. This plot tracks the share of workers in the open top bracket and in the top two brackets combined.
+
+# %%
+top_share = (
+    salary_bins.assign(is_top_bracket=lambda df: df["bin_type"].eq("open_top"))
+    .assign(is_top_two=lambda df: df["bin_type"].isin(["open_top", "closed_range"]) & (df["lower"] >= 3750.0))
+    .groupby("year", as_index=False)
+    .apply(
+        lambda group: pd.Series(
+            {
+                "open_top_share": float(group.loc[group["bin_type"] == "open_top", "count"].sum() / group["count"].sum()),
+                "top_two_brackets_share": float(group.loc[group["lower"] >= 3750.0, "count"].sum() / group["count"].sum()),
+            }
+        )
+    )
+    .reset_index(drop=True)
+)
+top_share.to_csv(PROCESSED_DIR / "top_bracket_shares_over_time.csv", index=False)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.plot(top_share["year"], top_share["open_top_share"], marker="o", label="Open top bracket share")
+ax.plot(top_share["year"], top_share["top_two_brackets_share"], marker="o", label="Top two brackets share")
+ax.set_title("Upper-tail bracket concentration over time")
+ax.set_xlabel("Year")
+ax.set_ylabel("Share of workers")
+ax.grid(True, alpha=0.3)
+ax.legend()
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "top_bracket_shares_over_time.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# This gives concrete distributional context to the tail diagnostics. The point is not that the top tail is huge in mass. The point is that even a small tail share can drive a large amount of misspecification when the right tail thickens over time.
 
 # %% [markdown]
 # ## Optional microdata branch

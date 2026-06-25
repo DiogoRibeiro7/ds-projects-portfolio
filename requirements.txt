@@ -41,6 +41,7 @@ networkx>=2.6.0         # Network analysis (future use)
 tqdm>=4.60.0           # Progress bars
 rich>=10.0.0           # Rich terminal output
 colorlog>=6.0.0        # Colored logging
+pygments>=2.20.0       # Pin transitive dep (GHSA-5239-wwwm-4pmq ReDoS fix)
 
 # Jupyter Environment
 jupyter>=1.0.0

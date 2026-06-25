@@ -16,7 +16,7 @@ flask-limiter==3.5.0
 flask-swagger-ui==4.11.1
 flask-graphql==2.0.1
 flask-socketio==5.6.0
-flask-httpauth==4.8.0
+flask-httpauth>=4.8.1
 flask-testing==0.8.1
 graphene==3.3
 

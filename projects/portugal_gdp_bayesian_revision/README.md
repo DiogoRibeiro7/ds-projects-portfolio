@@ -2,7 +2,7 @@
 
 This project implements a Bayesian workflow to estimate Portugal's 2025 GDP and GDP per capita after the revised resident-population information became available.
 
-The purpose is methodological. A higher resident-population estimate mechanically lowers GDP per capita if GDP is held fixed, but that is only a denominator-only correction. A more complete approach treats population, GDP, GDP per capita and the PPS index as uncertain quantities that should be updated when new information arrives.
+The purpose is methodological. A higher resident-population estimate mechanically lowers GDP per capita if GDP is held fixed, but that is only a denominator-only correction. A more complete approach treats population, GDP, GDP per capita and the PPS index as uncertain quantities that should be updated when new information arrives. It also asks a more substantive question: if the revised population largely reflects migrants who are active workers, how much of the revision should flow into output as well as headcount?
 
 ## Core idea
 
@@ -21,7 +21,8 @@ The current implementation uses:
 - a Bayesian regression for nominal GDP growth;
 - a direct signal from real GDP growth plus inferred GDP-deflator growth;
 - posterior simulation for GDP, population and GDP per capita;
-- a separate sensitivity layer for the Eurostat/AMECO GDP-per-capita-in-PPS index.
+- a separate sensitivity layer for the Eurostat/AMECO GDP-per-capita-in-PPS index;
+- an explicit labour-channel scenario block that converts extra residents into extra employed workers and extra GDP under alternative assumptions.
 
 ## Official anchors included
 
@@ -76,7 +77,7 @@ Portugal is at 77.0% of the EU average.
 A better output is:
 
 ```text
-Given the revised population observation, historical GDP dynamics and the observed 2025 real GDP growth signal, Portugal's GDP per capita is likely lower than the preliminary estimate, with uncertainty depending on assumptions about GDP revisions, population measurement error, deflator growth, PPPs and the EU reference average.
+Given the revised population observation, Portugal's 2025 GDP per capita cannot be interpreted from the denominator effect alone. The result depends on how much of the extra population translates into labour supply, employment, output, GDP revisions, PPPs and the EU reference average.
 ```
 
 ## Why this matters
@@ -87,5 +88,8 @@ This Bayesian version makes the assumptions explicit and separates:
 
 1. the mechanical population effect;
 2. the possible GDP revision effect;
-3. uncertainty in the data;
-4. uncertainty in the GDP-per-capita-in-PPS ranking.
+3. the labour-supply and worker-absorption channel;
+4. uncertainty in the data;
+5. uncertainty in the GDP-per-capita-in-PPS ranking.
+
+The practical insight is that the public argument is not only about arithmetic. It is about economic interpretation. A denominator-only correction supports a lower GDP-per-capita estimate; a worker-heavy migration interpretation can narrow that correction materially and, in stronger scenarios, reverse much of it.

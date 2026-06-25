@@ -1,0 +1,8 @@
+# Pinned to the versions the notebook was last run and verified against.
+pandas==2.3.3
+matplotlib==3.10.8
+requests==2.32.4
+beautifulsoup4==4.13.4
+
+# Notebook tooling
+jupyterlab>=4.5.9   # >=4.5.9 avoids known JupyterLab security advisories

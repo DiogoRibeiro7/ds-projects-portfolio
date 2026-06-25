@@ -87,10 +87,10 @@ The notebook marks these Portuguese labour-law changes:
 
 ## How to run
 
-Install the required packages:
+Install the required packages (pinned in `requirements.txt`):
 
 ```bash
-pip install pandas matplotlib requests beautifulsoup4 notebook
+pip install -r requirements.txt
 ```
 
 Then launch Jupyter:

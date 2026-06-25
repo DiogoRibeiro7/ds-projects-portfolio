@@ -1,0 +1,18 @@
+# Pinned to the versions the notebook was last run and verified against.
+# Core data + visualization
+numpy==2.3.5
+pandas==2.3.3
+matplotlib==3.10.8
+seaborn==0.13.2
+plotly==6.8.0
+
+# Statistical modeling
+statsmodels==0.14.5
+scipy==1.15.3
+
+# Data acquisition
+requests==2.32.4
+
+# Notebook tooling
+jupyterlab>=4.5.9   # >=4.5.9 avoids known JupyterLab security advisories
+nbformat==5.10.4

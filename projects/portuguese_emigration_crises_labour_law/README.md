@@ -116,9 +116,13 @@ outputs/
 ├── emigration_context_crisis_events.csv
 ├── emigration_context_labour_law_events.csv
 ├── emigration_macro_context.csv            # emigration + macro/destination covariates
+├── emigration_economic_context.csv         # wages, median/mean income, cost of living, GDP/cap
+├── emigration_inbound_flow.csv             # emigration, net migration, implied immigration
 └── figures/
     ├── emigration_vs_unemployment.png
     ├── macro_correlation_matrix.png
+    ├── wages_income_cost_of_living.png
+    ├── inbound_vs_outbound_flow.png
     ├── interrupted_time_series.png
     ├── change_point_detection.png
     ├── structural_counterfactual.png
@@ -143,7 +147,13 @@ cautious inference. **Data extensions** add macroeconomic and destination-countr
 from the World Bank API (cached locally with a provenance record):
 
 - Portuguese unemployment, youth unemployment, GDP growth, inflation, GDP per capita, net migration;
-- destination-country (ES, FR, CH, LU, GB, DE) unemployment and a GDP-weighted demand index.
+- destination-country (ES, FR, CH, LU, GB, DE) unemployment and a GDP-weighted demand index;
+- **wages and living standards** — mean gross wage (OECD, USD PPP), **median and mean
+  equivalised disposable income** (OECD Income Distribution Database), cost of living
+  (consumer price index), and GDP per capita in PPP terms;
+- an **implied inbound flow** (immigration ≈ net migration + emigration) showing Portugal's
+  swing from net immigration (2000s) to net emigration (2011–2014 crisis) and back to
+  strong net immigration since ~2016.
 
 **Modelling extensions** then analyse the series:
 

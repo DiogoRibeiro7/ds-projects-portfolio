@@ -118,11 +118,15 @@ outputs/
 ├── emigration_macro_context.csv            # emigration + macro/destination covariates
 ├── emigration_economic_context.csv         # wages, median/mean income, cost of living, GDP/cap
 ├── emigration_inbound_flow.csv             # emigration, net migration, implied immigration
+├── emigration_by_destination.csv           # Portuguese inflows by destination (OECD)
+├── emigration_female_share.csv             # female share over time
 └── figures/
     ├── emigration_vs_unemployment.png
     ├── macro_correlation_matrix.png
     ├── wages_income_cost_of_living.png
     ├── inbound_vs_outbound_flow.png
+    ├── emigration_by_destination.png
+    ├── emigration_female_share.png
     ├── interrupted_time_series.png
     ├── change_point_detection.png
     ├── structural_counterfactual.png
@@ -153,7 +157,11 @@ from the World Bank API (cached locally with a provenance record):
   (consumer price index), and GDP per capita in PPP terms;
 - an **implied inbound flow** (immigration ≈ net migration + emigration) showing Portugal's
   swing from net immigration (2000s) to net emigration (2011–2014 crisis) and back to
-  strong net immigration since ~2016.
+  strong net immigration since ~2016;
+- **emigration by destination country and gender** — Portuguese inflows into each OECD
+  country (OECD International Migration Database mirror statistics), the shifting top
+  destinations (Switzerland, Spain, Germany, France, UK, Luxembourg), and the female share
+  over time.
 
 **Modelling extensions** then analyse the series:
 
@@ -171,11 +179,14 @@ crisis-period excess outflow. All estimates are **illustrative and associational
 short, overlapping-event series cannot identify the independent effect of any single
 labour-law change.
 
-### Not yet implemented
+### Disaggregation status
 
-Disaggregating flows by **age group, education level, or destination country** requires
-additional Emigration Observatory tables beyond E.2 (the table this notebook scrapes). It is
-documented as the next data-collection step rather than approximated.
+- **Destination country** and **gender** — implemented from the OECD International Migration
+  Database (Portuguese inflows by destination; female share over time).
+- **Age** and **education** flows remain **data-limited**: OECD migration flows carry no age
+  dimension and only employment-rate education, and Eurostat's emigration-by-age/education
+  series (`migr_emi2` etc.) were unreachable at run time. They are documented rather than
+  approximated; with Eurostat reachable they would slot into the same destination-style cells.
 
 ## Caveats
 

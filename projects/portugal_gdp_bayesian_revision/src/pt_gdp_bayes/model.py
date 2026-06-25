@@ -69,7 +69,7 @@ def estimate_population_posterior_samples(
     target_year: int,
     population_col: str = "population",
     observed_population: float,
-    observation_relative_sd: float = 0.001,
+    observation_relative_sd: float = 0.0015,
     n_samples: int = 20_000,
     random_seed: int = 7,
 ) -> PopulationPosteriorResult:
@@ -90,8 +90,13 @@ def estimate_population_posterior_samples(
     observed_population:
         New official or revised observation for ``target_year``.
     observation_relative_sd:
-        Measurement uncertainty of the new observation, in relative terms. A
-        value of 0.001 means roughly 0.1% standard deviation.
+        Measurement uncertainty of the revised observation, in relative terms. It
+        is kept small (~0.15%) on purpose: the revised INE figure **supersedes**
+        the pre-revision trajectory, so the posterior should anchor to it rather
+        than be dragged back toward the now-stale AR(1) extrapolation. The AR(1)
+        prior's role is to characterise population *growth* (which feeds the GDP
+        regression), not to second-guess the official level. Widening this SD
+        materially pulls the posterior below the official figure.
     n_samples:
         Number of posterior samples.
     random_seed:
@@ -193,7 +198,7 @@ def estimate_gdp_posterior_samples(
     *,
     target_year: int,
     population_samples: FloatArray,
-    gdp_col: str = "gdp_current_usd",
+    gdp_col: str = "gdp_current_eur",
     population_col: str = "population",
     deflator_col: str = "gdp_deflator_pct",
     known_real_gdp_growth: float | None = None,
@@ -210,6 +215,12 @@ def estimate_gdp_posterior_samples(
 
     This avoids the restrictive assumption that GDP is fixed when the
     population estimate is revised.
+
+    ``gdp_col`` should be a **local-currency (EUR)** GDP series so that the
+    nominal-growth identity (real growth + deflator growth) holds. Using a
+    current-USD series instead would fold euro/dollar exchange-rate movements
+    into "GDP growth", which the local deflator and local real-growth signal do
+    not describe.
     """
 
     if len(population_samples) != n_samples:
@@ -372,3 +383,115 @@ def estimate_pps_index_samples(
         / population_correction_factor
         / eu_average_revision_factor_samples
     )
+
+
+def backtest_gdp_model(
+    df: pd.DataFrame,
+    *,
+    holdout_years: list[int],
+    gdp_col: str = "gdp_current_eur",
+    population_col: str = "population",
+    deflator_col: str = "gdp_deflator_pct",
+    n_samples: int = 4_000,
+    credible_mass: float = 0.90,
+    random_seed: int = 23,
+) -> pd.DataFrame:
+    """Out-of-sample check of the nominal-GDP model.
+
+    For each holdout year the model is re-fitted on data *before* that year and
+    used to predict nominal GDP, **without** the contemporaneous real-growth
+    signal (so nothing from the target year leaks in). The realised value is then
+    compared with the predicted median and the central credible interval.
+
+    A well-calibrated model should keep the percentage error small and contain
+    the realised value inside the interval about ``credible_mass`` of the time.
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per holdout year with actual, predicted median, the credible
+        interval, percentage error and an ``in_interval`` flag.
+    """
+
+    lower_q = (1.0 - credible_mass) / 2.0
+    upper_q = 1.0 - lower_q
+    rows: list[dict[str, float]] = []
+
+    for year in holdout_years:
+        target = df.loc[df["year"] == year]
+        if target.empty:
+            continue
+        actual = pd.to_numeric(target[gdp_col], errors="coerce").iloc[0]
+        population = pd.to_numeric(target[population_col], errors="coerce").iloc[0]
+        if not (np.isfinite(actual) and np.isfinite(population)):
+            continue
+        try:
+            result = estimate_gdp_posterior_samples(
+                df,
+                target_year=year,
+                population_samples=np.full(n_samples, float(population)),
+                gdp_col=gdp_col,
+                population_col=population_col,
+                deflator_col=deflator_col,
+                known_real_gdp_growth=None,
+                n_samples=n_samples,
+                random_seed=random_seed,
+            )
+        except ValueError:
+            continue
+        samples = result.gdp_samples
+        median = float(np.median(samples))
+        low = float(np.quantile(samples, lower_q))
+        high = float(np.quantile(samples, upper_q))
+        rows.append(
+            {
+                "year": int(year),
+                "actual": float(actual),
+                "predicted_median": median,
+                "q_low": low,
+                "q_high": high,
+                "pct_error": (median - float(actual)) / float(actual) * 100.0,
+                "in_interval": bool(low <= float(actual) <= high),
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
+def simulate_labour_channel_samples(
+    *,
+    extra_residents: float,
+    baseline_output_per_employed: float,
+    working_age_share: float,
+    participation_rate: float,
+    employment_rate: float,
+    productivity_relative: float,
+    n_samples: int,
+    rng: np.random.Generator,
+    relative_spread: float = 0.12,
+) -> FloatArray:
+    """Sample the extra GDP produced by the extra residents under one scenario.
+
+    Each labour parameter is drawn around its central value (a normal with
+    ``relative_spread`` coefficient of variation, clipped to a sensible range)
+    instead of being a fixed point, so the scenario carries its own uncertainty
+    rather than borrowing all of it from the GDP posterior. A scenario with every
+    central value at zero (the denominator-only case) returns all zeros.
+
+    ``extra_gdp = extra_residents * working_age_share * participation_rate
+                  * employment_rate * baseline_output_per_employed
+                  * productivity_relative``
+    """
+
+    def _draw(center: float, *, upper: float) -> FloatArray:
+        if center <= 0.0:
+            return np.zeros(n_samples)
+        return np.clip(rng.normal(center, center * relative_spread, n_samples), 0.0, upper)
+
+    extra_employed = (
+        extra_residents
+        * _draw(working_age_share, upper=1.0)
+        * _draw(participation_rate, upper=1.0)
+        * _draw(employment_rate, upper=1.0)
+    )
+    return extra_employed * baseline_output_per_employed * _draw(productivity_relative, upper=1.5)

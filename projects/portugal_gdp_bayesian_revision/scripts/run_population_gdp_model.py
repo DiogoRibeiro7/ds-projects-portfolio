@@ -30,16 +30,12 @@ KNOWN_OBSERVATIONS_PATH = PROJECT_ROOT / "data" / "known_observations.csv"
 
 WORLD_BANK_INDICATORS = {
     "population": "SP.POP.TOTL",
-    "gdp_current_usd": "NY.GDP.MKTP.CD",
-    "gdp_constant_2015_usd": "NY.GDP.MKTP.KD",
+    "gdp_current_eur": "NY.GDP.MKTP.CN",   # current local currency (EUR) - used for modelling
+    "gdp_current_usd": "NY.GDP.MKTP.CD",   # context only
     "real_gdp_growth_pct": "NY.GDP.MKTP.KD.ZG",
     "gdp_deflator_pct": "NY.GDP.DEFL.KD.ZG",
     "unemployment_pct": "SL.UEM.TOTL.ZS",
     "labor_force": "SL.TLF.TOTL.IN",
-    "exports_current_usd": "NE.EXP.GNFS.CD",
-    "imports_current_usd": "NE.IMP.GNFS.CD",
-    "household_consumption_current_usd": "NE.CON.PRVT.CD",
-    "gross_capital_formation_current_usd": "NE.GDI.TOTL.CD",
 }
 
 
@@ -69,7 +65,7 @@ def main() -> None:
         target_year=2025,
         population_col="population",
         observed_population=revised_population_2025,
-        observation_relative_sd=0.001,
+        observation_relative_sd=0.0015,
         n_samples=20_000,
     )
 
@@ -77,7 +73,7 @@ def main() -> None:
         panel,
         target_year=2025,
         population_samples=population_result.samples,
-        gdp_col="gdp_current_usd",
+        gdp_col="gdp_current_eur",
         population_col="population",
         deflator_col="gdp_deflator_pct",
         known_real_gdp_growth=real_gdp_growth_2025,
@@ -94,8 +90,8 @@ def main() -> None:
     summary = pd.DataFrame(
         {
             "population_2025": summarize_samples(population_result.samples),
-            "gdp_2025_current_usd": summarize_samples(gdp_result.gdp_samples),
-            "gdp_pc_2025_current_usd": summarize_samples(gdp_pc_samples),
+            "gdp_2025_current_eur": summarize_samples(gdp_result.gdp_samples),
+            "gdp_pc_2025_current_eur": summarize_samples(gdp_pc_samples),
             "gdp_pc_pps_index_sensitivity": summarize_samples(pps_index_samples),
         }
     ).T

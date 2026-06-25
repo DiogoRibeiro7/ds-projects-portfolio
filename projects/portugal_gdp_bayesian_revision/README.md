@@ -17,12 +17,13 @@ It starts from the longest historical population and macroeconomic series that c
 The current implementation uses:
 
 - a Bayesian AR(1) model for log population growth;
-- a noisy observation model for the revised 2025 population estimate;
-- a Bayesian regression for nominal GDP growth;
+- a noisy observation model for the revised 2025 population estimate, anchored tightly to the official figure (the revision supersedes the pre-revision trajectory);
+- a Bayesian regression for nominal GDP growth, modelled in **euros** (`NY.GDP.MKTP.CN`) so the "real growth + deflator" identity holds and euro/dollar moves do not contaminate it;
 - a direct signal from real GDP growth plus inferred GDP-deflator growth;
+- an **out-of-sample back-test** of the GDP model (re-fit before each hold-out year, no leakage) reporting error and credible-interval coverage;
 - posterior simulation for GDP, population and GDP per capita;
 - a separate sensitivity layer for the Eurostat/AMECO GDP-per-capita-in-PPS index;
-- an explicit labour-channel scenario block that converts extra residents into extra employed workers and extra GDP under alternative assumptions.
+- a labour-channel scenario block that converts extra residents into extra employed workers and extra GDP, with **uncertainty drawn on the labour parameters** (working-age share, participation, employment, productivity), not just point values.
 
 ## Official anchors included
 

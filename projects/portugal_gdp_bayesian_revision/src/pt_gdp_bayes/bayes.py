@@ -66,12 +66,14 @@ class BayesianLinearRegressionPosterior:
             size=n_samples,
             random_state=rng,
         )
-        beta_samples = np.empty((n_samples, self.beta_mean.shape[0]), dtype=float)
-        for i, sigma2 in enumerate(sigma2_samples):
-            beta_samples[i] = rng.multivariate_normal(
-                mean=self.beta_mean,
-                cov=sigma2 * self.beta_cov_scale,
-            )
+        # Vectorised draw: beta_i = mean + sqrt(sigma2_i) * L @ z_i, where L is the
+        # Cholesky factor of beta_cov_scale (so cov(L z) = beta_cov_scale, scaled by
+        # sigma2_i). Avoids a Python loop over every sample.
+        n_features = self.beta_mean.shape[0]
+        chol = np.linalg.cholesky(self.beta_cov_scale)
+        standard_normals = rng.standard_normal(size=(n_samples, n_features))
+        scaled = standard_normals @ chol.T * np.sqrt(sigma2_samples)[:, None]
+        beta_samples = self.beta_mean[None, :] + scaled
         return beta_samples, np.sqrt(sigma2_samples)
 
     def sample_predictive(

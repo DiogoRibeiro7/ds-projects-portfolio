@@ -1,12 +1,23 @@
 # Porto and Lisbon Urban Heat Island Exposure Analysis
 
-This project rebuilds a Porto/Lisbon urban heat island exposure table from official European data sources and uses that table to compare which population groups are more represented in hotter urban cells.
+This project rebuilds a Porto/Lisbon urban heat island exposure table from official European data sources and uses it to answer two questions: **what makes cells hot** (do parks cool the city?) and **who is exposed** to that heat.
 
 The workflow combines:
 
 - Eurostat GISCO Census 2021 1 km grid data;
 - Eurostat GISCO Urban Audit city boundaries;
-- the EEA public service exposing the Copernicus/UrbClim urban heat island model.
+- the EEA public service exposing the Copernicus/UrbClim urban heat island model;
+- OpenStreetMap park/vegetation polygons (Overpass API) for the green-cover analysis.
+
+## Headline result: parks cool the city
+
+Relating each cell's **green cover** (OSM parks, gardens, woodland, grass) to its modelled UHI intensity shows a clear negative relationship in both cities — greener cells are cooler:
+
+- population-weighted correlation of green cover with UHI: **≈ −0.40 (Lisbon), −0.32 (Porto)**;
+- regression slope: roughly **0.13 °C cooling per +10 percentage points of green cover** in Lisbon (≈0.09 °C in Porto);
+- Lisbon cells with **>30% green run about half a degree cooler** than cells with <5% green.
+
+Built-up centres without parks are the hotspots; well-vegetated cells are the coolest. (An association in modelled data, not a controlled experiment — green cover, building density and coastal position move together.)
 
 ## Output table
 

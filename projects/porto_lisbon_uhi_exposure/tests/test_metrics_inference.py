@@ -77,3 +77,41 @@ def test_double_burden_conserves_population() -> None:
     assert db["population"].sum() == pytest.approx(cells["population_total"].sum())
     assert db["population_share"].sum() == pytest.approx(1.0)
     assert set(db["quadrant"]).issuperset({"high heat + high vulnerability (double burden)"})
+
+
+def _make_green_cells() -> pd.DataFrame:
+    """Synthetic city where higher green cover goes with lower UHI (greener = cooler)."""
+    rng = np.random.default_rng(0)
+    green = np.linspace(0.0, 0.6, 80)
+    uhi = 2.0 - 2.5 * green + rng.normal(0, 0.05, green.size)  # strong negative relation
+    return pd.DataFrame(
+        {
+            "city": "TestCity",
+            "cell_id": [f"CRS3035RES1000mN{1000 + i}E{2000 + i}" for i in range(green.size)],
+            "population_total": 100.0,
+            "age_0_14": 10.0,
+            "age_65_plus": 10.0,
+            "employed": 60.0,
+            "born_outside_eu": 10.0,
+            "uhi_intensity_celsius": uhi,
+            "is_uhi_exposed": uhi >= 2.0,
+            "green_fraction": green,
+        }
+    )
+
+
+def test_green_relationship_is_negative() -> None:
+    from uhi_exposure.metrics import compute_green_uhi_relationship
+
+    rel = compute_green_uhi_relationship(_make_green_cells()).iloc[0]
+    assert rel["weighted_corr_green_uhi"] < -0.5
+    assert rel["celsius_per_10pp_green"] < 0
+
+
+def test_uhi_by_green_band_decreases_with_green() -> None:
+    from uhi_exposure.metrics import compute_uhi_by_green_band
+
+    band = compute_uhi_by_green_band(_make_green_cells())
+    band = band.set_index("green_band")["mean_uhi_celsius"]
+    # the most-green band must be cooler than the least-green band present
+    assert band.loc["<5%"] > band.iloc[-1]

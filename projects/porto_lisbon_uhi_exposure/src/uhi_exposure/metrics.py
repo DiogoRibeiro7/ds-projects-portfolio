@@ -474,3 +474,80 @@ def compute_double_burden(
             )
 
     return pd.DataFrame.from_records(rows)
+
+
+def compute_green_uhi_relationship(
+    df: pd.DataFrame,
+    green_column: str = "green_fraction",
+    columns: ExposureColumns | None = None,
+) -> pd.DataFrame:
+    """Relate green cover to UHI intensity per city (the parks-cool-the-city test).
+
+    For each city we measure how a cell's modelled UHI intensity moves with the share
+    of the cell that is green (parks/vegetation): a population-weighted correlation and a
+    weighted regression slope expressed in **°C per +10 percentage points of green cover**.
+    A negative relationship means greener cells are cooler.
+    """
+    columns = columns or ExposureColumns()
+    if green_column not in df.columns:
+        raise ValueError(f"Expected a {green_column!r} column; run attach_green_fraction first.")
+
+    rows: list[dict[str, float | str]] = []
+    for city, city_df in df.groupby(columns.city, sort=True):
+        work = city_df.dropna(subset=[green_column]).copy()
+        green = work[green_column].to_numpy(dtype=float)
+        uhi = work[columns.uhi_intensity_celsius].to_numpy(dtype=float)
+        pop = work[columns.population_total].to_numpy(dtype=float)
+        ok = pop > 0
+        corr = _weighted_corr(green[ok], uhi[ok], pop[ok])
+        mg = np.average(green[ok], weights=pop[ok])
+        var_g = np.average((green[ok] - mg) ** 2, weights=pop[ok])
+        mu = np.average(uhi[ok], weights=pop[ok])
+        slope = (
+            np.average((green[ok] - mg) * (uhi[ok] - mu), weights=pop[ok]) / var_g
+            if var_g > 0 else np.nan
+        )
+        rows.append(
+            {
+                "city": city,
+                "n_cells": int(ok.sum()),
+                "mean_green_fraction": float(mg),
+                "weighted_corr_green_uhi": corr,
+                "celsius_per_10pp_green": float(slope * 0.10) if np.isfinite(slope) else np.nan,
+            }
+        )
+
+    return pd.DataFrame.from_records(rows)
+
+
+def compute_uhi_by_green_band(
+    df: pd.DataFrame,
+    green_column: str = "green_fraction",
+    bands: tuple[float, ...] = (0.0, 0.05, 0.15, 0.30, 1.01),
+    labels: tuple[str, ...] = ("<5%", "5-15%", "15-30%", ">30%"),
+    columns: ExposureColumns | None = None,
+) -> pd.DataFrame:
+    """Population-weighted mean UHI intensity by green-cover band, per city."""
+    columns = columns or ExposureColumns()
+    work = df.dropna(subset=[green_column]).copy()
+    work["green_band"] = pd.cut(
+        work[green_column], bins=list(bands), labels=list(labels), include_lowest=True
+    )
+
+    rows: list[dict[str, float | str]] = []
+    for (city, band), band_df in work.groupby([columns.city, "green_band"], observed=True):
+        pop = band_df[columns.population_total].to_numpy(dtype=float)
+        if pop.sum() <= 0:
+            continue
+        rows.append(
+            {
+                "city": city,
+                "green_band": str(band),
+                "population": float(pop.sum()),
+                "mean_uhi_celsius": float(
+                    np.average(band_df[columns.uhi_intensity_celsius], weights=pop)
+                ),
+            }
+        )
+
+    return pd.DataFrame.from_records(rows)

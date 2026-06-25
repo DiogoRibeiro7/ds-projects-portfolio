@@ -414,3 +414,61 @@ def plot_dose_response(
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=160)
     plt.close()
+
+
+def plot_green_vs_uhi(
+    df: pd.DataFrame,
+    output_path: str | Path | None = None,
+    green_column: str = "green_fraction",
+) -> None:
+    """Scatter of UHI intensity against green cover per cell, with a weighted fit per city."""
+    cities = sorted(df["city"].dropna().unique())
+    fig, axes = plt.subplots(1, len(cities), figsize=(6.5 * len(cities), 5.5), sharey=True)
+    if len(cities) == 1:
+        axes = [axes]
+    for ax, city in zip(axes, cities):
+        city_df = df[(df["city"] == city)].dropna(subset=[green_column])
+        green = city_df[green_column].to_numpy(dtype=float) * 100
+        uhi = city_df["uhi_intensity_celsius"].to_numpy(dtype=float)
+        pop = city_df["population_total"].to_numpy(dtype=float)
+        sizes = 4 + 40 * pop / (pop.max() if pop.max() > 0 else 1)
+        ax.scatter(green, uhi, s=sizes, alpha=0.35, color="#2E8B3C", edgecolor="none")
+        ok = pop > 0
+        if ok.sum() > 2:
+            mg = np.average(green[ok], weights=pop[ok])
+            mu = np.average(uhi[ok], weights=pop[ok])
+            var_g = np.average((green[ok] - mg) ** 2, weights=pop[ok])
+            slope = np.average((green[ok] - mg) * (uhi[ok] - mu), weights=pop[ok]) / var_g
+            xs = np.linspace(green.min(), green.max(), 50)
+            ax.plot(xs, mu + slope * (xs - mg), color="#A4161A", lw=2,
+                    label=f"slope {slope * 10:+.2f} C / +10pp green")
+            ax.legend(frameon=False, fontsize=9)
+        ax.set(title=city, xlabel="Green cover (% of cell)")
+    axes[0].set_ylabel("UHI intensity (C)")
+    fig.suptitle("Greener cells are cooler: UHI intensity vs green cover", y=1.02)
+    plt.tight_layout()
+    if output_path is not None:
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(output_path, dpi=160, bbox_inches="tight")
+    plt.close()
+
+
+def plot_uhi_by_green_band(
+    band_df: pd.DataFrame,
+    output_path: str | Path | None = None,
+) -> None:
+    """Grouped bar chart of population-weighted mean UHI by green-cover band and city."""
+    order = ["<5%", "5-15%", "15-30%", ">30%"]
+    pivot = (band_df.pivot(index="green_band", columns="city", values="mean_uhi_celsius")
+             .reindex([b for b in order if b in band_df["green_band"].unique()]))
+    fig, ax = plt.subplots(figsize=(9, 5))
+    pivot.plot(kind="bar", ax=ax, color={"Lisbon": "#1f6aa5", "Porto": "#E6892B"})
+    ax.set(title="Mean urban heat by green-cover band (population-weighted)",
+           xlabel="Green cover (% of cell)", ylabel="Mean UHI intensity (C)")
+    ax.tick_params(axis="x", rotation=0)
+    ax.legend(title="City", frameon=False)
+    plt.tight_layout()
+    if output_path is not None:
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(output_path, dpi=160)
+    plt.close()

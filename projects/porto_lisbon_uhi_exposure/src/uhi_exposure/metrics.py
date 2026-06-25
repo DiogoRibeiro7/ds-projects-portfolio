@@ -280,3 +280,197 @@ def compute_exposure_band_decomposition(
         ascending=[True, False],
     )
     return summary
+
+
+def bootstrap_group_representation(
+    df: pd.DataFrame,
+    threshold: float = 2.0,
+    n_boot: int = 2000,
+    ci: float = 0.90,
+    columns: ExposureColumns | None = None,
+    random_state: int = 42,
+) -> pd.DataFrame:
+    """Bootstrap confidence intervals for the group representation ratios.
+
+    The representation ratio (group share inside exposed cells / group share in the
+    whole city) is a point estimate computed on a small exposed tail, so it needs an
+    uncertainty band before any "over-represented" claim can be trusted. We resample
+    **cells** with replacement within each city and recompute the ratio, giving a
+    bootstrap distribution per group.
+
+    A ratio is reported as statistically meaningful when the central ``ci`` interval
+    excludes 1.0. ``prob_overrepresented`` is the bootstrap probability the ratio
+    exceeds 1. (Cells are spatially autocorrelated, so these intervals are mildly
+    optimistic; treat them as a screen, not an exact test.)
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per city and group with the observed ratio, the ``ci`` interval,
+        ``prob_overrepresented`` and a ``significant`` flag.
+    """
+    columns = columns or ExposureColumns()
+    prepared = add_exposure_flag(df, threshold=threshold, columns=columns)
+    observed = compute_group_representation(df, threshold=threshold, columns=columns)
+    rng = np.random.default_rng(random_state)
+    lo_q, hi_q = (1.0 - ci) / 2.0, 1.0 - (1.0 - ci) / 2.0
+
+    rows: list[dict[str, float | str | bool]] = []
+    for city, city_df in prepared.groupby(columns.city, sort=True):
+        n = len(city_df)
+        pop = city_df[columns.population_total].to_numpy(dtype=float)
+        exposed = city_df[columns.is_uhi_exposed].to_numpy(dtype=bool)
+        group_arrays = {g: city_df[col].to_numpy(dtype=float) for g, col in GROUP_COLUMNS.items()}
+        boot = {g: np.empty(n_boot, dtype=float) for g in GROUP_COLUMNS}
+
+        for b in range(n_boot):
+            idx = rng.integers(0, n, n)
+            p = pop[idx]
+            e = exposed[idx]
+            total_pop = p.sum()
+            exposed_pop = p[e].sum()
+            for g, arr in group_arrays.items():
+                gc = arr[idx]
+                city_share = gc.sum() / total_pop if total_pop > 0 else np.nan
+                exposed_share = gc[e].sum() / exposed_pop if exposed_pop > 0 else np.nan
+                boot[g][b] = exposed_share / city_share if city_share and city_share > 0 else np.nan
+
+        for g in GROUP_COLUMNS:
+            draws = boot[g][~np.isnan(boot[g])]
+            obs = float(
+                observed.loc[
+                    (observed["city"] == city) & (observed["group"] == g),
+                    "representation_ratio",
+                ].iloc[0]
+            )
+            low, high = (float(np.quantile(draws, lo_q)), float(np.quantile(draws, hi_q))) if draws.size else (np.nan, np.nan)
+            rows.append(
+                {
+                    "city": city,
+                    "group": g,
+                    "representation_ratio": obs,
+                    "ci_low": low,
+                    "ci_high": high,
+                    "prob_overrepresented": float(np.mean(draws > 1.0)) if draws.size else np.nan,
+                    "significant": bool(low > 1.0 or high < 1.0) if draws.size else False,
+                }
+            )
+
+    return pd.DataFrame.from_records(rows)
+
+
+def _weighted_corr(x: np.ndarray, y: np.ndarray, w: np.ndarray) -> float:
+    """Population-weighted Pearson correlation between two arrays."""
+    w_sum = w.sum()
+    if w_sum == 0:
+        return float("nan")
+    mx = np.average(x, weights=w)
+    my = np.average(y, weights=w)
+    cov = np.average((x - mx) * (y - my), weights=w)
+    vx = np.average((x - mx) ** 2, weights=w)
+    vy = np.average((y - my) ** 2, weights=w)
+    denom = np.sqrt(vx * vy)
+    return float(cov / denom) if denom > 0 else float("nan")
+
+
+def compute_dose_response(
+    df: pd.DataFrame,
+    columns: ExposureColumns | None = None,
+) -> pd.DataFrame:
+    """Threshold-free association between UHI intensity and each group's local share.
+
+    Instead of a binary "exposed / not exposed" cut, this measures how each group's
+    *local share* of the cell population moves with the cell's UHI intensity, using
+    **all** cells and the full heat gradient. We report a population-weighted Pearson
+    correlation and a weighted slope (percentage points of group share per +1 °C).
+
+    A positive value means the group is concentrated in hotter cells — corroborating
+    (or contradicting) the threshold-based representation ratio without depending on
+    where the threshold is drawn.
+    """
+    columns = columns or ExposureColumns()
+    prepared = add_exposure_flag(df, columns=columns)
+
+    rows: list[dict[str, float | str]] = []
+    for city, city_df in prepared.groupby(columns.city, sort=True):
+        uhi = city_df[columns.uhi_intensity_celsius].to_numpy(dtype=float)
+        pop = city_df[columns.population_total].to_numpy(dtype=float)
+        ok = pop > 0
+        for group_name, group_column in GROUP_COLUMNS.items():
+            share = np.full(len(pop), np.nan)
+            np.divide(city_df[group_column].to_numpy(dtype=float), pop, out=share, where=pop > 0)
+            xu, ys, wp = uhi[ok], share[ok], pop[ok]
+            corr = _weighted_corr(xu, ys, wp)
+            mx = np.average(xu, weights=wp)
+            var_x = np.average((xu - mx) ** 2, weights=wp)
+            my = np.average(ys, weights=wp)
+            slope = (
+                np.average((xu - mx) * (ys - my), weights=wp) / var_x if var_x > 0 else np.nan
+            )
+            rows.append(
+                {
+                    "city": city,
+                    "group": group_name,
+                    "weighted_corr_uhi_share": corr,
+                    "slope_pp_share_per_degree": float(slope * 100) if np.isfinite(slope) else np.nan,
+                }
+            )
+
+    return pd.DataFrame.from_records(rows)
+
+
+def compute_double_burden(
+    df: pd.DataFrame,
+    columns: ExposureColumns | None = None,
+) -> pd.DataFrame:
+    """Cross-classify cells by heat and by heat-vulnerable-age share (the double burden).
+
+    Heat exposure and demographic vulnerability are usually reported separately. Here we
+    split each city's cells at the **population-weighted median** of UHI intensity and at the
+    median share of physiologically heat-vulnerable residents (children 0-14 plus adults
+    65+), then report how much population falls in each of the four quadrants. The
+    "high heat + high vulnerability" quadrant is the double burden — where heat and the
+    least heat-resilient residents coincide.
+    """
+    columns = columns or ExposureColumns()
+    validate_exposure_cells(df, columns)
+
+    rows: list[dict[str, float | str]] = []
+    for city, city_df in df.groupby(columns.city, sort=True):
+        work = city_df.copy()
+        pop = work[columns.population_total].to_numpy(dtype=float)
+        total_pop = pop.sum()
+        vulnerable_share = np.divide(
+            (work["age_0_14"] + work["age_65_plus"]).to_numpy(dtype=float),
+            pop, out=np.zeros(len(pop)), where=pop > 0,
+        )
+        uhi = work[columns.uhi_intensity_celsius].to_numpy(dtype=float)
+
+        # Population-weighted medians as the split points.
+        def _wmedian(values: np.ndarray) -> float:
+            order = np.argsort(values)
+            cum = np.cumsum(pop[order])
+            return float(values[order][np.searchsorted(cum, 0.5 * total_pop)])
+
+        hot = uhi >= _wmedian(uhi)
+        vulnerable = vulnerable_share >= _wmedian(vulnerable_share)
+        labels = {
+            ("high heat + high vulnerability (double burden)"): hot & vulnerable,
+            ("high heat + low vulnerability"): hot & ~vulnerable,
+            ("low heat + high vulnerability"): ~hot & vulnerable,
+            ("low heat + low vulnerability"): ~hot & ~vulnerable,
+        }
+        for label, mask in labels.items():
+            quadrant_pop = float(pop[mask].sum())
+            rows.append(
+                {
+                    "city": city,
+                    "quadrant": label,
+                    "population": quadrant_pop,
+                    "population_share": _safe_divide(quadrant_pop, total_pop),
+                    "mean_uhi_celsius": float(np.average(uhi[mask], weights=pop[mask]))
+                    if quadrant_pop > 0 else np.nan,
+                }
+            )
+
+    return pd.DataFrame.from_records(rows)

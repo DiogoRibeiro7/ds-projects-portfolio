@@ -354,3 +354,63 @@ def plot_hotspot_map(
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=160)
     plt.close()
+
+
+def plot_representation_with_ci(
+    bootstrap_df: pd.DataFrame,
+    output_path: str | Path | None = None,
+) -> None:
+    """Forest plot of representation ratios with bootstrap confidence intervals.
+
+    Significant over-representation (CI entirely above 1) is drawn in red, significant
+    under-representation (CI entirely below 1) in blue, and non-significant ratios in grey,
+    so the eye separates robust findings from noise.
+    """
+    df = bootstrap_df.copy()
+    df["label"] = df["city"] + " - " + df["group"]
+    df = df.sort_values(["city", "representation_ratio"]).reset_index(drop=True)
+
+    fig, ax = plt.subplots(figsize=(9, 0.6 * len(df) + 1.5))
+    for i, row in df.iterrows():
+        if row["significant"] and row["representation_ratio"] > 1:
+            color = "#A4161A"
+        elif row["significant"]:
+            color = "#1f6aa5"
+        else:
+            color = "0.6"
+        ax.plot([row["ci_low"], row["ci_high"]], [i, i], color=color, lw=2.2)
+        ax.plot(row["representation_ratio"], i, "o", color=color, ms=7)
+    ax.axvline(1.0, color="black", ls="--", lw=1)
+    ax.set_yticks(range(len(df)))
+    ax.set_yticklabels(df["label"])
+    ax.set_title("Group representation in heat-exposed cells (ratio with 90% bootstrap CI)")
+    ax.set_xlabel("Representation ratio  (1 = proportional, >1 = over-represented)")
+    plt.tight_layout()
+
+    if output_path is not None:
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(output_path, dpi=160)
+    plt.close()
+
+
+def plot_dose_response(
+    dose_df: pd.DataFrame,
+    output_path: str | Path | None = None,
+    value_column: str = "weighted_corr_uhi_share",
+) -> None:
+    """Bar chart of the threshold-free UHI-vs-group-share association by city and group."""
+    pivot = dose_df.pivot(index="group", columns="city", values=value_column)
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    pivot.plot(kind="barh", ax=ax, color={"Lisbon": "#1f6aa5", "Porto": "#E6892B"})
+    ax.axvline(0.0, color="black", lw=1)
+    ax.set_title("Dose-response: association of group share with UHI intensity (all cells)")
+    ax.set_xlabel("Population-weighted correlation  (>0 = group concentrated in hotter cells)")
+    ax.set_ylabel("")
+    ax.legend(title="City", frameon=False)
+    plt.tight_layout()
+
+    if output_path is not None:
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(output_path, dpi=160)
+    plt.close()

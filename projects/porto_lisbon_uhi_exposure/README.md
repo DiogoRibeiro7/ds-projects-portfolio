@@ -65,8 +65,9 @@ The notebook is configured for the real prepared table by default.
 With the current real-data pipeline and a `2.0 °C` exposure threshold:
 
 - Lisbon has a much lower exposed population share than Porto in the prepared table, about `1.05%` versus `6.42%`.
-- In Lisbon, the strongest overrepresentation in exposed areas is for `born_outside_eu`, with a representation ratio near `1.60`.
-- In Porto, `born_outside_eu`, `older_65_plus`, and `not_employed` are overrepresented in exposed areas, while `children_0_14` are underrepresented.
+- In Lisbon, `born_outside_eu` is **significantly** over-represented in exposed cells (≈`1.60`, 90% bootstrap CI excludes 1) — the strongest signal in the study.
+- In Porto, `older_65_plus` and `not_employed` are significantly over-represented; `born_outside_eu` is **not** statistically distinguishable from proportional at the threshold (CI includes 1), so it is not a both-cities result.
+- The notebook now reports these ratios **with uncertainty** (bootstrap CIs), adds a **threshold-free dose-response** check (which reveals Lisbon's migrant signal is an extreme-tail effect, not a gradient), and a **double-burden** quadrant analysis (≈30% of Porto's population lives where high heat meets high age-vulnerability).
 
 These findings should be read together with the boundary and raster assumptions above. They are valid for the **Urban Audit city polygons** and the **published UHI model surface** used here, not for municipality-only definitions of Lisbon and Porto.
 

@@ -1,8 +1,16 @@
 # Pinned to the versions the notebook was last run and verified against.
+# Core data + scraping + plotting
 pandas==2.3.3
+numpy==2.3.5
 matplotlib==3.10.8
+seaborn==0.13.2
 requests==2.32.4
 beautifulsoup4==4.13.4
+
+# Modelling extensions (interrupted time-series, change-point, structural, synthetic control)
+statsmodels==0.14.5
+scipy==1.15.3
+ruptures==1.1.10
 
 # Notebook tooling
 jupyterlab>=4.5.9   # >=4.5.9 avoids known JupyterLab security advisories

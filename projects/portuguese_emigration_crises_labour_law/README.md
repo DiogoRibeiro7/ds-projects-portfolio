@@ -107,13 +107,23 @@ jupyter lab portuguese_emigration_crises_labour_law.ipynb
 
 ## Output files
 
-When the final export cell is run, the notebook creates an `outputs/` folder with:
+Running the notebook creates `data/raw/` (cached World Bank downloads + `provenance.json`)
+and an `outputs/` folder with:
 
 ```text
 outputs/
-├── portuguese_emigration_outflows_2000_2024.csv
-├── crisis_events.csv
-└── labour_law_events.csv
+├── emigration_outflows_portugal_2000_2024.csv
+├── emigration_context_crisis_events.csv
+├── emigration_context_labour_law_events.csv
+├── emigration_macro_context.csv            # emigration + macro/destination covariates
+└── figures/
+    ├── emigration_vs_unemployment.png
+    ├── macro_correlation_matrix.png
+    ├── interrupted_time_series.png
+    ├── change_point_detection.png
+    ├── structural_counterfactual.png
+    ├── event_study.png
+    └── synthetic_control.png
 ```
 
 ## Interpretation notes
@@ -126,30 +136,36 @@ In the INE total-outflow series, the highest value is **2014**, with **134,624**
 
 The labour-law markers should be read as historical context, not as causal evidence. A causal analysis would require additional variables and a proper identification strategy.
 
-## Suggested extensions
+## Implemented extensions
 
-A stronger version of this project could add:
+The second half of the notebook ("Implemented extensions") moves from description toward
+cautious inference. **Data extensions** add macroeconomic and destination-country context
+from the World Bank API (cached locally with a provenance record):
 
-- unemployment rate;
-- youth unemployment;
-- real wages;
-- GDP growth;
-- inflation;
-- housing-cost indicators;
-- destination-country labour-market demand;
-- destination-country wages;
-- destination-country unemployment;
-- flows by age group;
-- flows by education level;
-- flows by destination country.
+- Portuguese unemployment, youth unemployment, GDP growth, inflation, GDP per capita, net migration;
+- destination-country (ES, FR, CH, LU, GB, DE) unemployment and a GDP-weighted demand index.
 
-Possible modelling extensions:
+**Modelling extensions** then analyse the series:
 
-- interrupted time-series analysis;
-- event-study models;
-- Bayesian structural time series;
-- change-point detection;
-- synthetic-control comparisons with similar countries.
+- **interrupted time-series** (segmented regression at the 2011 bailout, HAC standard errors);
+- **change-point detection** (`ruptures`, breaks chosen by the data, not imposed);
+- a **structural time-series counterfactual** (state-space local-linear-trend projection of a
+  no-crisis path, with an excess-emigration estimate);
+- an **event-study** view (emigration re-centred on event time, indexed to the 2011 event);
+- a **synthetic-control-style** comparison (synthetic Portugal built from a donor pool of
+  non-programme EU countries on the net-migration rate).
+
+Headline: emigration tracks unemployment (r ≈ 0.86); a significant 2011 break; data-chosen
+change-points bracket the surge and its unwind; the counterfactual estimates large
+crisis-period excess outflow. All estimates are **illustrative and associational** — the
+short, overlapping-event series cannot identify the independent effect of any single
+labour-law change.
+
+### Not yet implemented
+
+Disaggregating flows by **age group, education level, or destination country** requires
+additional Emigration Observatory tables beyond E.2 (the table this notebook scrapes). It is
+documented as the next data-collection step rather than approximated.
 
 ## Caveats
 

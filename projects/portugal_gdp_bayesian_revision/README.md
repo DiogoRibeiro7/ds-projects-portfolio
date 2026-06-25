@@ -78,8 +78,15 @@ Portugal is at 77.0% of the EU average.
 A better output is:
 
 ```text
-Given the revised population observation, Portugal's 2025 GDP per capita cannot be interpreted from the denominator effect alone. The result depends on how much of the extra population translates into labour supply, employment, output, GDP revisions, PPPs and the EU reference average.
+Anchoring labour absorption to the OBSERVED foreign-born employment rate (~76%, higher than
+natives), the data-grounded central estimate of Portugal's 2025 GDP per capita in PPS is
+~81 (EU=100), with a 90% interval of roughly 80-83 - essentially the preliminary level, not
+the denominator-only 77. The ~77 figure is the pessimistic bound (extra residents produce
+nothing), which the migrant labour-market data does not support.
 ```
+
+The notebook **leads with this data-grounded central estimate**, then reports the
+denominator-only (worst case) and full-absorption (best case) as bounds.
 
 ## Why this matters
 

@@ -705,7 +705,7 @@ if not gamma_bootstrap.empty:
 #
 # The public source does not provide worker-level microdata, so a literal microdata histogram is not available here. The defensible substitute is a **grouped histogram** built from the published salary brackets: each bar width is the bracket width and each bar area is the worker share in that bracket.
 #
-# The plots below show the observed grouped histogram together with fitted model densities for three representative years.
+# Because this is a salary-floor setting, the plotted support starts at the year-specific **RMMG** rather than at zero. Any published share below the minimum wage is shown as excluded context in the title area instead of being drawn to the left of the wage floor.
 
 # %%
 def frozen_from_row(row: pd.Series):
@@ -727,10 +727,15 @@ def frozen_from_row(row: pd.Series):
 
 def plot_grouped_histogram_with_fits(year: int, x_cap: float = 5000.0) -> None:
     """Plot a grouped-data histogram with fitted model density overlays."""
-    year_bins = salary_bins.query("year == @year and bin_type != 'exact_minimum_wage'").copy()
+    rmmg = float(RMMG_BY_YEAR[year])
+    excluded_share = float(
+        salary_bins.query("year == @year and bin_type == 'below_minimum_wage'")["count"].sum()
+        / salary_bins.query("year == @year")["count"].sum()
+    )
+    year_bins = salary_bins.query("year == @year and bin_type not in ['below_minimum_wage', 'exact_minimum_wage']").copy()
     year_bins = grouped_histogram_frame(year_bins.query("count > 0").sort_values("lower").copy(), x_cap=x_cap)
 
-    x = np.linspace(0.0, x_cap, 800)
+    x = np.linspace(rmmg, x_cap, 800)
     fig, ax = plt.subplots(figsize=(11, 5.5))
 
     for row in year_bins.itertuples(index=False):
@@ -750,10 +755,13 @@ def plot_grouped_histogram_with_fits(year: int, x_cap: float = 5000.0) -> None:
         density = clipped_density(frozen.pdf(x))
         ax.plot(x, density, linewidth=2, label=model_name)
 
-    ax.set_title(f"Grouped histogram of monthly earnings with fitted densities, {year}")
+    ax.set_title(
+        f"Grouped histogram of monthly earnings with fitted densities, {year}\n"
+        f"Plotted from RMMG={rmmg:.0f}; below-RMMG share excluded from histogram = {excluded_share:.2%}"
+    )
     ax.set_xlabel("Monthly earnings (euros)")
     ax.set_ylabel("Density")
-    ax.set_xlim(0, x_cap)
+    ax.set_xlim(rmmg, x_cap)
     ax.grid(True, axis="y", alpha=0.3)
     ax.legend()
     fig.tight_layout()

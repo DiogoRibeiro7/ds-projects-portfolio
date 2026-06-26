@@ -32,6 +32,12 @@ from .fitting import (
     top_share_fit_comparison,
 )
 from .plotting import clipped_density, grouped_histogram_frame, representative_years
+from .pipeline import (
+    build_pipeline_paths,
+    build_pipeline_steps,
+    run_pipeline,
+    steps_to_frame,
+)
 
 __all__ = [
     "RMMG_BY_YEAR",
@@ -59,8 +65,12 @@ __all__ = [
     "pareto_tail_diagnostics",
     "representative_years",
     "parse_pt_number",
+    "build_pipeline_paths",
+    "build_pipeline_steps",
+    "run_pipeline",
     "splice_top_decile_diagnostics",
     "splice_top_share_comparison",
+    "steps_to_frame",
     "tail_model_comparison",
     "top_share_fit_comparison",
     "validate_against_percentages",

@@ -80,13 +80,25 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Then execute the notebook from the project root:
+Then run the full analysis pipeline from the project root:
 
 ```bash
-jupyter nbconvert --to notebook --execute --inplace notebooks/01_salary_gamma_distribution_portugal.ipynb
+python scripts/run_full_analysis.py
 ```
 
-To generate a compact markdown and JSON summary from the processed outputs:
+This command does three things in order:
+
+1. syncs `notebooks/01_salary_gamma_distribution_portugal.py` and `notebooks/01_salary_gamma_distribution_portugal.ipynb`;
+2. executes the notebook headlessly with `nbconvert`;
+3. regenerates the compact markdown and JSON summary files.
+
+To inspect the planned steps without running them:
+
+```bash
+python scripts/run_full_analysis.py --dry-run
+```
+
+If you only need the summary refresh after a successful run:
 
 ```bash
 python scripts/summarize_notebook_outputs.py

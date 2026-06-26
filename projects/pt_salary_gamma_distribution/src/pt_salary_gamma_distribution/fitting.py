@@ -22,6 +22,17 @@ class FittedDistribution:
     message: str
 
 
+@dataclass(frozen=True)
+class SpliceDistribution:
+    threshold: float
+    body_params: dict[str, float]
+    tail_params: dict[str, float]
+    tail_weight: float
+    nll: float
+    converged: bool
+    message: str
+
+
 def weighted_midpoint_stats(bins: pd.DataFrame) -> tuple[float, float]:
     """Approximate grouped mean and variance from bracket midpoints."""
     midpoint = np.where(
@@ -152,6 +163,21 @@ def expected_counts(fit: FittedDistribution, bins: pd.DataFrame) -> np.ndarray:
     cdf_upper = np.where(np.isfinite(upper), frozen.cdf(upper), 1.0)
     probability = np.clip(cdf_upper - cdf_lower, 1e-12, 1.0)
     return probability * bins["count"].sum()
+
+
+def conditional_body_probability(
+    body_fit: FittedDistribution,
+    lower: np.ndarray,
+    upper: np.ndarray,
+    threshold: float,
+) -> np.ndarray:
+    """Compute interval probabilities under the body model conditional on X < threshold."""
+    frozen = distribution_frozen(body_fit.name, body_fit.params)
+    cdf_threshold = max(float(frozen.cdf(threshold)), 1e-12)
+    cdf_lower = frozen.cdf(lower)
+    cdf_upper = np.where(np.isfinite(upper), frozen.cdf(np.minimum(upper, threshold)), frozen.cdf(threshold))
+    probability = np.clip((cdf_upper - cdf_lower) / cdf_threshold, 1e-12, 1.0)
+    return probability
 
 
 def prepare_bins_for_fit(
@@ -504,6 +530,213 @@ def pareto_interval_probability(alpha: float, lower: np.ndarray, upper: np.ndarr
     lower_term = np.power(np.maximum(lower / xmin, 1.0), -alpha)
     upper_term = np.where(np.isfinite(upper), np.power(np.maximum(upper / xmin, 1.0), -alpha), 0.0)
     return np.clip(lower_term - upper_term, 1e-12, 1.0)
+
+
+def fit_lognormal_pareto_splice_year(bins: pd.DataFrame, threshold: float) -> SpliceDistribution | None:
+    """Fit a lognormal body plus Pareto tail splice model for one year."""
+    year_bins = prepare_bins_for_fit(bins)
+    body_bins = year_bins.loc[year_bins["upper"] <= threshold].copy()
+    tail_bins = year_bins.loc[year_bins["lower"] >= threshold].copy()
+    if len(body_bins) < 3 or len(tail_bins) < 2:
+        return None
+
+    total_count = float(year_bins["count"].sum())
+    tail_weight = float(tail_bins["count"].sum() / total_count)
+    body_weight = 1.0 - tail_weight
+    if not (0.0 < tail_weight < 1.0):
+        return None
+
+    body_fit = fit_grouped_distribution("lognormal", body_bins)
+    lower_tail = tail_bins["lower"].to_numpy(dtype=float)
+    upper_tail = tail_bins["upper"].to_numpy(dtype=float)
+    count_tail = tail_bins["count"].to_numpy(dtype=float)
+
+    pareto_result = optimize.minimize(
+        lambda theta: float(-np.sum(count_tail * np.log(pareto_interval_probability(math.exp(theta[0]), lower_tail, upper_tail, threshold)))),
+        x0=np.array([math.log(3.0)]),
+        method="L-BFGS-B",
+        bounds=[(-4.0, 6.0)],
+    )
+    pareto_alpha = float(math.exp(pareto_result.x[0]))
+
+    lower = year_bins["lower"].to_numpy(dtype=float)
+    upper = year_bins["upper"].to_numpy(dtype=float)
+    count = year_bins["count"].to_numpy(dtype=float)
+
+    probability = np.empty(len(year_bins), dtype=float)
+    body_mask = year_bins["upper"].to_numpy(dtype=float) <= threshold
+    tail_mask = year_bins["lower"].to_numpy(dtype=float) >= threshold
+
+    probability[body_mask] = body_weight * conditional_body_probability(body_fit, lower[body_mask], upper[body_mask], threshold)
+    probability[tail_mask] = tail_weight * pareto_interval_probability(pareto_alpha, lower[tail_mask], upper[tail_mask], threshold)
+    probability = np.clip(probability, 1e-12, 1.0)
+    nll = float(-np.sum(count * np.log(probability)))
+
+    return SpliceDistribution(
+        threshold=threshold,
+        body_params=body_fit.params,
+        tail_params={"alpha": pareto_alpha},
+        tail_weight=tail_weight,
+        nll=nll,
+        converged=bool(body_fit.converged and pareto_result.success),
+        message=f"body={body_fit.message}; tail={pareto_result.message}",
+    )
+
+
+def fit_lognormal_pareto_splice_all_years(
+    bins: pd.DataFrame,
+    thresholds: list[float] | None = None,
+) -> pd.DataFrame:
+    """Fit a lognormal body plus Pareto tail splice model across years."""
+    rows: list[dict[str, float | int | str | bool]] = []
+    thresholds_to_check = thresholds or [2500.0, 3750.0]
+    for year, group in bins.groupby("year"):
+        year_bins = prepare_bins_for_fit(group)
+        if year_bins.empty:
+            continue
+        total_count = float(year_bins["count"].sum())
+        for threshold in thresholds_to_check:
+            fit = fit_lognormal_pareto_splice_year(group, threshold)
+            if fit is None:
+                continue
+            k = 4  # body sigma, body scale, Pareto alpha, tail weight
+            rows.append(
+                {
+                    "year": int(year),
+                    "model": "lognormal_pareto_splice",
+                    "tail_threshold": threshold,
+                    "n_bins": len(year_bins),
+                    "n_workers_used": total_count,
+                    "nll": fit.nll,
+                    "aic": 2 * k + 2 * fit.nll,
+                    "bic": math.log(total_count) * k + 2 * fit.nll,
+                    "converged": fit.converged,
+                    "message": fit.message,
+                    "param_body_sigma": fit.body_params["sigma"],
+                    "param_body_scale": fit.body_params["scale"],
+                    "param_tail_alpha": fit.tail_params["alpha"],
+                    "param_tail_weight": fit.tail_weight,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def expected_counts_splice(splice_row: pd.Series, bins: pd.DataFrame) -> np.ndarray:
+    """Compute expected counts under a fitted lognormal-Pareto splice model."""
+    year_bins = prepare_bins_for_fit(bins)
+    threshold = float(splice_row["tail_threshold"])
+    body_fit = FittedDistribution(
+        name="lognormal",
+        params={"sigma": float(splice_row["param_body_sigma"]), "scale": float(splice_row["param_body_scale"])},
+        nll=float(splice_row["nll"]),
+        converged=bool(splice_row["converged"]),
+        message=str(splice_row["message"]),
+    )
+    tail_weight = float(splice_row["param_tail_weight"])
+    body_weight = 1.0 - tail_weight
+    pareto_alpha = float(splice_row["param_tail_alpha"])
+
+    lower = year_bins["lower"].to_numpy(dtype=float)
+    upper = year_bins["upper"].to_numpy(dtype=float)
+    probability = np.empty(len(year_bins), dtype=float)
+    body_mask = year_bins["upper"].to_numpy(dtype=float) <= threshold
+    tail_mask = year_bins["lower"].to_numpy(dtype=float) >= threshold
+    probability[body_mask] = body_weight * conditional_body_probability(body_fit, lower[body_mask], upper[body_mask], threshold)
+    probability[tail_mask] = tail_weight * pareto_interval_probability(pareto_alpha, lower[tail_mask], upper[tail_mask], threshold)
+    probability = np.clip(probability, 1e-12, 1.0)
+    return probability * year_bins["count"].sum()
+
+
+def splice_sample(row: pd.Series, size: int = 200000, seed: int = 0) -> np.ndarray:
+    """Draw samples from a fitted lognormal-Pareto splice model."""
+    rng = np.random.default_rng(seed + int(row["year"]) + int(row["tail_threshold"]))
+    sigma = float(row["param_body_sigma"])
+    scale = float(row["param_body_scale"])
+    alpha = float(row["param_tail_alpha"])
+    tail_weight = float(row["param_tail_weight"])
+    threshold = float(row["tail_threshold"])
+
+    body_size = int(round(size * (1.0 - tail_weight)))
+    tail_size = max(size - body_size, 1)
+
+    body_frozen = stats.lognorm(s=sigma, loc=0.0, scale=scale)
+    cdf_threshold = max(float(body_frozen.cdf(threshold)), 1e-12)
+    body_uniform = rng.uniform(1e-6, max(cdf_threshold - 1e-6, 2e-6), size=max(body_size, 1))
+    body_sample = body_frozen.ppf(body_uniform)
+
+    tail_uniform = rng.uniform(1e-6, 1.0 - 1e-6, size=tail_size)
+    tail_sample = threshold * np.power(1.0 - tail_uniform, -1.0 / alpha)
+    sample = np.concatenate([body_sample, tail_sample])
+    return sample[np.isfinite(sample)]
+
+
+def splice_top_decile_diagnostics(
+    summary_df: pd.DataFrame,
+    splice_results: pd.DataFrame,
+    size: int = 200000,
+) -> pd.DataFrame:
+    """Compare splice-model top-decile diagnostics against published decile summaries."""
+    top_cutpoints = summary_df.query("statistic == 'decile_cutpoint' and decile == 9")[["year", "value"]].rename(columns={"value": "observed_p90_cutpoint"})
+    top_means = summary_df.query("statistic == 'mean_gain_by_decile' and decile == 10")[["year", "value"]].rename(columns={"value": "observed_decile10_mean"})
+    observed = top_means.merge(top_cutpoints, on="year", how="left")
+
+    rows: list[dict[str, float | int]] = []
+    for row in splice_results.itertuples(index=False):
+        observed_match = observed.loc[observed["year"] == row.year]
+        if observed_match.empty:
+            continue
+        sample = splice_sample(pd.Series(row._asdict()), size=size)
+        p90 = float(np.quantile(sample, 0.9))
+        decile10_sample = sample[sample >= p90]
+        mean_decile10 = float(np.mean(decile10_sample))
+        obs = observed_match.iloc[0]
+        observed_p90_cutpoint = float(obs["observed_p90_cutpoint"]) if not pd.isna(obs["observed_p90_cutpoint"]) else float("nan")
+        rows.append(
+            {
+                "year": int(row.year),
+                "tail_threshold": float(row.tail_threshold),
+                "observed_p90_cutpoint": observed_p90_cutpoint,
+                "splice_p90_cutpoint": p90,
+                "observed_decile10_mean": float(obs["observed_decile10_mean"]),
+                "splice_decile10_mean": mean_decile10,
+                "p90_relative_error": (
+                    (p90 - observed_p90_cutpoint) / observed_p90_cutpoint if not math.isnan(observed_p90_cutpoint) else float("nan")
+                ),
+                "decile10_mean_relative_error": (mean_decile10 - float(obs["observed_decile10_mean"])) / float(obs["observed_decile10_mean"]),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def splice_top_share_comparison(
+    bins: pd.DataFrame,
+    splice_results: pd.DataFrame,
+    lower_threshold: float = 3750.0,
+) -> pd.DataFrame:
+    """Compare observed and splice-implied top shares."""
+    rows: list[dict[str, float | int]] = []
+    for year, year_bins in bins.groupby("year"):
+        fit_bins = prepare_bins_for_fit(year_bins)
+        observed_total = float(fit_bins["count"].sum())
+        observed_open_top = float(fit_bins.loc[fit_bins["bin_type"] == "open_top", "count"].sum() / observed_total)
+        observed_top_two = float(fit_bins.loc[fit_bins["lower"] >= lower_threshold, "count"].sum() / observed_total)
+
+        for _, splice_row in splice_results.query("year == @year").iterrows():
+            expected = expected_counts_splice(splice_row, year_bins)
+            fit_bins_local = fit_bins.copy()
+            fit_bins_local["expected_count"] = expected
+            expected_total = float(fit_bins_local["expected_count"].sum())
+            rows.append(
+                {
+                    "year": int(year),
+                    "tail_threshold": float(splice_row["tail_threshold"]),
+                    "observed_open_top_share": observed_open_top,
+                    "splice_open_top_share": float(fit_bins_local.loc[fit_bins_local["bin_type"] == "open_top", "expected_count"].sum() / expected_total),
+                    "observed_top_two_share": observed_top_two,
+                    "splice_top_two_share": float(fit_bins_local.loc[fit_bins_local["lower"] >= lower_threshold, "expected_count"].sum() / expected_total),
+                }
+            )
+    return pd.DataFrame(rows)
 
 
 def tail_model_comparison(

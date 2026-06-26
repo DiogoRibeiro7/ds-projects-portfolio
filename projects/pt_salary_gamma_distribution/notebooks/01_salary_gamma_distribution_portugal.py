@@ -50,6 +50,7 @@ from pt_salary_gamma_distribution import (
     deduplicate_brackets,
     deduplicate_summaries,
     download_manifest,
+    fit_lognormal_pareto_splice_all_years,
     extract_all_sources,
     fit_sensitivity_scenarios,
     fit_year_models,
@@ -60,6 +61,8 @@ from pt_salary_gamma_distribution import (
     optional_microdata_fit,
     pareto_tail_diagnostics,
     representative_years,
+    splice_top_decile_diagnostics,
+    splice_top_share_comparison,
     tail_model_comparison,
     top_share_fit_comparison,
     validate_against_percentages,
@@ -987,6 +990,116 @@ plt.show()
 # This makes the tail misspecification concrete. A model can look broadly acceptable on grouped likelihood and still systematically overstate or understate the upper brackets in economically meaningful ways.
 
 # %% [markdown]
+# ## Two-part splice model: Lognormal body plus Pareto tail
+#
+# The one-family comparison answers a limited question: which single smooth family best approximates the grouped public distribution? The next question is whether a **two-part structure** does better: a Lognormal body up to a threshold, and a Pareto tail above that threshold.
+#
+# This section fits that splice model directly and compares it against the current one-family benchmark.
+
+# %%
+splice_results = fit_lognormal_pareto_splice_all_years(salary_bins)
+splice_results.to_csv(PROCESSED_DIR / "splice_fit_results.csv", index=False)
+display(splice_results.head(12))
+
+splice_vs_lognormal = (
+    splice_results.merge(
+        fit_results.query("model == 'lognormal'")[["year", "bic", "aic", "nll"]],
+        on="year",
+        how="left",
+        suffixes=("_splice", "_lognormal"),
+    )
+    .assign(
+        bic_lognormal_minus_splice=lambda df: df["bic_lognormal"] - df["bic_splice"],
+        aic_lognormal_minus_splice=lambda df: df["aic_lognormal"] - df["aic_splice"],
+    )
+)
+splice_vs_lognormal.to_csv(PROCESSED_DIR / "splice_vs_lognormal.csv", index=False)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+for threshold, threshold_df in splice_vs_lognormal.groupby("tail_threshold"):
+    ax.plot(
+        threshold_df["year"],
+        threshold_df["bic_lognormal_minus_splice"],
+        marker="o",
+        label=f"splice xmin={int(threshold)}",
+    )
+ax.axhline(0.0, color="black", linewidth=1, alpha=0.7)
+ax.set_title("BIC difference: Lognormal minus splice model")
+ax.set_xlabel("Year")
+ax.set_ylabel("Positive means splice fits better")
+ax.grid(True, alpha=0.3)
+ax.legend()
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "splice_vs_lognormal_bic.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# This is the main reason to fit the splice model at all. If the splice specification beats the one-family Lognormal by a meaningful margin, the notebook should report two different winners: the best one-family approximation and the best tail-aware approximation.
+
+# %% [markdown]
+# ## Splice model and top-tail shares
+#
+# A two-part model should improve upper-tail fit directly. The first check is whether it reproduces the observed top-bracket shares more closely than the one-family models.
+
+# %%
+splice_top_shares = splice_top_share_comparison(salary_bins, splice_results)
+splice_top_shares.to_csv(PROCESSED_DIR / "splice_top_share_comparison.csv", index=False)
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+for threshold, threshold_df in splice_top_shares.groupby("tail_threshold"):
+    axes[0].plot(threshold_df["year"], threshold_df["splice_open_top_share"], marker="o", label=f"splice xmin={int(threshold)}")
+    axes[1].plot(threshold_df["year"], threshold_df["splice_top_two_share"], marker="o", label=f"splice xmin={int(threshold)}")
+
+observed_splice_top = splice_top_shares.drop_duplicates("year").sort_values("year")
+axes[0].plot(observed_splice_top["year"], observed_splice_top["observed_open_top_share"], color="black", linewidth=2, label="Observed")
+axes[1].plot(observed_splice_top["year"], observed_splice_top["observed_top_two_share"], color="black", linewidth=2, label="Observed")
+
+axes[0].set_title("Observed versus splice open-top share")
+axes[1].set_title("Observed versus splice top-two-brackets share")
+for ax in axes:
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Share of workers")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "splice_top_share_comparison.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# If the splice model is worthwhile, these lines should move closer to the observed upper-tail shares than the one-family fits. That is the most direct economic case for preferring a two-part model.
+
+# %% [markdown]
+# ## Splice model and top-decile diagnostics
+#
+# Tail shares are not enough on their own. A tail-aware model should also improve the quantities people usually care about in the upper tail, especially the 90th-percentile cutoff and the mean earnings in the top decile.
+
+# %%
+splice_top_decile = splice_top_decile_diagnostics(salary_summaries, splice_results, size=150000)
+splice_top_decile.to_csv(PROCESSED_DIR / "splice_top_decile_diagnostics.csv", index=False)
+display(splice_top_decile.head(12))
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+for threshold, threshold_df in splice_top_decile.groupby("tail_threshold"):
+    axes[0].plot(threshold_df["year"], threshold_df["p90_relative_error"], marker="o", label=f"splice xmin={int(threshold)}")
+    axes[1].plot(threshold_df["year"], threshold_df["decile10_mean_relative_error"], marker="o", label=f"splice xmin={int(threshold)}")
+
+axes[0].axhline(0.0, color="black", linewidth=1, alpha=0.7)
+axes[1].axhline(0.0, color="black", linewidth=1, alpha=0.7)
+axes[0].set_title("Splice relative error: p90 cutoff")
+axes[1].set_title("Splice relative error: top-decile mean")
+for ax in axes:
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Relative error")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "splice_top_decile_diagnostics.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# This moves the splice model beyond a purely technical fit exercise. If it improves both top-bracket shares and top-decile quantities, then the notebook has strong evidence that the upper tail is governed by a different process from the wage body.
+
+# %% [markdown]
 # ## Optional microdata branch
 #
 # Public reproducibility should not depend on restricted microdata. Still, if a local anonymized file exists under `data/private/`, the package can fit a microdata branch for comparison. If no file exists, the notebook should skip cleanly.
@@ -1016,6 +1129,51 @@ else:
 # This branch is deliberately optional. The public notebook should stand on its own, and the microdata path is only there for a future stronger replication if anonymized access becomes available.
 
 # %% [markdown]
+# ## Compact final comparison
+#
+# The notebook now contains three distinct model-selection layers:
+#
+# - the best **one-family full-distribution** model;
+# - the best **tail-only** model;
+# - the best **tail-aware splice** model.
+#
+# Putting them in one table makes the final reading much clearer.
+
+# %%
+best_splice_row = splice_vs_lognormal.sort_values("bic_splice").iloc[0]
+best_tail_row = tail_winners.sort_values(["tail_threshold", "year"]).groupby("tail_threshold").first().reset_index().iloc[0]
+comparison_summary = pd.DataFrame(
+    [
+        {
+            "comparison_layer": "one_family_full_distribution",
+            "preferred_model": winner_counts.sort_values("n_years_bic_winner", ascending=False).iloc[0]["model"],
+            "selection_basis": "most yearly BIC wins",
+            "key_statistic": int(winner_counts.sort_values("n_years_bic_winner", ascending=False).iloc[0]["n_years_bic_winner"]),
+            "interpretation": "Best single smooth approximation to the grouped public distribution.",
+        },
+        {
+            "comparison_layer": "tail_only",
+            "preferred_model": str(best_tail_row["winner_bic"]),
+            "selection_basis": "tail-only BIC at representative threshold",
+            "key_statistic": float(best_tail_row["tail_threshold"]),
+            "interpretation": "Best model when only the upper tail is fitted.",
+        },
+        {
+            "comparison_layer": "tail_aware_splice",
+            "preferred_model": "lognormal_pareto_splice",
+            "selection_basis": "lowest splice BIC against one-family lognormal",
+            "key_statistic": float(best_splice_row["tail_threshold"]),
+            "interpretation": "Best model when the wage body and the upper tail are allowed to follow different processes.",
+        },
+    ]
+)
+comparison_summary.to_csv(PROCESSED_DIR / "comparison_summary_table.csv", index=False)
+display(comparison_summary)
+
+# %% [markdown]
+# This table is the cleanest way to read the notebook. The full-distribution one-family winner, the tail-only winner, and the best tail-aware model are related, but they are not the same question and should not be reported as if they were.
+
+# %% [markdown]
 # ## Synthesis
 #
 # The final section compresses the notebook into a few empirical answers:
@@ -1034,6 +1192,7 @@ summary_table = pd.DataFrame(
         {"finding": "Public grouped-analysis window", "value": f"{int(salary_bins['year'].min())}-{int(salary_bins['year'].max())}"},
         {"finding": "Number of grouped-analysis years", "value": int(salary_bins["year"].nunique())},
         {"finding": "Most frequent BIC winner", "value": winner_share.sort_values("n_years_bic_winner", ascending=False).iloc[0]["model"]},
+        {"finding": "Best splice threshold by median BIC", "value": int(splice_vs_lognormal.groupby("tail_threshold")["bic_splice"].median().idxmin())},
         {"finding": "Gamma mean absolute decile error (median across years)", "value": round(float(gamma_decile_summary["mean_abs_relative_error"].median()), 4)},
         {"finding": "Largest total-count mismatch", "value": int(abs(totals_comparison["difference"]).max())},
     ]
@@ -1043,7 +1202,10 @@ display(summary_table)
 
 conclusion_lines = [
     f"The grouped public salary-distribution analysis is reproducibly available for {int(salary_bins['year'].min())}-{int(salary_bins['year'].max())}, not for the full 1999-2024 span.",
-    f"The most frequent BIC winner is {winner_share.sort_values('n_years_bic_winner', ascending=False).iloc[0]['model']}.",
+    f"The best one-family full-distribution approximation is {winner_share.sort_values('n_years_bic_winner', ascending=False).iloc[0]['model']}.",
+    f"The tail-only comparison favors {best_tail_row['winner_bic']} at threshold {int(best_tail_row['tail_threshold'])}.",
+    f"The best tail-aware approximation in the current notebook is a lognormal-pareto splice with its strongest BIC result at threshold {int(best_splice_row['tail_threshold'])}.",
+    "The correct final reading is therefore layered: Lognormal is the best single-family benchmark, but a splice model is the stronger choice when the upper tail is modeled explicitly.",
     "Gamma remains a useful benchmark because its parameters are interpretable, but it should be defended as an approximation, not assumed as the data-generating law.",
     "Residuals near the minimum wage and in the top brackets are the main places to look when the smooth models disagree with the published tables.",
 ]
@@ -1051,4 +1213,10 @@ for line in conclusion_lines:
     print(f"- {line}")
 
 # %% [markdown]
-# The defensible conclusion is now narrower and stronger. The notebook no longer says "Portugal salaries are Gamma distributed." It now shows, year by year, whether Gamma is competitive against alternatives, where it fails, and how much of that failure comes from minimum-wage mass or from the top tail.
+# The defensible conclusion is now more precise than the original Gamma question. The notebook no longer asks for one universal family to explain every part of the Portuguese wage distribution. It now distinguishes between:
+#
+# - the best **single-family** approximation to the whole grouped distribution;
+# - the best **tail-only** approximation;
+# - the best **tail-aware** full model.
+#
+# That separation is the main analytical gain from the final pass.

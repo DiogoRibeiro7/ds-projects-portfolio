@@ -4,10 +4,12 @@ import pandas as pd
 
 from pt_salary_gamma_distribution.fitting import (
     decile_validation_summary,
+    fit_lognormal_pareto_splice_all_years,
     fit_sensitivity_scenarios,
     fit_year_models,
     model_winners,
     prepare_bins_for_fit,
+    splice_top_share_comparison,
     tail_model_comparison,
 )
 
@@ -73,3 +75,12 @@ def test_tail_model_comparison_returns_supported_tail_models() -> None:
     tail = tail_model_comparison(make_bins(), thresholds=[1000.0])
     assert {"lognormal_tail", "pareto_tail"} == set(tail["model"])
     assert tail["aic"].notna().all()
+
+
+def test_splice_model_and_top_share_comparison_return_rows() -> None:
+    splice = fit_lognormal_pareto_splice_all_years(make_bins(), thresholds=[1500.0])
+    assert set(splice["model"]) == {"lognormal_pareto_splice"}
+    assert splice["bic"].notna().all()
+
+    top_share = splice_top_share_comparison(make_bins(), splice, lower_threshold=1500.0)
+    assert {"splice_open_top_share", "splice_top_two_share"} <= set(top_share.columns)

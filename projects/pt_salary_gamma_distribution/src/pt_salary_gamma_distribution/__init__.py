@@ -15,7 +15,9 @@ from .extraction import (
 )
 from .fitting import (
     bootstrap_grouped_parameter_ranges,
+    expected_counts_splice,
     fit_sensitivity_scenarios,
+    fit_lognormal_pareto_splice_all_years,
     decile_validation,
     decile_validation_summary,
     fit_year_models,
@@ -24,6 +26,8 @@ from .fitting import (
     model_winners,
     optional_microdata_fit,
     pareto_tail_diagnostics,
+    splice_top_decile_diagnostics,
+    splice_top_share_comparison,
     tail_model_comparison,
     top_share_fit_comparison,
 )
@@ -41,7 +45,9 @@ __all__ = [
     "deduplicate_brackets",
     "deduplicate_summaries",
     "download_manifest",
+    "expected_counts_splice",
     "extract_all_sources",
+    "fit_lognormal_pareto_splice_all_years",
     "fit_sensitivity_scenarios",
     "fit_year_models",
     "gamma_parameter_trend",
@@ -53,6 +59,8 @@ __all__ = [
     "pareto_tail_diagnostics",
     "representative_years",
     "parse_pt_number",
+    "splice_top_decile_diagnostics",
+    "splice_top_share_comparison",
     "tail_model_comparison",
     "top_share_fit_comparison",
     "validate_against_percentages",

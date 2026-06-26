@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -154,20 +154,47 @@ def expected_counts(fit: FittedDistribution, bins: pd.DataFrame) -> np.ndarray:
     return probability * bins["count"].sum()
 
 
+def prepare_bins_for_fit(
+    bins: pd.DataFrame,
+    drop_exact_minimum_wage: bool = True,
+    drop_open_top: bool = False,
+    min_lower: float | None = None,
+    max_lower: float | None = None,
+) -> pd.DataFrame:
+    """Apply common grouped-fit filters to a salary-bin table."""
+    out = bins.copy()
+    if drop_exact_minimum_wage:
+        out = out.query("bin_type != 'exact_minimum_wage'")
+    if drop_open_top:
+        out = out.query("bin_type != 'open_top'")
+    if min_lower is not None:
+        out = out.loc[out["lower"] >= min_lower].copy()
+    if max_lower is not None:
+        out = out.loc[out["lower"] <= max_lower].copy()
+    out = out.query("count > 0 and upper > lower").copy()
+    return out.sort_values(["year", "lower", "upper"]).reset_index(drop=True)
+
+
 def fit_year_models(
     bins: pd.DataFrame,
     candidate_models: list[DistributionName] | None = None,
     drop_exact_minimum_wage: bool = True,
+    drop_open_top: bool = False,
+    min_lower: float | None = None,
+    max_lower: float | None = None,
 ) -> pd.DataFrame:
     """Fit candidate grouped models year by year."""
     models = candidate_models or ["gamma", "lognormal", "weibull", "generalized_gamma"]
     rows: list[dict[str, float | int | str | bool]] = []
 
     for year, group in bins.groupby("year"):
-        year_bins = group.copy()
-        if drop_exact_minimum_wage:
-            year_bins = year_bins.query("bin_type != 'exact_minimum_wage'")
-        year_bins = year_bins.query("count > 0 and upper > lower").copy()
+        year_bins = prepare_bins_for_fit(
+            group,
+            drop_exact_minimum_wage=drop_exact_minimum_wage,
+            drop_open_top=drop_open_top,
+            min_lower=min_lower,
+            max_lower=max_lower,
+        )
         if len(year_bins) < 4:
             continue
 
@@ -201,6 +228,29 @@ def fit_year_models(
     return pd.DataFrame(rows)
 
 
+def fit_sensitivity_scenarios(
+    bins: pd.DataFrame,
+    scenarios: dict[str, dict[str, float | bool | None]],
+    candidate_models: list[DistributionName] | None = None,
+) -> pd.DataFrame:
+    """Run a family of grouped-fit sensitivity scenarios."""
+    frames: list[pd.DataFrame] = []
+    for scenario_name, options in scenarios.items():
+        frame = fit_year_models(
+            bins,
+            candidate_models=candidate_models,
+            drop_exact_minimum_wage=bool(options.get("drop_exact_minimum_wage", True)),
+            drop_open_top=bool(options.get("drop_open_top", False)),
+            min_lower=options.get("min_lower"),  # type: ignore[arg-type]
+            max_lower=options.get("max_lower"),  # type: ignore[arg-type]
+        )
+        if frame.empty:
+            continue
+        frame["scenario"] = scenario_name
+        frames.append(frame)
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+
 def fit_row_to_object(row: pd.Series) -> FittedDistribution:
     """Recreate a fitted-distribution object from a result row."""
     params = {key.removeprefix("param_"): float(value) for key, value in row.items() if key.startswith("param_") and not pd.isna(value)}
@@ -217,7 +267,7 @@ def grouped_residuals(bins: pd.DataFrame, fit_results: pd.DataFrame) -> pd.DataF
     """Return observed, expected, and residual diagnostics by year, model, and bracket."""
     rows: list[dict[str, float | int | str]] = []
     for year, year_bins in bins.groupby("year"):
-        year_bins = year_bins.query("bin_type != 'exact_minimum_wage' and count > 0 and upper > lower").copy()
+        year_bins = prepare_bins_for_fit(year_bins)
         if year_bins.empty:
             continue
         for _, fit_row in fit_results.query("year == @year").iterrows():
@@ -330,6 +380,53 @@ def gamma_parameter_trend(fit_results: pd.DataFrame) -> pd.DataFrame:
     return gamma.sort_values("year").reset_index(drop=True)
 
 
+def bootstrap_grouped_parameter_ranges(
+    bins: pd.DataFrame,
+    years: list[int],
+    models: list[DistributionName] | None = None,
+    n_boot: int = 12,
+    seed: int = 0,
+) -> pd.DataFrame:
+    """Bootstrap grouped-fit parameter ranges for selected years and models."""
+    rng = np.random.default_rng(seed)
+    candidate_models = models or ["gamma", "lognormal"]
+    rows: list[dict[str, float | int | str]] = []
+
+    for year in years:
+        year_bins = prepare_bins_for_fit(bins.query("year == @year"))
+        if year_bins.empty:
+            continue
+        observed = year_bins["count"].to_numpy(dtype=float)
+        total = int(observed.sum())
+        probabilities = observed / observed.sum()
+
+        for model in candidate_models:
+            samples: list[dict[str, float]] = []
+            for _ in range(n_boot):
+                boot_counts = rng.multinomial(total, probabilities)
+                boot_bins = year_bins.copy()
+                boot_bins["count"] = boot_counts
+                fit = fit_grouped_distribution(model, boot_bins)
+                if fit.converged:
+                    samples.append(fit.params)
+            if not samples:
+                continue
+            params_df = pd.DataFrame(samples)
+            for column in params_df.columns:
+                rows.append(
+                    {
+                        "year": int(year),
+                        "model": model,
+                        "parameter": column,
+                        "n_boot": int(len(params_df)),
+                        "p10": float(params_df[column].quantile(0.10)),
+                        "p50": float(params_df[column].quantile(0.50)),
+                        "p90": float(params_df[column].quantile(0.90)),
+                    }
+                )
+    return pd.DataFrame(rows)
+
+
 def optional_microdata_fit(private_dir: Path) -> pd.DataFrame:
     """Fit microdata if a local anonymized CSV is available; otherwise return empty."""
     candidates = list(private_dir.glob("*.csv"))
@@ -384,4 +481,127 @@ def pareto_tail_diagnostics(bins: pd.DataFrame, top_bin_count: int = 2) -> pd.Da
                 "tail_worker_share": float(tail["count"].sum() / group["count"].sum()),
             }
         )
+    return pd.DataFrame(rows)
+
+
+def conditional_tail_probability(
+    name: Literal["lognormal"],
+    theta: np.ndarray,
+    lower: np.ndarray,
+    upper: np.ndarray,
+    xmin: float,
+) -> np.ndarray:
+    """Compute conditional interval probabilities given X >= xmin for a tail model."""
+    cdf_xmin = np.asarray(distribution_cdf(name, theta, xmin), dtype=float)
+    cdf_lower = np.asarray(distribution_cdf(name, theta, lower), dtype=float)
+    cdf_upper = np.where(np.isfinite(upper), distribution_cdf(name, theta, upper), 1.0)
+    denominator = np.clip(1.0 - cdf_xmin, 1e-12, 1.0)
+    return np.clip((cdf_upper - cdf_lower) / denominator, 1e-12, 1.0)
+
+
+def pareto_interval_probability(alpha: float, lower: np.ndarray, upper: np.ndarray, xmin: float) -> np.ndarray:
+    """Compute interval probabilities under a Pareto tail with support x >= xmin."""
+    lower_term = np.power(np.maximum(lower / xmin, 1.0), -alpha)
+    upper_term = np.where(np.isfinite(upper), np.power(np.maximum(upper / xmin, 1.0), -alpha), 0.0)
+    return np.clip(lower_term - upper_term, 1e-12, 1.0)
+
+
+def tail_model_comparison(
+    bins: pd.DataFrame,
+    thresholds: list[float] | None = None,
+) -> pd.DataFrame:
+    """Compare lognormal and Pareto fits on the upper tail only."""
+    thresholds_to_check = thresholds or [2500.0, 3750.0]
+    rows: list[dict[str, float | int | str | bool]] = []
+
+    for year, year_bins_full in bins.groupby("year"):
+        for xmin in thresholds_to_check:
+            year_bins = prepare_bins_for_fit(year_bins_full, min_lower=xmin)
+            if len(year_bins) < 2:
+                continue
+            lower = year_bins["lower"].to_numpy(dtype=float)
+            upper = year_bins["upper"].to_numpy(dtype=float)
+            count = year_bins["count"].to_numpy(dtype=float)
+            total_count = float(count.sum())
+
+            lognormal_fit = fit_grouped_distribution("lognormal", year_bins)
+            theta_lognormal = np.log([lognormal_fit.params["sigma"], lognormal_fit.params["scale"]])
+            lognormal_prob = conditional_tail_probability("lognormal", theta_lognormal, lower, upper, xmin)
+            lognormal_nll = float(-np.sum(count * np.log(lognormal_prob)))
+
+            pareto_result = optimize.minimize(
+                lambda theta: float(-np.sum(count * np.log(pareto_interval_probability(math.exp(theta[0]), lower, upper, xmin)))),
+                x0=np.array([math.log(3.0)]),
+                method="L-BFGS-B",
+                bounds=[(-4.0, 6.0)],
+            )
+            pareto_alpha = float(math.exp(pareto_result.x[0]))
+            pareto_prob = pareto_interval_probability(pareto_alpha, lower, upper, xmin)
+            pareto_nll = float(-np.sum(count * np.log(pareto_prob)))
+
+            rows.extend(
+                [
+                    {
+                        "year": int(year),
+                        "tail_threshold": xmin,
+                        "model": "lognormal_tail",
+                        "n_bins": len(year_bins),
+                        "n_workers_used": total_count,
+                        "nll": lognormal_nll,
+                        "aic": 2 * 2 + 2 * lognormal_nll,
+                        "bic": math.log(total_count) * 2 + 2 * lognormal_nll,
+                        "converged": lognormal_fit.converged,
+                        "message": lognormal_fit.message,
+                        "param_sigma": lognormal_fit.params["sigma"],
+                        "param_scale": lognormal_fit.params["scale"],
+                    },
+                    {
+                        "year": int(year),
+                        "tail_threshold": xmin,
+                        "model": "pareto_tail",
+                        "n_bins": len(year_bins),
+                        "n_workers_used": total_count,
+                        "nll": pareto_nll,
+                        "aic": 2 * 1 + 2 * pareto_nll,
+                        "bic": math.log(total_count) * 1 + 2 * pareto_nll,
+                        "converged": bool(pareto_result.success),
+                        "message": str(pareto_result.message),
+                        "param_alpha": pareto_alpha,
+                    },
+                ]
+            )
+    return pd.DataFrame(rows)
+
+
+def top_share_fit_comparison(
+    bins: pd.DataFrame,
+    fit_results: pd.DataFrame,
+    lower_threshold: float = 3750.0,
+) -> pd.DataFrame:
+    """Compare observed and fitted top-bracket shares by model and year."""
+    rows: list[dict[str, float | int | str]] = []
+    for year, year_bins in bins.groupby("year"):
+        fit_bins = prepare_bins_for_fit(year_bins)
+        observed_total = float(fit_bins["count"].sum())
+        observed_open_top = float(fit_bins.loc[fit_bins["bin_type"] == "open_top", "count"].sum() / observed_total)
+        observed_top_two = float(fit_bins.loc[fit_bins["lower"] >= lower_threshold, "count"].sum() / observed_total)
+
+        for _, fit_row in fit_results.query("year == @year").iterrows():
+            fit = fit_row_to_object(fit_row)
+            expected = expected_counts(fit, fit_bins)
+            fit_bins_local = fit_bins.copy()
+            fit_bins_local["expected_count"] = expected
+            expected_total = float(fit_bins_local["expected_count"].sum())
+            expected_open_top = float(fit_bins_local.loc[fit_bins_local["bin_type"] == "open_top", "expected_count"].sum() / expected_total)
+            expected_top_two = float(fit_bins_local.loc[fit_bins_local["lower"] >= lower_threshold, "expected_count"].sum() / expected_total)
+            rows.append(
+                {
+                    "year": int(year),
+                    "model": fit.name,
+                    "observed_open_top_share": observed_open_top,
+                    "expected_open_top_share": expected_open_top,
+                    "observed_top_two_share": observed_top_two,
+                    "expected_top_two_share": expected_top_two,
+                }
+            )
     return pd.DataFrame(rows)

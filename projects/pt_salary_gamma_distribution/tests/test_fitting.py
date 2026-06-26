@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import pandas as pd
 
-from pt_salary_gamma_distribution.fitting import decile_validation_summary, fit_year_models, model_winners
+from pt_salary_gamma_distribution.fitting import (
+    decile_validation_summary,
+    fit_sensitivity_scenarios,
+    fit_year_models,
+    model_winners,
+    prepare_bins_for_fit,
+    tail_model_comparison,
+)
 
 
 def make_bins() -> pd.DataFrame:
@@ -45,3 +52,24 @@ def test_model_winners_and_validation_summary_are_tidy() -> None:
         )
     )
     assert summary.iloc[0]["mean_abs_relative_error"] == 0.15000000000000002
+
+
+def test_prepare_bins_for_fit_and_sensitivity_scenarios_work() -> None:
+    bins = make_bins()
+    filtered = prepare_bins_for_fit(bins, drop_open_top=True)
+    assert "open_top" not in set(filtered["bin_type"])
+
+    scenarios = fit_sensitivity_scenarios(
+        bins,
+        {
+            "baseline": {"drop_exact_minimum_wage": True},
+            "drop_open_top": {"drop_exact_minimum_wage": True, "drop_open_top": True},
+        },
+    )
+    assert {"baseline", "drop_open_top"} == set(scenarios["scenario"])
+
+
+def test_tail_model_comparison_returns_supported_tail_models() -> None:
+    tail = tail_model_comparison(make_bins(), thresholds=[1000.0])
+    assert {"lognormal_tail", "pareto_tail"} == set(tail["model"])
+    assert tail["aic"].notna().all()

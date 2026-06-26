@@ -14,6 +14,8 @@ from .extraction import (
     validate_against_percentages,
 )
 from .fitting import (
+    bootstrap_grouped_parameter_ranges,
+    fit_sensitivity_scenarios,
     decile_validation,
     decile_validation_summary,
     fit_year_models,
@@ -22,26 +24,36 @@ from .fitting import (
     model_winners,
     optional_microdata_fit,
     pareto_tail_diagnostics,
+    tail_model_comparison,
+    top_share_fit_comparison,
 )
+from .plotting import clipped_density, grouped_histogram_frame, representative_years
 
 __all__ = [
     "RMMG_BY_YEAR",
     "build_manual_validation_checks",
     "build_salary_bin_dataset",
     "build_year_totals",
+    "bootstrap_grouped_parameter_ranges",
+    "clipped_density",
     "decile_validation",
     "decile_validation_summary",
     "deduplicate_brackets",
     "deduplicate_summaries",
     "download_manifest",
     "extract_all_sources",
+    "fit_sensitivity_scenarios",
     "fit_year_models",
     "gamma_parameter_trend",
+    "grouped_histogram_frame",
     "grouped_residuals",
     "model_winners",
     "normalize_text",
     "optional_microdata_fit",
     "pareto_tail_diagnostics",
+    "representative_years",
     "parse_pt_number",
+    "tail_model_comparison",
+    "top_share_fit_comparison",
     "validate_against_percentages",
 ]

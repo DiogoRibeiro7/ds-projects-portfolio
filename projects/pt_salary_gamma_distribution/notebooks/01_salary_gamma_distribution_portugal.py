@@ -19,12 +19,14 @@
 from __future__ import annotations
 
 import math
+import os
 import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import requests
 from IPython.display import display
 from scipy import stats
 
@@ -37,21 +39,29 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from pt_salary_gamma_distribution import (
+    RMMG_BY_YEAR,
+    bootstrap_grouped_parameter_ranges,
     build_manual_validation_checks,
     build_salary_bin_dataset,
     build_year_totals,
+    clipped_density,
     decile_validation,
     decile_validation_summary,
     deduplicate_brackets,
     deduplicate_summaries,
     download_manifest,
     extract_all_sources,
+    fit_sensitivity_scenarios,
     fit_year_models,
     gamma_parameter_trend,
+    grouped_histogram_frame,
     grouped_residuals,
     model_winners,
     optional_microdata_fit,
     pareto_tail_diagnostics,
+    representative_years,
+    tail_model_comparison,
+    top_share_fit_comparison,
     validate_against_percentages,
 )
 from pt_salary_gamma_distribution.fitting import fit_row_to_object
@@ -126,6 +136,34 @@ display(salary_bins.head(12))
 
 # %% [markdown]
 # The extraction result matters more than the raw row count. What matters is that the grouped analysis is now explicitly framed as a **2007–2024** public-data exercise, not a 1999–2024 claim. That removes the false precision that came from assuming those earlier years had the same grouped tables.
+
+# %% [markdown]
+# ## Bracket definitions by year
+#
+# Before comparing distributions across time, it is useful to document the public bracket structure itself. The grouped tables are publication tables, not a fixed machine-readable schema, and the effective bracket design changes across publication windows.
+
+# %%
+bracket_source = salary_brackets[["year", "source_id"]].drop_duplicates()
+bracket_metadata = (
+    salary_bins.groupby("year")
+    .apply(
+        lambda group: pd.Series(
+            {
+                "n_bins": int(group["bin_label"].nunique()),
+                "lowest_closed_upper": float(group.loc[group["bin_type"] == "below_minimum_wage", "upper"].min()),
+                "open_top_lower": float(group.loc[group["bin_type"] == "open_top", "lower"].min()),
+                "has_exact_minimum_wage_bin": bool((group["bin_type"] == "exact_minimum_wage").any()),
+            }
+        )
+    )
+    .reset_index()
+    .merge(bracket_source, on="year", how="left")
+)
+bracket_metadata.to_csv(PROCESSED_DIR / "bracket_metadata_by_year.csv", index=False)
+display(bracket_metadata)
+
+# %% [markdown]
+# This table makes one important limit explicit: some time comparisons are based on a stable modeling approach applied to changing public bracket definitions. That is acceptable for grouped likelihood, but it should always be stated rather than hidden.
 
 # %% [markdown]
 # ## Validate against the original workbooks
@@ -239,6 +277,196 @@ plt.show()
 # Two points matter here. First, this is a strongly **nominally trending** series, so cross-year comparisons should focus on shape and relative fit, not on unadjusted levels alone. Second, the widening distance between the lower deciles and the top decile is exactly the kind of feature that can make a single smooth family struggle.
 
 # %% [markdown]
+# ## Real-wage context
+#
+# The grouped-distribution fitting is still done year by year in nominal euros, which is appropriate for the likelihood step. But interpretation improves if we also show how the median and selected decile means evolve in real terms.
+
+# %%
+def download_world_bank_cpi(country: str = "PRT") -> pd.DataFrame:
+    """Download annual CPI from the World Bank API."""
+    url = f"https://api.worldbank.org/v2/country/{country}/indicator/FP.CPI.TOTL?format=json&per_page=20000"
+    response = requests.get(url, timeout=60)
+    response.raise_for_status()
+    payload = response.json()
+    rows: list[dict[str, float | int]] = []
+    for item in payload[1]:
+        if item.get("value") is None:
+            continue
+        rows.append({"year": int(item["date"]), "cpi": float(item["value"])})
+    return pd.DataFrame(rows).sort_values("year")
+
+
+try:
+    cpi = download_world_bank_cpi()
+    base_year = int(median_series["year"].max())
+    base_cpi = float(cpi.loc[cpi["year"] == base_year, "cpi"].iloc[0])
+    cpi["deflator_to_base_year"] = base_cpi / cpi["cpi"]
+    cpi.to_csv(PROCESSED_DIR / "world_bank_cpi_portugal.csv", index=False)
+
+    median_real = median_series.merge(cpi[["year", "deflator_to_base_year"]], on="year", how="left")
+    median_real["median_gain_real"] = median_real["median_gain"] * median_real["deflator_to_base_year"]
+
+    decile_real = decile_means.merge(cpi[["year", "deflator_to_base_year"]], on="year", how="left")
+    decile_real["value_real"] = decile_real["value"] * decile_real["deflator_to_base_year"]
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    axes[0].plot(median_series["year"], median_series["median_gain"], marker="o", label="Nominal median")
+    axes[0].plot(median_real["year"], median_real["median_gain_real"], marker="o", label=f"Real median ({base_year} euros)")
+    axes[0].set_title("Nominal versus real median gain")
+    axes[0].set_xlabel("Year")
+    axes[0].set_ylabel("Euros")
+    axes[0].grid(True, alpha=0.3)
+    axes[0].legend()
+
+    for decile in [1, 5, 10]:
+        series = decile_real.query("decile == @decile").sort_values("year")
+        axes[1].plot(series["year"], series["value_real"], marker="o", label=f"Decile {decile}")
+    axes[1].set_title(f"Real mean earnings by decile ({base_year} euros)")
+    axes[1].set_xlabel("Year")
+    axes[1].set_ylabel("Euros")
+    axes[1].grid(True, alpha=0.3)
+    axes[1].legend()
+
+    fig.tight_layout()
+    fig.savefig(FIGURES_DIR / "real_wage_context.png", dpi=160)
+    plt.show()
+except Exception as exc:
+    print(f"Real-wage context skipped: {exc}")
+
+# %% [markdown]
+# This matters because a rising nominal scale parameter can reflect both genuine dispersion changes and price-level drift. The real-wage plots help distinguish wage-structure change from simple inflation arithmetic.
+
+# %% [markdown]
+# ## Minimum-wage regime as a structural feature
+#
+# The minimum wage is not just an inconvenience for fitting smooth distributions. It is one of the central institutional features shaping the Portuguese wage distribution, so it should be shown directly.
+
+# %%
+minimum_wage_context = (
+    salary_bins.groupby("year")
+    .apply(
+        lambda group: pd.Series(
+            {
+                "share_below_rmmg": float(group.loc[group["bin_type"] == "below_minimum_wage", "count"].sum() / group["count"].sum()),
+                "share_exact_rmmg": float(group.loc[group["bin_type"] == "exact_minimum_wage", "count"].sum() / group["count"].sum()),
+                "rmmg_euros": float(RMMG_BY_YEAR[int(group.name)]),
+            }
+        )
+    )
+    .reset_index()
+)
+minimum_wage_context.to_csv(PROCESSED_DIR / "minimum_wage_context.csv", index=False)
+
+fig, ax1 = plt.subplots(figsize=(10, 5))
+ax1.plot(minimum_wage_context["year"], minimum_wage_context["share_exact_rmmg"], marker="o", label="Exact RMMG share", color="tab:blue")
+ax1.plot(minimum_wage_context["year"], minimum_wage_context["share_below_rmmg"], marker="o", label="Below RMMG share", color="tab:orange")
+ax1.set_xlabel("Year")
+ax1.set_ylabel("Share of workers")
+ax1.grid(True, alpha=0.3)
+
+ax2 = ax1.twinx()
+ax2.plot(minimum_wage_context["year"], minimum_wage_context["rmmg_euros"], color="tab:green", linestyle="--", label="RMMG euros")
+ax2.set_ylabel("Euros")
+
+lines, labels = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax1.legend(lines + lines2, labels + labels2, loc="upper left")
+ax1.set_title("Minimum-wage mass and RMMG level over time")
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "minimum_wage_regime.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# This plot helps interpret why a single smooth positive-support distribution struggles. A visible mass exactly at the legal minimum wage is an institutional concentration, not the outcome of a smooth latent earnings process.
+
+# %% [markdown]
+# ## Wage compression and spread
+#
+# Distribution fitting is easier to interpret when paired with simple spread measures. Using the published mean earnings by decile, we can track how compressed or stretched the wage structure looks over time.
+
+# %%
+decile_pivot = decile_means.pivot(index="year", columns="decile", values="value").reset_index()
+decile_pivot["d10_d1_ratio"] = decile_pivot[10.0] / decile_pivot[1.0]
+decile_pivot["d9_d5_ratio"] = decile_pivot[9.0] / decile_pivot[5.0]
+decile_pivot["d5_d1_ratio"] = decile_pivot[5.0] / decile_pivot[1.0]
+compression_metrics = decile_pivot[["year", "d10_d1_ratio", "d9_d5_ratio", "d5_d1_ratio"]].copy()
+compression_metrics.to_csv(PROCESSED_DIR / "wage_compression_metrics.csv", index=False)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+for column in ["d10_d1_ratio", "d9_d5_ratio", "d5_d1_ratio"]:
+    ax.plot(compression_metrics["year"], compression_metrics[column], marker="o", label=column)
+ax.set_title("Wage compression metrics from published decile means")
+ax.set_xlabel("Year")
+ax.set_ylabel("Ratio")
+ax.grid(True, alpha=0.3)
+ax.legend()
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "wage_compression_metrics.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# These ratios help separate two stories: broad compression in the body of the distribution versus increasing stretch at the top. That distinction matters when deciding whether a model is missing the whole distribution or mainly the upper tail.
+
+# %% [markdown]
+# ## Where did the distribution change?
+#
+# Because the public bracket design changes over time, the cleanest way to compare the earliest and latest years is to use a harmonized set of broad earning bands rather than the raw publication bins.
+
+# %%
+def harmonized_band(row: pd.Series) -> str:
+    """Assign a raw salary bracket to a broad comparable band."""
+    if row["bin_type"] == "below_minimum_wage":
+        return "< RMMG"
+    if row["bin_type"] == "exact_minimum_wage":
+        return "= RMMG"
+    if row["upper"] <= 1000.0:
+        return "RMMG to <1000"
+    if row["upper"] <= 2500.0:
+        return "1000 to <2500"
+    if np.isfinite(row["upper"]) and row["upper"] <= 5000.0:
+        return "2500 to <5000"
+    return "5000+"
+
+
+harmonized_shares = salary_bins.copy()
+harmonized_shares["broad_band"] = harmonized_shares.apply(harmonized_band, axis=1)
+harmonized_shares = (
+    harmonized_shares.groupby(["year", "broad_band"], as_index=False)["count"].sum()
+    .assign(share=lambda df: df["count"] / df.groupby("year")["count"].transform("sum"))
+)
+harmonized_shares.to_csv(PROCESSED_DIR / "harmonized_broad_band_shares.csv", index=False)
+
+first_year = int(harmonized_shares["year"].min())
+last_year = int(harmonized_shares["year"].max())
+share_change = (
+    harmonized_shares.query("year in [@first_year, @last_year]")
+    .pivot(index="broad_band", columns="year", values="share")
+    .reset_index()
+)
+share_change["change_last_minus_first"] = share_change[last_year] - share_change[first_year]
+share_change.to_csv(PROCESSED_DIR / "harmonized_share_change_first_last.csv", index=False)
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+plot_df = share_change.set_index("broad_band")[[first_year, last_year]]
+plot_df.plot(kind="bar", ax=axes[0], color=["#8bb8f7", "#f1a36f"])
+axes[0].set_title(f"Harmonized band shares: {first_year} vs {last_year}")
+axes[0].set_xlabel("")
+axes[0].set_ylabel("Share of workers")
+axes[0].grid(True, axis="y", alpha=0.3)
+
+axes[1].barh(share_change["broad_band"], share_change["change_last_minus_first"], color="#5b8c5a")
+axes[1].set_title(f"Share change: {last_year} minus {first_year}")
+axes[1].set_xlabel("Share-point change")
+axes[1].grid(True, axis="x", alpha=0.3)
+
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "distribution_change_harmonized_bands.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# This section turns the abstract phrase “the distribution changed” into a concrete statement. It shows whether the main movement happened near the minimum wage, in the middle-income mass, or in the upper brackets.
+
+# %% [markdown]
 # ## Fit grouped distributions by year
 #
 # The main fitting step uses the published bracket counts. The equality mass at the minimum wage is excluded from the continuous grouped likelihood because a point mass cannot be represented cleanly by these smooth families.
@@ -250,8 +478,43 @@ fit_results.to_csv(PROCESSED_DIR / "distribution_fit_results.csv", index=False)
 winners = model_winners(fit_results)
 winners.to_csv(PROCESSED_DIR / "model_winners_by_year.csv", index=False)
 
+decile_fit = decile_validation(salary_summaries, fit_results)
+decile_fit_summary = decile_validation_summary(decile_fit)
+decile_fit.to_csv(PROCESSED_DIR / "decile_fit_validation.csv", index=False)
+decile_fit_summary.to_csv(PROCESSED_DIR / "decile_fit_validation_summary.csv", index=False)
+
 display(fit_results.head(12))
 display(winners.head(12))
+
+# %% [markdown]
+# ## Main findings first
+#
+# Before moving into diagnostics, it is useful to surface the current notebook result in one compact table. This keeps the rest of the notebook interpretive rather than suspense-driven.
+
+# %%
+main_findings = pd.DataFrame(
+    [
+        {"finding": "Public grouped-analysis window", "value": f"{int(salary_bins['year'].min())}-{int(salary_bins['year'].max())}"},
+        {"finding": "Most frequent BIC winner", "value": winners["winner_bic"].mode().iloc[0]},
+        {
+            "finding": "Median Gamma decile error",
+            "value": round(float(decile_fit_summary.query("model == 'gamma'")["mean_abs_relative_error"].median()), 4),
+        },
+        {
+            "finding": "Median Lognormal decile error",
+            "value": round(float(decile_fit_summary.query("model == 'lognormal'")["mean_abs_relative_error"].median()), 4),
+        },
+        {
+            "finding": "Maximum total-count mismatch after extraction",
+            "value": int(abs(totals_comparison["difference"]).max()),
+        },
+    ]
+)
+main_findings.to_csv(PROCESSED_DIR / "main_findings_first.csv", index=False)
+display(main_findings)
+
+# %% [markdown]
+# This table is the notebook’s top-line answer. The later sections explain *why* the models differ, and where Gamma remains useful as a benchmark despite not winning the grouped-data competition.
 
 # %% [markdown]
 # AIC and BIC should not be read as metaphysical truth. They answer a narrower question: **which candidate family assigns the most likelihood to the published grouped counts, after penalizing complexity?** That is still very useful, because it turns the Gamma claim into a directly testable statement.
@@ -317,6 +580,61 @@ plt.show()
 # This matters because the notebook is not just reporting a symbolic winner. A large and persistent positive gap means the evidence against Gamma as the best grouped-data summary is not marginal. It is systematic.
 
 # %% [markdown]
+# ## Sensitivity analysis: minimum wage, top bracket, and body-only fits
+#
+# The next question is whether the current ranking is stable to reasonable grouped-data modeling choices. This section reruns the fits under alternative inclusion rules for the exact minimum-wage mass, the open top bracket, and the body-only distribution.
+
+# %%
+sensitivity_scenarios = {
+    "baseline": {"drop_exact_minimum_wage": True},
+    "include_minimum_wage_bin": {"drop_exact_minimum_wage": False},
+    "drop_open_top": {"drop_exact_minimum_wage": True, "drop_open_top": True},
+    "body_only_1000_to_5000": {
+        "drop_exact_minimum_wage": True,
+        "drop_open_top": True,
+        "min_lower": 1000.0,
+        "max_lower": 4999.99,
+    },
+}
+sensitivity_results = fit_sensitivity_scenarios(salary_bins, sensitivity_scenarios)
+sensitivity_results.to_csv(PROCESSED_DIR / "sensitivity_fit_results.csv", index=False)
+
+sensitivity_summary = (
+    sensitivity_results.groupby(["scenario", "year"], as_index=False)
+    .apply(
+        lambda group: pd.Series(
+            {
+                "winner_bic": str(group.sort_values("bic").iloc[0]["model"]),
+                "winner_aic": str(group.sort_values("aic").iloc[0]["model"]),
+                "gamma_minus_lognormal_bic": float(
+                    group.loc[group["model"] == "gamma", "bic"].iloc[0]
+                    - group.loc[group["model"] == "lognormal", "bic"].iloc[0]
+                ),
+            }
+        )
+    )
+    .reset_index(drop=True)
+)
+sensitivity_summary.to_csv(PROCESSED_DIR / "sensitivity_summary.csv", index=False)
+display(sensitivity_summary.head(12))
+
+fig, ax = plt.subplots(figsize=(11, 5))
+for scenario_name, scenario_df in sensitivity_summary.groupby("scenario"):
+    ax.plot(scenario_df["year"], scenario_df["gamma_minus_lognormal_bic"], marker="o", label=scenario_name)
+ax.axhline(0.0, color="black", linewidth=1, alpha=0.7)
+ax.set_title("Gamma versus Lognormal BIC gap across sensitivity scenarios")
+ax.set_xlabel("Year")
+ax.set_ylabel("BIC(Gamma) - BIC(Lognormal)")
+ax.grid(True, alpha=0.3)
+ax.legend()
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "sensitivity_gamma_vs_lognormal_bic_gap.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# This section is doing the hard robustness work. If the ranking changes under mild and defensible grouped-data choices, the model conclusion is fragile. If the ranking stays stable, the grouped-data result becomes much stronger.
+
+# %% [markdown]
 # ## Gamma parameter trends
 #
 # Even when Gamma is not the overall winner, its parameters can still provide a compact description of how skewness and scale evolve. That is useful if the goal is to understand whether the distribution becomes more compressed or more spread out over time.
@@ -349,6 +667,40 @@ plt.show()
 # The most useful reading is comparative rather than absolute. A rising scale with limited shape movement suggests a general widening in the earnings scale. A collapsing shape would point to stronger skewness. The plot makes those tendencies visible without claiming Gamma is the one true model.
 
 # %% [markdown]
+# ## Bootstrap parameter ranges for selected years
+#
+# The fitted parameters are still point estimates. To give them some uncertainty context without turning the notebook into a long simulation exercise, this section uses a grouped multinomial bootstrap for representative years.
+
+# %%
+selected_years = representative_years(sorted(salary_bins["year"].unique()))
+bootstrap_ranges = bootstrap_grouped_parameter_ranges(
+    salary_bins,
+    years=selected_years,
+    models=["gamma", "lognormal"],
+    n_boot=12,
+    seed=42,
+)
+bootstrap_ranges.to_csv(PROCESSED_DIR / "bootstrap_parameter_ranges.csv", index=False)
+display(bootstrap_ranges.head(12))
+
+gamma_bootstrap = bootstrap_ranges.query("model == 'gamma'")
+if not gamma_bootstrap.empty:
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+    for axis, parameter in zip(axes, ["shape", "scale"], strict=False):
+        plot_df = gamma_bootstrap.query("parameter == @parameter").sort_values("year")
+        axis.plot(plot_df["year"], plot_df["p50"], marker="o")
+        axis.fill_between(plot_df["year"], plot_df["p10"], plot_df["p90"], alpha=0.25)
+        axis.set_title(f"Gamma {parameter}: bootstrap p10-p90")
+        axis.set_xlabel("Year")
+        axis.grid(True, alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(FIGURES_DIR / "gamma_bootstrap_ranges.png", dpi=160)
+    plt.show()
+
+# %% [markdown]
+# These are not formal confidence intervals, but they do answer a practical question: are the fitted parameters so unstable that the apparent year-to-year movement is mostly noise? For the notebook’s purpose, that is the right level of uncertainty check.
+
+# %% [markdown]
 # ## Histogram-style views of the published distribution
 #
 # The public source does not provide worker-level microdata, so a literal microdata histogram is not available here. The defensible substitute is a **grouped histogram** built from the published salary brackets: each bar width is the bracket width and each bar area is the worker share in that bracket.
@@ -356,9 +708,6 @@ plt.show()
 # The plots below show the observed grouped histogram together with fitted model densities for three representative years.
 
 # %%
-selected_years = [int(salary_bins["year"].min()), int(np.median(sorted(salary_bins["year"].unique()))), int(salary_bins["year"].max())]
-
-
 def frozen_from_row(row: pd.Series):
     """Build a scipy frozen distribution from a fitted-results row."""
     fit = fit_row_to_object(row)
@@ -379,11 +728,7 @@ def frozen_from_row(row: pd.Series):
 def plot_grouped_histogram_with_fits(year: int, x_cap: float = 5000.0) -> None:
     """Plot a grouped-data histogram with fitted model density overlays."""
     year_bins = salary_bins.query("year == @year and bin_type != 'exact_minimum_wage'").copy()
-    year_bins = year_bins.query("count > 0").sort_values("lower").copy()
-    year_bins["plot_upper"] = np.where(np.isfinite(year_bins["upper"]), year_bins["upper"], x_cap)
-    year_bins["width"] = year_bins["plot_upper"] - year_bins["lower"]
-    year_bins["share"] = year_bins["count"] / year_bins["count"].sum()
-    year_bins["density_height"] = year_bins["share"] / year_bins["width"]
+    year_bins = grouped_histogram_frame(year_bins.query("count > 0").sort_values("lower").copy(), x_cap=x_cap)
 
     x = np.linspace(0.0, x_cap, 800)
     fig, ax = plt.subplots(figsize=(11, 5.5))
@@ -402,9 +747,7 @@ def plot_grouped_histogram_with_fits(year: int, x_cap: float = 5000.0) -> None:
     for model_name in ["gamma", "lognormal", "weibull", "generalized_gamma"]:
         result_row = fit_results.query("year == @year and model == @model_name").iloc[0]
         frozen = frozen_from_row(result_row)
-        density = np.asarray(frozen.pdf(x), dtype=float)
-        density = np.where(np.isfinite(density), density, np.nan)
-        density = np.clip(density, 0.0, np.nanpercentile(density[np.isfinite(density)], 99.5) if np.isfinite(density).any() else 1.0)
+        density = clipped_density(frozen.pdf(x))
         ax.plot(x, density, linewidth=2, label=model_name)
 
     ax.set_title(f"Grouped histogram of monthly earnings with fitted densities, {year}")
@@ -460,12 +803,6 @@ for year in selected_years:
 # The grouped brackets drive the likelihood, but the decile means are an external validation layer. A model that wins on AIC/BIC and still misses decile means badly is not a convincing summary of the public distribution.
 
 # %%
-decile_fit = decile_validation(salary_summaries, fit_results)
-decile_fit_summary = decile_validation_summary(decile_fit)
-
-decile_fit.to_csv(PROCESSED_DIR / "decile_fit_validation.csv", index=False)
-decile_fit_summary.to_csv(PROCESSED_DIR / "decile_fit_validation_summary.csv", index=False)
-
 display(decile_fit_summary.head(12))
 
 for year in selected_years:
@@ -538,6 +875,41 @@ display(tail_diagnostics.tail(10))
 # Lower Pareto alpha means a heavier top tail. This diagnostic should be read cautiously because it is built from grouped top bins, not individual top incomes. Still, it adds useful context when smooth full-distribution models systematically miss the last brackets.
 
 # %% [markdown]
+# ## Tail-only model comparison
+#
+# The Pareto diagnostic above is descriptive. This section goes one step further by comparing a conditional Lognormal tail and a Pareto tail on the upper brackets only. That helps test whether the notebook’s main misspecification is really a tail problem.
+
+# %%
+tail_comparison = tail_model_comparison(salary_bins)
+tail_comparison.to_csv(PROCESSED_DIR / "tail_model_comparison.csv", index=False)
+
+tail_winners = (
+    tail_comparison.sort_values(["year", "tail_threshold", "bic"])
+    .drop_duplicates(["year", "tail_threshold"], keep="first")
+    .rename(columns={"model": "winner_bic"})
+)
+tail_winners.to_csv(PROCESSED_DIR / "tail_model_winners.csv", index=False)
+display(tail_winners.head(12))
+
+fig, ax = plt.subplots(figsize=(10, 5))
+for threshold, threshold_df in tail_comparison.groupby("tail_threshold"):
+    wide = threshold_df.pivot(index="year", columns="model", values="bic").reset_index()
+    wide["pareto_minus_lognormal_tail"] = wide["pareto_tail"] - wide["lognormal_tail"]
+    ax.plot(wide["year"], wide["pareto_minus_lognormal_tail"], marker="o", label=f"xmin={int(threshold)}")
+ax.axhline(0.0, color="black", linewidth=1, alpha=0.7)
+ax.set_title("Tail-only BIC difference: Pareto minus Lognormal")
+ax.set_xlabel("Year")
+ax.set_ylabel("Positive means tail Lognormal fits better")
+ax.grid(True, alpha=0.3)
+ax.legend()
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "tail_model_comparison.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# This section answers a narrower question than the full-distribution competition. Even if Lognormal wins overall, the upper tail may still behave more like a Pareto-type process beyond a sufficiently high threshold.
+
+# %% [markdown]
 # ## Top-bracket concentration over time
 #
 # The top-tail story is easier to read when shown directly in worker shares. This plot tracks the share of workers in the open top bracket and in the top two brackets combined.
@@ -575,14 +947,59 @@ plt.show()
 # This gives concrete distributional context to the tail diagnostics. The point is not that the top tail is huge in mass. The point is that even a small tail share can drive a large amount of misspecification when the right tail thickens over time.
 
 # %% [markdown]
+# ## Observed versus fitted top-bracket shares
+#
+# A direct way to test whether the full models miss the upper tail is to compare the observed top-bracket shares with the shares implied by each fitted model.
+
+# %%
+top_share_fit = top_share_fit_comparison(salary_bins, fit_results)
+top_share_fit.to_csv(PROCESSED_DIR / "top_share_fit_comparison.csv", index=False)
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+for model_name, model_df in top_share_fit.groupby("model"):
+    axes[0].plot(model_df["year"], model_df["expected_open_top_share"], marker="o", label=model_name)
+    axes[1].plot(model_df["year"], model_df["expected_top_two_share"], marker="o", label=model_name)
+
+observed_top = top_share_fit.drop_duplicates("year").sort_values("year")
+axes[0].plot(observed_top["year"], observed_top["observed_open_top_share"], color="black", linewidth=2, label="Observed")
+axes[1].plot(observed_top["year"], observed_top["observed_top_two_share"], color="black", linewidth=2, label="Observed")
+
+axes[0].set_title("Observed versus fitted open-top share")
+axes[1].set_title("Observed versus fitted top-two-brackets share")
+for ax in axes:
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Share of workers")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+fig.tight_layout()
+fig.savefig(FIGURES_DIR / "observed_vs_fitted_top_shares.png", dpi=160)
+plt.show()
+
+# %% [markdown]
+# This makes the tail misspecification concrete. A model can look broadly acceptable on grouped likelihood and still systematically overstate or understate the upper brackets in economically meaningful ways.
+
+# %% [markdown]
 # ## Optional microdata branch
 #
 # Public reproducibility should not depend on restricted microdata. Still, if a local anonymized file exists under `data/private/`, the package can fit a microdata branch for comparison. If no file exists, the notebook should skip cleanly.
 
 # %%
+microdata_schema = pd.DataFrame(
+    [
+        {"column": "year", "dtype": "integer", "required": True, "description": "Calendar year matching the public series."},
+        {"column": "monthly_earnings", "dtype": "float", "required": True, "description": "Positive monthly earnings in euros."},
+    ]
+)
+microdata_schema.to_csv(PROCESSED_DIR / "optional_microdata_schema.csv", index=False)
+display(microdata_schema)
+
 microdata_fit = optional_microdata_fit(PRIVATE_DIR)
 if microdata_fit.empty:
-    print("No local anonymized microdata file found. Public grouped-data pipeline remains fully reproducible.")
+    print(
+        "No local anonymized microdata file found. "
+        "The expected schema is documented in data/private/MICRODATA_SCHEMA.md "
+        "and mirrored in data/processed/optional_microdata_schema.csv."
+    )
 else:
     microdata_fit.to_csv(PROCESSED_DIR / "optional_microdata_fit.csv", index=False)
     display(microdata_fit.head())

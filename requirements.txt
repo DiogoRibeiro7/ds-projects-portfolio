@@ -90,7 +90,7 @@ urllib3>=2.7.0         # Fixed compression vulnerabilities
 httpx>=0.23.0          # Modern HTTP client
 
 # Time Series Analysis (future expansion)
-prophet>=1.1.0
+prophet>=1.3.0
 
 # Modern DataFrame Alternatives (implemented TODOs)
 polars>=0.15.0         # Fast modern dataframes

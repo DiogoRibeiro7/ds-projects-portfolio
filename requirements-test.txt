@@ -87,7 +87,7 @@ vcrpy==8.2.1
 
 # Browser testing (for dashboards)
 pytest-playwright==0.4.3
-selenium==4.16.0
+selenium==4.45.0
 pytest-selenium==4.1.0
 
 # Parallel and distributed testing

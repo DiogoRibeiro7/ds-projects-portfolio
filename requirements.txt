@@ -94,7 +94,7 @@ prophet>=1.1.0
 
 # Modern DataFrame Alternatives (implemented TODOs)
 polars>=0.15.0         # Fast modern dataframes
-dask>=2022.0.0         # Parallel computing
+dask>=2026.6.0         # Parallel computing
 modin>=0.15.0          # Pandas-compatible distributed computing
 
 # Security & Validation

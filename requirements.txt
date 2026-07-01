@@ -60,7 +60,7 @@ mypy>=0.900            # Type checking
 pytest>=6.0.0          # Testing
 pytest-cov>=3.0.0     # Test coverage
 pre-commit>=2.15.0     # Git hooks
-flake8>=4.0.0          # Linting
+flake8>=7.3.0          # Linting
 
 # Documentation & Reporting (implemented TODOs)
 notebook>=6.4.0

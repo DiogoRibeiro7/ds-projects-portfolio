@@ -1,0 +1,13 @@
+variable,country,year,value,unit,source,notes
+resident_population,Portugal,2025,11424031,persons,"INE, Estimativas de População Residente 2025 (Destaque, 22 June 2026)","Resident population on 31 December 2025. First estimate on a fully administrative basis; 2021-2024 revised on the same methodology. Equals Eurostat demo_gind on 1 January 2026."
+resident_population_2021,Portugal,2025,10599117,persons,"INE, Estimativas de População Residente 2025 (Destaque, 22 June 2026)","Start of the revised administrative-basis series (31 December 2021). Pre-2020 estimates remain census-based, so 2020->2021 is not a like-for-like change."
+foreign_residents,Portugal,2025,1597539,persons,"INE, Estimativas de População Residente 2025 (Destaque, 22 June 2026)","Foreign-national residents on 31 December 2025; more than doubled since 2021 (748,155)."
+foreign_resident_share,Portugal,2025,0.140,share,"INE, Estimativas de População Residente 2025 (Destaque, 22 June 2026)",Foreign nationals as a share of total resident population.
+migrant_working_age_share,Portugal,2025,0.861,share,"INE, Estimativas de População Residente 2025 (Destaque, 22 June 2026), section 3","Observed, not assumed: 86.1% of foreign-national residents are aged 15-64 (vs 64.3% of the total population). Up 3.6pp on 2021."
+total_working_age_share,Portugal,2025,0.643,share,"INE, Estimativas de População Residente 2025 (Destaque, 22 June 2026), section 2","Share of the total resident population aged 15-64; context for how much more working-age-concentrated migrants are."
+real_gdp_growth,Portugal,2025,0.019,decimal,INE Press Release 706214887,GDP volume growth in 2025; used as the direct signal in the GDP model.
+preliminary_gdp_pc_pps_index,Portugal,2025,81.3,EU27_2025_100,Article citing European Commission AMECO May 2025,"The index the article applies its correction to. Computed on the national-accounts population (~10.80M), not the revised resident population."
+population_correction_factor,Portugal,2025,1.056,ratio,Article calculations,"Ratio the article divides the index by. Close to the true ratio between the two population bases (11.41M / 10.80M = 1.056)."
+article_corrected_gdp_pc_pps_index,Portugal,2025,77.0,EU27_2025_100,Article calculations,The article's headline result from the denominator-only correction.
+migrant_activity_rate,Portugal,2025,0.87,share,"Eurostat lfsa_argacob, activity rate of foreign-born aged 15-64","Paired with the OECD employment rate so their product matches the observed employment rate. Not from the INE release."
+migrant_relative_productivity,Portugal,2025,0.80,ratio,"Relative-wage proxy; migrants concentrate in lower-paying sectors","Least data-pinned parameter in the labour channel; drawn with wide uncertainty."

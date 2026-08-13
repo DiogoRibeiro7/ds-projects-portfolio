@@ -1,0 +1,11 @@
+# Cached API responses: regenerated on first run, not source.
+data/raw/
+
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/

@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "customer-analytics"
+version = "0.1.0"
+description = "Customer churn, segmentation, and treatment-effect analytics snapshots exported from ds-projects-portfolio."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "joblib>=1.3",
+  "matplotlib>=3.7",
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "scikit-learn>=1.3",
+  "scipy>=1.10",
+  "statsmodels>=0.14",
+]
+
+[project.optional-dependencies]
+dashboard = [
+  "streamlit>=1.30",
+  "plotly>=5.18",
+  "shap>=0.44",
+]
+notebook = [
+  "jupyter>=1.0",
+  "nbformat>=5.9",
+]
+test = [
+  "hypothesis>=6.90",
+  "pytest>=8.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = [
+  "tests",
+  "projects/advanced_customer_segmentation/tests",
+]
+pythonpath = [
+  ".",
+  "src",
+]
+addopts = "-q"
+markers = [
+  "unit: fast unit tests copied from the portfolio root suite",
+]

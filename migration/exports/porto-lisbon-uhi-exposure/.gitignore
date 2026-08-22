@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+.env
+outputs/*.csv
+plots/*.png
+!outputs/demo_summary.csv
+!plots/demo_*.png
+data/manual/*
+!data/manual/porto_lisbon_cells_template.csv

@@ -46,6 +46,14 @@ The full machine-readable table is in `migration/migration_matrix.csv`.
    - `projects/pt_salary_gamma_distribution`
 4. Optional later `customer-analytics`: copy churn, segmentation, uplift, and selected feature-engineering material.
 
+## Drain Resolution
+
+All active rows in `migration/migration_matrix.csv` now have a concrete non-`REVIEW`
+disposition. The stale dependency-update and release workflows are classified as `KEEP`
+root automation because changing or disabling CI is a separate cleanup decision, not part of
+copy-first extraction. Generated artifacts remain `DELETE_GENERATED` candidates only; they
+must not be removed without explicit cleanup approval.
+
 ## What Stays Here
 
 - `projects/`

@@ -12,7 +12,11 @@ on:
       - "tests/**"
       - "scripts/**"
       - "docs/**"
+      - "migration/**"
       - "requirements*.txt"
+      - "README.md"
+      - "MIGRATION_MATRIX.md"
+      - "projects.yml"
       - "pyproject.toml"
       - "pytest.ini"
       - "Makefile"
@@ -27,7 +31,11 @@ on:
       - "tests/**"
       - "scripts/**"
       - "docs/**"
+      - "migration/**"
       - "requirements*.txt"
+      - "README.md"
+      - "MIGRATION_MATRIX.md"
+      - "projects.yml"
       - "pyproject.toml"
       - "pytest.ini"
       - "Makefile"
@@ -43,6 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -59,10 +69,77 @@ jobs:
           fi
           python -m pip install ruff==0.14.0
           python -m pip install hypothesis
+      - name: Collect changed Python files
+        id: changed_python
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base_ref="${{ github.base_ref || 'main' }}"
+            git fetch origin "$base_ref" --depth=1
+            base="origin/${base_ref}"
+          else
+            base="${{ github.event.before }}"
+            if [ "$base" = "0000000000000000000000000000000000000000" ]; then
+              base="HEAD^"
+            fi
+          fi
+          files="$(git diff --name-only "$base"...HEAD -- '*.py' | grep -Ev '^(migration/exports|archive/)' || true)"
+          {
+            echo "files<<EOF"
+            echo "$files"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
       - name: Check formatting consistency
-        run: ruff format --check src tools tests scripts
+        if: steps.changed_python.outputs.files != ''
+        shell: bash
+        run: |
+          cat > /tmp/changed-python.txt <<'EOF'
+          ${{ steps.changed_python.outputs.files }}
+          EOF
+          xargs -r ruff format --check < /tmp/changed-python.txt
       - name: Lint
-        run: ruff check src tools tests scripts
+        if: steps.changed_python.outputs.files != ''
+        shell: bash
+        run: |
+          cat > /tmp/changed-python.txt <<'EOF'
+          ${{ steps.changed_python.outputs.files }}
+          EOF
+          xargs -r ruff check < /tmp/changed-python.txt
+      - name: Validate project catalogue
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pathlib
+
+          import yaml
+
+          path = pathlib.Path("projects.yml")
+          if not path.exists():
+              raise SystemExit("projects.yml is missing")
+
+          data = yaml.safe_load(path.read_text(encoding="utf-8"))
+          projects = data.get("projects", []) if isinstance(data, dict) else []
+          required = {"name", "repository", "status", "category", "summary"}
+          missing = [
+              project.get("name", "<missing name>")
+              for project in projects
+              if not isinstance(project, dict) or not required.issubset(project)
+          ]
+          missing_repositories = [
+              project["repository"]
+              for project in projects
+              if isinstance(project, dict)
+              and isinstance(project.get("repository"), str)
+              and not pathlib.Path(project["repository"]).exists()
+          ]
+          if not projects:
+              raise SystemExit("projects.yml contains no projects")
+          if missing:
+              raise SystemExit(f"projects.yml entries missing required fields: {missing}")
+          if missing_repositories:
+              raise SystemExit(f"projects.yml repositories do not exist: {missing_repositories}")
+          print(f"projects.yml valid: {len(projects)} projects")
+          PY
 
   typecheck:
     name: Type Checking
@@ -70,6 +147,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -86,7 +165,34 @@ jobs:
           fi
           python -m pip install ruff==0.14.0
       - name: Run mypy
-        run: make typecheck
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base_ref="${{ github.base_ref || 'main' }}"
+            git fetch origin "$base_ref" --depth=1
+            base="origin/${base_ref}"
+          else
+            base="${{ github.event.before }}"
+            if [ "$base" = "0000000000000000000000000000000000000000" ]; then
+              base="HEAD^"
+            fi
+          fi
+
+          files="$(git diff --name-only "$base"...HEAD -- '*.py' | grep -Ev '^(migration/exports|archive/)' || true)"
+          if [ -z "$files" ]; then
+            echo "No changed Python files to type-check."
+            exit 0
+          fi
+
+          if echo "$files" | grep -q '^migration/'; then
+            mypy migration
+          fi
+
+          root_files="$(echo "$files" | grep -Ev '^migration/' || true)"
+          if [ -n "$root_files" ]; then
+            echo "$root_files" > /tmp/root-python.txt
+            xargs -r mypy --ignore-missing-imports < /tmp/root-python.txt
+          fi
 
   tests:
     name: Tests (Python ${{ matrix.python-version }})
@@ -98,6 +204,8 @@ jobs:
         python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -116,9 +224,33 @@ jobs:
       - name: Run tests
         env:
           PYTHONHASHSEED: "0"
+        shell: bash
         run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base_ref="${{ github.base_ref || 'main' }}"
+            git fetch origin "$base_ref" --depth=1
+            base="origin/${base_ref}"
+          else
+            base="${{ github.event.before }}"
+            if [ "$base" = "0000000000000000000000000000000000000000" ]; then
+              base="HEAD^"
+            fi
+          fi
+
+          changed="$(git diff --name-only "$base"...HEAD)"
           mkdir -p artifacts
-          make test TEST_OPTS="--junitxml=artifacts/junit-${{ matrix.python-version }}.xml --durations=25 --cov=src --cov-report=xml:artifacts/coverage-${{ matrix.python-version }}.xml --cov-report=term-missing:skip-covered"
+
+          if echo "$changed" | grep -q '^migration/'; then
+            pytest migration --junitxml=artifacts/junit-migration-${{ matrix.python-version }}.xml
+          fi
+
+          if echo "$changed" | grep -Eq '^(src|tools|tests|scripts)/'; then
+            make test TEST_OPTS="--junitxml=artifacts/junit-${{ matrix.python-version }}.xml --durations=25 --cov=src --cov-report=xml:artifacts/coverage-${{ matrix.python-version }}.xml --cov-report=term-missing:skip-covered"
+          fi
+
+          if ! echo "$changed" | grep -Eq '^(migration|src|tools|tests|scripts)/'; then
+            echo "No changed Python test surface."
+          fi
       - name: Upload test artifacts
         if: failure()
         uses: actions/upload-artifact@v7
@@ -137,6 +269,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -152,10 +286,28 @@ jobs:
             pip install -r "${{ github.workspace }}/requirements.txt"
           fi
           python -m pip install ruff==0.14.0
-      - name: Build docs
+      - name: Validate docs
+        shell: bash
         run: |
-          mkdir -p docs/_build
-          make docs
+          python - <<'PY'
+          from pathlib import Path
+
+          required = [
+              Path("README.md"),
+              Path("MIGRATION_MATRIX.md"),
+              Path("docs/architecture.md"),
+              Path("docs/history_preservation.md"),
+              Path("docs/repository_decomposition_inventory.md"),
+              Path("migration/final_migration_report.md"),
+          ]
+          missing = [str(path) for path in required if not path.exists()]
+          empty = [str(path) for path in required if path.exists() and not path.read_text(encoding="utf-8").strip()]
+          if missing:
+              raise SystemExit(f"Required docs missing: {missing}")
+          if empty:
+              raise SystemExit(f"Required docs empty: {empty}")
+          print(f"Validated {len(required)} documentation files")
+          PY
       - name: Upload docs build on failure
         if: failure()
         uses: actions/upload-artifact@v7

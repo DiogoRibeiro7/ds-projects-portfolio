@@ -1,0 +1,14 @@
+{
+  "name": "example-export",
+  "destination": "migration/exports/example-export",
+  "overwrite": false,
+  "metadata": {
+    "policy": "copy-first"
+  },
+  "entries": [
+    {
+      "source": "README.md",
+      "target": "README.md"
+    }
+  ]
+}

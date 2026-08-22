@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "porto-lisbon-uhi-exposure"
+version = "0.1.0"
+description = "Urban heat island exposure and population representation analysis for Porto and Lisbon."
+authors = ["Diogo Ribeiro"]
+readme = "README.md"
+packages = [{ include = "uhi_exposure", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.14"
+pandas = "^2.2.0"
+numpy = ">=1.26,<3"
+matplotlib = "^3.8.0"
+geopandas = ">=0.14,<2"
+shapely = "^2.0.0"
+rasterio = "^1.3.9"
+pyarrow = ">=16,<22"
+requests = "^2.32.0"
+
+[tool.poetry.group.dev.dependencies]
+jupyterlab = "^4.2.0"
+pytest = "^8.2.0"
+ruff = "^0.5.0"
+mypy = "^1.10.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.2.0"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "scripts"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -82,6 +82,10 @@ Use this map when you want to jump directly to a project area:
 The complete notebook catalog (including archive/reference notebooks) remains in
 [`notebooks/README.md`](notebooks/README.md).
 
+The machine-readable featured-project catalogue is in [`projects.yml`](projects.yml).
+The repository architecture and copy-first export policy are documented in
+[`docs/architecture.md`](docs/architecture.md).
+
 ## End-to-end analytics examples
 
 - [`examples/eda_end_to_end.ipynb`](examples/eda_end_to_end.ipynb) for a complete

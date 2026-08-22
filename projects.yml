@@ -1,0 +1,154 @@
+projects:
+  - name: Portugal GDP Bayesian Revision
+    repository: ./migration/exports/portugal-gdp-bayesian-revision
+    category: Research & Statistical Modelling
+    status: validated-export
+    summary: Bayesian reconciliation of Portugal GDP and population revision scenarios.
+    methods:
+      - Bayesian modelling
+      - data reconciliation
+      - uncertainty quantification
+    technologies:
+      - Python
+      - pandas
+      - scipy
+      - pytest
+    featured: true
+  - name: Porto Lisbon UHI Exposure
+    repository: ./migration/exports/porto-lisbon-uhi-exposure
+    category: Applied Geospatial Analytics
+    status: validated-export
+    summary: Urban heat island exposure analysis for Porto and Lisbon population groups.
+    methods:
+      - geospatial analysis
+      - exposure metrics
+      - demographic comparison
+    technologies:
+      - Python
+      - GeoPandas
+      - pyarrow
+      - pytest
+    featured: true
+  - name: City Wage Cost Global
+    repository: ./migration/exports/city-wage-cost-global
+    category: Applied Economic Analytics
+    status: validated-export
+    summary: Notebook analysis comparing wages and living costs across US, UK, and EU cities.
+    methods:
+      - comparative analysis
+      - economic indicators
+      - notebook reporting
+    technologies:
+      - Python
+      - pandas
+      - pyarrow
+      - Jupyter
+    featured: true
+  - name: Portugal Salary Gamma Distribution
+    repository: ./migration/exports/pt-salary-gamma-distribution
+    category: Research & Statistical Modelling
+    status: validated-export
+    summary: Portugal salary distribution modelling with gamma-family fitting and reproducible tests.
+    methods:
+      - distribution fitting
+      - salary modelling
+      - statistical diagnostics
+    technologies:
+      - Python
+      - scipy
+      - pandas
+      - pytest
+    featured: true
+  - name: Experimentation Toolkit
+    repository: ./migration/exports/experimentation-toolkit
+    category: Reusable Data Science Software
+    status: validated-export
+    summary: Focused package for A/B testing, sample size, SRM checks, CUPED, and bandit helpers.
+    methods:
+      - hypothesis testing
+      - power analysis
+      - variance reduction
+      - bandits
+    technologies:
+      - Python
+      - NumPy
+      - pandas
+      - scipy
+    featured: true
+  - name: GenAI RAG Engineering
+    repository: ./migration/exports/genai-rag-engineering
+    category: AI Engineering
+    status: validated-export
+    summary: Offline-testable RAG engineering package with chunking, retrieval, guardrails, evaluation, and telemetry.
+    methods:
+      - retrieval augmented generation
+      - guardrails
+      - retrieval evaluation
+      - telemetry
+    technologies:
+      - Python
+      - pydantic
+      - scikit-learn
+      - pytest
+    featured: true
+  - name: Customer Analytics
+    repository: ./migration/exports/customer-analytics
+    category: Applied Machine Learning
+    status: validated-export
+    summary: Churn, segmentation, retention, and customer analytics snapshot with focused tests.
+    methods:
+      - churn modelling
+      - customer segmentation
+      - treatment-effect analysis
+      - model evaluation
+    technologies:
+      - Python
+      - scikit-learn
+      - statsmodels
+      - pandas
+    featured: true
+  - name: Healthcare Analysis
+    repository: ./notebooks/healthcare_analysis.ipynb
+    category: Applied Machine Learning
+    status: active-portfolio
+    summary: Portfolio notebook for healthcare analysis and model interpretation.
+    methods:
+      - exploratory analysis
+      - predictive modelling
+      - explainability
+    technologies:
+      - Python
+      - pandas
+      - scikit-learn
+      - Jupyter
+    featured: true
+  - name: Finance Credit Risk Stress Testing
+    repository: ./notebooks/finance_credit_risk_stress_testing.ipynb
+    category: Applied Risk Analytics
+    status: active-portfolio
+    summary: Credit-risk stress-testing notebook with portfolio-facing methodology.
+    methods:
+      - credit risk
+      - stress testing
+      - model evaluation
+    technologies:
+      - Python
+      - pandas
+      - scikit-learn
+      - Jupyter
+    featured: true
+  - name: MLOps Drift Lifecycle
+    repository: ./notebooks/mlops_mlflow_drift_lifecycle.ipynb
+    category: Production Data Science
+    status: active-portfolio
+    summary: Notebook demonstrating drift monitoring and MLOps lifecycle patterns.
+    methods:
+      - drift monitoring
+      - lifecycle management
+      - experiment tracking
+    technologies:
+      - Python
+      - MLflow
+      - pandas
+      - Jupyter
+    featured: false

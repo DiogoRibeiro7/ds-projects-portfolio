@@ -33,7 +33,6 @@ exclude_patterns = [
     "_build",
     "Thumbs.db",
     ".DS_Store",
-    "modules/*",
 ]
 
 # The suffix(es) of source filenames.

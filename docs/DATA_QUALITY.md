@@ -1,7 +1,10 @@
-# 📊 Data Quality Management System
+# Data Quality Utilities
 
 ## Overview
-A comprehensive data quality management system with advanced validation, profiling, preprocessing, and monitoring capabilities. This enterprise-grade solution ensures data integrity, tracks lineage, and provides real-time quality monitoring through an interactive dashboard.
+This page summarizes the reusable data quality utilities in the portfolio:
+schema validation, statistical checks, profiling, preprocessing, and a
+Streamlit dashboard for exploratory review. Treat these modules as portfolio
+building blocks and examples, not as a managed enterprise data platform.
 
 ## 📝 New Dataset Onboarding Checklist
 The following checklist helps ensure every new dataset is reviewed consistently before it is used in analysis or production.
@@ -53,9 +56,9 @@ assert result.passed, result.message
 For a one-command local check, this guard can be wrapped in CI by running a small
 validation script and failing the pipeline when `result.passed` is false.
 
-## ✅ Features Implemented
+## Maintained Modules
 
-### 1. **Data Quality Framework** (`src/data_quality/quality_framework.py`)
+### 1. Data Quality Framework (`src/data_quality/quality_framework.py`)
 
 #### Schema Validation
 - **JSON Schema Validation**: Validate structured data against predefined schemas
@@ -66,13 +69,16 @@ validation script and failing the pipeline when `result.passed` is false.
 from src.data_quality.quality_framework import SchemaValidator
 
 validator = SchemaValidator()
-validator.register_schema("customer_schema", {
-    "type": "object",
-    "properties": {
-        "age": {"type": "number", "minimum": 0, "maximum": 120},
-        "email": {"type": "string", "format": "email"}
-    }
-})
+validator.register_schema(
+    "customer_schema",
+    {
+        "type": "object",
+        "properties": {
+            "age": {"type": "number", "minimum": 0, "maximum": 120},
+            "email": {"type": "string", "format": "email"},
+        },
+    },
+)
 result = validator.validate_json_schema(data, "customer_schema")
 ```
 
@@ -91,8 +97,8 @@ result = validator.validate_json_schema(data, "customer_schema")
 from src.data_quality.quality_framework import StatisticalValidator
 
 validator = StatisticalValidator()
-result = validator.check_distribution(df['column'], expected_dist='normal')
-outliers = validator.detect_outliers(df, method='isolation_forest')
+result = validator.check_distribution(df["column"], expected_dist="normal")
+outliers = validator.detect_outliers(df, method="isolation_forest")
 ```
 
 #### Business Rule Validation
@@ -105,12 +111,10 @@ outliers = validator.detect_outliers(df, method='isolation_forest')
 from src.data_quality.quality_framework import DataIntegrityValidator
 
 validator = DataIntegrityValidator()
-result = validator.check_referential_integrity(
-    df1, df2, key1='customer_id', key2='id'
-)
+result = validator.check_referential_integrity(df1, df2, key1="customer_id", key2="id")
 ```
 
-### 2. **Data Profiling Tools** (`src/data_profiling/profiling_tools.py`)
+### 2. Data Profiling Tools (`src/data_profiling/profiling_tools.py`)
 
 #### Comprehensive Profiling
 - **Automatic Statistics**: Mean, median, mode, skewness, kurtosis
@@ -142,7 +146,7 @@ tracker = DataLineageTracker()
 lineage = tracker.track_transformation(
     input_datasets=["raw_sales", "raw_customers"],
     output_dataset="sales_analysis",
-    transformation={"type": "join", "operations": ["filter", "aggregate"]}
+    transformation={"type": "join", "operations": ["filter", "aggregate"]},
 )
 upstream = tracker.get_upstream_datasets("sales_analysis")
 ```
@@ -175,12 +179,12 @@ catalog.register_dataset(
     name="Sales Data 2024",
     description="Quarterly sales transactions",
     owner="Sales Team",
-    tags=["sales", "transactions", "quarterly"]
+    tags=["sales", "transactions", "quarterly"],
 )
 results = catalog.search_datasets(query="sales", tags=["quarterly"])
 ```
 
-### 3. **Data Preprocessing Pipelines** (`src/data_preprocessing/preprocessing_pipelines.py`)
+### 3. Data Preprocessing Pipelines (`src/data_preprocessing/preprocessing_pipelines.py`)
 
 #### Robust Outlier Detection
 - **Multiple Methods**: IQR, Z-score, Isolation Forest, LOF, DBSCAN
@@ -263,12 +267,12 @@ X_noisy = augmenter.add_noise(X, noise_level=0.01)
 X_mixed, y_mixed = augmenter.mixup(X, y, alpha=0.2)
 ```
 
-### 4. **Interactive Data Quality Dashboard** (`src/data_quality/quality_dashboard.py`)
+### 4. Interactive Data Quality Dashboard (`src/data_quality/quality_dashboard.py`)
 
-#### Real-time Monitoring
-- **Live Metrics**: Records/sec, quality score, anomalies, processing time
-- **Streaming Visualizations**: Real-time charts and graphs
-- **Alert System**: Configurable thresholds and notifications
+#### Monitoring View
+- Dataset-level quality metrics
+- Validation summaries and anomaly indicators
+- Interactive charts for exploratory review
 
 #### Module Features
 
@@ -328,7 +332,10 @@ pip install ydata-profiling sweetviz dtale
 ```python
 from src.data_quality.quality_framework import DataQualityFramework
 from src.data_profiling.profiling_tools import DataProfiler
-from src.data_preprocessing.preprocessing_pipelines import PreprocessingPipeline, PreprocessingConfig
+from src.data_preprocessing.preprocessing_pipelines import (
+    PreprocessingPipeline,
+    PreprocessingConfig,
+)
 
 # Load your data
 df = pd.read_csv("your_data.csv")
@@ -348,10 +355,12 @@ config = PreprocessingConfig(
     outlier_method="isolation_forest",
     imputation_strategy="knn",
     scaling_method="robust",
-    feature_engineering=True
+    feature_engineering=True,
 )
 pipeline = PreprocessingPipeline(config)
-X_processed, y_processed = pipeline.fit_transform(df.drop('target', axis=1), df['target'])
+X_processed, y_processed = pipeline.fit_transform(
+    df.drop("target", axis=1), df["target"]
+)
 ```
 
 ### Launch Dashboard
@@ -361,16 +370,18 @@ X_processed, y_processed = pipeline.fit_transform(df.drop('target', axis=1), df[
 streamlit run src/data_quality/quality_dashboard.py
 ```
 
-## 📊 Performance Metrics
+## Validation Checklist
 
-| Component | Metric | Value |
-|-----------|--------|-------|
-| Schema Validation | Speed | <100ms for 100K records |
-| Outlier Detection | Accuracy | 95%+ with Isolation Forest |
-| Missing Data Imputation | RMSE Reduction | 40-60% with KNN |
-| Feature Engineering | Features Generated | 10-100x original |
-| Profiling | Report Generation | <5s for 1M records |
-| Dashboard | Update Frequency | Real-time (sub-second) |
+Use these checks before presenting a dataset or model output:
+
+| Area | Check | Evidence to Keep |
+|------|-------|------------------|
+| Schema | Required columns, types, and valid ranges | Schema validation result |
+| Missingness | Missing-value rates and imputation rationale | Profile summary |
+| Outliers | Method, threshold, and review decision | Outlier report |
+| Integrity | Duplicates, keys, and referential checks | Validation summary |
+| Drift | Distribution shifts against prior snapshots | Comparison report |
+| Reproducibility | Dataset fingerprint and transformation notes | Manifest or README |
 
 ## 🏗️ Architecture
 
@@ -405,14 +416,21 @@ Data Quality System
 ### Custom Validation Rules
 
 ```python
-from src.data_quality.quality_framework import DataQualityRule
+from src.data_quality.quality_framework import (
+    DataQualityFramework,
+    DataQualityLevel,
+    DataQualityRule,
+)
+
 
 # Define custom rule
-def check_email_format(df, column='email'):
+def check_email_format(df, column="email"):
     import re
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     invalid = df[~df[column].str.match(pattern)]
     return len(invalid) == 0
+
 
 rule = DataQualityRule(
     rule_id="email_validation",
@@ -420,9 +438,10 @@ rule = DataQualityRule(
     description="Validates email format",
     rule_type="business",
     severity=DataQualityLevel.HIGH,
-    check_function=check_email_format
+    check_function=check_email_format,
 )
 
+framework = DataQualityFramework()
 framework.register_rule(rule)
 ```
 
@@ -431,12 +450,18 @@ framework.register_rule(rule)
 ```python
 # Chain multiple preprocessing steps
 from sklearn.pipeline import Pipeline
+from src.data_preprocessing.preprocessing_pipelines import (
+    AdvancedImputer,
+    DataTransformer,
+    FeatureEngineer,
+    OutlierDetector,
+)
 
 preprocessing_steps = [
-    ('outlier', OutlierDetector(method='isolation_forest')),
-    ('imputer', AdvancedImputer(strategy='iterative')),
-    ('scaler', DataTransformer(method='robust')),
-    ('engineer', FeatureEngineer())
+    ("outlier", OutlierDetector(method="isolation_forest")),
+    ("imputer", AdvancedImputer(strategy="iterative")),
+    ("scaler", DataTransformer(method="robust")),
+    ("engineer", FeatureEngineer()),
 ]
 
 full_pipeline = Pipeline(preprocessing_steps)
@@ -449,6 +474,7 @@ X_final = full_pipeline.fit_transform(X)
 # Schedule automated quality reports
 import schedule
 
+
 def run_quality_check():
     df = load_latest_data()
     report = dq_framework.run_validation(df)
@@ -458,39 +484,19 @@ def run_quality_check():
 
     save_report(report)
 
+
 schedule.every().day.at("09:00").do(run_quality_check)
 ```
 
-## 📈 Benefits
+## Portfolio Value
 
-- **🔍 Early Issue Detection**: Catch data quality issues before they impact models
-- **📊 Comprehensive Profiling**: Understand your data at a deep level
-- **🔧 Automated Preprocessing**: Consistent, reproducible data preparation
-- **🔗 Full Lineage Tracking**: Complete audit trail of data transformations
-- **📱 Real-time Monitoring**: Live quality metrics and alerts
-- **🎯 Business Rule Compliance**: Ensure data meets business requirements
-- **💾 Version Control**: Track and rollback data changes
-- **🚀 Performance Optimization**: Efficient processing of large datasets
-
-## 🔮 Future Enhancements
-
-- [ ] Machine learning-based anomaly detection
-- [ ] Automated data quality rule generation
-- [ ] Integration with cloud data quality services
-- [ ] Natural language data quality queries
-- [ ] Automated remediation suggestions
-- [ ] Data quality SLA monitoring
-- [ ] Multi-database support
-- [ ] Real-time streaming data quality
+- Demonstrates practical data validation and profiling patterns.
+- Provides reusable checks that can be applied in notebooks and project scripts.
+- Keeps data quality decisions visible to reviewers through reports, manifests,
+  and project README notes.
 
 ## 📚 Resources
 
 - [Great Expectations Documentation](https://docs.greatexpectations.io/)
 - [Pandera Documentation](https://pandera.readthedocs.io/)
 - [Data Quality Best Practices](https://www.oreilly.com/library/view/data-quality-fundamentals/9781492074250/)
-
----
-
-**Version**: 1.0.0
-**Last Updated**: January 2024
-**Status**: Production Ready ✅

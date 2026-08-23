@@ -9,7 +9,7 @@ which commands validate the maintained surface.
 :maxdepth: 2
 :hidden:
 
-README_ENHANCED
+portfolio_overview
 architecture
 PORTFOLIO_SCOPE
 installation

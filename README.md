@@ -119,7 +119,7 @@ Repository scope contract is documented in
 ## Read next
 
 - Portfolio visitors: [`docs/index.md`](docs/index.md) and
-  [`docs/README_ENHANCED.md`](docs/README_ENHANCED.md)
+  [`docs/portfolio_overview.md`](docs/portfolio_overview.md)
 - Contributors: [`docs/internal.md`](docs/internal.md),
   [`docs/contributor/development.md`](docs/contributor/development.md)
 - If you spot an issue: open it on GitHub

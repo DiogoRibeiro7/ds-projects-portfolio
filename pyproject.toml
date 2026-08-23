@@ -125,16 +125,12 @@ extend-exclude = [
     "deep_learning",
     "docs",
     "feature_engineering",
-    "modern-bank-churn",
     "nlp",
     "performance_optimization",
     "projects",
-    "recommendation-system",
-    "recommender_systems",
     "statistical_methods",
     "streamlit_apps",
     "tests",
-    "time-series",
     "time_series",
     "tutorials",
     "run_tests.py",
@@ -184,7 +180,7 @@ warn_unused_ignores = true
 warn_no_return = false
 warn_unreachable = false
 strict_equality = true
-exclude = '(^|/)(ab_testing|churn_prediction|dashboard_enhanced|deep_learning|docs|feature_engineering|modern-bank-churn|nlp|performance_optimization|projects|recommendation-system|recommender_systems|statistical_methods|streamlit_apps|time-series|time_series|tutorials)/|(^|/)(dashboard_enhanced/app\.py)$'
+exclude = '(^|/)(ab_testing|churn_prediction|dashboard_enhanced|deep_learning|docs|feature_engineering|nlp|performance_optimization|projects|statistical_methods|streamlit_apps|time_series|tutorials)/'
 
 [[tool.mypy.overrides]]
 module = [

@@ -83,12 +83,11 @@ The complete notebook catalog (including archive/reference notebooks) remains in
 [`notebooks/README.md`](notebooks/README.md).
 
 The machine-readable featured-project catalogue is in [`projects.yml`](projects.yml).
-The repository architecture and copy-first export policy are documented in
-[`docs/architecture.md`](docs/architecture.md).
+The portfolio structure is documented in [`docs/architecture.md`](docs/architecture.md).
 
 ## Standalone repositories
 
-Validated copy-first snapshots are also available as standalone repositories:
+Selected projects are also available as focused standalone repositories:
 
 - [experimentation-toolkit](https://github.com/DiogoRibeiro7/experimentation-toolkit)
 - [genai-rag-engineering](https://github.com/DiogoRibeiro7/genai-rag-engineering)

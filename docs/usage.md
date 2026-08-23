@@ -74,5 +74,5 @@ and related experiment diagnostics.
 
 - Run `python scripts/analyze_experiment.py --help` for CLI-driven reporting.
 - Browse `docs/api/index.md` for the curated API overview.
-- Check `docs/contributor/development.md` for testing, linting, and release
+- Check `docs/contributor/development.md` for testing, linting, and validation
   workflows.

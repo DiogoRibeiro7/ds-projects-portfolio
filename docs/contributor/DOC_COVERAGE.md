@@ -26,7 +26,6 @@ locally against the latest sources.
 | `scripts/analyze_experiment.py` | ✅ |
 | `scripts/fix_notebook_issues.py` | ✅ |
 | `scripts/run_notebook_tests.py` | ✅ |
-| `setup.py` | ✅ |
 
 ## Top Public APIs With Examples
 
@@ -81,8 +80,7 @@ the change in the “Updates in this PR” section below.
   coverage.
 - Enabled Ruff docstring checks in `pyproject.toml`, `.pre-commit-config.yaml`,
   and `.github/workflows/ci.yml`, keeping enforcement in sync with pre-commit
-  and CI. `setup.cfg` now scopes `pydocstyle` to every package except transient
-  build directories.
+  and CI.
 - Rewrote docstrings + inline comments for the most-used statistics utilities in
   `src/statistics/core.py` (ExperimentAnalyzer, `two_prop_ztest`, bootstrap
   helpers, multiple-testing corrections) and

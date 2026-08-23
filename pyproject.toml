@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel", "numpy"]
+requires = ["setuptools>=77.0", "wheel", "numpy"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,8 @@ name = "ds-portfolio"
 version = "1.0.0"
 description = "Professional data science portfolio with statistical analysis and experimentation"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     {name = "Diogo Ribeiro", email = "dfr@esmad.ipp.pt"}
 ]
@@ -18,7 +19,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
@@ -72,13 +72,10 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/diogoribeiro7/data-science-portfolio"
-Documentation = "https://diogoribeiro7.github.io/data-science-portfolio/"
-Repository = "https://github.com/diogoribeiro7/data-science-portfolio"
-"Bug Tracker" = "https://github.com/diogoribeiro7/data-science-portfolio/issues"
-
-[project.scripts]
-ds-portfolio = "ds_portfolio.cli:main"
+Homepage = "https://github.com/DiogoRibeiro7/ds-projects-portfolio"
+Documentation = "https://diogoribeiro7.github.io/ds-projects-portfolio/"
+Repository = "https://github.com/DiogoRibeiro7/ds-projects-portfolio"
+"Bug Tracker" = "https://github.com/DiogoRibeiro7/ds-projects-portfolio/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -143,7 +140,6 @@ extend-exclude = [
     "tutorials",
     "run_tests.py",
     "run_notebook_tests.py",
-    "setup.py",
 ]
 
 [tool.ruff.lint]
@@ -296,7 +292,6 @@ source = ["src"]
 omit = [
     "*/tests/*",
     "*/test_*",
-    "setup.py"
 ]
 
 [tool.coverage.report]

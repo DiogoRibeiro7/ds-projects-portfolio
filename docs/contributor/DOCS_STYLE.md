@@ -133,13 +133,12 @@ def run_power_simulation(
 
 - `ruff` enforces PEP 8/Pyflakes rules plus `pydocstyle` (`D`) checks using the
   Google convention.
-- `pydocstyle` remains configured in `setup.cfg` to keep parity with IDEs; its
-  config mirrors the Ruff docstring rules and documents any justified ignores.
+- Docstring linting is configured in `pyproject.toml` through Ruff's
+  pydocstyle rules.
 - The only globally ignored docstring codes are `D203` (required blank line
   before class docstrings) and `D213` (multi-line summary formatting) because
   Google-style docstrings expect those blank lines. Any additional ignore must
-  be added here with a justification before landing in `setup.cfg` or
-  `pyproject.toml`.
+  be added here with a justification before landing in `pyproject.toml`.
 - `tools/check_docstring_coverage.py` enforces 100% module/class/function
   coverage across `src/`, `statistical_methods/`, `dashboard_enhanced/`,
   `ab_testing/`, `time-series/`, `modern-bank-churn/`, and `tests/` (fixtures

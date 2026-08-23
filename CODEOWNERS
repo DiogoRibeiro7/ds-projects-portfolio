@@ -1,8 +1,0 @@
-# Default ownership
-* @ds-platform-maintainers @ml-systems-maintainers
-
-# Sensitive directories
-src/api/ @ds-platform-maintainers @ml-infra
-modern-bank-churn/ @ml-systems-maintainers
-statistical_methods/ @research-methods-team
-tests/ @qa-data-platform

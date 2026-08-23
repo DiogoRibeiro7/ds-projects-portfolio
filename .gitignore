@@ -167,14 +167,13 @@ logs/
 cache/
 
 # Output directories
+artifacts/
 outputs/
 results/
 test_results/
 docs/_build/
 
 # Repository hygiene: generated quality artifacts and local scratch
-archive/runtime/
-archive/tmp/
 _build_*.py
 coverage.xml
 htmlcov/

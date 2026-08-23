@@ -4,8 +4,8 @@ This repository remains a data science projects portfolio. It contains active pr
 notebooks, examples, documentation, tests, and selected reusable source modules.
 
 The migration work added copy-first export snapshots under `migration/exports/` for
-components that can later become independent repositories. Originals stay in this repository
-until a destination exists and removal is explicitly approved.
+components that now also exist as independent repositories. Originals stay in this
+repository unless removal is explicitly approved.
 
 ## Repository Model
 
@@ -27,13 +27,13 @@ This avoids destroying project context just to make the repository smaller.
 
 ## Validated Export Snapshots
 
-- `migration/exports/experimentation-toolkit`
-- `migration/exports/genai-rag-engineering`
-- `migration/exports/portugal-gdp-bayesian-revision`
-- `migration/exports/porto-lisbon-uhi-exposure`
-- `migration/exports/city-wage-cost-global`
-- `migration/exports/pt-salary-gamma-distribution`
-- `migration/exports/customer-analytics`
+- `migration/exports/experimentation-toolkit` -> `https://github.com/DiogoRibeiro7/experimentation-toolkit`
+- `migration/exports/genai-rag-engineering` -> `https://github.com/DiogoRibeiro7/genai-rag-engineering`
+- `migration/exports/portugal-gdp-bayesian-revision` -> `https://github.com/DiogoRibeiro7/portugal-gdp-bayesian-revision`
+- `migration/exports/porto-lisbon-uhi-exposure` -> `https://github.com/DiogoRibeiro7/porto-lisbon-uhi-exposure`
+- `migration/exports/city-wage-cost-global` -> `https://github.com/DiogoRibeiro7/city-wage-cost-global`
+- `migration/exports/pt-salary-gamma-distribution` -> `https://github.com/DiogoRibeiro7/pt-salary-gamma-distribution`
+- `migration/exports/customer-analytics` -> `https://github.com/DiogoRibeiro7/customer-analytics`
 
 ## Catalogue
 
@@ -53,8 +53,8 @@ Required fields per project:
 
 ## Boundaries
 
-Independent repositories can be created later from export snapshots. This repository remains
-the canonical portfolio source until that happens.
+Independent repositories have been created from the export snapshots. This repository
+remains the canonical portfolio source for the original active project files.
 
 Generated artifacts and local caches are not promoted as portfolio content. They are tracked
 as cleanup candidates in the migration matrix, but cleanup requires explicit approval.

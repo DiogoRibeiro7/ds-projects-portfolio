@@ -1,6 +1,6 @@
 projects:
   - name: Portugal GDP Bayesian Revision
-    repository: ./migration/exports/portugal-gdp-bayesian-revision
+    repository: https://github.com/DiogoRibeiro7/portugal-gdp-bayesian-revision
     category: Research & Statistical Modelling
     status: validated-export
     summary: Bayesian reconciliation of Portugal GDP and population revision scenarios.
@@ -15,7 +15,7 @@ projects:
       - pytest
     featured: true
   - name: Porto Lisbon UHI Exposure
-    repository: ./migration/exports/porto-lisbon-uhi-exposure
+    repository: https://github.com/DiogoRibeiro7/porto-lisbon-uhi-exposure
     category: Applied Geospatial Analytics
     status: validated-export
     summary: Urban heat island exposure analysis for Porto and Lisbon population groups.
@@ -30,7 +30,7 @@ projects:
       - pytest
     featured: true
   - name: City Wage Cost Global
-    repository: ./migration/exports/city-wage-cost-global
+    repository: https://github.com/DiogoRibeiro7/city-wage-cost-global
     category: Applied Economic Analytics
     status: validated-export
     summary: Notebook analysis comparing wages and living costs across US, UK, and EU cities.
@@ -45,7 +45,7 @@ projects:
       - Jupyter
     featured: true
   - name: Portugal Salary Gamma Distribution
-    repository: ./migration/exports/pt-salary-gamma-distribution
+    repository: https://github.com/DiogoRibeiro7/pt-salary-gamma-distribution
     category: Research & Statistical Modelling
     status: validated-export
     summary: Portugal salary distribution modelling with gamma-family fitting and reproducible tests.
@@ -60,7 +60,7 @@ projects:
       - pytest
     featured: true
   - name: Experimentation Toolkit
-    repository: ./migration/exports/experimentation-toolkit
+    repository: https://github.com/DiogoRibeiro7/experimentation-toolkit
     category: Reusable Data Science Software
     status: validated-export
     summary: Focused package for A/B testing, sample size, SRM checks, CUPED, and bandit helpers.
@@ -76,7 +76,7 @@ projects:
       - scipy
     featured: true
   - name: GenAI RAG Engineering
-    repository: ./migration/exports/genai-rag-engineering
+    repository: https://github.com/DiogoRibeiro7/genai-rag-engineering
     category: AI Engineering
     status: validated-export
     summary: Offline-testable RAG engineering package with chunking, retrieval, guardrails, evaluation, and telemetry.
@@ -92,7 +92,7 @@ projects:
       - pytest
     featured: true
   - name: Customer Analytics
-    repository: ./migration/exports/customer-analytics
+    repository: https://github.com/DiogoRibeiro7/customer-analytics
     category: Applied Machine Learning
     status: validated-export
     summary: Churn, segmentation, retention, and customer analytics snapshot with focused tests.

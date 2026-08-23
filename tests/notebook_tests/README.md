@@ -1,6 +1,6 @@
 # Jupyter Notebook Testing Framework
 
-A comprehensive testing framework for validating and executing Jupyter notebooks with detailed reporting and CI/CD integration.
+A notebook testing framework for validating and executing portfolio notebooks with detailed reporting and CI automation.
 
 ## Features
 
@@ -19,7 +19,7 @@ A comprehensive testing framework for validating and executing Jupyter notebooks
 - **Cell Timing Capture**: Records execution time for each cell
 - **Error Handling**: Captures and reports execution errors with full tracebacks
 - **Memory Monitoring**: Tracks memory usage throughout execution
-- **Parallel Execution**: Supports concurrent notebook testing for faster CI/CD
+- **Parallel Execution**: Supports concurrent notebook testing for faster CI runs
 
 ### 3. Data Validation
 - **Schema Validation**: Verifies DataFrames match expected schemas
@@ -29,7 +29,7 @@ A comprehensive testing framework for validating and executing Jupyter notebooks
 
 ### 4. Reporting
 - **HTML Reports**: Beautiful, interactive HTML reports with charts
-- **JSON Output**: Machine-readable results for CI/CD integration
+- **JSON Output**: Machine-readable results for CI automation
 - **Markdown Summaries**: Quick overview of test results
 - **GitHub Integration**: Automatic PR comments with test results
 
@@ -53,7 +53,7 @@ pre-commit install
 python scripts/run_notebook_tests.py --validate-only
 
 # Run full tests (validation + execution)
-python scripts/run_notebook_tests.py --dirs ab_testing archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn
+python scripts/run_notebook_tests.py --dirs projects/ab_testing
 
 # Run tests in parallel
 python scripts/run_notebook_tests.py --parallel
@@ -74,8 +74,7 @@ from tests.notebook_tests.report_generator import generate_html_report
 # Create runner
 runner = NotebookTestRunner(
     notebook_dirs=[
-        "ab_testing",
-        "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn",
+        "projects/ab_testing",
     ],
     output_dir="test_results",
     timeout=600,
@@ -132,14 +131,14 @@ Edit `tests/notebook_tests/test_config.json`:
 }
 ```
 
-## CI/CD Integration
+## CI Integration
 
 ### GitHub Actions
 
 The framework includes a GitHub Actions workflow (`.github/workflows/notebook-tests.yml`) that:
 
 1. Runs on push/PR for notebook changes
-2. Tests with multiple Python versions
+2. Tests with Python 3.11
 3. Validates notebooks first (quick check)
 4. Executes notebooks if validation passes
 5. Comments results on PRs
@@ -207,7 +206,7 @@ repos:
 6. **Clean up resources**: Delete large variables when done
 
 ### For Test Configuration
-1. **Set appropriate timeouts**: Balance thoroughness with CI/CD speed
+1. **Set appropriate timeouts**: Balance thoroughness with CI speed
 2. **Define expected schemas**: Document data structure expectations
 3. **Specify metric ranges**: Set reasonable bounds for model performance
 4. **Use parallel execution**: Speed up tests when possible
@@ -249,7 +248,7 @@ tests/notebook_tests/
 └── README.md              # This file
 
 scripts/run_notebook_tests.py  # Main CLI entry point
-.github/workflows/            # CI/CD workflows
+.github/workflows/            # CI workflows
 .pre-commit-config.yaml       # Pre-commit hooks
 ```
 

@@ -24,7 +24,6 @@ Additional workflows cover deeper or less frequent checks:
 - `.github/workflows/notebook-tests.yml`: notebook validation.
 - `.github/workflows/codeql-analysis.yml`: security analysis.
 - `.github/workflows/dependency-update.yml`: dependency maintenance.
-- `.github/workflows/release.yml`: release hygiene.
 
 These workflows are useful for maintenance, but the fast CI path remains the
 default signal for normal portfolio cleanup and documentation changes.

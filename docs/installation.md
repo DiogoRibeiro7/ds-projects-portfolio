@@ -36,8 +36,8 @@ pip install -r requirements.txt
 ## Dependency File Guide
 
 - `requirements.txt`: Primary user environment used by README and docs quick starts.
-- `requirements-dev.txt`: Contributor/maintainer environment (lint, type-checking,
-  pre-commit, release tooling).
+- `requirements-dev.txt`: Contributor/maintainer environment (lint,
+  type-checking, pre-commit, and docs tooling).
 - `requirements-test.txt`: Optional CI/test stack for notebook and benchmark runs.
 - `requirements-core.txt`: Internal CI baseline for notebook validation jobs.
 - `requirements-notebook-healthcare-shap.txt`: Optional notebook-only stack for

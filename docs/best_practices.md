@@ -580,7 +580,8 @@ def predict():
 ```
 
 ### 3. Change Documentation
-Maintain changelog:
+Maintain concise release or change notes when a project has a public versioned
+surface:
 
 ```markdown
 # Changelog

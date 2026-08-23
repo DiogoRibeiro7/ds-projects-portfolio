@@ -7,9 +7,6 @@ sphinx-autobuild==2025.8.25
 myst-parser==2.0.0
 nbsphinx==0.9.8
 
-# For API documentation
-sphinx-autodoc-typehints==3.0.1
-
 # For better formatting
 docutils==0.22.4
 pygments>=2.20.0

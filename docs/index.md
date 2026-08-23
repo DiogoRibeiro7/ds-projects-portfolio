@@ -12,10 +12,16 @@ which commands validate the maintained surface.
 README_ENHANCED
 architecture
 PORTFOLIO_SCOPE
+installation
 quickstart
 usage
+best_practices
+DATA_QUALITY
+ROBUSTNESS
 methodology/index
+tutorials/index
 api/index
+deployment
 ```
 
 ```{toctree}
@@ -24,6 +30,7 @@ api/index
 :hidden:
 
 internal
+PORTFOLIO_RELEASE_CHECKLIST
 ```
 
 ## Review Path

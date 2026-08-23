@@ -13,8 +13,8 @@ Public symbols are anything meant to be imported or executed by consumers:
   services, data utilities).
 - Project packages under `projects/` that expose importable Python modules used
   by notebooks, examples, or tests.
-- Standalone scripts in `scripts/` (for example
-  `scripts/advanced_experimentation_platform.py`, `scripts/analyze_experiment.py`).
+- Standalone scripts in `scripts/` that are referenced by documentation or
+  active workflows, such as `scripts/analyze_experiment.py`.
 - Any module exported from `__init__.py`, referenced by documentation, invoked
   by CLI entry points (`pyproject.toml` / `src/api/ml_api.py`), or imported by
   automated jobs/tests/notebooks.

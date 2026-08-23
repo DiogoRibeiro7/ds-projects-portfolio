@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Enhanced analysis script for A/B testing portfolio projects.
+"""Run A/B testing analyses for portfolio projects.
 
-This script provides a comprehensive command-line interface for running A/B test analyses
-with all TODOs implemented including proper package imports, configuration files,
-batch processing, and professional reporting.
+This script provides a command-line interface for experiment analysis, batch
+processing, and HTML/JSON reporting.
 """
 
 import argparse
@@ -20,16 +19,11 @@ from typing import Any
 import pandas as pd
 import yaml
 
-# Import our enhanced modules
-try:
-    from src.visualization.plots import (
-        ExperimentDashboard,
-        plot_conversion_funnel,
-        plot_experiment_results,
-        plot_time_series_analysis,
-        set_publication_style,
-    )
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
+try:
     from src.data_processing.cleaning import (
         DataQualityChecker,
         apply_cuped,
@@ -43,6 +37,13 @@ try:
         calculate_sample_size,
         two_prop_ztest,
     )
+    from src.vizualization.plots import (
+        ExperimentDashboard,
+        plot_conversion_funnel,
+        plot_experiment_results,
+        plot_time_series_analysis,
+        set_publication_style,
+    )
 except ImportError as e:
     print(f"Error importing modules: {e}")
     print(
@@ -52,10 +53,7 @@ except ImportError as e:
 
 
 def setup_logging(verbose: bool = False, log_file: str | None = None) -> None:
-    """Configure comprehensive logging with structured format and file output.
-
-    Implements TODO: Add structured logging with JSON format for better parsing
-    """
+    """Configure logging with structured format and optional file output."""
     level = logging.DEBUG if verbose else logging.INFO
 
     # Create formatter with timestamps and module names
@@ -90,13 +88,7 @@ def setup_logging(verbose: bool = False, log_file: str | None = None) -> None:
 
 
 def load_experiment_data(file_path: str) -> pd.DataFrame:
-    """Load experiment data with support for multiple formats and database connections.
-
-    Implements TODOs:
-    - Add support for database connections and streaming data
-    - Add automatic delimiter detection and encoding handling
-    - Add validation of loaded data structure
-    """
+    """Load experiment data with support for common local file formats."""
     path = Path(file_path)
 
     if not path.exists():
@@ -168,10 +160,7 @@ def load_experiment_data(file_path: str) -> pd.DataFrame:
 
 
 def load_configuration(config_file: str) -> dict[str, Any]:
-    """Load and validate configuration from YAML or JSON file.
-
-    Implements TODO: Implement configuration file loading with support for both formats
-    """
+    """Load and validate configuration from a YAML or JSON file."""
     if not config_file:
         return {}
 
@@ -204,10 +193,7 @@ def load_configuration(config_file: str) -> dict[str, Any]:
 
 
 def validate_configuration(config: dict[str, Any]) -> dict[str, Any]:
-    """Validate and set defaults for configuration.
-
-    Implements TODO: Add comprehensive configuration validation
-    """
+    """Validate configuration and fill missing defaults."""
     # Default configuration template
     default_config = {
         "data": {
@@ -292,12 +278,7 @@ def validate_configuration(config: dict[str, Any]) -> dict[str, Any]:
 def run_comprehensive_analysis(
     df: pd.DataFrame, config: dict[str, Any]
 ) -> dict[str, Any]:
-    """Run comprehensive A/B test analysis pipeline.
-
-    Implements TODOs:
-    - Comprehensive analysis pipeline with all standard checks
-    - SRM check, power analysis, effect size calculations, confidence intervals
-    """
+    """Run the A/B test analysis pipeline."""
     logger = logging.getLogger(__name__)
     logger.info("Starting comprehensive analysis pipeline")
 
@@ -440,10 +421,7 @@ def run_comprehensive_analysis(
 
 
 def run_power_analysis(df: pd.DataFrame, config: dict[str, Any]) -> dict[str, Any]:
-    """Run comprehensive power analysis.
-
-    Implements TODO: Add statistical power calculation for observed effect sizes
-    """
+    """Run power analysis for observed experiment effects."""
     power_results = {}
 
     try:
@@ -501,10 +479,7 @@ def run_power_analysis(df: pd.DataFrame, config: dict[str, Any]) -> dict[str, An
 
 
 def run_sequential_analysis(df: pd.DataFrame, config: dict[str, Any]) -> dict[str, Any]:
-    """Run sequential testing analysis.
-
-    Implements TODO: Add support for sequential testing and α-spending functions
-    """
+    """Return sequential testing metadata for the analysis report."""
     sequential_results = {}
 
     try:
@@ -525,10 +500,7 @@ def run_sequential_analysis(df: pd.DataFrame, config: dict[str, Any]) -> dict[st
 def generate_final_recommendations(
     results: dict[str, Any], config: dict[str, Any]
 ) -> list[str]:
-    """Generate final actionable recommendations based on analysis results.
-
-    Implements TODO: Add automated interpretation of results
-    """
+    """Generate actionable recommendations based on analysis results."""
     recommendations = []
 
     # Data quality recommendations
@@ -587,13 +559,7 @@ def generate_final_recommendations(
 def generate_comprehensive_report(
     results: dict[str, Any], config: dict[str, Any], output_path: str
 ) -> None:
-    """Generate comprehensive analysis report with multiple formats.
-
-    Implements TODOs:
-    - Professional HTML report template
-    - Add automated interpretation of results
-    - Multiple export formats
-    """
+    """Generate an analysis report in the configured format."""
     logger = logging.getLogger(__name__)
 
     try:
@@ -629,10 +595,7 @@ def generate_comprehensive_report(
 def generate_html_report(
     results: dict[str, Any], config: dict[str, Any], output_path: str
 ) -> None:
-    """Generate professional HTML report.
-
-    Implements TODO: Create professional HTML report template
-    """
+    """Generate an HTML analysis report."""
     html_template = """
     <!DOCTYPE html>
     <html lang="en">
@@ -1027,10 +990,7 @@ def generate_technical_details_html(
 def create_visualizations(
     df: pd.DataFrame, config: dict[str, Any], output_dir: str
 ) -> dict[str, str]:
-    """Create and save visualizations.
-
-    Implements TODO: Add diagnostic plots for effectiveness
-    """
+    """Create and save configured visualizations."""
     logger = logging.getLogger(__name__)
 
     if not config["output"]["include_plots"]:
@@ -1075,10 +1035,7 @@ def create_visualizations(
 def process_batch_experiments(
     input_directory: str, config: dict[str, Any], output_directory: str
 ) -> dict[str, dict[str, Any]]:
-    """Process multiple experiment files in batch.
-
-    Implements TODO: Add support for batch processing multiple experiments
-    """
+    """Process multiple experiment files in batch."""
     logger = logging.getLogger(__name__)
     logger.info(f"Starting batch processing of experiments in {input_directory}")
 
@@ -1195,10 +1152,7 @@ def generate_batch_summary_report(
 
 
 def signal_handler(signum, frame):
-    """Handle keyboard interrupts gracefully.
-
-    Implements TODO: Handle keyboard interrupts gracefully
-    """
+    """Handle termination signals and clean temporary files."""
     logger = logging.getLogger(__name__)
     logger.info("Received interrupt signal. Cleaning up...")
 
@@ -1213,21 +1167,13 @@ def signal_handler(signum, frame):
 
 
 def main():
-    """Enhanced main function with comprehensive CLI and error handling.
-
-    Implements all TODOs:
-    - Sophisticated CLI with subcommands
-    - Configuration files
-    - Batch processing
-    - Better error handling and recovery
-    - Keyboard interrupt handling
-    """
+    """Run the command-line interface."""
     # Set up signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
     parser = argparse.ArgumentParser(
-        description="Enhanced A/B Testing Analysis Tool with comprehensive statistical methods",
+        description="A/B testing analysis tool with reporting and sample-size helpers",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

@@ -12,10 +12,8 @@ on:
       - "tests/**"
       - "scripts/**"
       - "docs/**"
-      - "migration/**"
       - "requirements*.txt"
       - "README.md"
-      - "MIGRATION_MATRIX.md"
       - "projects.yml"
       - "pyproject.toml"
       - "pytest.ini"
@@ -31,10 +29,8 @@ on:
       - "tests/**"
       - "scripts/**"
       - "docs/**"
-      - "migration/**"
       - "requirements*.txt"
       - "README.md"
-      - "MIGRATION_MATRIX.md"
       - "projects.yml"
       - "pyproject.toml"
       - "pytest.ini"
@@ -83,7 +79,7 @@ jobs:
               base="HEAD^"
             fi
           fi
-          files="$(git diff --name-only "$base"...HEAD -- '*.py' | grep -Ev '^(migration/exports|archive/)' || true)"
+          files="$(git diff --diff-filter=ACMRT --name-only "$base"...HEAD -- '*.py' | grep -Ev '^(archive/)' || true)"
           {
             echo "files<<EOF"
             echo "$files"
@@ -182,21 +178,14 @@ jobs:
             fi
           fi
 
-          files="$(git diff --name-only "$base"...HEAD -- '*.py' | grep -Ev '^(migration/exports|archive/)' || true)"
+          files="$(git diff --diff-filter=ACMRT --name-only "$base"...HEAD -- '*.py' | grep -Ev '^(archive/)' || true)"
           if [ -z "$files" ]; then
             echo "No changed Python files to type-check."
             exit 0
           fi
 
-          if echo "$files" | grep -q '^migration/'; then
-            mypy migration
-          fi
-
-          root_files="$(echo "$files" | grep -Ev '^migration/' || true)"
-          if [ -n "$root_files" ]; then
-            echo "$root_files" > /tmp/root-python.txt
-            xargs -r mypy --ignore-missing-imports < /tmp/root-python.txt
-          fi
+          echo "$files" > /tmp/root-python.txt
+          xargs -r mypy --ignore-missing-imports < /tmp/root-python.txt
 
   tests:
     name: Tests (Python ${{ matrix.python-version }})
@@ -244,15 +233,11 @@ jobs:
           changed="$(git diff --name-only "$base"...HEAD)"
           mkdir -p artifacts
 
-          if echo "$changed" | grep -q '^migration/'; then
-            pytest migration --junitxml=artifacts/junit-migration-${{ matrix.python-version }}.xml
-          fi
-
           if echo "$changed" | grep -Eq '^(src|tools|tests|scripts)/'; then
             make test TEST_OPTS="--junitxml=artifacts/junit-${{ matrix.python-version }}.xml --durations=25 --cov=src --cov-report=xml:artifacts/coverage-${{ matrix.python-version }}.xml --cov-report=term-missing:skip-covered"
           fi
 
-          if ! echo "$changed" | grep -Eq '^(migration|src|tools|tests|scripts)/'; then
+          if ! echo "$changed" | grep -Eq '^(src|tools|tests|scripts)/'; then
             echo "No changed Python test surface."
           fi
       - name: Upload test artifacts
@@ -298,11 +283,10 @@ jobs:
 
           required = [
               Path("README.md"),
-              Path("MIGRATION_MATRIX.md"),
+              Path("projects.yml"),
               Path("docs/architecture.md"),
-              Path("docs/history_preservation.md"),
-              Path("docs/repository_decomposition_inventory.md"),
-              Path("migration/final_migration_report.md"),
+              Path("docs/index.md"),
+              Path("docs/PORTFOLIO_SCOPE.md"),
           ]
           missing = [str(path) for path in required if not path.exists()]
           empty = [str(path) for path in required if path.exists() and not path.read_text(encoding="utf-8").strip()]

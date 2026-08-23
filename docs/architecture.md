@@ -1,44 +1,38 @@
 # Portfolio Architecture
 
-This repository remains a data science projects portfolio. It contains active projects,
-notebooks, examples, documentation, tests, and selected reusable source modules.
-
-The migration work added copy-first export snapshots under `migration/exports/` for
-components that now also exist as independent repositories. Originals stay in this
-repository unless removal is explicitly approved.
+This repository is the active portfolio surface for data science projects, notebooks,
+examples, documentation, and selected reusable source modules.
 
 ## Repository Model
 
-The working model is:
+The active tree is intentionally organized for review:
 
-- portfolio source remains here;
-- reusable or flagship components may also have validated export snapshots;
-- generated artifacts are identified for possible cleanup but are not removed by default;
-- stale infrastructure remains archival/reference unless a focused destination is approved.
+- `README.md` provides the first-pass portfolio narrative.
+- `projects.yml` is the machine-readable catalogue for featured work.
+- `notebooks/`, `projects/`, and `examples/` contain the in-repository portfolio material.
+- `src/`, `tests/`, `scripts/`, and `tools/` support reusable code and validation.
+- `archive/` keeps historical/reference material away from the primary portfolio path.
 
-## Why Not Convert To A Tiny Hub
+## Standalone Repositories
 
-The original decomposition prompt proposed converting this repository into a lightweight
-hub. That was superseded by the user's later policy: keep data science projects and
-portfolio files in this repo, and move/copy unrelated material only when there is a real
-destination.
+Some portfolio projects also have focused standalone repositories with independent
+dependencies and CI:
 
-This avoids destroying project context just to make the repository smaller.
+- `experimentation-toolkit`: `https://github.com/DiogoRibeiro7/experimentation-toolkit`
+- `genai-rag-engineering`: `https://github.com/DiogoRibeiro7/genai-rag-engineering`
+- `portugal-gdp-bayesian-revision`: `https://github.com/DiogoRibeiro7/portugal-gdp-bayesian-revision`
+- `porto-lisbon-uhi-exposure`: `https://github.com/DiogoRibeiro7/porto-lisbon-uhi-exposure`
+- `city-wage-cost-global`: `https://github.com/DiogoRibeiro7/city-wage-cost-global`
+- `pt-salary-gamma-distribution`: `https://github.com/DiogoRibeiro7/pt-salary-gamma-distribution`
+- `customer-analytics`: `https://github.com/DiogoRibeiro7/customer-analytics`
 
-## Validated Export Snapshots
-
-- `migration/exports/experimentation-toolkit` -> `https://github.com/DiogoRibeiro7/experimentation-toolkit`
-- `migration/exports/genai-rag-engineering` -> `https://github.com/DiogoRibeiro7/genai-rag-engineering`
-- `migration/exports/portugal-gdp-bayesian-revision` -> `https://github.com/DiogoRibeiro7/portugal-gdp-bayesian-revision`
-- `migration/exports/porto-lisbon-uhi-exposure` -> `https://github.com/DiogoRibeiro7/porto-lisbon-uhi-exposure`
-- `migration/exports/city-wage-cost-global` -> `https://github.com/DiogoRibeiro7/city-wage-cost-global`
-- `migration/exports/pt-salary-gamma-distribution` -> `https://github.com/DiogoRibeiro7/pt-salary-gamma-distribution`
-- `migration/exports/customer-analytics` -> `https://github.com/DiogoRibeiro7/customer-analytics`
+This repository remains the portfolio index and the home of active in-repo project files.
+The standalone repositories are separate maintenance surfaces, not duplicated working
+copies inside this repo.
 
 ## Catalogue
 
-`projects.yml` is the machine-readable catalogue for featured portfolio work. It includes
-validated export snapshots and active portfolio notebooks/projects.
+`projects.yml` is the source of truth for featured project metadata.
 
 Required fields per project:
 
@@ -53,8 +47,6 @@ Required fields per project:
 
 ## Boundaries
 
-Independent repositories have been created from the export snapshots. This repository
-remains the canonical portfolio source for the original active project files.
-
-Generated artifacts and local caches are not promoted as portfolio content. They are tracked
-as cleanup candidates in the migration matrix, but cleanup requires explicit approval.
+Generated artifacts, caches, local runtime outputs, and migration workspaces are not part of
+the active portfolio surface. Historical material can remain in Git history or `archive/`,
+but the root tree should stay focused on project discovery and review.

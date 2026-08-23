@@ -1,7 +1,0 @@
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.ipynb_checkpoints/
-data/raw/
-data/generated/
-.venv/

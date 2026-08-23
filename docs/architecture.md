@@ -10,7 +10,7 @@ The active tree is intentionally organized for review:
 - `README.md` provides the first-pass portfolio narrative.
 - `projects.yml` is the machine-readable catalogue for featured work.
 - `notebooks/`, `projects/`, and `examples/` contain the in-repository portfolio material.
-- `src/`, `tests/`, `scripts/`, and `tools/` support reusable code and validation.
+- `src/`, `tests/`, and `scripts/` support reusable code and validation.
 - Historical/reference material is kept outside this repository so the active
   tree stays focused on portfolio review.
 

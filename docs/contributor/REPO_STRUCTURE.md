@@ -5,7 +5,6 @@ This repository is intentionally a monorepo, but not all directories have the sa
 ## Active code (quality-gated)
 
 - `src/`: reusable production-style Python modules.
-- `tools/`: small developer utilities used by checks and workflows.
 - `tests/`: automated unit/integration/regression tests for active code.
 - `scripts/`: repo scripts that support active workflows.
 - `docs/`: user and contributor documentation.

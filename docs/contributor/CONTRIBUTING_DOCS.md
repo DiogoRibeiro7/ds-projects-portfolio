@@ -39,10 +39,9 @@ fixing bugs, or improving notebooks to keep documentation consistent.
 
 ## 4. Documentation Validation Workflow
 
-1. Run `python tools/check_docstring_coverage.py` to check public docstring coverage.
-2. Run `pre-commit run --all-files` to execute Ruff (with docstring rules),
-   `pydocstyle`, formatting, and custom hooks.
-3. Build the docs site: `cd docs && make html`. This confirms that docstrings
+1. Run `pre-commit run --all-files` to execute Ruff, formatting, mypy, and
+   repository hygiene hooks.
+2. Build the docs site: `cd docs && make html`. This confirms that docstrings
    render correctly in the API reference.
 
 ## 5. Pull Request Checklist

@@ -136,7 +136,6 @@ extend-exclude = [
     "tests",
     "time-series",
     "time_series",
-    "tools",
     "tutorials",
     "run_tests.py",
     "run_notebook_tests.py",
@@ -167,20 +166,12 @@ ignore = [
     "B023",
     "B028",
     "B904",
-    "D203",
-    "D213",
 ]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
-
-[tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["D"]
 
 # mypy configuration
 [tool.mypy]
 python_version = "3.11"
-files = ["src", "tools"]
+files = ["src"]
 warn_return_any = false
 warn_unused_configs = true
 disallow_untyped_defs = false

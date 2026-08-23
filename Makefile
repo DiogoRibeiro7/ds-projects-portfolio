@@ -3,7 +3,7 @@ PYTEST ?= pytest
 MYPY ?= mypy
 SPHINXBUILD ?= sphinx-build
 TEST_OPTS ?=
-ACTIVE_PATHS ?= src tools tests scripts
+ACTIVE_PATHS ?= src tests scripts
 
 .PHONY: check format lint typecheck test test-unit test-integration test-regression test-slow test-all docs build clean
 
@@ -14,7 +14,7 @@ lint:
 	ruff check $(ACTIVE_PATHS)
 
 typecheck:
-	$(MYPY) tools/ src/ --ignore-missing-imports
+	$(MYPY) src/ --ignore-missing-imports
 
 test:
 	$(PYTEST) -m "(unit or integration or regression) and not slow" $(TEST_OPTS)

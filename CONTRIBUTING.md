@@ -27,13 +27,13 @@ Optional extras:
 Command | Purpose
 --- | ---
 `make format` | Apply in-place formatting with Ruff
-`make lint` | Static analysis / lint checks (matches CI)
-`make typecheck` | Run mypy on `tools/` and `src/`
+`make lint` | Broad local static analysis / lint checks
+`make typecheck` | Run mypy on `src/`
 `make test` | Fast pytest suite (unit + integration + regression)
 `make docs` | Build HTML docs (`docs/_build`)
 `make build` | Package distributions via `python -m build`
 `make clean` | Remove caches, dist artifacts, docs build
-`make check` | Combo of lint + typecheck + test (same as CI)
+`make check` | Broad local lint + typecheck + test suite
 `make test-slow` | Optional long-running suite for local/deep validation
 `python scripts/generate_regression_baselines.py` | Refresh regression snapshots when expected outputs change
 `python examples/run_demo.py` | Smoke-test the stack end-to-end

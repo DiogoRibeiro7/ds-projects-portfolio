@@ -6,7 +6,6 @@ Follow these steps to get a fully reproducible environment for the portfolio.
 
 - Python 3.10+ (matches `pyproject.toml`)
 - Git
-- Optional: Docker + docker-compose for containerized workflows
 
 ## Create an Environment
 

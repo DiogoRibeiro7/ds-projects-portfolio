@@ -15,7 +15,6 @@ This repository is intentionally a monorepo, but not all directories have the sa
 - `projects/`: portfolio implementations and demos, including per-project experiments.
 - `notebooks/`: exploratory and domain notebooks.
 - `examples/`: runnable examples and notebook-facing demos.
-- `deployment/`: portfolio-facing deployment entry points (primarily `docker/` and `model_server/`).
 - `tutorials/`: narrative learning material.
 
 Historical and internal scaffolding should live outside this repository. The
@@ -24,8 +23,9 @@ tooling.
 
 ## Generated Outputs
 
-- `artifacts/`: model/data artifacts kept only when intentionally versioned for portfolio evidence.
-- `notebooks/artifacts/**/production/`: notebook run traces and production-style run outputs; ignore by default.
+- Generated artifacts, notebook run traces, and production-style run outputs are
+  ignored by default and should be regenerated locally or preserved in external
+  artifact/archive repositories.
 
 For the public-facing contract and clear "keep vs move out" rule, see
 [`docs/PORTFOLIO_SCOPE.md`](../PORTFOLIO_SCOPE.md).

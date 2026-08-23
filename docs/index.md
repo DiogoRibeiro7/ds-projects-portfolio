@@ -21,7 +21,6 @@ ROBUSTNESS
 methodology/index
 tutorials/index
 api/index
-deployment
 ```
 
 ```{toctree}

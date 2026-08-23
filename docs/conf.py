@@ -173,9 +173,9 @@ _install_stub("flask_socketio", flask_socketio_stub)
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "Data Science Portfolio"
-copyright = "2024, Data Science Team"
-author = "Data Science Team"
+project = "Data Science Projects Portfolio"
+copyright = "2024, Diogo Ribeiro"
+author = "Diogo Ribeiro"
 release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------
@@ -362,7 +362,7 @@ latex_documents = [
         master_doc,
         "DataSciencePortfolio.tex",
         "Data Science Portfolio Documentation",
-        "Data Science Team",
+        author,
         "manual",
     ),
 ]

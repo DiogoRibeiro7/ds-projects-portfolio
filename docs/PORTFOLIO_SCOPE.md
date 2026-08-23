@@ -14,7 +14,7 @@
 
 ## What is explicitly out-of-scope for the portfolio narrative
 
-- `archive/legacy/`: legacy project trees and historical migrations.
+- `archive/legacy/`: legacy project trees and historical reference material.
 - `archive/runtime/`: generated runtime outputs.
 - `archive/quality-reports/`: historical quality snapshots.
 - `archive/internal/`: internal platform ops scaffolding and experiment infrastructure.

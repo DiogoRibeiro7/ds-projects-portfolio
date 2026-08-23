@@ -47,6 +47,7 @@ Required fields per project:
 
 ## Boundaries
 
-Generated artifacts, caches, local runtime outputs, and migration workspaces are not part of
-the active portfolio surface. Historical material can remain in Git history or `archive/`,
-but the root tree should stay focused on project discovery and review.
+Generated artifacts, caches, local runtime outputs, and temporary export
+workspaces are not part of the active portfolio surface. Historical material can
+remain in Git history or `archive/`, but the root tree should stay focused on
+project discovery and review.

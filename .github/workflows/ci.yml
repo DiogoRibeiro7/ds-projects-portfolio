@@ -125,11 +125,15 @@ jobs:
               for project in projects
               if not isinstance(project, dict) or not required.issubset(project)
           ]
+          def is_remote_repository(value):
+              return value.startswith(("https://", "http://", "git@"))
+
           missing_repositories = [
               project["repository"]
               for project in projects
               if isinstance(project, dict)
               and isinstance(project.get("repository"), str)
+              and not is_remote_repository(project["repository"])
               and not pathlib.Path(project["repository"]).exists()
           ]
           if not projects:

@@ -10,15 +10,15 @@ portfolio projects or source directories were moved or deleted.
 
 ## Produced Export Snapshots
 
-| Export | Status |
-|---|---|
-| `migration/exports/experimentation-toolkit` | validated |
-| `migration/exports/genai-rag-engineering` | validated |
-| `migration/exports/portugal-gdp-bayesian-revision` | validated |
-| `migration/exports/porto-lisbon-uhi-exposure` | validated |
-| `migration/exports/city-wage-cost-global` | validated |
-| `migration/exports/pt-salary-gamma-distribution` | validated |
-| `migration/exports/customer-analytics` | validated |
+| Export | Repository | Status |
+|---|---|---|
+| `migration/exports/experimentation-toolkit` | `https://github.com/DiogoRibeiro7/experimentation-toolkit` | validated and pushed |
+| `migration/exports/genai-rag-engineering` | `https://github.com/DiogoRibeiro7/genai-rag-engineering` | validated and pushed |
+| `migration/exports/portugal-gdp-bayesian-revision` | `https://github.com/DiogoRibeiro7/portugal-gdp-bayesian-revision` | validated and pushed |
+| `migration/exports/porto-lisbon-uhi-exposure` | `https://github.com/DiogoRibeiro7/porto-lisbon-uhi-exposure` | validated and pushed |
+| `migration/exports/city-wage-cost-global` | `https://github.com/DiogoRibeiro7/city-wage-cost-global` | validated and pushed |
+| `migration/exports/pt-salary-gamma-distribution` | `https://github.com/DiogoRibeiro7/pt-salary-gamma-distribution` | validated and pushed |
+| `migration/exports/customer-analytics` | `https://github.com/DiogoRibeiro7/customer-analytics` | validated and pushed |
 
 ## Reports Produced
 
@@ -75,10 +75,13 @@ to keep data science projects and portfolio files in this repository.
 Instead, this branch adds catalogue and architecture metadata while preserving active
 portfolio content.
 
-## Manual GitHub Operations Still Required
+## Manual GitHub Operations Status
 
-- Review and merge `migration/copy-first-exports` into `main`.
-- Create standalone GitHub repositories from validated export snapshots if desired.
-- Create the preservation tag `monolith-final-2026-08` before any future cleanup.
+- Merged `migration/copy-first-exports` into `main` via PR #468.
+- Created the preservation tag `monolith-final-2026-08` on the merged `main` state.
+- Created standalone public GitHub repositories from the validated export snapshots.
+
+## Remaining Decisions
+
 - Decide separately whether stale root workflows should be repaired or disabled.
 - Decide separately whether generated artifacts should be removed or externalized.

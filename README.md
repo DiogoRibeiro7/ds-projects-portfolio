@@ -86,6 +86,18 @@ The machine-readable featured-project catalogue is in [`projects.yml`](projects.
 The repository architecture and copy-first export policy are documented in
 [`docs/architecture.md`](docs/architecture.md).
 
+## Standalone repositories
+
+Validated copy-first snapshots are also available as standalone repositories:
+
+- [experimentation-toolkit](https://github.com/DiogoRibeiro7/experimentation-toolkit)
+- [genai-rag-engineering](https://github.com/DiogoRibeiro7/genai-rag-engineering)
+- [portugal-gdp-bayesian-revision](https://github.com/DiogoRibeiro7/portugal-gdp-bayesian-revision)
+- [porto-lisbon-uhi-exposure](https://github.com/DiogoRibeiro7/porto-lisbon-uhi-exposure)
+- [city-wage-cost-global](https://github.com/DiogoRibeiro7/city-wage-cost-global)
+- [pt-salary-gamma-distribution](https://github.com/DiogoRibeiro7/pt-salary-gamma-distribution)
+- [customer-analytics](https://github.com/DiogoRibeiro7/customer-analytics)
+
 ## End-to-end analytics examples
 
 - [`examples/eda_end_to_end.ipynb`](examples/eda_end_to_end.ipynb) for a complete

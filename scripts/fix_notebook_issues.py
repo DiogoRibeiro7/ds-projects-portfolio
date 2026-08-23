@@ -6,17 +6,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-LEGACY_CHURN_DIR = Path(
-    "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn"
-)
-LEGACY_CHURN_DATA_DIR = LEGACY_CHURN_DIR / "data"
+AB_TESTING_DIR = Path("projects/ab_testing")
+AB_TESTING_DATA_DIR = AB_TESTING_DIR / "data"
 
 
 def create_sample_data_files():
     """Create sample data files for notebooks that need them."""
     # Create directories if they don't exist
-    Path("ab_testing/data").mkdir(parents=True, exist_ok=True)
-    LEGACY_CHURN_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    AB_TESTING_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     # Generate sample A/B testing data
     print("Creating sample A/B testing datasets...")
@@ -32,7 +29,7 @@ def create_sample_data_files():
             "converted": np.random.choice([0, 1], 10000, p=[0.88, 0.12]),
         }
     )
-    landing_page_data.to_csv("ab_testing/data/landing_page.csv", index=False)
+    landing_page_data.to_csv(AB_TESTING_DATA_DIR / "landing_page.csv", index=False)
     print("  [OK] Created landing_page.csv")
 
     # Cookie Cats data (game A/B test)
@@ -45,7 +42,7 @@ def create_sample_data_files():
             "retention_7": np.random.choice([True, False], 5000, p=[0.19, 0.81]),
         }
     )
-    cookie_cats_data.to_csv("ab_testing/data/cookie_cats.csv", index=False)
+    cookie_cats_data.to_csv(AB_TESTING_DATA_DIR / "cookie_cats.csv", index=False)
     print("  [OK] Created cookie_cats.csv")
 
     # Pricing A/B test data
@@ -62,62 +59,8 @@ def create_sample_data_files():
             ),
         }
     )
-    pricing_data.to_csv("ab_testing/data/pricing_ab.csv", index=False)
+    pricing_data.to_csv(AB_TESTING_DATA_DIR / "pricing_ab.csv", index=False)
     print("  [OK] Created pricing_ab.csv")
-
-    # Fix the bank churn data column issue
-    churn_file = LEGACY_CHURN_DATA_DIR / "Churn_Modelling.csv"
-    if churn_file.exists():
-        print("\nFixing bank churn data...")
-        df = pd.read_csv(churn_file)
-
-        # Check if we need to rename a column to 'Exited'
-        if "Exited" not in df.columns:
-            # Look for likely target columns
-            possible_targets = ["Churn", "churn", "Target", "target", "Label", "label"]
-            for col in possible_targets:
-                if col in df.columns:
-                    df = df.rename(columns={col: "Exited"})
-                    print(f"  [OK] Renamed '{col}' to 'Exited'")
-                    break
-            else:
-                # If no target column found, create a synthetic one
-                print(
-                    "  [WARN] No target column found, creating synthetic 'Exited' column"
-                )
-                df["Exited"] = np.random.choice([0, 1], len(df), p=[0.8, 0.2])
-
-        # Save the fixed data
-        df.to_csv(churn_file, index=False)
-        print("  [OK] Updated Churn_Modelling.csv")
-    else:
-        print("  [WARN] Churn_Modelling.csv not found, creating sample data...")
-        # Create sample churn data
-        n_customers = 10000
-        churn_data = pd.DataFrame(
-            {
-                "RowNumber": range(1, n_customers + 1),
-                "CustomerId": np.random.randint(15000000, 16000000, n_customers),
-                "Surname": ["Customer_" + str(i) for i in range(n_customers)],
-                "CreditScore": np.random.randint(350, 850, n_customers),
-                "Geography": np.random.choice(
-                    ["France", "Spain", "Germany"], n_customers
-                ),
-                "Gender": np.random.choice(["Male", "Female"], n_customers),
-                "Age": np.random.randint(18, 85, n_customers),
-                "Tenure": np.random.randint(0, 10, n_customers),
-                "Balance": np.random.uniform(0, 250000, n_customers),
-                "NumOfProducts": np.random.choice(
-                    [1, 2, 3, 4], n_customers, p=[0.5, 0.35, 0.1, 0.05]
-                ),
-                "HasCrCard": np.random.choice([0, 1], n_customers, p=[0.3, 0.7]),
-                "IsActiveMember": np.random.choice([0, 1], n_customers, p=[0.48, 0.52]),
-                "EstimatedSalary": np.random.uniform(10000, 200000, n_customers),
-                "Exited": np.random.choice([0, 1], n_customers, p=[0.8, 0.2]),
-            }
-        )
-        churn_data.to_csv(churn_file, index=False)
-        print("  [OK] Created sample Churn_Modelling.csv")
 
 
 def fix_syntax_errors():
@@ -126,7 +69,7 @@ def fix_syntax_errors():
     print("MANUAL FIXES REQUIRED")
     print("=" * 60)
     print("\nSyntax errors found in:")
-    print("1. ab_testing_ecommerce_playbook.ipynb - Line 7")
+    print("1. projects/ab_testing/ab_testing_ecommerce_playbook.ipynb - Line 7")
     print("   -> Check for unterminated strings, missing quotes")
     print("\n2. experiment_story_templates.ipynb - Line 52")
     print("   -> Check for unterminated strings, f-string issues")
@@ -159,9 +102,9 @@ except ImportError:
     print(fix_script)
 
     # Save the fix script
-    with open("ab_testing/erfcinv_fix.py", "w") as f:
+    with open(AB_TESTING_DIR / "erfcinv_fix.py", "w") as f:
         f.write(fix_script)
-    print("\n[OK] Saved fix script to ab_testing/erfcinv_fix.py")
+    print("\n[OK] Saved fix script to projects/ab_testing/erfcinv_fix.py")
 
 
 def main():
@@ -171,7 +114,7 @@ def main():
     print("=" * 60)
 
     # Check current directory
-    if not Path("ab_testing").exists() and not LEGACY_CHURN_DIR.exists():
+    if not AB_TESTING_DIR.exists():
         print("ERROR: Run this script from the project root directory!")
         return
 
@@ -190,10 +133,7 @@ def main():
     print("1. Review and fix the syntax errors manually")
     print("2. Add the erfcinv import fix to affected notebooks")
     print("3. Re-run the tests:")
-    print(
-        "   python scripts/run_notebook_tests.py --dirs ab_testing "
-        "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn"
-    )
+    print("   python scripts/run_notebook_tests.py --dirs projects/ab_testing")
     print("\n[OK] Quick fixes complete!")
 
 

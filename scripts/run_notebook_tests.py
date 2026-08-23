@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""Command-line interface for running notebook tests.
-"""
+"""Command-line interface for running notebook tests."""
 
 import argparse
 import json
@@ -27,7 +26,7 @@ Examples:
   python run_notebook_tests.py
 
   # Test specific directories
-  python run_notebook_tests.py --dirs ab_testing archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn
+  python run_notebook_tests.py --dirs projects/ab_testing
 
   # Run tests in parallel (faster but uses more resources)
   python run_notebook_tests.py --parallel
@@ -49,10 +48,7 @@ Examples:
     parser.add_argument(
         "--dirs",
         nargs="+",
-        default=[
-            "ab_testing",
-            "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn",
-        ],
+        default=["projects/ab_testing"],
         help="Directories containing notebooks to test",
     )
 

@@ -74,13 +74,11 @@ Use this map when you want to jump directly to a project area:
 - [statistical_methods](projects/statistical_methods/)
 - [streamlit_apps](projects/streamlit_apps/)
 - [dashboard_enhanced](projects/dashboard_enhanced/)
-- [archive legacy MLOps notebooks](archive/legacy/projects/mlops/)
 - [deep_learning](projects/deep_learning/)
 - [nlp](projects/nlp/)
 - [performance_optimization](projects/performance_optimization/)
 
-The complete notebook catalog (including archive/reference notebooks) remains in
-[`notebooks/README.md`](notebooks/README.md).
+The complete active notebook catalog remains in [`notebooks/README.md`](notebooks/README.md).
 
 The machine-readable featured-project catalogue is in [`projects.yml`](projects.yml).
 The portfolio structure is documented in [`docs/architecture.md`](docs/architecture.md).
@@ -108,13 +106,12 @@ Selected projects are also available as focused standalone repositories:
 .
 ├── src/                  # Core reusable packages
 ├── docs/                 # Portfolio documentation and API reference
-├── notebooks/            # Portfolio notebooks (featured + archive)
+├── notebooks/            # Portfolio notebooks
 ├── projects/             # Project writeups and reference implementations
 ├── examples/             # Runnable portfolio demos
 ├── tests/                # Automated test suite
 ├── scripts/              # Repo tooling
-├── deployment/           # Portfolio-facing deployment entry points
-└── archive/              # Historical artifacts and legacy references
+└── deployment/           # Portfolio-facing deployment entry points
 ```
 
 Repository scope contract is documented in
@@ -129,6 +126,6 @@ Repository scope contract is documented in
 - If you spot an issue: open it on GitHub
 
 This project is meant to stay portfolio-first: fast signal for reviewers, concise
-entry paths, and clear separation between maintained portfolio content and archive
-backlog.
+entry paths, and clear separation between maintained portfolio content and
+external historical backlog.
 

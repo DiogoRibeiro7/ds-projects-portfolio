@@ -115,6 +115,7 @@ mypy_output*.txt
 *.csv
 *.tsv
 *.json
+!tests/notebook_tests/test_config.json
 *.parquet
 *.h5
 *.hdf5
@@ -171,6 +172,7 @@ artifacts/
 outputs/
 results/
 test_results/
+test_results*/
 docs/_build/
 
 # Repository hygiene: generated quality artifacts and local scratch

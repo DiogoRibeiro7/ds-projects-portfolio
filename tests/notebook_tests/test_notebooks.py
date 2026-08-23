@@ -16,8 +16,7 @@ from report_generator import generate_html_report
 
 # Configuration
 NOTEBOOK_DIRS = [
-    "ab_testing",
-    "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn",
+    "projects/ab_testing",
 ]
 CONFIG_PATH = Path(__file__).parent / "test_config.json"
 OUTPUT_DIR = Path(__file__).parent / "test_results"
@@ -51,6 +50,7 @@ class TestNotebooks:
             ).find_notebooks()
         ],
     )
+    @pytest.mark.validation
     def test_notebook_validation(self, notebook_path):
         """Test notebook validation checks."""
         validator = NotebookValidator(str(notebook_path))
@@ -73,6 +73,7 @@ class TestNotebooks:
         )
 
     @pytest.mark.slow
+    @pytest.mark.execution
     @pytest.mark.parametrize(
         "notebook_path",
         [
@@ -121,6 +122,7 @@ class TestNotebooks:
             if "eda" in nb.name.lower() or "baseline" in nb.name.lower()
         ],
     )
+    @pytest.mark.validation
     def test_data_validation(self, notebook_path):
         """Test data validation in notebooks."""
         # This is a placeholder for actual data validation
@@ -128,6 +130,7 @@ class TestNotebooks:
         # and validate them
         pass
 
+    @pytest.mark.validation
     def test_random_seeds(self):
         """Test that all notebooks set random seeds."""
         notebooks_without_seeds = []
@@ -148,6 +151,7 @@ class TestNotebooks:
             f"Notebooks missing random seeds: {notebooks_without_seeds}"
         )
 
+    @pytest.mark.validation
     def test_visualization_completeness(self):
         """Test that visualizations are properly displayed."""
         notebooks_with_issues = []
@@ -169,6 +173,7 @@ class TestNotebooks:
             pytest.skip(f"Notebooks with visualization issues: {notebooks_with_issues}")
 
     @pytest.mark.slow
+    @pytest.mark.execution
     def test_generate_report(self):
         """Test report generation."""
         results = self.runner.run_all_tests()
@@ -215,20 +220,6 @@ def test_average_execution_time(notebook_results):
     """Test that average execution time is reasonable."""
     avg_time = notebook_results["summary"]["average_metrics"].get("execution_time", 0)
     assert avg_time < 300, f"Average execution time {avg_time}s exceeds 5 minutes"
-
-
-# Pytest markers for selective testing
-pytest.mark.validation = pytest.mark.mark(
-    pytest.mark.validation, "mark test as validation only (no execution)"
-)
-
-pytest.mark.execution = pytest.mark.mark(
-    pytest.mark.execution, "mark test as execution test"
-)
-
-pytest.mark.slow = pytest.mark.mark(
-    pytest.mark.slow, "mark test as slow (notebook execution)"
-)
 
 
 if __name__ == "__main__":

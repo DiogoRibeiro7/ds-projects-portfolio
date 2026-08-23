@@ -1,0 +1,20 @@
+{
+  "timeout": 600,
+  "parallel": false,
+  "skip_patterns": [
+    ".ipynb_checkpoints",
+    "__pycache__",
+    "test_"
+  ],
+  "skip_execution_patterns": [],
+  "expected_schemas": {},
+  "metric_ranges": {},
+  "data_files": [],
+  "memory_limits": {
+    "max_memory_mb": 4096
+  },
+  "validation_rules": {
+    "require_random_seeds": true,
+    "allow_hardcoded_paths": false
+  }
+}

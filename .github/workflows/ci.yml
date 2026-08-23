@@ -231,11 +231,22 @@ jobs:
           changed="$(git diff --diff-filter=ACMRT --name-only "$base"...HEAD)"
           mkdir -p artifacts
 
-          if echo "$changed" | grep -Eq '^(src|tools|tests)/'; then
+          changed_test_surface="$(echo "$changed" | grep -E '^(src|tools|tests)/' || true)"
+          non_notebook_surface="$(echo "$changed_test_surface" | grep -Ev '^tests/notebook_tests/' || true)"
+
+          if [ -n "$non_notebook_surface" ]; then
             make test TEST_OPTS="--junitxml=artifacts/junit-${{ matrix.python-version }}.xml --durations=25 --cov=src --cov-report=xml:artifacts/coverage-${{ matrix.python-version }}.xml --cov-report=term-missing:skip-covered"
           fi
 
-          if ! echo "$changed" | grep -Eq '^(src|tools|tests)/'; then
+          if [ -z "$non_notebook_surface" ] && echo "$changed" | grep -Eq '^tests/notebook_tests/'; then
+            python -m pip install papermill nbformat nbconvert memory_profiler psutil
+            python scripts/run_notebook_tests.py \
+              --validate-only \
+              --dirs projects/ab_testing \
+              --output test_results_ci
+          fi
+
+          if [ -z "$changed_test_surface" ]; then
             echo "No changed Python test surface."
           fi
       - name: Upload test artifacts

@@ -15,7 +15,6 @@ PORTFOLIO_SCOPE
 installation
 quickstart
 usage
-best_practices
 DATA_QUALITY
 ROBUSTNESS
 methodology/index

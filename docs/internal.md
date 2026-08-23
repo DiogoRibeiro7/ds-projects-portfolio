@@ -13,7 +13,6 @@ contributor/development
 contributor/DOCS_STYLE
 contributor/CODE_QUALITY
 contributor/TESTING
-contributor/TESTING_INFRASTRUCTURE
 contributor/CI_CD_PIPELINE
 contributor/REPO_STRUCTURE
 ```

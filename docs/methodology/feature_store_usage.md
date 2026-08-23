@@ -32,7 +32,8 @@ For projects that are not yet ready for a full managed feature store, use a ligh
 
 ## Example: local feature store usage
 
-The `modern-bank-churn` project includes a simple `FeatureStore` implementation in `modern-bank-churn/mlops_pipeline.py`.
+The maintained churn utilities include a simple `FeatureStore` implementation
+in `src/modern_bank_churn/mlops_pipeline.py`.
 
 ```python
 from modern_bank_churn.mlops_pipeline import FeatureStore
@@ -85,6 +86,6 @@ Common managed feature store tools:
 
 ## Related resources
 
-- `modern-bank-churn/mlops_pipeline.py` — local `FeatureStore` implementation
-- `recommendation-system/README.md` — production notes on using feature stores for recommender features
+- `src/modern_bank_churn/mlops_pipeline.py` — local `FeatureStore` implementation
+- `projects/machine_learning/recommendation_system/README.md` — production notes on using feature stores for recommender features
 - `docs/methodology/evaluation_metrics_standardization.md` — metrics standardization for model evaluation

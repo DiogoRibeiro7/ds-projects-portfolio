@@ -1,13 +1,13 @@
 # Testing Strategy
 
-This repository uses pytest with layered suites so that fast, deterministic tests run on every pull request and heavier flows run nightly or on demand.
+This repository uses pytest with layered suites so that fast, deterministic tests run on every pull request and heavier flows stay opt-in.
 
 ## Test Layers
 
 - **Unit (`tests/unit/`, `pytest -m unit`)** — Pure functions and isolated classes. These tests mock all I/O, seed RNGs, and finish in milliseconds.
 - **Integration (`tests/integration/`, `pytest -m integration`)** — Multi-component flows such as API surfaces, caching layers, or orchestration pipelines. External services (DB/Redis/cloud) are mocked or replaced with in-memory fakes.
 - **Regression (`tests/regression/`, `pytest -m regression`)** — Snapshot/binary compatibility checks that lock in bug fixes. These tests should reproduce previously fixed scenarios and assert on concrete outputs.
-- **Slow (`pytest -m slow`)** — Optional tag layered on any test (unit/integration/regression) when it exceeds budget. Slow tests only run nightly or when manually requested.
+- **Slow (`pytest -m slow`)** — Optional tag layered on any test (unit/integration/regression) when it exceeds budget. Slow tests run only when explicitly requested.
 
 Other dedicated directories (e.g., `tests/performance`, `tests/notebook_tests`) remain but are opt‑in.
 
@@ -45,7 +45,7 @@ value and reuse it for every randomized step.
 
 - Default PR suite (`make test`) must finish in **<10 minutes** on GitHub Actions and <5 minutes locally on a modern laptop.
 - Individual unit tests should complete in <1 second; integration/regression tests should stay under 30 seconds.
-- Any test exceeding that budget must be marked `@pytest.mark.slow` and will only run on the nightly/manual CI job (`slow-tests`).
+- Any test exceeding that budget must be marked `@pytest.mark.slow` and kept out of the default PR suite.
 
 ## Running Tests
 
@@ -54,7 +54,7 @@ make test                 # unit + integration + regression (excludes slow)
 make test-unit            # just unit tests
 make test-integration     # just integration tests
 make test-regression      # regression/snapshot tests
-make test-slow            # slow-only suite (nightly equivalent)
+make test-slow            # slow-only suite for explicit deep validation
 ```
 
 ## Quickstart for local testing
@@ -81,7 +81,9 @@ To verify a clean local state quickly:
 
 All commands respect `PYTEST_ADDOPTS` / `TEST_OPTS`, so you can append flags via `make test TEST_OPTS='-k feature_x'`.
 
-CI runs unit+integration+regression on every PR and executes the slow suite on the scheduled nightly / manual dispatch workflow. Notebook/performance suites still live in `.github/workflows/*.yml` and can be triggered independently.
+CI runs the fast maintained surface on every PR. Notebook and security checks
+live in dedicated workflows and can be triggered independently when a larger
+portfolio update needs deeper validation.
 
 ## Updating Regression Baselines
 

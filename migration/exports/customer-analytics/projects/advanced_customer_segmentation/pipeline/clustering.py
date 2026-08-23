@@ -1,9 +1,9 @@
 """Advanced clustering pipeline with model selection and explainability."""
+
 import joblib
 import numpy as np
 import pandas as pd
-import shap
-from sklearn.cluster import AgglomerativeClustering, KMeans
+from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
 from .feature_engineering import build_feature_pipeline
@@ -25,25 +25,28 @@ def select_best_clustering(X, cluster_range=(2, 6)):
 
 
 def run_pipeline(input_csv, output_csv, model_path, shap_path):
+    import shap
+
     df = pd.read_csv(input_csv)
     preprocessor = build_feature_pipeline()
     X = preprocessor.fit_transform(df)
     model, best_k, best_score = select_best_clustering(X)
     labels = model.predict(X)
-    df['cluster'] = labels
+    df["cluster"] = labels
     df.to_csv(output_csv, index=False)
-    joblib.dump({'model': model, 'preprocessor': preprocessor}, model_path)
+    joblib.dump({"model": model, "preprocessor": preprocessor}, model_path)
     # SHAP explainability (KernelExplainer for clustering)
     explainer = shap.KernelExplainer(model.predict, X)
     shap_values = explainer.shap_values(X[:100])  # Limit for speed
     np.save(shap_path, shap_values)
     return best_k, best_score
 
+
 if __name__ == "__main__":
     best_k, best_score = run_pipeline(
         input_csv="../data/customers_sample_advanced.csv",
         output_csv="../data/customers_segmented.csv",
         model_path="../data/cluster_model.joblib",
-        shap_path="../data/shap_values.npy"
+        shap_path="../data/shap_values.npy",
     )
     print(f"Best K: {best_k}, Silhouette Score: {best_score:.3f}")

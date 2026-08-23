@@ -40,7 +40,8 @@ def apply_cuped(
     clean[output_col] = result.adjusted
     clean["cuped_theta"] = result.theta
     clean["cuped_variance_reduction"] = result.variance_reduction
-    return clean
+    output: pd.DataFrame = clean
+    return output
 
 
 def cuped_values(

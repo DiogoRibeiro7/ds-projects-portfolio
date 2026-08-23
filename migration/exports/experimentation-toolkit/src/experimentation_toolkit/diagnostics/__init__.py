@@ -23,4 +23,5 @@ def summarize_groups(
         .rename(columns={"count": "n"})
     )
     summary["standard_error"] = summary["std"] / summary["n"].pow(0.5)
-    return summary.reset_index()
+    output: pd.DataFrame = summary.reset_index()
+    return output

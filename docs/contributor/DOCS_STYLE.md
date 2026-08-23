@@ -120,27 +120,22 @@ def run_power_simulation(
 
 1. Update or add docstrings when touching public code.
 2. Add inline comments when you introduce domain-specific logic or guardrails.
-3. Run `pre-commit run --all-files` (ruff, pydocstyle, docstring coverage).
+3. Run `pre-commit run --all-files` for formatting, linting, type checking, and
+   repository hygiene hooks.
 4. Build docs with `(cd docs && make html)` to ensure docstrings render
    correctly inside the API reference.
 
-## Automation and Coverage Enforcement
+## Automation
 
-- `ruff` enforces PEP 8/Pyflakes rules plus `pydocstyle` (`D`) checks using the
-  Google convention.
-- Docstring linting is configured in `pyproject.toml` through Ruff's
-  pydocstyle rules.
-- The only globally ignored docstring codes are `D203` (required blank line
-  before class docstrings) and `D213` (multi-line summary formatting) because
-  Google-style docstrings expect those blank lines. Any additional ignore must
-  be added here with a justification before landing in `pyproject.toml`.
-- `tools/check_docstring_coverage.py` checks module/class/function coverage for
-  active Python packages and tests.
+- `ruff` enforces formatting and the selected lint rules configured in
+  `pyproject.toml`.
+- Docstrings are maintained by review policy for public APIs, tutorials, and
+  reusable project code.
 - CI (`.github/workflows/ci.yml`) runs lint → type check → unit/integration/data
   tests → docs build to keep docstrings, coverage, and site generation aligned.
 - Pre-commit hooks (`.pre-commit-config.yaml`) execute formatting, `ruff`,
-  `pydocstyle`, and `tools/check_docstring_coverage.py` locally. Fix issues
-  before opening a pull request.
+  `mypy`, and repository hygiene checks locally. Fix issues before opening a
+  pull request.
 
 ## Review Checklist
 

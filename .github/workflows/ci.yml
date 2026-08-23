@@ -7,7 +7,6 @@ on:
       - "feature/*"
     paths:
       - "src/**"
-      - "tools/**"
       - "tests/**"
       - "scripts/**"
       - "docs/**"
@@ -23,7 +22,6 @@ on:
       - main
     paths:
       - "src/**"
-      - "tools/**"
       - "tests/**"
       - "scripts/**"
       - "docs/**"
@@ -231,7 +229,7 @@ jobs:
           changed="$(git diff --diff-filter=ACMRT --name-only "$base"...HEAD)"
           mkdir -p artifacts
 
-          changed_test_surface="$(echo "$changed" | grep -E '^(src|tools|tests)/' || true)"
+          changed_test_surface="$(echo "$changed" | grep -E '^(src|tests)/' || true)"
           non_notebook_surface="$(echo "$changed_test_surface" | grep -Ev '^tests/notebook_tests/' || true)"
 
           if [ -n "$non_notebook_surface" ]; then

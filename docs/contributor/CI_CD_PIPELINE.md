@@ -1,7 +1,7 @@
 # CI Pipeline
 
 This repository uses GitHub Actions to protect the active portfolio surface:
-source modules, tests, examples, scripts, tools, docs, and selected notebooks.
+source modules, tests, examples, scripts, docs, and selected notebooks.
 
 ## Required Pull Request Checks
 
@@ -10,7 +10,7 @@ The main workflow is `.github/workflows/ci.yml`.
 It runs:
 
 - Ruff format and lint checks.
-- Mypy type checking for active Python modules and tools.
+- Mypy type checking for active Python modules.
 - Pytest on Python 3.11 and 3.12.
 - Sphinx documentation build.
 
@@ -30,7 +30,8 @@ default signal for normal portfolio cleanup and documentation changes.
 
 ## Local Validation
 
-Run the same practical checks before opening a pull request:
+Run the broad local checks before opening a pull request when the affected
+surface is small enough:
 
 ```bash
 make check
@@ -41,8 +42,8 @@ make html
 For focused Python changes:
 
 ```bash
-ruff check src tests tools
-mypy src tools
+ruff check src tests scripts
+mypy src
 pytest tests/unit
 ```
 

@@ -10,7 +10,6 @@ repos:
     hooks:
       - id: mypy
         args:
-          - tools/
           - src/
         additional_dependencies:
           - "types-requests"

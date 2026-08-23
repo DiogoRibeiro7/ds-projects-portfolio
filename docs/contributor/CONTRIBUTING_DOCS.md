@@ -13,7 +13,7 @@ fixing bugs, or improving notebooks to keep documentation consistent.
    - Tests (`tests/`), tutorials (`tutorials/`), and docs (`docs/usage.md`,
      `docs/api/`) to see what gets exercised most frequently.
 3. Update docstrings for any public symbol you touch, and add `Examples`
-   sections for the usage-heavy APIs recorded in `DOC_COVERAGE.md`.
+   sections when the API is used by notebooks, examples, docs, or tests.
 
 ## 2. Writing Docstrings
 
@@ -37,26 +37,20 @@ fixing bugs, or improving notebooks to keep documentation consistent.
 - Keep comments short, using plain sentences prefixed with `# `. Multi-line
   explanations should read like small paragraphs rather than bullet lists.
 
-## 4. Documentation Coverage Workflow
+## 4. Documentation Validation Workflow
 
-1. Update `DOC_COVERAGE.md`:
-   - Record new modules/packages plus their docstring status.
-   - Note any exceptions (with rationale) and the current “top APIs with
-     examples” list.
-   - Summarize what changed in this pull request.
-2. Run `python tools/check_docstring_coverage.py` to guarantee 100% coverage.
-3. Run `pre-commit run --all-files` to execute Ruff (with docstring rules),
+1. Run `python tools/check_docstring_coverage.py` to check public docstring coverage.
+2. Run `pre-commit run --all-files` to execute Ruff (with docstring rules),
    `pydocstyle`, formatting, and custom hooks.
-4. Build the docs site: `cd docs && make html`. This confirms that docstrings
+3. Build the docs site: `cd docs && make html`. This confirms that docstrings
    render correctly in the API reference.
 
 ## 5. Pull Request Checklist
 
 - [ ] Every public module/class/function touched has a Google-style docstring.
-- [ ] Top 20 APIs listed in `DOC_COVERAGE.md` contain `Examples`.
+- [ ] Usage-heavy APIs touched by the change contain runnable `Examples`.
 - [ ] Inline comments explain intent/guardrails for complex logic.
 - [ ] Type hints, Raises, and docstrings stay in sync.
-- [ ] `DOC_COVERAGE.md` describes what changed plus remaining gaps.
 - [ ] `pre-commit` hooks and the docs build pass locally.
 
 Following this workflow keeps the documentation site, code, and CI automation in

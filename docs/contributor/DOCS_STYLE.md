@@ -11,10 +11,8 @@ Public symbols are anything meant to be imported or executed by consumers:
 
 - All Python packages under `src/` (CLI entry points, shared libraries, FastAPI
   services, data utilities).
-- Domain packages at the repository root (`ab_testing/`,
-  `statistical_methods/`, `dashboard_enhanced/`, `modern-bank-churn/`,
-  `performance_optimization/`, `recommendation-system/`, `time-series/`,
-  `time_series/`, etc.).
+- Project packages under `projects/` that expose importable Python modules used
+  by notebooks, examples, or tests.
 - Standalone scripts in `scripts/` (for example
   `scripts/advanced_experimentation_platform.py`, `scripts/analyze_experiment.py`).
 - Any module exported from `__init__.py`, referenced by documentation, invoked
@@ -50,8 +48,7 @@ only when their behavior is already explained by the surrounding documentation.
 7. **Examples**: Provide runnable snippets for public APIs referenced by CLI,
    documentation, or notebooks. The “top 20” most-used public functions/classes
    identified via repository-wide `rg` usage counts must include an `Examples`
-   section describing typical and edge-case behavior. The coverage report lists
-   which APIs currently require examples.
+   section describing typical and edge-case behavior.
 
 Classes and dataclasses include an `Attributes:` section documenting fields that
 callers read. Module docstrings summarize responsibilities, note constants, and
@@ -117,16 +114,14 @@ def run_power_simulation(
   behavior varies by parameter values, explain the guardrail.
 - Functions invoked by tutorials, CLIs, or tests must provide at least one
   runnable example covering default behavior and a second note for edge cases
-  (e.g., “zero-variance data returns `np.nan` effect sizes”). Track completion
-  status in `DOC_COVERAGE.md`.
+  (e.g., “zero-variance data returns `np.nan` effect sizes”).
 
 ## Documentation Workflow
 
 1. Update or add docstrings when touching public code.
 2. Add inline comments when you introduce domain-specific logic or guardrails.
-3. Update `DOC_COVERAGE.md` with new modules/symbols and example coverage.
-4. Run `pre-commit run --all-files` (ruff, pydocstyle, docstring coverage).
-5. Build docs with `(cd docs && make html)` to ensure docstrings render
+3. Run `pre-commit run --all-files` (ruff, pydocstyle, docstring coverage).
+4. Build docs with `(cd docs && make html)` to ensure docstrings render
    correctly inside the API reference.
 
 ## Automation and Coverage Enforcement
@@ -139,12 +134,8 @@ def run_power_simulation(
   before class docstrings) and `D213` (multi-line summary formatting) because
   Google-style docstrings expect those blank lines. Any additional ignore must
   be added here with a justification before landing in `pyproject.toml`.
-- `tools/check_docstring_coverage.py` enforces 100% module/class/function
-  coverage across `src/`, `statistical_methods/`, `dashboard_enhanced/`,
-  `ab_testing/`, `time-series/`, `modern-bank-churn/`, and `tests/` (fixtures
-  double as example documentation). The script currently skips
-  `modern-bank-churn/enhanced_feature_engineering.py` until its syntax errors
-  are resolved; this exception is tracked here and in `DOC_COVERAGE.md`.
+- `tools/check_docstring_coverage.py` checks module/class/function coverage for
+  active Python packages and tests.
 - CI (`.github/workflows/ci.yml`) runs lint → type check → unit/integration/data
   tests → docs build to keep docstrings, coverage, and site generation aligned.
 - Pre-commit hooks (`.pre-commit-config.yaml`) execute formatting, `ruff`,
@@ -159,8 +150,7 @@ def run_power_simulation(
    high-usage APIs?
 3. Are inline comments limited to intent/invariant explanations?
 4. Are type hints, exception handling, and docstring text kept in sync?
-5. Is the new/modified module listed in `DOC_COVERAGE.md`, and were docs
-   rebuilt to verify rendering?
+5. Were docs rebuilt to verify rendering?
 
 Following these rules keeps documentation consistent, enforceable, and genuinely
 useful for everyone consuming the data science toolkit.

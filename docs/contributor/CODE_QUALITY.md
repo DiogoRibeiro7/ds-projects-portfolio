@@ -16,7 +16,7 @@ This page summarizes the formatting, linting, and typing rules enforced locally 
 
 1. **Install hooks**: `pre-commit install` (runs Ruff format/check, Black check, mypy, whitespace cleanup on every commit).
 2. **Run the check suite** before pushing: `make check` — this matches CI’s fast lane (lint + typecheck + tests).
-3. **Optional**: `make docs` and `make test-slow` for full parity with nightly CI.
+3. **Optional**: `make docs` and `make test-slow` for deeper local validation.
 
 ## Common Issues & Fixes
 

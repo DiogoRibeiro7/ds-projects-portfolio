@@ -230,7 +230,7 @@ jobs:
             fi
           fi
 
-          changed="$(git diff --name-only "$base"...HEAD)"
+          changed="$(git diff --diff-filter=ACMRT --name-only "$base"...HEAD)"
           mkdir -p artifacts
 
           if echo "$changed" | grep -Eq '^(src|tools|tests)/'; then

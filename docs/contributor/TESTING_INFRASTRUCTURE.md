@@ -158,37 +158,38 @@ def test_pipeline_performance(benchmark):
 - **Purpose**: Ensure test quality
 - **Coverage**: Critical business logic
 
-## 🚀 CI/CD Pipeline
+## 🚀 CI Pipeline
 
 ### GitHub Actions Workflows
 
 #### 1. CI Pipeline (`ci.yml`)
-- **Triggers**: Push, PR, Schedule
+- **Triggers**: Push and pull request changes on maintained portfolio paths
 - **Jobs**:
-  - Code linting (Black, Flake8, MyPy)
-  - Unit tests (Matrix: 5 Python × 3 OS)
-  - Integration tests
-  - Data quality tests
-  - Security scanning
-  - Performance benchmarks
+  - Ruff formatting and linting
+  - Mypy type checking
+  - Unit tests on Python 3.11 and 3.12
   - Documentation build
 
 #### 2. Release Pipeline (`release.yml`)
 - **Triggers**: Version tags, Manual
 - **Jobs**:
   - Version validation
-  - Full test suite
-  - Docker image build
-  - PyPI publication
-  - Documentation deployment
-  - Release notifications
+  - Release packaging and publication checks
+  - Documentation release hygiene
+
+#### 3. Optional Deep Checks
+- **Triggers**: Manual, schedule, or explicit PR label
+- **Jobs**:
+  - Notebook validation
+  - Security analysis
+  - Dependency review
 
 ### Matrix Testing Strategy
 ```yaml
 strategy:
   matrix:
-    python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-    os: [ubuntu-latest, windows-latest, macos-latest]
+    python-version: ['3.11', '3.12']
+    os: [ubuntu-latest]
 ```
 
 ## 📈 Test Coverage

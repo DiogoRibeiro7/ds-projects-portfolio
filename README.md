@@ -110,8 +110,7 @@ Selected projects are also available as focused standalone repositories:
 ├── projects/             # Project writeups and reference implementations
 ├── examples/             # Runnable portfolio demos
 ├── tests/                # Automated test suite
-├── scripts/              # Repo tooling
-└── deployment/           # Portfolio-facing deployment entry points
+└── scripts/              # Repo tooling
 ```
 
 Repository scope contract is documented in

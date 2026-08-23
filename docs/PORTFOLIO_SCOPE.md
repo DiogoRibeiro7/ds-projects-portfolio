@@ -9,8 +9,6 @@
 - `tests/`: lightweight validation for active modules, where quality is enforced in CI.
 - `docs/`: public documentation, guides, and module references.
 - `docs/contributor/*`: contributor-facing process docs.
-- `deployment/docker`: portfolio-facing container entrypoints.
-- `deployment/model_server`: reference model serving package (when used by docs/tests).
 
 ## What is explicitly out-of-scope for the portfolio narrative
 
@@ -19,8 +17,8 @@
   active portfolio.
 - Generated runtime outputs and local run traces.
 - Historical quality snapshots.
-- Internal platform ops scaffolding, deployment manifests, configs, Helm charts,
-  and utility scripts.
+- Internal platform ops scaffolding, deployment manifests, container stacks,
+  configs, Helm charts, and utility scripts.
 
 ## Disposition guidance for new content
 

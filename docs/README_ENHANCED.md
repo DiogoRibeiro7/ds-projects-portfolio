@@ -25,8 +25,8 @@ The portfolio is organized around practical evidence of data science maturity:
   customer analytics, geospatial exposure analysis, and forecasting.
 - **AI engineering:** retrieval pipelines, evaluation patterns, guardrails, and
   service-oriented GenAI examples.
-- **Production awareness:** reproducible demos, test coverage, deployment
-  references, and documentation that separates active assets from archived work.
+- **Production awareness:** reproducible demos, test coverage, service-oriented
+  notebooks, and documentation that separates active assets from archived work.
 
 ## Repository Map
 
@@ -39,8 +39,7 @@ The portfolio is organized around practical evidence of data science maturity:
 ├── examples/              # Runnable demos and examples
 ├── src/                   # Reusable Python modules
 ├── tests/                 # Automated validation for active modules
-├── docs/                  # Portfolio and contributor documentation
-└── deployment/            # Portfolio-facing deployment references
+└── docs/                  # Portfolio and contributor documentation
 ```
 
 ## Standalone Project Repositories

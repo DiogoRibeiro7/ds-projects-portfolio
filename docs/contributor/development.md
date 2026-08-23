@@ -91,10 +91,9 @@ for platform-specific reproduction.
 
 ## Local Debug Recipes
 
-### Sample Data Cache
+### Notebook Checks
 
 ```bash
-python scripts/fix_notebook_issues.py --download-datasets
 python scripts/run_notebook_tests.py --dirs projects/ab_testing
 ```
 

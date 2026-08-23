@@ -35,6 +35,7 @@ try:
     from src.statistics.core import (
         ExperimentAnalyzer,
         calculate_sample_size,
+        sequential_testing_boundary,
         two_prop_ztest,
     )
     from src.vizualization.plots import (
@@ -229,6 +230,7 @@ def validate_configuration(config: dict[str, Any]) -> dict[str, Any]:
             "multiple_testing_correction": "holm",
             "bootstrap_samples": 5000,
             "sequential_testing": False,
+            "sequential_boundary_method": "obrien_fleming",
             "power_analysis": True,
         },
     }
@@ -479,16 +481,95 @@ def run_power_analysis(df: pd.DataFrame, config: dict[str, Any]) -> dict[str, An
 
 
 def run_sequential_analysis(df: pd.DataFrame, config: dict[str, Any]) -> dict[str, Any]:
-    """Return sequential testing metadata for the analysis report."""
-    sequential_results = {}
+    """Run an interim sequential-testing summary for binary metrics."""
+    sequential_results: dict[str, Any] = {
+        "method": config["advanced"].get(
+            "sequential_boundary_method", "obrien_fleming"
+        ),
+        "alpha": 1 - config["analysis"]["confidence_level"],
+        "metrics": {},
+        "skipped_metrics": {},
+    }
 
     try:
-        # Placeholder for sequential testing implementation
-        # This would implement O'Brien-Fleming, Pocock, or Lan-DeMets boundaries
-        sequential_results["method"] = "placeholder"
-        sequential_results["note"] = (
-            "Sequential testing implementation available in advanced version"
+        group_col = config["data"]["group_column"]
+        metric_columns = config["data"]["metric_columns"]
+        groups = list(df[group_col].dropna().unique())
+
+        if len(groups) != 2:
+            sequential_results["note"] = (
+                "Sequential summary requires exactly two experiment groups."
+            )
+            return sequential_results
+
+        control_group, treatment_group = groups
+        alpha = sequential_results["alpha"]
+        boundary = sequential_testing_boundary(
+            len(df),
+            alpha=alpha,
+            method=sequential_results["method"],
         )
+        sequential_results["boundary"] = boundary
+        sequential_results["groups"] = {
+            "control": control_group,
+            "treatment": treatment_group,
+        }
+
+        for metric in metric_columns:
+            if metric not in df.columns:
+                sequential_results["skipped_metrics"][metric] = "missing column"
+                continue
+
+            metric_data = df[[group_col, metric]].dropna()
+            observed_values = set(metric_data[metric].unique())
+            if not observed_values.issubset({0, 1}):
+                sequential_results["skipped_metrics"][metric] = (
+                    "sequential summary supports binary metrics only"
+                )
+                continue
+
+            control = metric_data[metric_data[group_col] == control_group][metric]
+            treatment = metric_data[metric_data[group_col] == treatment_group][metric]
+            n_control = len(control)
+            n_treatment = len(treatment)
+
+            if n_control == 0 or n_treatment == 0:
+                sequential_results["skipped_metrics"][metric] = (
+                    "both groups must have observations"
+                )
+                continue
+
+            control_successes = int(control.astype(int).sum())
+            treatment_successes = int(treatment.astype(int).sum())
+            z_stat, p_value = two_prop_ztest(
+                control_successes,
+                n_control,
+                treatment_successes,
+                n_treatment,
+                alternative="two-sided",
+            )
+            stop_for_significance = abs(z_stat) >= boundary
+
+            sequential_results["metrics"][metric] = {
+                "control_successes": control_successes,
+                "control_observations": n_control,
+                "treatment_successes": treatment_successes,
+                "treatment_observations": n_treatment,
+                "control_rate": control_successes / n_control,
+                "treatment_rate": treatment_successes / n_treatment,
+                "z_statistic": z_stat,
+                "p_value": p_value,
+                "boundary": boundary,
+                "stop_for_significance": stop_for_significance,
+                "recommendation": (
+                    "Stop for statistical significance at this interim look."
+                    if stop_for_significance
+                    else "Continue collecting data under the planned design."
+                ),
+            }
+
+        if not sequential_results["metrics"]:
+            sequential_results["note"] = "No eligible binary metrics were analyzed."
 
     except Exception as e:
         logging.getLogger(__name__).warning(f"Sequential analysis failed: {e}")

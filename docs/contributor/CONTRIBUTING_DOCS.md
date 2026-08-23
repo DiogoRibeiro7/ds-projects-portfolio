@@ -47,8 +47,8 @@ fixing bugs, or improving notebooks to keep documentation consistent.
 2. Run `python tools/check_docstring_coverage.py` to guarantee 100% coverage.
 3. Run `pre-commit run --all-files` to execute Ruff (with docstring rules),
    `pydocstyle`, formatting, and custom hooks.
-4. Build the docs site: `python -m docs.make_docs` (or `cd docs && make html`).
-   This confirms that docstrings render correctly in the API reference.
+4. Build the docs site: `cd docs && make html`. This confirms that docstrings
+   render correctly in the API reference.
 
 ## 5. Pull Request Checklist
 

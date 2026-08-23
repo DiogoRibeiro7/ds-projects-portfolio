@@ -32,10 +32,11 @@ contributor/RELEASE
 
 ## CI and checks for maintainers
 
-- Use the fast path on PRs through [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+- Use the fast path on PRs through
+  [`.github/workflows/ci.yml`](https://github.com/DiogoRibeiro7/ds-projects-portfolio/blob/main/.github/workflows/ci.yml).
 - Run deep checks via:
-  - [`notebook-tests.yml`](../.github/workflows/notebook-tests.yml)
-  - [`codeql-analysis.yml`](../.github/workflows/codeql-analysis.yml)
+  - [`notebook-tests.yml`](https://github.com/DiogoRibeiro7/ds-projects-portfolio/blob/main/.github/workflows/notebook-tests.yml)
+  - [`codeql-analysis.yml`](https://github.com/DiogoRibeiro7/ds-projects-portfolio/blob/main/.github/workflows/codeql-analysis.yml)
 - Deep checks are optional and can be started either from the Actions UI (`Run workflow`) or by adding the `run-deep-ci` label to the PR.
 
 The repository uses this split to keep required checks fast while still allowing deeper validation before release.

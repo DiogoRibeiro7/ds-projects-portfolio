@@ -126,8 +126,8 @@ def run_power_simulation(
 2. Add inline comments when you introduce domain-specific logic or guardrails.
 3. Update `DOC_COVERAGE.md` with new modules/symbols and example coverage.
 4. Run `pre-commit run --all-files` (ruff, pydocstyle, docstring coverage).
-5. Build docs (`python -m docs.make_docs` or `(cd docs && make html)`) to ensure
-   docstrings render correctly inside the API reference.
+5. Build docs with `(cd docs && make html)` to ensure docstrings render
+   correctly inside the API reference.
 
 ## Automation and Coverage Enforcement
 

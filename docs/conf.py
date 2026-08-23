@@ -206,7 +206,6 @@ exclude_patterns = [
     "_build",
     "Thumbs.db",
     ".DS_Store",
-    "api_reference.md",
     "modules/*",
 ]
 

@@ -4,8 +4,10 @@ This file exposes the knobs Sphinx reads when building HTML/LaTeX output and
 configures every extension we rely on for notebooks, diagrams, and API docs.
 """
 
+import asyncio
 import os
 import sys
+import types
 
 REPO_ROOT = os.path.abspath("..")
 sys.path.insert(0, REPO_ROOT)
@@ -16,9 +18,6 @@ sys.path.insert(0, os.path.join(REPO_ROOT, "src"))
 # ---------------------------------------------------------------------------
 # Lightweight stubs for optional third-party frameworks used in the API
 # ---------------------------------------------------------------------------
-
-import asyncio
-import types
 
 
 def _install_stub(name: str, module: types.ModuleType) -> None:

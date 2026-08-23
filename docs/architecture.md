@@ -11,7 +11,8 @@ The active tree is intentionally organized for review:
 - `projects.yml` is the machine-readable catalogue for featured work.
 - `notebooks/`, `projects/`, and `examples/` contain the in-repository portfolio material.
 - `src/`, `tests/`, `scripts/`, and `tools/` support reusable code and validation.
-- `archive/` keeps historical/reference material away from the primary portfolio path.
+- Historical/reference material is kept outside this repository so the active
+  tree stays focused on portfolio review.
 
 ## Standalone Repositories
 
@@ -47,7 +48,7 @@ Required fields per project:
 
 ## Boundaries
 
-Generated artifacts, caches, local runtime outputs, and temporary export
-workspaces are not part of the active portfolio surface. Historical material can
-remain in Git history or `archive/`, but the root tree should stay focused on
-project discovery and review.
+Generated artifacts, caches, local runtime outputs, temporary export workspaces,
+and historical backlog material are not part of the active portfolio surface.
+Historical files remain available through Git history or separate archive
+repositories; this root tree should stay focused on project discovery and review.

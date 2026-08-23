@@ -40,8 +40,7 @@ The portfolio is organized around practical evidence of data science maturity:
 ├── src/                   # Reusable Python modules
 ├── tests/                 # Automated validation for active modules
 ├── docs/                  # Portfolio and contributor documentation
-├── deployment/            # Portfolio-facing deployment references
-└── archive/               # Historical/reference material
+└── deployment/            # Portfolio-facing deployment references
 ```
 
 ## Standalone Project Repositories

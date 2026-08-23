@@ -8,8 +8,7 @@ on:
       - labeled
     paths:
       - "**.ipynb"
-      - "ab_testing/**"
-      - "archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn/**"
+      - "projects/ab_testing/**"
       - "tests/notebook_tests/**"
   schedule:
     # Run tests weekly on Sunday at 2 AM.
@@ -64,13 +63,13 @@ jobs:
 
       - name: Validate notebooks (quick check)
         run: |
-          python scripts/run_notebook_tests.py --validate-only --dirs ab_testing archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn
+          python scripts/run_notebook_tests.py --validate-only --dirs projects/ab_testing
 
       - name: Run notebook execution tests
         if: github.event.inputs.validate_only != 'true'
         run: |
           python scripts/run_notebook_tests.py \
-            --dirs ab_testing archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn \
+            --dirs projects/ab_testing \
             --timeout 600 \
             --output test_results \
             ${{ github.event.inputs.parallel == 'true' && '--parallel' || '' }}

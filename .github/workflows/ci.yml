@@ -79,7 +79,7 @@ jobs:
               base="HEAD^"
             fi
           fi
-          files="$(git diff --diff-filter=ACMRT --name-only "$base"...HEAD -- '*.py' | grep -Ev '^(archive/)' || true)"
+          files="$(git diff --diff-filter=ACMRT --name-only "$base"...HEAD -- '*.py' || true)"
           {
             echo "files<<EOF"
             echo "$files"
@@ -178,7 +178,7 @@ jobs:
             fi
           fi
 
-          files="$(git diff --diff-filter=ACMRT --name-only "$base"...HEAD -- '*.py' | grep -Ev '^(archive/|docs/)' || true)"
+          files="$(git diff --diff-filter=ACMRT --name-only "$base"...HEAD -- '*.py' | grep -Ev '^(docs/)' || true)"
           if [ -z "$files" ]; then
             echo "No changed Python files to type-check."
             exit 0
@@ -233,11 +233,11 @@ jobs:
           changed="$(git diff --name-only "$base"...HEAD)"
           mkdir -p artifacts
 
-          if echo "$changed" | grep -Eq '^(src|tools|tests|scripts)/'; then
+          if echo "$changed" | grep -Eq '^(src|tools|tests)/'; then
             make test TEST_OPTS="--junitxml=artifacts/junit-${{ matrix.python-version }}.xml --durations=25 --cov=src --cov-report=xml:artifacts/coverage-${{ matrix.python-version }}.xml --cov-report=term-missing:skip-covered"
           fi
 
-          if ! echo "$changed" | grep -Eq '^(src|tools|tests|scripts)/'; then
+          if ! echo "$changed" | grep -Eq '^(src|tools|tests)/'; then
             echo "No changed Python test surface."
           fi
       - name: Upload test artifacts

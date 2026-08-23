@@ -93,9 +93,8 @@ for platform-specific reproduction.
   - notebook runtime caches (`.ipynb_checkpoints/`, `notebooks/artifacts/`, `notebooks/mlruns/`)
 - Keep in version control only intentionally curated artifacts used by the
   portfolio narrative (source markdown, notebooks, and curated summaries).
-- If a generated artifact must be preserved, prefer the explicit
-  `archive/runtime/` destination and keep only the minimum representative
-  evidence there.
+- If a generated artifact must be preserved, move it to a separate archive
+  repository and keep only the minimum representative evidence there.
 - Versioned generated artifacts are allowed only when the files are part of a
   defined narrative deliverable (for example, benchmark outputs that are
   directly referenced by project writeups).
@@ -106,7 +105,7 @@ for platform-specific reproduction.
 
 ```bash
 python scripts/fix_notebook_issues.py --download-datasets
-python scripts/run_notebook_tests.py --dirs archive/legacy/projects/mlops/modern_bank_churn/legacy/modern-bank-churn ab_testing
+python scripts/run_notebook_tests.py --dirs projects/ab_testing
 ```
 
 ### Dashboard

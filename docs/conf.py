@@ -4,8 +4,10 @@ This file exposes the knobs Sphinx reads when building HTML/LaTeX output and
 configures every extension we rely on for notebooks, diagrams, and API docs.
 """
 
+import asyncio
 import os
 import sys
+import types
 
 REPO_ROOT = os.path.abspath("..")
 sys.path.insert(0, REPO_ROOT)
@@ -16,9 +18,6 @@ sys.path.insert(0, os.path.join(REPO_ROOT, "src"))
 # ---------------------------------------------------------------------------
 # Lightweight stubs for optional third-party frameworks used in the API
 # ---------------------------------------------------------------------------
-
-import asyncio
-import types
 
 
 def _install_stub(name: str, module: types.ModuleType) -> None:
@@ -173,9 +172,9 @@ _install_stub("flask_socketio", flask_socketio_stub)
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "Data Science Portfolio"
-copyright = "2024, Data Science Team"
-author = "Data Science Team"
+project = "Data Science Projects Portfolio"
+copyright = "2024, Diogo Ribeiro"
+author = "Diogo Ribeiro"
 release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------
@@ -362,7 +361,7 @@ latex_documents = [
         master_doc,
         "DataSciencePortfolio.tex",
         "Data Science Portfolio Documentation",
-        "Data Science Team",
+        author,
         "manual",
     ),
 ]

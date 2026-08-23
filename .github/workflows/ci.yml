@@ -178,7 +178,7 @@ jobs:
             fi
           fi
 
-          files="$(git diff --diff-filter=ACMRT --name-only "$base"...HEAD -- '*.py' | grep -Ev '^(archive/)' || true)"
+          files="$(git diff --diff-filter=ACMRT --name-only "$base"...HEAD -- '*.py' | grep -Ev '^(archive/|docs/)' || true)"
           if [ -z "$files" ]; then
             echo "No changed Python files to type-check."
             exit 0

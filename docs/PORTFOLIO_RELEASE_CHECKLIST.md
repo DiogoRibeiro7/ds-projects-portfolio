@@ -15,7 +15,7 @@ For smaller, low-visibility changes (single typo fixes, internal refactors, docs
 
 ## Portfolio quality
 
-- [ ] Featured portfolio items are accurate (`README.md`, `docs/README_ENHANCED.md`).
+- [ ] Featured portfolio items are accurate (`README.md`, `docs/index.md`, `docs/README_ENHANCED.md`).
 - [ ] Every changed featured notebook has: clean structure, clear objective, run steps, expected outputs, and next-step guidance.
 - [ ] Featured notebook list and project/readme links were updated where needed.
 - [ ] All visual portfolio artifacts (`plots`, `tables`, `screenshots`) were validated for readability and match the current results.
@@ -32,7 +32,7 @@ For smaller, low-visibility changes (single typo fixes, internal refactors, docs
 - [ ] No generated runtime artifacts were introduced (e.g. `docs/_build`, `.ipynb_checkpoints`,
   `outputs`, `results`, `coverage`, `logs`).
 - [ ] Artifact policy is updated if needed in
-  [docs/contributor/development.md](docs/contributor/development.md), `.gitignore`,
+  [docs/contributor/development.md](contributor/development.md), `.gitignore`,
   and/or workflow rules.
 
 ## Reviewer handoff

@@ -26,7 +26,7 @@ Every change merged to `main` should bump `CHANGELOG.md` under the `Unreleased` 
 3. **Review release checklist**
 
    - For PR-driven portfolio changes, attach and complete
-     [docs/PORTFOLIO_RELEASE_CHECKLIST.md](/docs/PORTFOLIO_RELEASE_CHECKLIST.md)
+     [docs/PORTFOLIO_RELEASE_CHECKLIST.md](../PORTFOLIO_RELEASE_CHECKLIST.md)
      and include it in the PR description.
 
 4. **Update metadata**

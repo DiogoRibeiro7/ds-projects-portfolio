@@ -6,7 +6,7 @@ This project implements a comprehensive CI/CD pipeline using GitHub Actions, Doc
 
 ## Pipeline Architecture
 
-```mermaid
+```{mermaid}
 graph TB
     A[Code Push/PR] --> B[Code Quality]
     B --> C[Type Checking]
@@ -266,7 +266,7 @@ pytest tests/benchmarks/ --benchmark-only
 
 ### Environment Variables
 
-```env
+```text
 # Database
 POSTGRES_USER=mluser
 POSTGRES_PASSWORD=secure_password
@@ -335,7 +335,9 @@ pip-audit
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+See the repository
+[`CONTRIBUTING.md`](https://github.com/DiogoRibeiro7/ds-projects-portfolio/blob/main/CONTRIBUTING.md)
+for contribution guidelines.
 
 ## License
 

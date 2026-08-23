@@ -104,7 +104,8 @@ Use this sample set as a baseline for most machine learning projects.
 
 - Document metric definitions in a shared location such as `docs/methodology/business_metrics.md` or the new `evaluation_metrics_standardization.md` page.
 - Use the experiment README template in `docs/methodology/experiment_readme_template.md` to capture metric context in each experiment.
-- Keep dashboards aligned with the portfolio dashboard baseline metrics guidance in `docs/modules/dashboard.md`.
+- Keep dashboard metrics aligned with the project README and the maintained API
+  overview in `docs/api/index.md`.
 - When adding new projects, map project-specific metric names to the standard metric vocabulary.
 
 ## Example documentation block

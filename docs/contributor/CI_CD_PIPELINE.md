@@ -169,16 +169,16 @@ Located in `tests/benchmarks/test_performance.py`:
 
 ## Documentation
 
-### Automated Documentation
+### Documentation Build
 
-- Sphinx-based API documentation
-- Auto-generated from docstrings
+- Sphinx-based portfolio documentation
+- Curated API overview and usage guides
 - Deployed to GitHub Pages on main branch
 - Version-specific documentation
 
 ### Documentation Types
 
-1. **API Reference**: Auto-generated from code
+1. **API Overview**: Curated source map and maintained usage guides
 2. **User Guides**: Markdown-based guides
 3. **Jupyter Notebooks**: Interactive examples
 4. **Architecture Diagrams**: Mermaid diagrams

@@ -1,5 +1,5 @@
 # Development Dependencies
-# This file contains all dependencies needed for development, testing, and CI/CD
+# This file contains dependencies needed for development, testing, and CI.
 
 # Core Testing
 pytest>=7.4.0
@@ -110,7 +110,7 @@ setuptools>=68.1.2
 wheel>=0.41.2
 pip-tools>=7.3.0
 
-# CI/CD Tools
+# CI Tools
 tox>=4.10.0
 nox>=2023.4.22
 

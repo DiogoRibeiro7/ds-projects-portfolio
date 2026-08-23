@@ -1,7 +1,8 @@
 # 🧪 Comprehensive Testing Infrastructure
 
 ## Overview
-Production-grade testing infrastructure with 95%+ code coverage, property-based testing, data validation, and CI/CD automation.
+Portfolio-focused testing infrastructure with unit, integration, regression,
+notebook, and documentation checks backed by GitHub Actions.
 
 ## 📊 Testing Metrics
 
@@ -9,7 +10,7 @@ Production-grade testing infrastructure with 95%+ code coverage, property-based 
 |--------|--------|---------|
 | Code Coverage | 95% | ✅ 95%+ |
 | Test Types | 8 | ✅ 8 |
-| Python Versions | 5 | ✅ 3.8-3.12 |
+| Python Versions | 2 | ✅ 3.11-3.12 |
 | Operating Systems | 3 | ✅ Linux, Windows, macOS |
 | Security Scanners | 4 | ✅ Bandit, Safety, pip-audit, Semgrep |
 | Performance Benchmarks | 15+ | ✅ 15+ |
@@ -355,10 +356,8 @@ pytest -v --tb=short
 ### CI Testing
 ```bash
 # Triggered automatically on:
-- Push to main/develop
+- Push to main
 - Pull requests
-- Weekly schedule
-- Manual dispatch
 ```
 
 ## 📈 Test Metrics Dashboard
@@ -415,10 +414,10 @@ pytest --reruns 3 --reruns-delay 1
 - ✅ 95%+ code coverage achieved
 - ✅ Property-based testing implemented
 - ✅ Data quality validation active
-- ✅ CI/CD fully automated
+- ✅ CI automated for the maintained portfolio surface
 - ✅ Security scanning integrated
 - ✅ Performance regression testing
-- ✅ Multi-platform testing
+- ✅ Python 3.11 and 3.12 testing
 - ✅ Automated dependency updates
 
 ---

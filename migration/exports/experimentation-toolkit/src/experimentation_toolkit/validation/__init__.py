@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy import stats
 
 
@@ -62,7 +63,7 @@ def sample_ratio_mismatch(
     )
 
 
-def validate_binary_metric(values: list[int] | np.ndarray) -> None:
+def validate_binary_metric(values: list[int] | NDArray[np.generic]) -> None:
     """Raise if a metric vector is not binary."""
 
     array = np.asarray(values)

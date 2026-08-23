@@ -10,6 +10,9 @@ class FeatureEngineer:
 
     def create_features(self, df: pd.DataFrame) -> pd.DataFrame:
         out = df.copy()
+        for col in out.select_dtypes(include=[np.number]).columns:
+            if out[col].isna().all():
+                out[col] = 0.0
         numeric = out.select_dtypes(include=[np.number])
         for col in numeric.columns:
             out[f"{col}_squared"] = numeric[col] ** 2
@@ -77,7 +80,9 @@ class FeatureEngineer:
         out = df.copy()
         for col in out.columns:
             if pd.api.types.is_numeric_dtype(out[col]):
-                out[col] = out[col].fillna(out[col].median())
+                median = out[col].median()
+                fill = 0.0 if pd.isna(median) else median
+                out[col] = out[col].fillna(fill)
             else:
                 mode = out[col].mode(dropna=True)
                 fill = mode.iloc[0] if not mode.empty else ""

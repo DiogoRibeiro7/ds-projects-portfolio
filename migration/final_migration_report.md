@@ -80,6 +80,21 @@ portfolio content.
 - Merged `migration/copy-first-exports` into `main` via PR #468.
 - Created the preservation tag `monolith-final-2026-08` on the merged `main` state.
 - Created standalone public GitHub repositories from the validated export snapshots.
+- Verified standalone repository CI and synced follow-up fixes back into the export snapshots.
+
+## Standalone CI Follow-Up
+
+The first standalone CI pass identified three repository-local issues after the fresh
+snapshot pushes:
+
+- `experimentation-toolkit`: NumPy 2.x typing compatibility and pandas typing differences
+  across Python 3.10-3.12.
+- `genai-rag-engineering`: NumPy 2.x typing compatibility in mypy.
+- `customer-analytics`: eager optional `shap` import during tests and an all-null numeric
+  feature edge case found by Hypothesis.
+
+Fixes were pushed to the standalone repositories and mirrored into `migration/exports/` so
+the portfolio snapshots match the live repositories.
 
 ## Remaining Decisions
 

@@ -13,16 +13,13 @@
 
 ## Tooling
 
-| Task           | Command                                               |
-| -------------- | ----------------------------------------------------- |
-| Format         | `black . && isort .`                                  |
-| Static typing  | `mypy tools/check_docstring_coverage.py` (expand coverage once outstanding typing debt is resolved) |
-| Ruff/pydocstyle| `pre-commit run --all-files`                          |
-| Unit tests     | `pytest tests/unit -n auto --maxfail=1`               |
-| Integration    | `pytest tests/integration -m "not slow"`              |
-| Data quality   | `pytest tests/data` (uses Great Expectations)         |
-| Performance    | `pytest tests/performance --benchmark-only`           |
-| Docs           | `(cd docs && make html)`                              |
+| Task           | Command                                  |
+| -------------- | ---------------------------------------- |
+| Format         | `ruff format src tools tests scripts`    |
+| Lint           | `ruff check src tools tests scripts`     |
+| Static typing  | `mypy tools/ src/ --ignore-missing-imports` |
+| Unit tests     | `pytest tests/unit --maxfail=1`          |
+| Docs           | `(cd docs && make html)`                 |
 
 > NOTE: Full `mypy` coverage across production packages is still blocked by legacy type debt and missing third-party stubs. Use Python 3.11 for local type-checking:
 >
@@ -66,13 +63,6 @@ python -m pip install -r requirements.lock
 Prefer committing only one canonical snapshot file (`requirements.lock`) for
 automation and keeping human-readable environment files (`environment-export.yml`)
 for platform-specific reproduction.
-
-## Releasing
-
-1. Ensure `DOC_COVERAGE.md` and `CHANGELOG` are updated.
-2. Bump `pyproject.toml` / `src/__init__.py` versions as needed.
-3. Tag the release: `git tag -s v1.1.0 && git push origin v1.1.0`.
-4. The `release.yml` workflow publishes to PyPI/GitHub Packages.
 
 ## Documentation Workflow
 

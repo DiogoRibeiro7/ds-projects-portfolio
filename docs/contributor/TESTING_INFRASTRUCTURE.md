@@ -170,14 +170,7 @@ def test_pipeline_performance(benchmark):
   - Unit tests on Python 3.11 and 3.12
   - Documentation build
 
-#### 2. Release Pipeline (`release.yml`)
-- **Triggers**: Version tags, Manual
-- **Jobs**:
-  - Version validation
-  - Release packaging and publication checks
-  - Documentation release hygiene
-
-#### 3. Optional Deep Checks
+#### 2. Optional Deep Checks
 - **Triggers**: Manual, schedule, or explicit PR label
 - **Jobs**:
   - Notebook validation

@@ -1,7 +1,7 @@
 # Contributor and Maintenance Documentation
 
-This area is for contributors, maintainers, and release workflows. It contains
-process and hygiene documentation; portfolio-first readers should use the
+This area is for contributors and maintainers. It contains lightweight process
+and hygiene documentation; portfolio-first readers should use the
 portfolio-facing docs section in [index.md](index.md).
 
 ```{toctree}
@@ -18,7 +18,6 @@ contributor/TESTING_INFRASTRUCTURE
 contributor/CI_CD_PIPELINE
 contributor/REPO_STRUCTURE
 contributor/ROADMAP
-contributor/RELEASE
 ```
 
 ## Quick start for contributors
@@ -39,4 +38,5 @@ contributor/RELEASE
   - [`codeql-analysis.yml`](https://github.com/DiogoRibeiro7/ds-projects-portfolio/blob/main/.github/workflows/codeql-analysis.yml)
 - Deep checks are optional and can be started either from the Actions UI (`Run workflow`) or by adding the `run-deep-ci` label to the PR.
 
-The repository uses this split to keep required checks fast while still allowing deeper validation before release.
+The repository uses this split to keep required checks fast while still allowing
+deeper validation before larger portfolio updates.

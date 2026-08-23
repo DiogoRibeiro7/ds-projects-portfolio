@@ -15,13 +15,13 @@
 #### Create Standardized Project Structure
 
 ```
-data-science-portfolio/
+ds-projects-portfolio/
 ├── README.md ✅
 ├── CONTRIBUTING.md ✅  
 ├── requirements.txt ✅
 ├── LICENSE
 ├── .gitignore
-├── setup.py (for package installation)
+├── pyproject.toml (package and tooling configuration)
 │
 ├── projects/
 │   ├── ab_testing/ ✅ (current)

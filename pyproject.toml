@@ -132,7 +132,6 @@ extend-exclude = [
     "tests",
     "time_series",
     "tutorials",
-    "run_tests.py",
     "run_notebook_tests.py",
 ]
 

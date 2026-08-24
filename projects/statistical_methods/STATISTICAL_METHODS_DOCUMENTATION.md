@@ -1,12 +1,13 @@
-# Advanced Statistical Methods Framework
-
-## Comprehensive Statistical Enhancement Suite
+# Statistical Methods Documentation
 
 ### Overview
 
-This framework provides advanced statistical methods and techniques for robust experimentation, causal inference, and statistical testing. All implementations are validated against established libraries and include proper diagnostics.
+These notes document statistical-method examples included in the portfolio:
+Bayesian A/B testing, bandits, non-parametric tests, multiple-testing
+corrections, bootstrap methods, power analysis, causal inference, and validation
+helpers.
 
-## 1\. Bayesian A/B Testing (`bayesian_ab_testing.py`)
+## 1. Bayesian A/B Testing (`bayesian_ab_testing.py`)
 
 ### Features
 
@@ -41,7 +42,7 @@ result = tester.test_conversion(
 - **Incorporates prior knowledge**: Useful for small samples
 - **Decision-theoretic**: Provides expected loss for decisions
 
-## 2\. Multi-Armed Bandits (`multi_armed_bandits.py`)
+## 2. Multi-Armed Bandits (`multi_armed_bandits.py`)
 
 ### Algorithms Implemented
 
@@ -74,7 +75,7 @@ stats = thompson.get_statistics()
 - **Feature Rollouts**: Gradually shift traffic to winner
 - **Personalization**: Context-aware recommendations
 
-## 3\. Advanced Statistical Tests (`advanced_statistical_tests.py`)
+## 3. Statistical Tests (`advanced_statistical_tests.py`)
 
 ### Non-Parametric Tests
 
@@ -144,7 +145,7 @@ power = PowerAnalysis.simulation_power(
 - **Eta-squared (η²)**: ANOVA effect size
 - **Omega-squared (ω²)**: Less biased ANOVA effect
 
-## 4\. Causal Inference Methods (`causal_inference.py`)
+## 4. Causal Inference Methods (`causal_inference.py`)
 
 ### Instrumental Variables (IV)
 
@@ -459,14 +460,8 @@ from statistical_methods.causal_inference import PropensityScoreMatching
 from statistical_methods.statistical_validation_suite import StatisticalValidator
 ```
 
-## Conclusion
+## Closing Notes
 
-This comprehensive statistical methods framework provides:
-
-- **Rigorous**: All methods validated against theory and libraries
-- **Practical**: Ready-to-use with clear examples
-- **Comprehensive**: Covers A/B testing, bandits, causal inference
-- **Modern**: Includes latest statistical advances
-- **Documented**: Clear explanations and references
-
-The framework enables robust statistical analysis for any experimentation or causal inference need, with proper diagnostics and validation throughout.
+The modules are examples of statistical implementation patterns for portfolio
+review and local experimentation. Before adapting them, check assumptions,
+diagnostics, sample sizes, and library comparisons for the specific use case.

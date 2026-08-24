@@ -1,12 +1,15 @@
-# Enhanced Statistical Methods Documentation
+# Statistical Methods Reference Notes
 
 ## Overview
 
-This document provides comprehensive documentation of the enhanced statistical methods implemented in this portfolio, including theoretical foundations, practical applications, and validation approaches.
+This document summarizes selected statistical-method examples in this portfolio,
+including Bayesian experimentation, network effects, time-dependent testing,
+meta-analysis, power simulations, causal inference, bandits, and validation
+checks.
 
 ## Table of Contents
 
-1. [Enhanced Bayesian A/B Testing](#enhanced-bayesian-ab-testing)
+1. [Bayesian A/B Testing](#bayesian-ab-testing)
 2. [Network Effect Corrections](#network-effect-corrections)
 3. [Time-Dependent Testing](#time-dependent-testing)
 4. [Meta-Analysis Tools](#meta-analysis-tools)
@@ -15,7 +18,7 @@ This document provides comprehensive documentation of the enhanced statistical m
 7. [Multi-Armed Bandits](#multi-armed-bandits)
 8. [Statistical Validation Suite](#statistical-validation-suite)
 
-## Enhanced Bayesian A/B Testing
+## Bayesian A/B Testing
 
 ### Theoretical Foundation
 
@@ -466,21 +469,15 @@ print(f"Early stopping rate: {result.early_stopping_rate:.3f}")
    - Lattimore, T. & Szepesvári, C. (2020). Bandit Algorithms.
    - Slivkins, A. (2019). "Introduction to Multi-Armed Bandits."
 
-## Conclusion
+## Closing Notes
 
-This enhanced statistical methods suite provides:
+These examples show several approaches to experimentation and causal analysis:
 
-1. **Comprehensive Testing Framework**: From basic A/B tests to complex network and temporal analyses
-2. **Rigorous Validation**: Comparison with established libraries and theoretical properties
-3. **Practical Tools**: Power analysis, sensitivity analysis, and adaptive designs
-4. **Causal Inference**: Multiple methods for identifying causal effects
-5. **Modern Approaches**: Bayesian methods, bandit algorithms, and meta-analysis
+1. Bayesian A/B testing and posterior decision summaries.
+2. Network and temporal treatment-effect examples.
+3. Meta-analysis, power simulation, and adaptive-design utilities.
+4. Causal inference implementations for common observational-study designs.
+5. Bandit algorithms and statistical validation helpers.
 
-The implementations prioritize:
-- **Accuracy**: Validated against known results
-- **Efficiency**: Optimized for performance
-- **Usability**: Clear APIs and documentation
-- **Robustness**: Comprehensive error handling
-- **Extensibility**: Modular design for customization
-
-This toolkit enables data scientists to conduct sophisticated statistical analyses with confidence in the results' validity and reliability.
+Before reusing the code, verify assumptions, sample-size requirements, and
+diagnostics against the specific experiment or dataset.

@@ -81,7 +81,7 @@ class ProductionPipeline:
             pickle.dump(self, f)
 
     @classmethod
-    def load(cls, path: str | Path) -> "ProductionPipeline":
+    def load(cls, path: str | Path) -> ProductionPipeline:
         with open(path, "rb") as f:
             obj = pickle.load(f)
         if not isinstance(obj, cls):

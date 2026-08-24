@@ -5,19 +5,21 @@ reproducibly, and without API credentials. Toggling a `USE_LIVE_API` flag at the
 of each notebook swaps in the real Anthropic or OpenAI client with identical call
 signatures and response shapes.
 """
+
 from __future__ import annotations
 
 import hashlib
 import os
 import re
 import time
-from typing import Protocol
+from typing import Any, Protocol, cast
 
 from .schemas import LLMMessage, LLMResponse
 
 
 class LLMClient(Protocol):
     """Protocol for all LLM clients."""
+
     model: str
     provider: str
 
@@ -34,11 +36,15 @@ class LLMClient(Protocol):
 # Real clients (thin, single-responsibility wrappers around the SDK response)
 # ----------------------------------------------------------------------------
 
+
 class AnthropicClient:
     provider = "anthropic"
 
-    def __init__(self, model: str = "claude-haiku-4-5-20251001", api_key: str | None = None):
+    def __init__(
+        self, model: str = "claude-haiku-4-5-20251001", api_key: str | None = None
+    ):
         import anthropic  # local import: keep module import cheap
+
         self.model = model
         self._client = anthropic.Anthropic(
             api_key=api_key or os.environ.get("ANTHROPIC_API_KEY")
@@ -70,7 +76,9 @@ class AnthropicClient:
         resp = self._client.messages.create(**kwargs)
         latency = (time.monotonic() - t0) * 1000
         text = "".join(
-            getattr(b, "text", "") for b in resp.content if getattr(b, "type", "") == "text"
+            getattr(b, "text", "")
+            for b in resp.content
+            if getattr(b, "type", "") == "text"
         )
         return LLMResponse(
             text=text,
@@ -88,8 +96,11 @@ class OpenAIClient:
 
     def __init__(self, model: str = "gpt-4o-mini", api_key: str | None = None):
         import openai
+
         self.model = model
-        self._client = openai.OpenAI(api_key=api_key or os.environ.get("OPENAI_API_KEY"))
+        self._client = openai.OpenAI(
+            api_key=api_key or os.environ.get("OPENAI_API_KEY")
+        )
 
     def complete(
         self,
@@ -103,7 +114,10 @@ class OpenAIClient:
             model=self.model,
             max_tokens=max_tokens,
             temperature=temperature,
-            messages=[{"role": m.role, "content": m.content} for m in messages],
+            messages=cast(
+                Any,
+                [{"role": m.role, "content": m.content} for m in messages],
+            ),
         )
         latency = (time.monotonic() - t0) * 1000
         choice = resp.choices[0]
@@ -124,7 +138,9 @@ class OpenAIClient:
 
 _CITE_PATTERN = re.compile(r"\[([A-Za-z0-9_\-#]+)\]\s*(.*)")
 _JUDGE_HINT = re.compile(r"score\s*[:=]\s*\{?", re.IGNORECASE)
-_JUDGE_SCORE = re.compile(r"rate this as\s+(faithful|partial|unfaithful)", re.IGNORECASE)
+_JUDGE_SCORE = re.compile(
+    r"rate this as\s+(faithful|partial|unfaithful)", re.IGNORECASE
+)
 
 
 class FakeLLMClient:
@@ -136,6 +152,7 @@ class FakeLLMClient:
     a rubric signal and returns a deterministic JSON verdict. Latency and token counts
     are seeded so cost / latency dashboards render sensibly even offline.
     """
+
     provider = "fake"
 
     def __init__(self, model: str = "fake-sonnet", seed: int = 17):
@@ -149,10 +166,14 @@ class FakeLLMClient:
         max_tokens: int = 1024,
         temperature: float = 0.0,
     ) -> LLMResponse:
-        last_user = next((m.content for m in reversed(messages) if m.role == "user"), "")
+        last_user = next(
+            (m.content for m in reversed(messages) if m.role == "user"), ""
+        )
         system = next((m.content for m in messages if m.role == "system"), "")
         full_prompt = system + "\n\n" + last_user
-        prompt_digest = hashlib.md5(full_prompt.encode("utf-8", "ignore")).hexdigest()[:8]
+        prompt_digest = hashlib.md5(full_prompt.encode("utf-8", "ignore")).hexdigest()[
+            :8
+        ]
 
         text = self._respond(full_prompt, prompt_digest)
         token_in = max(1, len(full_prompt.split()))
@@ -258,8 +279,11 @@ class FakeLLMClient:
         else:
             overlap = len(q_tokens & p_tokens) / len(q_tokens)
             rel = overlap > 0.20
-        return ('{"relevant": true, "reasoning": "token overlap > 0.20"}' if rel else
-                '{"relevant": false, "reasoning": "insufficient token overlap"}')
+        return (
+            '{"relevant": true, "reasoning": "token overlap > 0.20"}'
+            if rel
+            else '{"relevant": false, "reasoning": "insufficient token overlap"}'
+        )
 
     def _respond_hyde(self, prompt: str) -> str:
         # Extract the question after "Question:"
@@ -292,7 +316,7 @@ def _extract_section(prompt: str, header: str) -> str:
     idx = prompt.find(header)
     if idx < 0:
         return ""
-    rest = prompt[idx + len(header):]
+    rest = prompt[idx + len(header) :]
     end = rest.find("###")
     return rest[:end] if end >= 0 else rest
 
@@ -300,6 +324,7 @@ def _extract_section(prompt: str, header: str) -> str:
 # ----------------------------------------------------------------------------
 # Factory
 # ----------------------------------------------------------------------------
+
 
 def get_llm_client(
     provider: str = "fake",

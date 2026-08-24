@@ -1,7 +1,7 @@
-"""Enhanced data processing utilities for A/B testing and experimentation.
+"""Data processing utilities for A/B testing and experimentation.
 
 This module handles data cleaning, validation, and preparation for statistical analysis
-with comprehensive implementations of all TODO items and high-performance optimizations.
+with optional performance-oriented helpers.
 """
 
 import json
@@ -21,7 +21,7 @@ from scipy import stats
 # Performance optimization imports
 try:
     import numba
-    from numba import jit, prange
+    from numba import jit
 
     NUMBA_AVAILABLE = True
 except ImportError:
@@ -141,7 +141,7 @@ class OptimizedDataProcessor:
         """
         self.n_jobs = multiprocessing.cpu_count() if n_jobs == -1 else n_jobs
         self.use_gpu = use_gpu
-        self._cache = {}
+        self._cache: dict[str, Any] = {}
 
         # Check for GPU support
         if use_gpu:
@@ -208,7 +208,7 @@ class OptimizedDataProcessor:
         unique_groups = np.unique(groups)
         results = np.zeros(len(unique_groups))
 
-        for i in prange(len(unique_groups)):
+        for i in range(len(unique_groups)):
             mask = groups == unique_groups[i]
             group_values = values[mask]
 

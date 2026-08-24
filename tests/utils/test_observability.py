@@ -1,7 +1,6 @@
 from unittest.mock import Mock
 
 import pytest
-from unittest.mock import Mock
 
 from src.utils.observability import ObservabilityManager
 

@@ -1,8 +1,7 @@
 """Statistical utilities module for the data science portfolio.
 
 This module contains core statistical functions used across the portfolio
-projects. Enhanced with proper error handling, advanced methods, and
-comprehensive implementations.
+projects, including experiment analysis helpers and statistical tests.
 """
 
 import logging
@@ -13,6 +12,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from scipy.special import ndtri
+
+from .robust import huber_smooth
 
 # Module-level constants
 DEFAULT_ALPHA = 0.05
@@ -70,8 +71,8 @@ def two_prop_ztest(
         0.0156
 
     Notes:
-        - The helper returns ``(inf, 0.0)`` or ``(-inf, 0.0)`` when one cohort
-          has zero variance (all successes or all failures).
+        - The continuity correction stabilizes finite one-sided degenerate
+          cohorts; fully deterministic matching cohorts return ``(0.0, 1.0)``.
         - ``two_sided=False`` is preserved for legacy callers and simply maps to
           ``alternative='larger'`` when no explicit alternative is supplied.
     """
@@ -599,13 +600,16 @@ class ExperimentAnalyzer:
         if not 0 < fraction < 0.5:
             raise ValueError("trim_fraction must be in (0, 0.5)")
 
-        def _trim(group: pd.DataFrame) -> pd.DataFrame:
-            arr = group[value_col].values
+        trimmed_groups: list[pd.DataFrame] = []
+        for _, group in df.groupby(group_col, sort=False):
+            arr = np.asarray(group[value_col].values, dtype=float)
             low = np.quantile(arr, fraction)
             high = np.quantile(arr, 1 - fraction)
-            return group[(group[value_col] >= low) & (group[value_col] <= high)]
+            trimmed_groups.append(
+                group[(group[value_col] >= low) & (group[value_col] <= high)]
+            )
 
-        return df.groupby(group_col, group_keys=False).apply(_trim)
+        return pd.concat(trimmed_groups, ignore_index=False)
 
     def run_comprehensive_analysis(
         self,
@@ -723,7 +727,10 @@ class ExperimentAnalyzer:
 
         processed: dict[str, np.ndarray] = {}
         for group in groups:
-            values = df.loc[df[group_col] == group, metric].dropna().values
+            values = np.asarray(
+                df.loc[df[group_col] == group, metric].dropna().values,
+                dtype=float,
+            )
             if robust:
                 if trim_fraction > 0:
                     low = np.quantile(values, trim_fraction)
@@ -783,7 +790,7 @@ def apply_multiple_testing_correction(
     if method == "bonferroni":
         corrected = p_array * len(p_array)
         corrected = np.minimum(corrected, 1.0)
-        rejected = corrected < 0.05
+        rejected = corrected <= 0.05
 
     elif method == "holm":
         n = len(p_array)
@@ -793,7 +800,7 @@ def apply_multiple_testing_correction(
 
         for i, idx in enumerate(sorted_indices):
             corrected[idx] = min(1.0, p_array[idx] * (n - i))
-            if corrected[idx] < 0.05:
+            if corrected[idx] <= 0.05:
                 rejected[idx] = True
             else:
                 # Holm method stops once it encounters the first non-rejection so

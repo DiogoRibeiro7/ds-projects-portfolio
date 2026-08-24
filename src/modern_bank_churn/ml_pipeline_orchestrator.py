@@ -51,7 +51,7 @@ class PipelineConfig:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "PipelineConfig":
+    def from_dict(cls, data: dict[str, Any]) -> PipelineConfig:
         return cls(**data)
 
 
@@ -109,7 +109,11 @@ class MLPipelineOrchestrator:
         model = self._make_model()
         model.fit(X_train, y_train)
         preds = model.predict(X_test)
-        proba = model.predict_proba(X_test)[:, 1] if hasattr(model, "predict_proba") else preds
+        proba = (
+            model.predict_proba(X_test)[:, 1]
+            if hasattr(model, "predict_proba")
+            else preds
+        )
 
         metrics = {
             "accuracy": float(accuracy_score(y_test, preds)),
@@ -153,7 +157,7 @@ class MLPipelineOrchestrator:
             pickle.dump(self, f)
 
     @classmethod
-    def load_pipeline(cls, path: str | Path) -> "MLPipelineOrchestrator":
+    def load_pipeline(cls, path: str | Path) -> MLPipelineOrchestrator:
         with open(path, "rb") as f:
             obj = pickle.load(f)
         if not isinstance(obj, cls):

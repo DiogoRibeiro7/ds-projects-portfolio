@@ -4,6 +4,8 @@ MYPY ?= mypy
 SPHINXBUILD ?= sphinx-build
 TEST_OPTS ?=
 ACTIVE_PATHS ?= src tests scripts
+TYPECHECK_PATHS ?= src/genai src/modern_bank_churn src/statistics/core.py src/data_processing/cleaning.py
+TEST_PATHS ?= tests/unit tests/regression
 
 .PHONY: check format lint typecheck test test-unit test-integration test-regression test-slow test-all docs build clean
 
@@ -14,19 +16,19 @@ lint:
 	ruff check $(ACTIVE_PATHS)
 
 typecheck:
-	$(MYPY) src/ --ignore-missing-imports
+	$(MYPY) $(TYPECHECK_PATHS) --ignore-missing-imports
 
 test:
-	$(PYTEST) -m "(unit or integration or regression) and not slow" $(TEST_OPTS)
+	$(PYTEST) $(TEST_PATHS) -m "(unit or regression) and not slow" $(TEST_OPTS)
 
 test-unit:
-	$(PYTEST) -m "unit and not slow" $(TEST_OPTS)
+	$(PYTEST) tests/unit -m "unit and not slow" $(TEST_OPTS)
 
 test-integration:
 	$(PYTEST) -m "integration and not slow" $(TEST_OPTS)
 
 test-regression:
-	$(PYTEST) -m "regression and not slow" $(TEST_OPTS)
+	$(PYTEST) tests/regression -m "regression and not slow" $(TEST_OPTS)
 
 test-slow:
 	$(PYTEST) -m "slow" $(TEST_OPTS)

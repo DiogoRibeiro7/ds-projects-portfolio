@@ -36,7 +36,7 @@ def test_pdf_integrates_to_one():
     x0 = np.array([[0.2]])
     grid = np.linspace(-6, 6, 4000)
     pdf_vals = model.pdf(np.repeat(x0, grid.size, axis=0), grid)
-    integral = np.trapz(pdf_vals, grid)
+    integral = np.trapezoid(pdf_vals, grid)
     assert integral == pytest.approx(1.0, abs=5e-2)
 
 

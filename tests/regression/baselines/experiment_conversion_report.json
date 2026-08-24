@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "seed": 202401
+  },
+  "snapshot": {
+    "absolute_lift": 0.007896341463414641,
+    "confidence_interval": [
+      -0.025152439024390252,
+      0.04012195121951219
+    ],
+    "conversion_rates": {
+      "control": 0.12625,
+      "treatment": 0.134146
+    },
+    "conversions": {
+      "control": 101,
+      "treatment": 110
+    },
+    "p_value": 0.6904225833847801,
+    "relative_lift": 0.06254527891813577,
+    "sample_sizes": {
+      "control": 800,
+      "treatment": 820
+    },
+    "statistical_power": 0.06835921046483276,
+    "z_statistic": 0.3982816524729704
+  }
+}

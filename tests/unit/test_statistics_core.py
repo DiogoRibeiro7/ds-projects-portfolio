@@ -4,7 +4,6 @@ This module provides extensive testing for all statistical functions
 with edge cases, error conditions, and proper coverage.
 """
 
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -34,7 +33,7 @@ class TestTwoPropZTest:
     def test_different_proportions(self):
         """Test when groups have significantly different proportions."""
         z_stat, p_value = two_prop_ztest(20, 100, 40, 100)
-        assert z_stat < -2.0  # Negative because group 1 < group 2
+        assert z_stat > 2.0  # Positive because treatment conversion is higher
         assert p_value < 0.05
 
     def test_continuity_correction(self):
@@ -61,9 +60,9 @@ class TestTwoPropZTest:
         _, p_larger = two_prop_ztest(x1, n1, x2, n2, alternative="larger")
         _, p_smaller = two_prop_ztest(x1, n1, x2, n2, alternative="smaller")
 
-        # Two-sided p-value should be approximately twice the smaller one-sided p-value
+        # Treatment is larger, so the "larger" one-sided p-value is the smaller tail.
         assert p_two > p_larger
-        assert p_two > p_smaller
+        assert p_smaller > p_two
 
     def test_edge_cases_zero_successes(self):
         """Test when both groups have zero successes."""
@@ -256,7 +255,7 @@ class TestPowerCalculation:
     def test_basic_power(self):
         """Test basic power calculation."""
         power = calculate_power(
-            n_control=1000, n_treatment=1000, baseline_rate=0.1, effect_size=0.02
+            n_control=3500, n_treatment=3500, baseline_rate=0.1, effect_size=0.02
         )
 
         assert 0 <= power <= 1

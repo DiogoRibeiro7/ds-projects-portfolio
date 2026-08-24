@@ -74,7 +74,7 @@ Use this map when you want to jump directly to a project area:
 - [statistical_methods](projects/statistical_methods/)
 - [streamlit_apps](projects/streamlit_apps/)
 - [dashboard components](projects/dashboard_enhanced/)
-- [deep_learning](projects/deep_learning/)
+- [deep learning notebooks](projects/deep_learning/)
 - [nlp](projects/nlp/)
 - [performance_optimization](projects/performance_optimization/)
 

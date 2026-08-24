@@ -13,6 +13,7 @@ Three components:
 These are intentionally thin so a notebook can show OpenTelemetry / LangFuse wiring
 at a conceptual level without adding those as runtime deps.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -21,8 +22,9 @@ import statistics
 import time
 import uuid
 from collections import deque
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import Any, Iterator
+from typing import Any
 
 
 @dataclass
@@ -67,19 +69,23 @@ class Tracer:
         return (time.monotonic_ns() - self._origin_ns) / 1e6
 
     @contextlib.contextmanager
-    def span(self, name: str, attributes: dict[str, Any] | None = None) -> Iterator[dict[str, Any]]:
-        mutable = {"name": name, "attributes": dict(attributes or {})}
+    def span(
+        self, name: str, attributes: dict[str, Any] | None = None
+    ) -> Iterator[dict[str, Any]]:
+        mutable: dict[str, Any] = {"name": name, "attributes": dict(attributes or {})}
         start = self._now_ms()
         try:
             yield mutable
         finally:
             end = self._now_ms()
-            self._spans.append(Span(
-                name=mutable["name"],
-                start_ms=start,
-                end_ms=end,
-                attributes=mutable["attributes"],
-            ))
+            self._spans.append(
+                Span(
+                    name=mutable["name"],
+                    start_ms=start,
+                    end_ms=end,
+                    attributes=mutable["attributes"],
+                )
+            )
 
     @property
     def spans(self) -> list[Span]:
@@ -101,25 +107,33 @@ class Tracer:
 # Prices are USD per 1M tokens. Anthropic & OpenAI 2026 published rates (representative).
 DEFAULT_PRICING: dict[str, tuple[float, float]] = {
     # (input_per_1m, output_per_1m)
-    "claude-opus-4-7":        (15.00, 75.00),
-    "claude-sonnet-4-6":      (3.00,  15.00),
+    "claude-opus-4-7": (15.00, 75.00),
+    "claude-sonnet-4-6": (3.00, 15.00),
     "claude-haiku-4-5-20251001": (0.80, 4.00),
-    "gpt-4o":                 (2.50,  10.00),
-    "gpt-4o-mini":            (0.15,  0.60),
-    "fake-default":           (0.00,  0.00),
-    "fake-sonnet":            (0.00,  0.00),
+    "gpt-4o": (2.50, 10.00),
+    "gpt-4o-mini": (0.15, 0.60),
+    "fake-default": (0.00, 0.00),
+    "fake-sonnet": (0.00, 0.00),
 }
 
 
 @dataclass
 class CostTracker:
-    pricing: dict[str, tuple[float, float]] = field(default_factory=lambda: dict(DEFAULT_PRICING))
+    pricing: dict[str, tuple[float, float]] = field(
+        default_factory=lambda: dict(DEFAULT_PRICING)
+    )
     total_usd: float = 0.0
     by_model: dict[str, float] = field(default_factory=dict)
     by_tenant: dict[str, float] = field(default_factory=dict)
 
-    def record(self, *, model: str, prompt_tokens: int, completion_tokens: int,
-               tenant_id: str = "default") -> float:
+    def record(
+        self,
+        *,
+        model: str,
+        prompt_tokens: int,
+        completion_tokens: int,
+        tenant_id: str = "default",
+    ) -> float:
         rates = self.pricing.get(model, (0.0, 0.0))
         usd = (prompt_tokens * rates[0] + completion_tokens * rates[1]) / 1_000_000
         self.total_usd += usd
@@ -131,6 +145,7 @@ class CostTracker:
 # ----------------------------------------------------------------------------
 # Rolling latency (P50/P95 for online SLA checks)
 # ----------------------------------------------------------------------------
+
 
 class RollingLatencyTracker:
     def __init__(self, window: int = 500):
@@ -162,6 +177,7 @@ class RollingLatencyTracker:
 # ----------------------------------------------------------------------------
 # Structured JSON logger
 # ----------------------------------------------------------------------------
+
 
 def structured_log(level: str, event: str, **fields: Any) -> str:
     """Serialise a log line to one-line JSON; returns the string for testability.

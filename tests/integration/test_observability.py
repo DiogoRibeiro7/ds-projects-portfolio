@@ -1,5 +1,4 @@
-"""Test suite for observability utilities.
-"""
+"""Test suite for observability utilities."""
 
 import json
 import logging
@@ -405,7 +404,7 @@ class TestHealthChecker:
 
         readiness = health_checker.readiness_probe()
 
-        assert readiness["ready"] == True
+        assert readiness["ready"]
         assert all(readiness["dependencies"].values())
 
 

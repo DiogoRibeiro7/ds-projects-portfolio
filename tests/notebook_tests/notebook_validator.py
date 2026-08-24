@@ -1,5 +1,4 @@
-"""Notebook validation utilities for comprehensive testing of Jupyter notebooks.
-"""
+"""Notebook validation utilities for comprehensive testing of Jupyter notebooks."""
 
 import re
 from datetime import datetime
@@ -407,9 +406,9 @@ class NotebookValidator:
                 # Check for commented code
                 commented_code = len(
                     [
-                        l
-                        for l in lines
-                        if l.strip().startswith("#") and len(l.strip()) > 2
+                        line
+                        for line in lines
+                        if line.strip().startswith("#") and len(line.strip()) > 2
                     ]
                 )
                 if commented_code > 10:

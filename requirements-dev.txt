@@ -100,6 +100,8 @@ pytest-postgresql>=5.0.0
 fakeredis>=2.19.0
 
 # Data Testing
+numpy>=2.3.5,<2.4
+statsmodels>=0.14.4
 great-expectations==1.17.0
 pandera>=0.32.0
 

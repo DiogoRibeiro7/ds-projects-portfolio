@@ -1,5 +1,4 @@
-"""Performance regression tests to ensure system performance doesn't degrade.
-"""
+"""Performance regression tests to ensure system performance doesn't degrade."""
 
 import asyncio
 import json
@@ -13,15 +12,15 @@ import numpy as np
 import pandas as pd
 import psutil
 import pytest
+from dashboard_enhanced.dashboard_framework import DashboardConfig, EnhancedDashboard
 from memory_profiler import memory_usage
+from statistical_methods.statistical_analyzer import StatisticalAnalyzer
+
 from modern_bank_churn.feature_engineering import FeatureEngineer
 from modern_bank_churn.ml_pipeline_orchestrator import (
     MLPipelineOrchestrator,
     PipelineConfig,
 )
-from statistical_methods.statistical_analyzer import StatisticalAnalyzer
-
-from dashboard_enhanced.dashboard_framework import DashboardConfig, EnhancedDashboard
 
 # ============================================================================
 # Performance Benchmarks

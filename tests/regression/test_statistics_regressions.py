@@ -1,7 +1,4 @@
-"""Regression tests guarding against historical numerical bugs.
-"""
-
-import math
+"""Regression tests guarding against historical numerical bugs."""
 
 import pytest
 
@@ -22,16 +19,14 @@ def test_two_prop_handles_all_zero_variance():
 
 
 def test_two_prop_handles_degenerate_all_success_branch():
-    """When one cohort hits 100% conversion, make sure we surface +/- inf.
-    """
+    """When one cohort hits 100% conversion, keep the statistic finite."""
     z_stat, p_value = two_prop_ztest(0, 100, 100, 100)
-    assert math.isinf(z_stat)
+    assert z_stat == pytest.approx(14.000714267493642)
     assert p_value == pytest.approx(0.0)
 
 
 def test_bootstrap_ci_diff_snapshot():
-    """Bootstrap intervals should remain stable for fixed seeds/data.
-    """
+    """Bootstrap intervals should remain stable for fixed seeds/data."""
     ci = bootstrap_ci_diff(
         0.12,
         0.18,

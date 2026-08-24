@@ -1,5 +1,4 @@
-"""Test suite for the ML API module.
-"""
+"""Test suite for the ML API module."""
 
 from unittest.mock import Mock, patch
 
@@ -356,7 +355,7 @@ class TestModelMonitoring:
 
         assert "has_drift" in drift_report
         assert "drift_score" in drift_report
-        assert drift_report["has_drift"] == True
+        assert drift_report["has_drift"]
 
     def test_performance_monitoring(self, monitor):
         """Test model performance monitoring."""

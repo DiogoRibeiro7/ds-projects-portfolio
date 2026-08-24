@@ -5,14 +5,25 @@ Strategy: try to split at the most semantic separator that produces pieces small
 than `chunk_size` (paragraph > sentence > word > character), then greedy-merge
 adjacent pieces up to `chunk_size` with `chunk_overlap` tail carry-over.
 """
+
 from __future__ import annotations
 
 import re
-from typing import Iterable
+from collections.abc import Iterable
 
 from .schemas import Chunk, Document
 
-DEFAULT_SEPARATORS: tuple[str, ...] = ("\n\n", "\n", ". ", "? ", "! ", "; ", ", ", " ", "")
+DEFAULT_SEPARATORS: tuple[str, ...] = (
+    "\n\n",
+    "\n",
+    ". ",
+    "? ",
+    "! ",
+    "; ",
+    ", ",
+    " ",
+    "",
+)
 
 
 def _recursive_split(
@@ -30,7 +41,7 @@ def _recursive_split(
     for i, sep in enumerate(separators):
         if sep == "" or sep in text:
             chosen = sep
-            remaining = separators[i + 1:]
+            remaining = separators[i + 1 :]
             break
 
     if chosen == "":
@@ -85,7 +96,9 @@ def _merge(pieces: list[str], max_size: int, overlap: int) -> list[str]:
     return chunks
 
 
-def chunk_document(doc: Document, chunk_size: int = 512, chunk_overlap: int = 64) -> list[Chunk]:
+def chunk_document(
+    doc: Document, chunk_size: int = 512, chunk_overlap: int = 64
+) -> list[Chunk]:
     """Produce a list of Chunks from one Document."""
     if chunk_overlap >= chunk_size:
         raise ValueError("chunk_overlap must be smaller than chunk_size")
@@ -110,7 +123,9 @@ def chunk_documents(
 ) -> list[Chunk]:
     out: list[Chunk] = []
     for d in docs:
-        out.extend(chunk_document(d, chunk_size=chunk_size, chunk_overlap=chunk_overlap))
+        out.extend(
+            chunk_document(d, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        )
     return out
 
 

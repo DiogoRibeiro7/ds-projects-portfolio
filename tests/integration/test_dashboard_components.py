@@ -12,15 +12,15 @@ Dash = dash.Dash
 dcc = dash.dcc
 html = dash.html
 
-from dashboard_enhanced.app import create_app
-from dashboard_enhanced.dashboard_framework import (
+from dashboard_enhanced.app import create_app  # noqa: E402
+from dashboard_enhanced.dashboard_framework import (  # noqa: E402
     ChartBuilder,
     DashboardBase,
     DataConnector,
     InteractiveDashboard,
     RealtimeDashboard,
 )
-from dashboard_enhanced.graphql_api import Query, schema
+from dashboard_enhanced.graphql_api import Query, schema  # noqa: E402
 
 pytestmark = pytest.mark.integration
 

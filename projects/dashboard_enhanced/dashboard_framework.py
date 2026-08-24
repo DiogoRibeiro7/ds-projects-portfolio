@@ -1,7 +1,7 @@
-"""Enhanced Dashboard Framework
+"""Dashboard component examples.
 
-A comprehensive dashboard framework with real-time streaming, interactive filtering,
-export capabilities, and responsive design.
+Dashboard utilities with streaming, interactive filtering, export capabilities,
+and responsive layout examples.
 
 Author: Portfolio Team
 Date: 2024

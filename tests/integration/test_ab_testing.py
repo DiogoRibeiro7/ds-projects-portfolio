@@ -1,11 +1,8 @@
-"""Test suite for AB testing module.
-"""
-
+"""Test suite for AB testing module."""
 
 import numpy as np
 import pandas as pd
 import pytest
-
 from ab_testing import (
     ABTestRunner,
     BayesianABTest,

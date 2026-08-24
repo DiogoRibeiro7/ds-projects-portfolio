@@ -282,7 +282,7 @@ def run_comprehensive_analysis(
 ) -> dict[str, Any]:
     """Run the A/B test analysis pipeline."""
     logger = logging.getLogger(__name__)
-    logger.info("Starting comprehensive analysis pipeline")
+    logger.info("Starting experiment analysis pipeline")
 
     results = {
         "timestamp": datetime.now().isoformat(),

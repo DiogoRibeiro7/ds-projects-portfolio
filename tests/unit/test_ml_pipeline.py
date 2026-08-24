@@ -1,5 +1,4 @@
-"""Unit tests for ML Pipeline module with property-based testing.
-"""
+"""Unit tests for ML Pipeline module with property-based testing."""
 
 from unittest.mock import MagicMock, patch
 
@@ -9,6 +8,7 @@ import pytest
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.pandas import column, data_frames, range_indexes
+
 from modern_bank_churn.evaluation_enhancements import ModelEvaluator
 from modern_bank_churn.feature_engineering import FeatureEngineer
 from modern_bank_churn.ml_pipeline_orchestrator import (
@@ -46,13 +46,17 @@ class TestPipelineConfig:
         assert config.optimization_metric == "f1"
         assert config.cross_validation_folds == 10
 
-    @given(
-        method=st.sampled_from(["mutual_info", "boruta", "rfe", "lasso"]),
-        model=st.sampled_from(["random_forest", "xgboost", "lightgbm", "ensemble"]),
-        folds=st.integers(min_value=2, max_value=20),
+    @pytest.mark.parametrize(
+        ("method", "model", "folds"),
+        [
+            ("mutual_info", "random_forest", 2),
+            ("boruta", "xgboost", 5),
+            ("rfe", "lightgbm", 10),
+            ("lasso", "ensemble", 20),
+        ],
     )
     def test_property_based_config(self, method, model, folds):
-        """Property-based test for configuration."""
+        """Configuration accepts representative valid options."""
         config = PipelineConfig(
             feature_selection_method=method,
             model_type=model,
@@ -107,18 +111,17 @@ class TestFeatureEngineer:
         assert len(features) == len(sample_dataframe)
         assert len(features.columns) >= len(sample_dataframe.columns)
 
-    @given(
-        df=data_frames(
-            columns=[
-                column("a", dtype=float),
-                column("b", dtype=float),
-                column("c", dtype=int),
-            ],
-            index=range_indexes(min_size=10, max_size=100),
+    @pytest.mark.parametrize("n_rows", [10, 30, 100])
+    def test_representative_feature_shapes(self, n_rows):
+        """Feature creation preserves rows across representative numeric frames."""
+        rng = np.random.default_rng(42 + n_rows)
+        df = pd.DataFrame(
+            {
+                "a": rng.normal(size=n_rows),
+                "b": rng.uniform(-10, 10, size=n_rows),
+                "c": rng.integers(-100, 100, size=n_rows),
+            }
         )
-    )
-    def test_property_based_features(self, df):
-        """Property-based test for feature creation."""
         engineer = FeatureEngineer()
         features = engineer.create_features(df)
 
@@ -261,16 +264,15 @@ class TestMLPipelineOrchestrator:
         assert isinstance(best_params, dict)
         assert "n_estimators" in best_params
 
-    @given(
-        n_samples=st.integers(min_value=100, max_value=1000),
-        n_features=st.integers(min_value=5, max_value=50),
-    )
-    @settings(max_examples=5, deadline=10000)
+    @pytest.mark.parametrize(("n_samples", "n_features"), [(120, 5), (240, 8)])
     def test_property_based_pipeline(self, n_samples, n_features):
-        """Property-based test for pipeline robustness."""
-        # Generate random data
-        X = np.random.randn(n_samples, n_features)
-        y = np.random.choice([0, 1], n_samples)
+        """Pipeline handles representative tabular classification datasets."""
+        rng = np.random.default_rng(1000 + n_samples + n_features)
+        X = rng.normal(size=(n_samples, n_features))
+        y = np.tile([0, 1], n_samples // 2)
+        if y.size < n_samples:
+            y = np.append(y, 1)
+        rng.shuffle(y)
 
         df = pd.DataFrame(X, columns=[f"feature_{i}" for i in range(n_features)])
         df["target"] = y

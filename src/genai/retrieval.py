@@ -6,11 +6,12 @@
 - `CrossEncoderReranker` — `cross-encoder/ms-marco-MiniLM-L-6-v2` re-ranker.
 - `hyde_transform` / `multi_query_rewrite` — query transforms.
 """
+
 from __future__ import annotations
 
 import json
 import re
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -29,11 +30,13 @@ def _tokenize(text: str) -> list[str]:
 # Dense retrieval
 # ----------------------------------------------------------------------------
 
+
 class DenseRetriever:
     """Cosine-similarity retrieval over an embedded chunk corpus, backed by FAISS flat-IP."""
 
     def __init__(self, embedder: Embedder, chunks: list[Chunk]):
         import faiss
+
         self._embedder = embedder
         self._chunks = chunks
         self._by_id = {c.chunk_id: c for c in chunks}
@@ -58,20 +61,22 @@ class DenseRetriever:
     def _search_vec(self, qv: np.ndarray, k: int) -> list[RetrievedChunk]:
         if not self._chunks:
             return []
-        D, I = self._index.search(qv, min(k, len(self._chunks)))
+        distances, indices = self._index.search(qv, min(k, len(self._chunks)))
         out: list[RetrievedChunk] = []
-        for rank, (score, idx) in enumerate(zip(D[0], I[0])):
+        for rank, (score, idx) in enumerate(zip(distances[0], indices[0], strict=True)):
             if idx < 0:
                 continue
             c = self._chunks[int(idx)]
-            out.append(RetrievedChunk(
-                chunk_id=c.chunk_id,
-                doc_id=c.doc_id,
-                text=c.text,
-                score=float(score),
-                retriever="dense",
-                rank=rank,
-            ))
+            out.append(
+                RetrievedChunk(
+                    chunk_id=c.chunk_id,
+                    doc_id=c.doc_id,
+                    text=c.text,
+                    score=float(score),
+                    retriever="dense",
+                    rank=rank,
+                )
+            )
         return out
 
 
@@ -79,9 +84,11 @@ class DenseRetriever:
 # BM25 retrieval
 # ----------------------------------------------------------------------------
 
+
 class BM25Retriever:
     def __init__(self, chunks: list[Chunk]):
         from rank_bm25 import BM25Okapi
+
         self._chunks = chunks
         self._bm25 = BM25Okapi([_tokenize(c.text) for c in chunks])
 
@@ -111,6 +118,7 @@ class BM25Retriever:
 # Hybrid = RRF(dense, bm25)
 # ----------------------------------------------------------------------------
 
+
 def reciprocal_rank_fusion(
     result_lists: Sequence[Sequence[RetrievedChunk]],
     *,
@@ -122,7 +130,9 @@ def reciprocal_rank_fusion(
     source: dict[str, RetrievedChunk] = {}
     for rlist in result_lists:
         for r in rlist:
-            scores[r.chunk_id] = scores.get(r.chunk_id, 0.0) + 1.0 / (k_rrf + r.rank + 1)
+            scores[r.chunk_id] = scores.get(r.chunk_id, 0.0) + 1.0 / (
+                k_rrf + r.rank + 1
+            )
             source[r.chunk_id] = r
     ordered = sorted(scores.keys(), key=lambda cid: -scores[cid])[:k]
     return [
@@ -154,9 +164,11 @@ class HybridRetriever:
 # Cross-encoder reranker
 # ----------------------------------------------------------------------------
 
+
 class CrossEncoderReranker:
     def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
         from sentence_transformers import CrossEncoder
+
         self.model_name = model_name
         self._model = CrossEncoder(model_name)
 

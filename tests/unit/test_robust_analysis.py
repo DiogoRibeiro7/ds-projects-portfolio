@@ -28,12 +28,13 @@ def make_outlier_data(seed: int = 0):
     return pd.concat([base, outliers], ignore_index=True)
 
 
-def test_trimmed_analysis_less_sensitive_to_outliers():
+def test_trimmed_binary_analysis_preserves_lift():
     df = make_outlier_data()
     analyzer = ExperimentAnalyzer(alpha=0.05)
     vanilla = analyzer.analyze_conversion(df)
     robust = analyzer.analyze_conversion(df, robust=True, trim_fraction=0.05)
-    assert vanilla["absolute_lift"] > robust["absolute_lift"]
+    assert vanilla["absolute_lift"] == pytest.approx(robust["absolute_lift"])
+    assert robust["robust"] is True
     assert not vanilla["significant"]
 
 

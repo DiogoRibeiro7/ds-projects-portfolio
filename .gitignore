@@ -116,6 +116,7 @@ mypy_output*.txt
 *.tsv
 *.json
 !tests/notebook_tests/test_config.json
+!tests/regression/baselines/*.json
 *.parquet
 *.h5
 *.hdf5

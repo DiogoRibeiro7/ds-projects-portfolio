@@ -13,7 +13,6 @@ from sklearn.model_selection import train_test_split
 
 from .feature_engineering import FeatureEngineer
 
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -68,7 +67,9 @@ class DataPipeline:
         self.feature_engineer = FeatureEngineer()
         self.validator = DataValidator(config)
 
-    def run(self, df: pd.DataFrame | None = None) -> tuple[pd.DataFrame, dict[str, Any]]:
+    def run(
+        self, df: pd.DataFrame | None = None
+    ) -> tuple[pd.DataFrame, dict[str, Any]]:
         if df is None:
             df = self._load_data()
         report = self.validator.validate(df)
@@ -125,7 +126,11 @@ class TrainingPipeline:
         )
         model.fit(X_train, y_train)
         preds = model.predict(X_test)
-        probs = model.predict_proba(X_test)[:, 1] if hasattr(model, "predict_proba") else preds
+        probs = (
+            model.predict_proba(X_test)[:, 1]
+            if hasattr(model, "predict_proba")
+            else preds
+        )
 
         metrics = {
             "accuracy": float(accuracy_score(y_test, preds)),
@@ -165,7 +170,9 @@ class ModelServer:
         self.model = model
         self.feature_names = feature_names
 
-    def predict(self, payload: dict[str, Any] | pd.DataFrame) -> list[int] | list[float]:
+    def predict(
+        self, payload: dict[str, Any] | pd.DataFrame
+    ) -> list[int] | list[float]:
         if isinstance(payload, dict):
             frame = pd.DataFrame([payload])
         else:

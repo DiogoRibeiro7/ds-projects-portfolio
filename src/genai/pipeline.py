@@ -8,15 +8,17 @@ Designed so the same pipeline object is reusable from:
   - `genai_rag_pipeline.ipynb` — loops it across a dataset and writes predictions.jsonl
   - `genai_service_delivery.ipynb` — serves it from a FastAPI endpoint
 """
+
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-from .guardrails import InputGuardrail, OutputGuardrail, REFUSAL_MESSAGE
+from .guardrails import REFUSAL_MESSAGE, InputGuardrail, OutputGuardrail
 from .llm import LLMClient
-from .prompts import REGISTRY as PROMPT_REGISTRY, Prompt
+from .prompts import REGISTRY as PROMPT_REGISTRY
+from .prompts import Prompt
 from .schemas import (
     Citation,
     GeneratedAnswer,
@@ -46,7 +48,9 @@ class Reranker(Protocol):
 _CITE_ID_RE = re.compile(r"\[([A-Za-z0-9][\w\-#]*)\]")
 
 
-def _parse_citations(answer_text: str, retrieved: list[RetrievedChunk]) -> list[Citation]:
+def _parse_citations(
+    answer_text: str, retrieved: list[RetrievedChunk]
+) -> list[Citation]:
     """Extract IDs that appear in brackets in the answer; map them back to retrieved chunks."""
     seen: set[str] = set()
     citations: list[Citation] = []
@@ -66,8 +70,9 @@ def _parse_citations(answer_text: str, retrieved: list[RetrievedChunk]) -> list[
             # can flag it as a potential hallucinated citation.
             citations.append(Citation(chunk_id=ref, doc_id=ref, quote=""))
         else:
-            citations.append(Citation(chunk_id=hit.chunk_id, doc_id=hit.doc_id,
-                                       quote=hit.text[:180]))
+            citations.append(
+                Citation(chunk_id=hit.chunk_id, doc_id=hit.doc_id, quote=hit.text[:180])
+            )
     return citations
 
 
@@ -117,7 +122,9 @@ class RAGPipeline:
         # ---- 3. Rerank (optional) ----
         if self.reranker is not None and raw_hits:
             with tracer.span("rerank", {"top_k": self.top_k_after_rerank}) as span:
-                ranked = self.reranker.rerank(safe_text, raw_hits, top_k=self.top_k_after_rerank)
+                ranked = self.reranker.rerank(
+                    safe_text, raw_hits, top_k=self.top_k_after_rerank
+                )
                 span["attributes"]["n_after"] = len(ranked)
         else:
             ranked = raw_hits[: self.top_k_after_rerank]
@@ -126,16 +133,24 @@ class RAGPipeline:
         prompt = self._prompt()
         context = _render_context(ranked)
         system, user = prompt.render(context=context, question=safe_text)
-        messages = [LLMMessage(role="system", content=system),
-                     LLMMessage(role="user", content=user)]
+        messages = [
+            LLMMessage(role="system", content=system),
+            LLMMessage(role="user", content=user),
+        ]
 
-        with tracer.span("llm.complete", {"model": self.llm.model, "provider": self.llm.provider}) as span:
-            llm_resp: LLMResponse = self.llm.complete(messages, max_tokens=400, temperature=0.0)
-            span["attributes"].update({
-                "prompt_tokens": llm_resp.prompt_tokens,
-                "completion_tokens": llm_resp.completion_tokens,
-                "latency_ms": llm_resp.latency_ms,
-            })
+        with tracer.span(
+            "llm.complete", {"model": self.llm.model, "provider": self.llm.provider}
+        ) as span:
+            llm_resp: LLMResponse = self.llm.complete(
+                messages, max_tokens=400, temperature=0.0
+            )
+            span["attributes"].update(
+                {
+                    "prompt_tokens": llm_resp.prompt_tokens,
+                    "completion_tokens": llm_resp.completion_tokens,
+                    "latency_ms": llm_resp.latency_ms,
+                }
+            )
 
         # ---- 5. Parse citations, detect refusal ----
         refused = llm_resp.text.strip().lower().startswith("i cannot answer")
@@ -180,7 +195,9 @@ class RAGPipeline:
 
     # ------------------------------------------------------------------
 
-    def _refusal(self, query: Query, g_in: GuardrailResult, tracer: Tracer) -> Prediction:
+    def _refusal(
+        self, query: Query, g_in: GuardrailResult, tracer: Tracer
+    ) -> Prediction:
         ans = GeneratedAnswer(
             answer=REFUSAL_MESSAGE,
             citations=[],
@@ -192,7 +209,10 @@ class RAGPipeline:
             text=REFUSAL_MESSAGE,
             model=self.llm.model,
             provider=self.llm.provider,  # type: ignore[arg-type]
-            prompt_tokens=0, completion_tokens=0, latency_ms=0.0, stop_reason="refused",
+            prompt_tokens=0,
+            completion_tokens=0,
+            latency_ms=0.0,
+            stop_reason="refused",
         )
         return Prediction(
             request_id=query.request_id,

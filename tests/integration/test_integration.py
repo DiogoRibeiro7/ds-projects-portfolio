@@ -1,5 +1,4 @@
-"""Integration tests for end-to-end pipeline execution.
-"""
+"""Integration tests for end-to-end pipeline execution."""
 
 import asyncio
 import concurrent.futures
@@ -15,14 +14,14 @@ import aiohttp
 import numpy as np
 import pandas as pd
 import pytest
-
-pytestmark = pytest.mark.integration
+from statistical_methods.statistical_analyzer import StatisticalAnalyzer
 
 from modern_bank_churn.ml_pipeline_orchestrator import (
     MLPipelineOrchestrator,
     PipelineConfig,
 )
-from statistical_methods.statistical_analyzer import StatisticalAnalyzer
+
+pytestmark = pytest.mark.integration
 
 _api_infra_mod = pytest.importorskip("dashboard_enhanced.api_infrastructure")
 _dashboard_mod = pytest.importorskip("dashboard_enhanced.dashboard_framework")
@@ -246,7 +245,7 @@ class TestEndToEndPipeline:
         orchestrator = MLPipelineOrchestrator(config)
 
         # Test with corrupted data
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             # Should handle gracefully
             results = orchestrator.run_pipeline(corrupted_dataframe)
 
@@ -353,7 +352,7 @@ class TestAPIIntegration:
             mock_get.return_value.status_code = 429
             mock_get.return_value.json.return_value = {"error": "Rate limit exceeded"}
 
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017
                 api.get_data("token")
 
     @pytest.mark.integration
@@ -447,9 +446,10 @@ class TestDashboardIntegration:
     def test_dashboard_export_functionality(self, sample_dataframe, temp_dir):
         """Test dashboard export capabilities."""
         import plotly.graph_objects as go
-
-        from dashboard_enhanced.visualization_components import InteractiveVisualizations
         from dashboard_enhanced.app import ExportManager
+        from dashboard_enhanced.visualization_components import (
+            InteractiveVisualizations,
+        )
 
         viz = InteractiveVisualizations()
 
@@ -462,7 +462,9 @@ class TestDashboardIntegration:
             pdf_output = ExportManager.export_to_pdf("<html><body>test</body></html>")
             if pdf_output is None:
                 # Actual PDF generation depends on optional runtime dependency `wkhtmltopdf`.
-                pytest.skip("PDF export dependencies (pdfkit/wkhtmltopdf) are not installed")
+                pytest.skip(
+                    "PDF export dependencies (pdfkit/wkhtmltopdf) are not installed"
+                )
             f.write(pdf_output)
         assert pdf_path.exists()
 

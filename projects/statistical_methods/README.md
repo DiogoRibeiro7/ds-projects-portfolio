@@ -25,9 +25,6 @@ experimentation rather than a maintained standalone package.
 - `statistical_validation_suite.py` and
   `enhanced_statistical_validation.py`: validation checks and comparison
   helpers.
-- `ENHANCED_STATISTICAL_METHODS.md` and
-  `STATISTICAL_METHODS_DOCUMENTATION.md`: longer notes retained as reference
-  documentation.
 
 ## Quick Start
 

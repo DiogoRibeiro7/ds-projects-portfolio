@@ -2,8 +2,9 @@
 
 ![Fast CI](https://github.com/diogoribeiro7/ds-projects-portfolio/actions/workflows/ci.yml/badge.svg)
 
-A structured monorepo for portfolio-grade data science work: reusable modeling
-code, notebooks, reproducible demos, and production-oriented references.
+A curated data science portfolio with notebooks, reusable Python modules,
+reproducible demos, and project writeups for applied analytics, experimentation,
+machine learning, and AI engineering.
 
 ## Start here (first 2 minutes)
 
@@ -30,13 +31,13 @@ code, notebooks, reproducible demos, and production-oriented references.
    python examples/run_demo.py
    ```
 
-3. Validate the repository check (optional but recommended):
+3. Run the repository checks:
 
    ```bash
    make check
    ```
 
-4. Open a featured notebook to evaluate portfolio quality quickly:
+4. Open a featured notebook for a quick review:
 
    - [`notebooks/healthcare_analysis.ipynb`](notebooks/healthcare_analysis.ipynb)
    - [`notebooks/finance_credit_risk_stress_testing.ipynb`](notebooks/finance_credit_risk_stress_testing.ipynb)
@@ -44,13 +45,17 @@ code, notebooks, reproducible demos, and production-oriented references.
 
 ## What this portfolio demonstrates
 
-This repository is centered on practical projects where technical quality is
-paired with clear storytelling:
+This repository is organized around work that is useful to inspect in a hiring
+or project-review context:
 
-- Modeling reliability: healthcare explainability, credit-risk modeling, forecasting, and fraud detection.
-- Deployment-readiness: FastAPI workflows, MLOps drift management, and notebook-to-service transitions.
-- AI engineering: RAG, retrieval/eval service patterns, and controlled guardrails.
-- Decision quality: calibration, subgroup fairness, benchmarking, and governance-oriented reporting.
+- Applied modeling: healthcare explainability, credit-risk stress testing,
+  forecasting, churn, segmentation, and fraud examples.
+- Experimentation and statistics: A/B testing, power analysis, Bayesian methods,
+  bandits, causal inference, and validation checks.
+- Operational data science: model monitoring examples, reproducible demos,
+  API-oriented workflows, and clear testing conventions.
+- AI engineering: RAG, retrieval evaluation, telemetry, and guardrail patterns
+  that can be reviewed offline.
 
 ## Featured portfolio set
 
@@ -60,7 +65,7 @@ Use this short list first when reviewing:
 - [`notebooks/life_science_medical_imaging_triage.ipynb`](notebooks/life_science_medical_imaging_triage.ipynb) (medical imaging)
 - [`notebooks/insurance_data_science.ipynb`](notebooks/insurance_data_science.ipynb) (insurance governance)
 - [`notebooks/finance_credit_risk_stress_testing.ipynb`](notebooks/finance_credit_risk_stress_testing.ipynb) (finance stress testing)
-- [`notebooks/genai_rag_pipeline.ipynb`](notebooks/genai_rag_pipeline.ipynb) (GenAI production pipeline)
+- [`notebooks/genai_rag_pipeline.ipynb`](notebooks/genai_rag_pipeline.ipynb) (RAG engineering)
 - [`notebooks/energy_load_probabilistic_forecasting.ipynb`](notebooks/energy_load_probabilistic_forecasting.ipynb) (time-series forecasting)
 - [`notebooks/mlops_mlflow_drift_lifecycle.ipynb`](notebooks/mlops_mlflow_drift_lifecycle.ipynb) (MLOps lifecycle)
 
@@ -68,16 +73,16 @@ Use this short list first when reviewing:
 
 Use this map when you want to jump directly to a project area:
 
-- [churn_prediction](projects/churn_prediction/)
+- [churn prediction](projects/churn_prediction/)
 - [customer segmentation](projects/customer_segmentation/)
-- [ab_testing](projects/ab_testing/)
+- [A/B testing notebooks](projects/ab_testing/)
 - [statistical methods examples](projects/statistical_methods/)
 - [feature engineering utilities](projects/feature_engineering/)
-- [streamlit_apps](projects/streamlit_apps/)
+- [Streamlit app examples](projects/streamlit_apps/)
 - [dashboard components](projects/dashboard_enhanced/)
 - [deep learning notebooks](projects/deep_learning/)
-- [nlp](projects/nlp/)
-- [performance_optimization](projects/performance_optimization/)
+- [NLP examples](projects/nlp/)
+- [performance optimization examples](projects/performance_optimization/)
 
 The complete active notebook catalog remains in [`notebooks/README.md`](notebooks/README.md).
 

@@ -73,7 +73,7 @@ Use this map when you want to jump directly to a project area:
 - [ab_testing](projects/ab_testing/)
 - [statistical_methods](projects/statistical_methods/)
 - [streamlit_apps](projects/streamlit_apps/)
-- [dashboard_enhanced](projects/dashboard_enhanced/)
+- [dashboard components](projects/dashboard_enhanced/)
 - [deep_learning](projects/deep_learning/)
 - [nlp](projects/nlp/)
 - [performance_optimization](projects/performance_optimization/)

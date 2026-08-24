@@ -1,17 +1,21 @@
 # Robust Training Modes
 
-This repo ships optional robustness toggles inside ExperimentAnalyzer and related utilities.
+The portfolio includes optional robustness toggles in `ExperimentAnalyzer` for
+experiments where outliers or heavy-tailed metrics could distort the default
+summary.
 
 ## Options
 
 | Mode | Description | Trade-offs |
 | --- | --- | --- |
-| 	rim_fraction | Drops the top/bottom quantiles in each group before computing rates. | Removes leverage of extreme observations but slightly reduces effective sample size. Avoid >0.1 unless you can afford the data loss. |
-| obust=True + huber_delta | Applies a Huber-style shrinkage to continuous metrics, clipping residuals to ±delta. | Stabilizes mean differences under heavy tails, but introduces bias when true effects live in the clipped region. |
+| `trim_fraction` | Drops the top and bottom quantiles in each group before computing rates or summaries. | Reduces leverage from extreme observations but lowers effective sample size. Avoid values above `0.1` unless the experiment has enough traffic. |
+| `robust=True` with `huber_delta` | Applies Huber-style clipping to continuous metric residuals. | Stabilizes mean differences under heavy tails but can bias estimates when true effects sit in the clipped region. |
 
 ## Usage
 
-`python
+```python
+from src.statistics.core import ExperimentAnalyzer
+
 analyzer = ExperimentAnalyzer(alpha=0.05)
 robust_report = analyzer.analyze_conversion(
     df,
@@ -20,11 +24,11 @@ robust_report = analyzer.analyze_conversion(
     robust=True,
     trim_fraction=0.05,
 )
-`
+```
 
-For continuous metrics via un_comprehensive_analysis, pass the same flags:
+For continuous metrics via `run_comprehensive_analysis`, pass the same flags:
 
-`python
+```python
 summary = analyzer.run_comprehensive_analysis(
     df,
     metrics=["ltv"],
@@ -32,12 +36,15 @@ summary = analyzer.run_comprehensive_analysis(
     trim_fraction=0.05,
     huber_delta=1.5,
 )
-`
+```
 
-## When to use
+## When To Use
 
-- **Heavy-tailed KPIs** (e.g., revenue): Use Huber smoothing with a modest delta.
-- **Log data glitches/outliers**: Trim 1–5% per tail to protect against corrupted spikes.
-- **Regulatory reporting**: Keep obust=False to avoid biasing official numbers.
+- Heavy-tailed KPIs, such as revenue or lifetime value.
+- Log or data pipeline glitches that create corrupted spikes.
+- Sensitivity analysis where robust and default summaries are compared side by
+  side.
 
-Always compare robust vs non-robust summaries; differences highlight data quality issues.
+Keep `robust=False` for official reporting unless the robust method is part of
+the pre-registered analysis plan. Differences between robust and non-robust
+summaries should trigger a data quality review.

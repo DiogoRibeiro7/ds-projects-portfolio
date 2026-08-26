@@ -35,7 +35,7 @@ psutil>=5.8.0           # System monitoring
 
 # Advanced Analytics (implemented TODOs)
 lifelines>=0.27.0       # Survival analysis
-networkx>=2.6.0         # Network analysis (future use)
+networkx>=3.6.1         # Network analysis (future use)
 
 # Progress & Logging (implemented TODOs)
 tqdm>=4.60.0           # Progress bars

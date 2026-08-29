@@ -1,0 +1,45 @@
+name: Portugal Housing Tourism CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "projects/portugal_housing_tourism/**"
+      - ".github/workflows/portugal-housing-tourism.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "projects/portugal_housing_tourism/**"
+      - ".github/workflows/portugal-housing-tourism.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    defaults:
+      run:
+        working-directory: projects/portugal_housing_tourism
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install project and validation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest mypy pandas-stubs types-requests ruff==0.14.0
+      - name: Check formatting
+        run: ruff format --check src scripts tests
+      - name: Lint
+        run: ruff check src scripts tests
+      - name: Type check
+        run: mypy src
+      - name: Test
+        run: pytest

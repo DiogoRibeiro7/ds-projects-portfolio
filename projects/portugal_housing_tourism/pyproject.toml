@@ -37,6 +37,10 @@ strict = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 
+[[tool.mypy.overrides]]
+module = ["statsmodels", "statsmodels.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 addopts = "-q"
 testpaths = ["tests"]

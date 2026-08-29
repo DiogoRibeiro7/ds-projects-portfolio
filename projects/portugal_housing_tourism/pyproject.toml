@@ -1,0 +1,46 @@
+[tool.poetry]
+name = "portugal-housing-tourism"
+version = "0.2.0"
+description = "Small reproducible data-science project on housing affordability, tourism, and short-term accommodation in Portugal."
+authors = ["Diogo Ribeiro"]
+readme = "README.md"
+packages = [{ include = "housing_tourism", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+pandas = "^2.2"
+numpy = "^2.0"
+requests = "^2.32"
+matplotlib = "^3.9"
+statsmodels = "^0.14"
+pyarrow = "^17.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+mypy = "^1.11"
+ruff = "^0.6"
+jupyterlab = "^4.2"
+nbformat = "^5.10"
+pandas-stubs = "^2.2"
+types-requests = "^2.32"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"

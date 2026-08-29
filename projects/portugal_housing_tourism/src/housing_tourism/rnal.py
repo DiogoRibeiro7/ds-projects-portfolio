@@ -11,8 +11,7 @@ import pandas as pd
 import requests
 
 RNAL_LAYER_URL = (
-    "https://geo.turismodeportugal.pt/server/rest/services/TDP/"
-    "OpenData_AL/MapServer/6/query"
+    "https://geo.turismodeportugal.pt/server/rest/services/TDP/OpenData_AL/MapServer/6/query"
 )
 
 
@@ -194,9 +193,7 @@ def surviving_registration_panel(
     result = result.join(pre_start, on=municipality_col)
     result["pre_start"] = result["pre_start"].fillna(0).astype(int)
     result["al_surviving_registrations"] = (
-        result.groupby(municipality_col, observed=True)[
-            "new_surviving_registrations"
-        ].cumsum()
+        result.groupby(municipality_col, observed=True)["new_surviving_registrations"].cumsum()
         + result["pre_start"]
     )
     return result.drop(columns=["registration_year", "pre_start"])

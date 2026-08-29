@@ -15,6 +15,22 @@ projects:
       - NetworkX
       - scipy
     featured: false
+  - name: Mobility Demand & Fleet Optimization
+    repository: ./projects/mobility_demand_optimization/
+    category: Decision Science & Operations Research
+    status: active-portfolio
+    summary: Probabilistic spatiotemporal demand forecasting linked to constrained fleet allocation and operational regret evaluation.
+    methods:
+      - probabilistic forecasting
+      - rolling-origin evaluation
+      - mathematical optimization
+      - decision regret
+    technologies:
+      - Python
+      - NumPy
+      - pandas
+      - OR-Tools
+    featured: false
   - name: Portugal Housing Tourism Pressure
     repository: ./projects/portugal_housing_tourism/
     category: Applied Economic Analytics

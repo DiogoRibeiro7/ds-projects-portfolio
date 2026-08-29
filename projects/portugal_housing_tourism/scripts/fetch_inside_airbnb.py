@@ -63,9 +63,7 @@ def main() -> None:
     annual = annualise_listing_snapshots(snapshot_summary)
     output_dir = ROOT / "data" / "processed"
     output_dir.mkdir(parents=True, exist_ok=True)
-    snapshot_summary.to_parquet(
-        output_dir / "inside_airbnb_lisbon_snapshots.parquet", index=False
-    )
+    snapshot_summary.to_parquet(output_dir / "inside_airbnb_lisbon_snapshots.parquet", index=False)
     annual.to_parquet(output_dir / "inside_airbnb_lisbon_annual.parquet", index=False)
     pd.DataFrame(provenance).to_parquet(
         output_dir / "inside_airbnb_lisbon_provenance.parquet",

@@ -66,7 +66,7 @@ class RNALClient:
         records: list[dict[str, Any]] = []
         offset = 0
         while True:
-            params: dict[str, object] = {
+            params: dict[str, str | int] = {
                 "where": "1=1",
                 "outFields": "*",
                 "returnGeometry": "false",

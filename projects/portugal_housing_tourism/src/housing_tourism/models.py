@@ -96,7 +96,11 @@ def predict_rent_levels(
     """Predict rent levels from a fitted model."""
     prediction = pd.Series(fitted.predict(frame), index=frame.index, dtype=float)
     if logged_outcome:
-        prediction = np.exp(prediction)
+        prediction = pd.Series(
+            np.exp(prediction.to_numpy()),
+            index=prediction.index,
+            dtype=float,
+        )
     prediction.name = "predicted_rent"
     return prediction
 

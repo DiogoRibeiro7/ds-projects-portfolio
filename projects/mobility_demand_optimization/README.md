@@ -11,7 +11,7 @@ The project evaluates forecasting models through two linked objectives:
 1. **predictive quality** — point accuracy, probabilistic calibration and tail behaviour;
 2. **decision quality** — relocation cost, unmet demand, idle capacity and total realised operating cost.
 
-The primary dataset will be NYC Taxi & Limousine Commission trip records aggregated to a zone-by-time demand panel.
+The primary dataset is NYC Taxi & Limousine Commission Yellow Taxi trip records aggregated to a zone-by-time demand panel.
 
 ## Decision pipeline
 
@@ -24,6 +24,37 @@ TLC trip records
     -> realised demand
     -> operational regret and cost
 ```
+
+## Frozen first-stage data design
+
+The first empirical study is prospectively fixed before model fitting:
+
+- source: official NYC TLC Yellow Taxi monthly parquet files;
+- source months: January 2025 through May 2026;
+- demand unit: pickup count per TLC zone and civil clock hour;
+- analysis zones: top 30 geographic pickup zones selected using training data only;
+- training: 2025-01-01 through 2025-12-31;
+- validation/model selection: 2026-01-01 through 2026-02-28;
+- untouched test: 2026-03-01 through 2026-05-31;
+- forecast horizon: 24 hours;
+- forecast origins: every 24 hours;
+- fit window: expanding;
+- primary seasonal lag: 168 hours.
+
+This produces 92 complete daily test origins before any prospective DST-day exclusion.
+
+TLC timestamps are treated as published local wall-clock times. DST transition days are explicitly flagged in the panel and excluded from the headline comparison rather than silently coercing ambiguous wall-clock times to UTC.
+
+The ingestion layer records row-level rejection counts for missing pickup times, missing pickup zones, non-geographic/invalid zones and observations outside the frozen study window. Zone selection is performed using the training period only.
+
+Build the local panel with:
+
+```bash
+cd projects/mobility_demand_optimization
+python scripts/build_tlc_panel.py --download
+```
+
+The script writes both the hourly parquet panel and a JSON manifest containing the selected zones, panel dimensions, test-origin count and monthly QA summaries. Raw TLC trip files are not committed to the portfolio repository.
 
 ## Core comparisons
 
@@ -102,7 +133,8 @@ The uncertainty-aware policy will be implemented without future leakage, using o
 - rolling features use strictly past observations;
 - future realised demand is unavailable to all deployable policies;
 - the oracle appears only in retrospective decision evaluation;
-- hyperparameter tuning occurs inside the rolling evaluation design.
+- hyperparameter tuning occurs inside the rolling evaluation design;
+- zone selection uses training demand only.
 
 ## Planned notebooks
 
@@ -115,4 +147,4 @@ Reusable logic belongs in `src/`, not inside notebooks.
 
 ## Status
 
-**Active research / portfolio project.** The design and evaluation contract are frozen before fitting the main models. No empirical performance claim should be made until the end-to-end backtest has been executed on real TLC data.
+**Active research / portfolio project.** The data contract and initial evaluation window are frozen before fitting the main models. No empirical performance claim should be made until the end-to-end backtest has been executed on real TLC data.

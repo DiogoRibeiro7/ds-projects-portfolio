@@ -49,9 +49,7 @@ def main() -> None:
     for spec in specs:
         fetched = fetch_snapshot(spec, cache_dir, refresh=args.refresh)
         frame = pd.read_csv(fetched.path, low_memory=False)
-        summaries.append(
-            summarise_listing_snapshot(frame, snapshot_date=fetched.snapshot_date)
-        )
+        summaries.append(summarise_listing_snapshot(frame, snapshot_date=fetched.snapshot_date))
         provenance.append(
             {
                 "snapshot_date": fetched.snapshot_date,
@@ -66,13 +64,9 @@ def main() -> None:
     output_dir = ROOT / "data" / "processed"
     output_dir.mkdir(parents=True, exist_ok=True)
     snapshot_summary.to_parquet(
-        output_dir / "inside_airbnb_lisbon_snapshots.parquet",
-        index=False,
+        output_dir / "inside_airbnb_lisbon_snapshots.parquet", index=False
     )
-    annual.to_parquet(
-        output_dir / "inside_airbnb_lisbon_annual.parquet",
-        index=False,
-    )
+    annual.to_parquet(output_dir / "inside_airbnb_lisbon_annual.parquet", index=False)
     pd.DataFrame(provenance).to_parquet(
         output_dir / "inside_airbnb_lisbon_provenance.parquet",
         index=False,

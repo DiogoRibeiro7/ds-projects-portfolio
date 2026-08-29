@@ -46,9 +46,7 @@ class INEClient:
     ) -> None:
         if not isinstance(cache_dir, Path):
             raise TypeError("cache_dir must be a pathlib.Path.")
-        if not isinstance(timeout_seconds, (int, float)) or isinstance(
-            timeout_seconds, bool
-        ):
+        if not isinstance(timeout_seconds, (int, float)) or isinstance(timeout_seconds, bool):
             raise TypeError("timeout_seconds must be a real number.")
         if float(timeout_seconds) <= 0:
             raise ValueError("timeout_seconds must be positive.")
@@ -165,14 +163,10 @@ def flatten_ine_payload(payload: list[dict[str, Any]]) -> pd.DataFrame:
         }
         for period, observations in data.items():
             if not isinstance(observations, list):
-                raise ValueError(
-                    "Unexpected INE payload: each period must contain a list."
-                )
+                raise ValueError("Unexpected INE payload: each period must contain a list.")
             for observation in observations:
                 if not isinstance(observation, dict):
-                    raise ValueError(
-                        "Unexpected INE payload: observation must be an object."
-                    )
+                    raise ValueError("Unexpected INE payload: observation must be an object.")
                 row = {**metadata, "period": str(period), **observation}
                 if "valor" in row:
                     row["value"] = parse_ine_numeric(row["valor"])
@@ -213,22 +207,12 @@ def dimension_columns(frame: pd.DataFrame) -> list[str]:
     """Return human-readable INE dimension-label columns found in a flat frame."""
     if not isinstance(frame, pd.DataFrame):
         raise TypeError("frame must be a pandas DataFrame.")
-    return sorted(
-        column
-        for column in frame.columns
-        if re.fullmatch(r"dim_\d+_t", str(column))
-    )
+    return sorted(column for column in frame.columns if re.fullmatch(r"dim_\d+_t", str(column)))
 
 
-def describe_dimensions(
-    frame: pd.DataFrame, *, max_values: int = 20
-) -> dict[str, list[str]]:
+def describe_dimensions(frame: pd.DataFrame, *, max_values: int = 20) -> dict[str, list[str]]:
     """Summarise dimension labels before any scientific filtering."""
-    if (
-        not isinstance(max_values, int)
-        or isinstance(max_values, bool)
-        or max_values <= 0
-    ):
+    if not isinstance(max_values, int) or isinstance(max_values, bool) or max_values <= 0:
         raise ValueError("max_values must be a positive integer.")
     return {
         column: frame[column].dropna().astype(str).drop_duplicates().tolist()[:max_values]
@@ -260,9 +244,7 @@ def canonicalise_ine_measure(
     if minimum_year is not None:
         if not isinstance(minimum_year, int) or isinstance(minimum_year, bool):
             raise TypeError("minimum_year must be an int or None.")
-        data = data.loc[
-            pd.to_numeric(data[year_col], errors="coerce") >= minimum_year
-        ].copy()
+        data = data.loc[pd.to_numeric(data[year_col], errors="coerce") >= minimum_year].copy()
     output = data[[geo_code_col, geo_name_col, year_col, "value"]].rename(
         columns={
             geo_code_col: "geo_code",
@@ -280,8 +262,7 @@ def canonicalise_ine_measure(
         raise ValueError("No observations remain after applying INE filters.")
     if output.duplicated(["geo_code", "year"]).any():
         raise ValueError(
-            "Filters do not identify a unique geography-year measure. "
-            "Inspect remaining dimensions."
+            "Filters do not identify a unique geography-year measure. Inspect remaining dimensions."
         )
     return output.sort_values(["geo_code", "year"]).reset_index(drop=True)
 
@@ -298,9 +279,7 @@ def infer_total_filters(
         values = frame[column].dropna().astype(str).drop_duplicates().tolist()
         if len(values) <= 1:
             continue
-        matches = [
-            value for value in values if value.strip().casefold() in candidate_keys
-        ]
+        matches = [value for value in values if value.strip().casefold() in candidate_keys]
         if len(matches) != 1:
             raise ValueError(
                 f"Cannot infer a unique total category for {column!r}. "

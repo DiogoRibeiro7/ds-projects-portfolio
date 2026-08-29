@@ -4,6 +4,8 @@
 
 `active-portfolio` — research design and reproducible data pipeline are being built. No empirical results are claimed yet.
 
+The first ingestion milestone is implemented: raw OECD ICIO CSV/ZIP artifacts are loaded with exact-file provenance, structural validation, and explicit construction of the technical-coefficient matrix before any graph metric is computed.
+
 ## Research question
 
 Which country-industry nodes create the greatest systemic supply-chain vulnerability, how do disruptions propagate through production dependencies, and which diversification strategies reduce exposure at the lowest cost?
@@ -15,6 +17,20 @@ The project treats the supply chain as a directed weighted production network ra
 - **OECD Inter-Country Input-Output (ICIO) tables**: primary source for country-industry production dependencies. The current release covers 1995–2022, 80 economies plus a rest-of-world aggregate, and 50 economic activities.
 - **UN Comtrade**: product-level bilateral trade data for a semiconductor case study. This is kept analytically distinct from input-output dependence.
 - **World Bank Logistics Performance Index**: contextual logistics information only. It is not treated as an annual panel because survey waves are sparse.
+
+## Data-ingestion contract
+
+Downloaded OECD archives are immutable raw artifacts. The ingestion layer records a SHA-256 digest of the exact source bytes and preserves source row/column identifiers. Before analysis it rejects empty tables, duplicate labels, negative accounting flows, non-finite accounting values, non-positive gross output, and technical-coefficient columns whose intermediate-input shares exceed one.
+
+The raw-table parser does **not** guess which columns constitute the square intermediate-use block. That extraction mapping must be explicit for each ICIO vintage, because silently inferring final-demand or value-added columns would contaminate the production network.
+
+For the intermediate-use matrix `Z` and gross-output vector `x`, the project defines
+
+\[
+A_{ij}=\frac{Z_{ij}}{x_j}.
+\]
+
+This orientation is frozen: row `i` is the supplying country-industry node and column `j` is the using country-industry node.
 
 ## Analytical structure
 
@@ -71,7 +87,7 @@ Use product-level trade flows to examine semiconductor concentration and alterna
 5. `05_diversification_optimization.ipynb` — constrained sourcing optimization and Pareto frontier.
 6. `06_semiconductor_case_study.ipynb` — detailed product-level application.
 
-Reusable code will live in `src/`; notebooks are analysis/reporting surfaces rather than the sole implementation.
+Reusable code lives in `src/`; notebooks are analysis/reporting surfaces rather than the sole implementation.
 
 ## Scientific guardrails
 

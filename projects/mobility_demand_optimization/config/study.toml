@@ -1,0 +1,20 @@
+[data]
+source = "NYC Taxi & Limousine Commission Yellow Taxi Trip Records"
+taxi_type = "yellow"
+first_month = "2025-01"
+last_month = "2026-05"
+time_grain = "1h"
+timezone = "America/New_York"
+top_k_zones = 30
+zone_selection_period = "training-only"
+
+[backtest]
+train_start = "2025-01-01T00:00:00"
+train_end = "2026-01-01T00:00:00"
+validation_end = "2026-03-01T00:00:00"
+test_end = "2026-06-01T00:00:00"
+forecast_horizon_hours = 24
+origin_frequency_hours = 24
+fit_window = "expanding"
+seasonal_lag_hours = 168
+exclude_dst_transition_days_from_headline = true

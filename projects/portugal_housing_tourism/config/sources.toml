@@ -19,9 +19,9 @@ name = "Resident population (number), annual, NUTS 2013"
 url = "https://www.ine.pt/xurl/indx/0008272/PT"
 
 [ine.overnight_stays]
-indicator = "0009182"
-name = "Overnight stays in tourist accommodation by residence country, annual, NUTS 2013"
-url = "https://www.ine.pt/xurl/indx/0009182/PT"
+indicator = "0009877"
+name = "Overnight stays in tourist accommodation by accommodation type, annual, NUTS 2013"
+url = "https://www.ine.pt/xurl/indx/0009877/PT"
 
 [rnal]
 name = "Registo Nacional de Alojamento Local (RNAL)"

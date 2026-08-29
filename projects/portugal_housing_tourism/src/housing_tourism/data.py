@@ -73,7 +73,9 @@ class INEClient:
         suffix = "_all" if not dimensions else "_filtered"
         cache_path = self.cache_dir / f"{indicator_code}{suffix}.json"
         if cache_path.exists() and not refresh:
-            return _validate_payload(json.loads(cache_path.read_text(encoding="utf-8")))
+            return _validate_payload(
+                json.loads(cache_path.read_text(encoding="utf-8")),
+            )
         params: dict[str, str] = {
             "op": "2",
             "varcd": indicator_code,
@@ -93,7 +95,8 @@ class INEClient:
         response.raise_for_status()
         payload = _validate_payload(response.json())
         cache_path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
         )
         return payload
 
@@ -119,7 +122,8 @@ class INEClient:
         response.raise_for_status()
         payload = response.json()
         cache_path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
         )
         return payload
 

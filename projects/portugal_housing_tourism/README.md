@@ -62,16 +62,38 @@ EHPI is generated only after an explicit statistical model and counterfactual ha
 | Resident population | `0008272` | INE annual population estimates |
 | Tourist overnight stays | `0009182` | INE tourist accommodation survey |
 | Alojamento Local | — | Turismo de Portugal / RNAL |
-| Active/listed short-term rentals, optional | — | Inside Airbnb Lisbon snapshots |
+| Point-in-time platform listings, Lisbon | — | Inside Airbnb dated snapshots |
+
+## Historical short-term-rental exposure
+
+The project now separates two estimands rather than pretending that one source measures both.
+
+**National municipality panel.** The current RNAL register is used only to construct a surviving-registration proxy. A registration date tells us when a currently surviving registration began; it does not tell us whether registrations absent from today's register were active in earlier years. This series is therefore a sensitivity measure, not reconstructed historical active stock.
+
+**Lisbon case study.** Historical platform exposure is built from dated Inside Airbnb listing snapshots. Each verified snapshot is a point-in-time census of listings visible to that data collection, not a count of occupied nights and not necessarily a one-to-one count of licensed RNAL establishments. The ingestion layer stores the retrieval bytes, SHA-256 digest, source URL, snapshot date and row count.
+
+Verified snapshot URLs belong in `data/manifests/inside_airbnb_lisbon.csv`. The manifest is intentionally not pre-populated from guessed URL patterns. Missing years remain missing: `annualise_listing_snapshots()` chooses the latest observed snapshot within each year and performs no interpolation or backfilling.
+
+This means the preferred hierarchy is:
+
+```text
+Lisbon dated platform snapshots
+    -> primary historical exposure series for the Lisbon case study
+
+RNAL current-register survivor reconstruction
+    -> nationwide sensitivity proxy only
+```
+
+Neither measure is automatically interpreted causally.
 
 ## Important measurement rule
 
-`RNAL registration != active tourist dwelling`.
+`RNAL registration != active tourist dwelling != platform listing`.
 
-The public RNAL layer exposes registration dates but no cancellation/end-date field. A present-day registry therefore cannot be treated as a complete historical active-stock series. The project keeps a surviving-registration proxy separate from a defensible dated active-stock measure.
+The public RNAL layer exposes registration dates but no cancellation/end-date field. A present-day registry therefore cannot be treated as a complete historical active-stock series. Likewise, a platform listing is an observable market listing rather than proof of occupancy, legal status or conversion from a conventional long-term dwelling.
 
 ## Status
 
 **Research case study · Active**
 
-The analytical framework, data clients, index definitions and tests are implemented. Historical short-term-rental exposure remains the main empirical data constraint before the project should be presented as a completed causal or policy analysis.
+The analytical framework, data clients, index definitions and tests are implemented. A provenance-preserving historical listing ingestion layer is now in place for Lisbon, but the dated snapshot manifest still needs to be populated only with independently verified archive URLs before the empirical time series can be executed. The project should therefore remain non-featured and should not yet be presented as a completed causal or policy analysis.

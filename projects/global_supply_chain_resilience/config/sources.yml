@@ -1,0 +1,35 @@
+sources:
+  oecd_icio:
+    role: primary
+    dataset: OECD Inter-Country Input-Output tables
+    vintage: January 2026 revision
+    coverage_years: [1995, 2022]
+    unit_of_analysis: country-industry
+    purpose:
+      - production network construction
+      - intermediate-input dependence
+      - Leontief stress testing
+    caveats:
+      - technical coefficients are accounting relationships, not structural causal parameters
+      - aggregation can hide firm-level and product-level substitution
+      - rest-of-world treatment must remain explicit
+
+  un_comtrade:
+    role: case-study
+    dataset: UN Comtrade
+    unit_of_analysis: reporter-partner-product-year
+    purpose:
+      - semiconductor bilateral trade concentration
+      - product-level sourcing structure
+    caveats:
+      - bilateral trade value is not equivalent to input-output dependence
+      - product classifications and concordances must be versioned
+
+  world_bank_lpi:
+    role: contextual
+    dataset: Logistics Performance Index
+    purpose:
+      - contextualize alternative sourcing locations
+    caveats:
+      - sparse survey waves; do not interpolate into an annual panel without explicit justification
+      - perception-based measures should not be interpreted as direct physical capacity

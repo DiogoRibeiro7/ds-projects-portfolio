@@ -66,13 +66,13 @@ EHPI is generated only after an explicit statistical model and counterfactual ha
 
 ## Historical short-term-rental exposure
 
-The project now separates two estimands rather than pretending that one source measures both.
+The project separates two estimands rather than pretending that one source measures both.
 
 **National municipality panel.** The current RNAL register is used only to construct a surviving-registration proxy. A registration date tells us when a currently surviving registration began; it does not tell us whether registrations absent from today's register were active in earlier years. This series is therefore a sensitivity measure, not reconstructed historical active stock.
 
 **Lisbon case study.** Historical platform exposure is built from dated Inside Airbnb listing snapshots. Each verified snapshot is a point-in-time census of listings visible to that data collection, not a count of occupied nights and not necessarily a one-to-one count of licensed RNAL establishments. The ingestion layer stores the retrieval bytes, SHA-256 digest, source URL, snapshot date and row count.
 
-Verified snapshot URLs belong in `data/manifests/inside_airbnb_lisbon.csv`. The manifest is intentionally not pre-populated from guessed URL patterns. Missing years remain missing: `annualise_listing_snapshots()` chooses the latest observed snapshot within each year and performs no interpolation or backfilling.
+Verified snapshot URLs belong in `data/manifests/inside_airbnb_lisbon.csv`. Missing years remain missing: `annualise_listing_snapshots()` chooses the latest observed snapshot within each year and performs no interpolation or backfilling.
 
 This means the preferred hierarchy is:
 
@@ -86,6 +86,19 @@ RNAL current-register survivor reconstruction
 
 Neither measure is automatically interpreted causally.
 
+## First executed Lisbon observations
+
+The first empirical workflow execution successfully fetched and summarised two independently verified snapshots:
+
+| Snapshot | Listed units | Entire home/apt | Private room | Shared room | Hotel room |
+|---|---:|---:|---:|---:|---:|
+| 2024-12-14 | 24,181 | 17,867 | 5,806 | 287 | 221 |
+| 2026-06-23 | 24,876 | 18,444 | 6,131 | 148 | 153 |
+
+Between these two observed dates, total listed units are 2.9% higher and entire-home listings are 3.2% higher. The entire-home share is nearly unchanged, at about 73.9% and 74.1%, respectively. These are comparisons between two point-in-time platform censuses, not estimates of housing units converted to tourism use and not causal effects on rents.
+
+The compact outputs and source hashes are stored in `results/processed/inside_airbnb_lisbon_annual.csv` and `results/processed/inside_airbnb_lisbon_provenance.csv`. Raw third-party listing files are not committed.
+
 ## Important measurement rule
 
 `RNAL registration != active tourist dwelling != platform listing`.
@@ -96,4 +109,4 @@ The public RNAL layer exposes registration dates but no cancellation/end-date fi
 
 **Research case study · Active**
 
-The analytical framework, data clients, index definitions and tests are implemented. A provenance-preserving historical listing ingestion layer is now in place for Lisbon, but the dated snapshot manifest still needs to be populated only with independently verified archive URLs before the empirical time series can be executed. The project should therefore remain non-featured and should not yet be presented as a completed causal or policy analysis.
+The analytical framework, data clients, index definitions, tests and first observed Lisbon platform snapshots are now executed reproducibly. The empirical exposure series remains sparse because 2025 and earlier archive dates have not yet been independently verified, so the project remains non-featured and should not yet be presented as a completed causal or policy analysis.

@@ -114,11 +114,14 @@ class RNALClient:
         for column in ("DataRegisto", "DataAberturaPublico"):
             if column in frame.columns:
                 frame[column] = pd.to_datetime(
-                    frame[column], unit="ms", errors="coerce"
+                    frame[column],
+                    unit="ms",
+                    errors="coerce",
                 )
         if "NrRNAL" in frame.columns:
             frame["NrRNAL"] = pd.to_numeric(
-                frame["NrRNAL"], errors="coerce"
+                frame["NrRNAL"],
+                errors="coerce",
             ).astype("Int64")
         if "Concelho" in frame.columns:
             frame["Concelho"] = frame["Concelho"].astype("string").str.strip()

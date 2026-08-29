@@ -36,7 +36,7 @@ jobs:
           python -m pip install -e .
           python -m pip install pytest mypy pandas-stubs types-requests ruff==0.14.0
       - name: Check formatting
-        run: ruff format --diff src scripts tests
+        run: ruff format --check src scripts tests
       - name: Lint
         run: ruff check src scripts tests
       - name: Type check

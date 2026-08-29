@@ -7,7 +7,11 @@ from collections.abc import Iterable
 import numpy as np
 import pandas as pd
 
-from .indices import local_housing_decoupling_index, tourist_housing_conversion_rate, tourism_intensity
+from .indices import (
+    local_housing_decoupling_index,
+    tourism_intensity,
+    tourist_housing_conversion_rate,
+)
 
 KEYS = ["geo_code", "year"]
 
@@ -85,7 +89,9 @@ def add_core_indices(
     if missing:
         raise KeyError(f"Missing required columns: {sorted(missing)}")
     result = panel.copy()
-    result["thcr"] = tourist_housing_conversion_rate(result[al_col], result["housing_stock"])
+    result["thcr"] = tourist_housing_conversion_rate(
+        result[al_col], result["housing_stock"]
+    )
     result["lhdi"] = local_housing_decoupling_index(result, base_year=base_year)
     result["tourism_intensity"] = tourism_intensity(
         result["overnight_stays"], result["resident_population"]

@@ -43,9 +43,15 @@ jobs:
         working-directory: projects/mobility_demand_optimization
         run: python scripts/run_baselines.py
 
-      - name: Print empirical summary
+      - name: Calibrate probabilistic count model
         working-directory: projects/mobility_demand_optimization
-        run: cat data/results/baselines/summary.json
+        run: python scripts/run_probabilistic_counts.py
+
+      - name: Print empirical summaries
+        working-directory: projects/mobility_demand_optimization
+        run: |
+          cat data/results/baselines/summary.json
+          cat data/results/probabilistic_counts/summary.json
 
       - name: Upload processed evidence
         uses: actions/upload-artifact@v4
@@ -57,3 +63,5 @@ jobs:
             projects/mobility_demand_optimization/data/processed/mobility_demand_hourly.manifest.json
             projects/mobility_demand_optimization/data/results/baselines/summary.json
             projects/mobility_demand_optimization/data/results/baselines/*.parquet
+            projects/mobility_demand_optimization/data/results/probabilistic_counts/summary.json
+            projects/mobility_demand_optimization/data/results/probabilistic_counts/*.csv

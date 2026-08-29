@@ -1,0 +1,59 @@
+name: Mobility empirical backtest
+
+on:
+  pull_request:
+    paths:
+      - "projects/mobility_demand_optimization/**"
+      - ".github/workflows/mobility_empirical.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mobility-backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install project
+        working-directory: projects/mobility_demand_optimization
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run mobility unit tests
+        working-directory: projects/mobility_demand_optimization
+        run: python -m pytest -q
+
+      - name: Build frozen TLC panel
+        working-directory: projects/mobility_demand_optimization
+        run: python scripts/build_tlc_panel.py --download
+
+      - name: Run frozen forecasting baselines
+        working-directory: projects/mobility_demand_optimization
+        run: python scripts/run_baselines.py
+
+      - name: Print empirical summary
+        working-directory: projects/mobility_demand_optimization
+        run: cat data/results/baselines/summary.json
+
+      - name: Upload processed evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobility-empirical-backtest
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            projects/mobility_demand_optimization/data/processed/mobility_demand_hourly.manifest.json
+            projects/mobility_demand_optimization/data/results/baselines/summary.json
+            projects/mobility_demand_optimization/data/results/baselines/*.parquet

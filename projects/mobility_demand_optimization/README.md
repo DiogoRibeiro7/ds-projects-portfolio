@@ -56,6 +56,40 @@ python scripts/build_tlc_panel.py --download
 
 The script writes both the hourly parquet panel and a JSON manifest containing the selected zones, panel dimensions, test-origin count and monthly QA summaries. Raw TLC trip files are not committed to the portfolio repository.
 
+## Frozen baseline models
+
+The first modelling comparison is deliberately simple and interpretable.
+
+### Seasonal naive
+
+For each zone and forecast target hour,
+
+```text
+y_hat[i,t] = y[i,t-168].
+```
+
+The 168-hour lag is longer than the 24-hour forecast horizon, so every source observation predates the forecast origin.
+
+### Expanding Poisson hour-of-week model
+
+For zone `i` and hour-of-week `h`, demand is modelled as
+
+```text
+D[i,t] ~ Poisson(lambda[i,h]).
+```
+
+At each forecast origin, `lambda[i,h]` is estimated from observations strictly before that origin. The Poisson maximum-likelihood estimate is therefore the historical mean for the corresponding zone/hour-of-week cell. No test or future-validation observation enters the fitted rate.
+
+Run both baselines with:
+
+```bash
+python scripts/run_baselines.py
+```
+
+The script evaluates validation and untouched-test origins, writes row-level forecast parquet files and a compact JSON summary containing MAE and WAPE. Headline metrics exclude prospectively flagged DST-transition rows.
+
+A dedicated GitHub Actions workflow can execute the full empirical build from official TLC downloads and upload the processed manifest and forecast results as short-lived workflow artifacts. This keeps raw source files out of Git while preserving a reproducible evidence trail.
+
 ## Core comparisons
 
 The project is designed around prospective comparisons rather than model accumulation.
@@ -63,7 +97,7 @@ The project is designed around prospective comparisons rather than model accumul
 ### Forecasting
 
 - seasonal-naive baseline;
-- count model (Poisson or Negative Binomial where dispersion requires it);
+- expanding Poisson hour-of-week count baseline;
 - gradient-boosted point model;
 - quantile or distributional forecast model.
 
@@ -134,7 +168,8 @@ The uncertainty-aware policy will be implemented without future leakage, using o
 - future realised demand is unavailable to all deployable policies;
 - the oracle appears only in retrospective decision evaluation;
 - hyperparameter tuning occurs inside the rolling evaluation design;
-- zone selection uses training demand only.
+- zone selection uses training demand only;
+- every expanding Poisson fit uses observations strictly before its forecast origin.
 
 ## Planned notebooks
 
@@ -147,4 +182,4 @@ Reusable logic belongs in `src/`, not inside notebooks.
 
 ## Status
 
-**Active research / portfolio project.** The data contract and initial evaluation window are frozen before fitting the main models. No empirical performance claim should be made until the end-to-end backtest has been executed on real TLC data.
+**Active research / portfolio project.** The data contract, evaluation window and first two forecasting baselines are frozen before any richer model is introduced. No empirical performance claim should be made until the end-to-end backtest has been executed on real TLC data.

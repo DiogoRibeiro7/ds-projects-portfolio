@@ -90,16 +90,22 @@ def add_core_indices(
         raise KeyError(f"Missing required columns: {sorted(missing)}")
     result = panel.copy()
     result["thcr"] = tourist_housing_conversion_rate(
-        result[al_col], result["housing_stock"]
+        result[al_col],
+        result["housing_stock"],
     )
     result["lhdi"] = local_housing_decoupling_index(result, base_year=base_year)
     result["tourism_intensity"] = tourism_intensity(
-        result["overnight_stays"], result["resident_population"]
+        result["overnight_stays"],
+        result["resident_population"],
     )
     result["log_rent"] = np.where(
-        result["rent_eur_m2"] > 0, np.log(result["rent_eur_m2"]), np.nan
+        result["rent_eur_m2"] > 0,
+        np.log(result["rent_eur_m2"]),
+        np.nan,
     )
     result["log_income"] = np.where(
-        result["income_eur"] > 0, np.log(result["income_eur"]), np.nan
+        result["income_eur"] > 0,
+        np.log(result["income_eur"]),
+        np.nan,
     )
     return result

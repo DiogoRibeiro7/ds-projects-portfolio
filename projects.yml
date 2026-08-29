@@ -1,4 +1,20 @@
 projects:
+  - name: Portugal Housing Tourism Pressure
+    repository: ./projects/portugal_housing_tourism/
+    category: Applied Economic Analytics
+    status: active-portfolio
+    summary: Municipality-level housing affordability, tourism intensity, and short-term accommodation study with survivorship-aware RNAL measurement.
+    methods:
+      - panel data
+      - fixed effects
+      - index construction
+      - counterfactual modelling
+    technologies:
+      - Python
+      - pandas
+      - statsmodels
+      - Jupyter
+    featured: false
   - name: Portugal GDP Bayesian Revision
     repository: https://github.com/DiogoRibeiro7/portugal-gdp-bayesian-revision
     category: Research & Statistical Modelling

@@ -73,6 +73,7 @@ Use this short list first when reviewing:
 
 Use this map when you want to jump directly to a project area:
 
+- [Portugal housing, tourism and short-term accommodation](projects/portugal_housing_tourism/)
 - [churn prediction](projects/churn_prediction/)
 - [customer segmentation](projects/customer_segmentation/)
 - [A/B testing notebooks](projects/ab_testing/)
@@ -133,4 +134,3 @@ Repository scope contract is documented in
 This project is meant to stay portfolio-first: fast signal for reviewers, concise
 entry paths, and clear separation between maintained portfolio content and
 external historical backlog.
-

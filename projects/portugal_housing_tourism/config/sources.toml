@@ -1,0 +1,35 @@
+[ine.rent]
+indicator = "0009631"
+name = "Median rent of new residential lease contracts (EUR/m2), annual, NUTS 2013"
+url = "https://www.ine.pt/xurl/indx/0009631/PT"
+
+[ine.income]
+indicator = "0009934"
+name = "Median gross declared income per taxpayer (EUR), annual, NUTS 2013"
+url = "https://www.ine.pt/xurl/indx/0009934/PT"
+
+[ine.housing_stock]
+indicator = "0008329"
+name = "Classical family dwellings, housing stock (number), annual, NUTS 2013"
+url = "https://www.ine.pt/xurl/indx/0008329/PT"
+
+[ine.population]
+indicator = "0008272"
+name = "Resident population (number), annual, NUTS 2013"
+url = "https://www.ine.pt/xurl/indx/0008272/PT"
+
+[ine.overnight_stays]
+indicator = "0009182"
+name = "Overnight stays in tourist accommodation by residence country, annual, NUTS 2013"
+url = "https://www.ine.pt/xurl/indx/0009182/PT"
+
+[rnal]
+name = "Registo Nacional de Alojamento Local (RNAL)"
+url = "https://dadosabertos.turismodeportugal.pt/datasets/4e62eb1977564991bd01e61d7aa8266f_6/explore"
+arcgis_layer = "https://geo.turismodeportugal.pt/server/rest/services/TDP/OpenData_AL/MapServer/6"
+notes = "Official current-state RNAL layer. It publishes DataRegisto but no cancellation/end-date field, so a current snapshot cannot by itself recover historical active stock."
+
+[inside_airbnb]
+name = "Inside Airbnb - Lisbon"
+url = "https://insideairbnb.com/get-the-data/"
+notes = "Optional validation/activity source. Preserve the snapshot date and the activity definition used."

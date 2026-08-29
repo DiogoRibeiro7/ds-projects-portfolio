@@ -1,4 +1,20 @@
 projects:
+  - name: Global Supply Chain Resilience
+    repository: ./projects/global_supply_chain_resilience/
+    category: Decision Science & Network Analytics
+    status: active-portfolio
+    summary: Country-industry supply-chain network analysis with disruption stress testing, systemic-risk measurement, and constrained diversification optimization.
+    methods:
+      - network science
+      - input-output modelling
+      - stress testing
+      - constrained optimization
+    technologies:
+      - Python
+      - pandas
+      - NetworkX
+      - scipy
+    featured: false
   - name: Mobility Demand & Fleet Optimization
     repository: ./projects/mobility_demand_optimization/
     category: Decision Science & Operations Research

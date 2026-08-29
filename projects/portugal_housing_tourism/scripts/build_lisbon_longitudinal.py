@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import json
 import sys
 import tomllib
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
@@ -15,13 +18,13 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from housing_tourism.data import (  # noqa: E402
-    INEClient,
     canonicalise_ine_measure,
     flatten_ine_payload,
-    infer_total_filters,
     infer_year,
 )
 
+INE_MIRROR_ENDPOINT = "https://gateway.pipeworx.io/ine-pt/mcp"
+TOTAL_LABELS = {"total", "total geral"}
 VALUE_NAMES = {
     "rent": "rent_eur_m2",
     "income": "income_eur",
@@ -36,57 +39,232 @@ def _load_sources() -> dict[str, object]:
         return tomllib.load(handle)
 
 
-def _lisbon_series(frame: pd.DataFrame, *, value_name: str) -> pd.DataFrame:
-    """Select the unique annual geography series named Lisboa."""
-    matches = frame.loc[frame["geo_name"].str.strip().str.casefold().eq("lisboa")].copy()
-    candidates = matches[["geo_code", "geo_name"]].drop_duplicates().sort_values("geo_code")
-    if matches.empty:
-        raise ValueError("INE series contains no geography named 'Lisboa'.")
-    if candidates["geo_code"].nunique() != 1:
+def _mirror_call(tool_name: str, arguments: dict[str, object]) -> Any:
+    """Call the public transport mirror and decode its text-wrapped JSON payload."""
+    request = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {"name": tool_name, "arguments": arguments},
+    }
+    response = requests.post(INE_MIRROR_ENDPOINT, json=request, timeout=30.0)
+    response.raise_for_status()
+    body = response.json()
+    if "error" in body:
+        raise RuntimeError(f"INE mirror error: {body['error']}")
+    try:
+        text = body["result"]["content"][0]["text"]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise ValueError("Unexpected INE mirror response shape.") from exc
+    return json.loads(text)
+
+
+def _metadata_object(indicator: str) -> dict[str, Any]:
+    payload = _mirror_call("indicator_meta", {"varcd": indicator, "lang": "PT"})
+    if not isinstance(payload, list) or len(payload) != 1 or not isinstance(payload[0], dict):
+        raise ValueError(f"Unexpected metadata payload for INE indicator {indicator}.")
+    return payload[0]
+
+
+def _category_entries(metadata: dict[str, Any]) -> list[dict[str, Any]]:
+    try:
+        groups = metadata["Dimensoes"]["Categoria_Dim"]
+    except (KeyError, TypeError) as exc:
+        raise ValueError("INE metadata does not contain dimension categories.") from exc
+    if not isinstance(groups, list):
+        raise ValueError("INE dimension categories must be a list.")
+    entries: list[dict[str, Any]] = []
+    for group in groups:
+        if not isinstance(group, dict):
+            continue
+        for values in group.values():
+            if isinstance(values, list):
+                entries.extend(value for value in values if isinstance(value, dict))
+    return entries
+
+
+def _dimension_numbers(metadata: dict[str, Any]) -> tuple[str, str, list[str]]:
+    """Return time, geography and remaining INE dimension numbers."""
+    descriptions = metadata.get("Dimensoes", {}).get("Descricao_Dim", [])
+    if not isinstance(descriptions, list):
+        raise ValueError("INE metadata dimension descriptions must be a list.")
+    time_dim: str | None = None
+    geography_dim: str | None = None
+    all_dims: list[str] = []
+    for item in descriptions:
+        if not isinstance(item, dict):
+            continue
+        dim_num = str(item.get("dim_num", ""))
+        label = str(item.get("abrv", "")).casefold()
+        if not dim_num:
+            continue
+        all_dims.append(dim_num)
+        if "período" in label or "periodo" in label:
+            time_dim = dim_num
+        if "localização geográfica" in label or "localizacao geografica" in label:
+            geography_dim = dim_num
+    if time_dim is None or geography_dim is None:
+        raise ValueError("Could not identify INE time and geography dimensions from metadata.")
+    other_dims = [dim for dim in all_dims if dim not in {time_dim, geography_dim}]
+    return time_dim, geography_dim, other_dims
+
+
+def _unique_category_code(
+    entries: list[dict[str, Any]],
+    *,
+    dim_num: str,
+    label: str,
+    level: str | None = None,
+) -> str:
+    target = label.strip().casefold()
+    matches = [
+        str(entry["categ_cod"])
+        for entry in entries
+        if str(entry.get("dim_num")) == dim_num
+        and str(entry.get("categ_dsg", "")).strip().casefold() == target
+        and (level is None or str(entry.get("categ_nivel")) == level)
+    ]
+    if len(matches) != 1:
         raise ValueError(
-            "INE geography 'Lisboa' is ambiguous after filtering. Candidates: "
-            f"{candidates.to_dict(orient='records')}"
+            f"Expected one category {label!r} in dimension {dim_num}, found {matches!r}."
         )
-    return matches[["year", value_name]].sort_values("year").reset_index(drop=True)
+    return matches[0]
 
 
-def _build_ine_series() -> pd.DataFrame:
+def _total_dimension_codes(
+    entries: list[dict[str, Any]],
+    other_dims: list[str],
+) -> dict[str, str]:
+    result: dict[str, str] = {}
+    for dim_num in other_dims:
+        dim_entries = [entry for entry in entries if str(entry.get("dim_num")) == dim_num]
+        total_matches = [
+            str(entry["categ_cod"])
+            for entry in dim_entries
+            if str(entry.get("categ_dsg", "")).strip().casefold() in TOTAL_LABELS
+        ]
+        if len(total_matches) == 1:
+            result[dim_num] = total_matches[0]
+        elif len(dim_entries) == 1:
+            result[dim_num] = str(dim_entries[0]["categ_cod"])
+        else:
+            labels = [str(entry.get("categ_dsg", "")) for entry in dim_entries[:12]]
+            raise ValueError(
+                f"Cannot select an unambiguous total for INE dimension {dim_num}. "
+                f"Observed labels include {labels!r}."
+            )
+    return result
+
+
+def _period_codes(entries: list[dict[str, Any]], time_dim: str) -> list[tuple[int, str]]:
+    periods: list[tuple[int, str]] = []
+    for entry in entries:
+        if str(entry.get("dim_num")) != time_dim:
+            continue
+        label = str(entry.get("categ_dsg", "")).strip()
+        if label.isdigit() and len(label) == 4 and int(label) >= 2017:
+            periods.append((int(label), str(entry["categ_cod"])))
+    periods = sorted(set(periods))
+    if not periods:
+        raise ValueError("INE metadata contains no annual periods from 2017 onward.")
+    return periods
+
+
+def _fetch_lisbon_indicator(
+    *,
+    measure: str,
+    indicator: str,
+) -> tuple[pd.DataFrame, dict[str, object]]:
+    """Fetch every advertised annual period for Lisbon municipality via a mirror."""
+    metadata = _metadata_object(indicator)
+    entries = _category_entries(metadata)
+    time_dim, geography_dim, other_dims = _dimension_numbers(metadata)
+    lisboa_code = _unique_category_code(
+        entries,
+        dim_num=geography_dim,
+        label="Lisboa",
+        level="5",
+    )
+    totals = _total_dimension_codes(entries, other_dims)
+    period_codes = _period_codes(entries, time_dim)
+
+    frames: list[pd.DataFrame] = []
+    extraction_dates: list[str] = []
+    for year, period_code in period_codes:
+        dims = {
+            f"Dim{time_dim}": period_code,
+            f"Dim{geography_dim}": lisboa_code,
+            **{f"Dim{dim}": code for dim, code in totals.items()},
+        }
+        payload = _mirror_call(
+            "get_indicator",
+            {"varcd": indicator, "dims": dims, "lang": "PT"},
+        )
+        flat = flatten_ine_payload(payload)
+        flat["year"] = infer_year(flat["period"])
+        canonical = canonicalise_ine_measure(
+            flat,
+            value_name=VALUE_NAMES[measure],
+            minimum_year=2017,
+        )
+        if canonical["geo_code"].nunique() != 1 or canonical["geo_code"].iloc[0] != lisboa_code:
+            raise ValueError(f"INE returned an unexpected geography for {measure} in {year}.")
+        frames.append(canonical[["year", VALUE_NAMES[measure]]])
+        if "DataExtracao" in payload[0]:
+            extraction_dates.append(str(payload[0]["DataExtracao"]))
+
+    result = pd.concat(frames, ignore_index=True)
+    if result.duplicated("year").any():
+        raise ValueError(f"Duplicate annual observations returned for {measure}.")
+    result = result.sort_values("year").reset_index(drop=True)
+    provenance: dict[str, object] = {
+        "measure": measure,
+        "indicator_code": indicator,
+        "indicator_name": metadata.get("IndicadorNome"),
+        "first_period": metadata.get("PrimeiroPeriodo"),
+        "last_period": metadata.get("UltimoPeriodo"),
+        "last_update": metadata.get("DataUltimaAtualizacao"),
+        "geo_code": lisboa_code,
+        "geo_name": "Lisboa",
+        "transport": "Pipeworx INE proxy",
+        "transport_url": INE_MIRROR_ENDPOINT,
+        "statistical_source": "Instituto Nacional de Estatística (INE), Portugal",
+        "extraction_date": max(extraction_dates) if extraction_dates else metadata.get("DataExtracao"),
+        "total_dimension_codes": json.dumps(totals, ensure_ascii=False, sort_keys=True),
+    }
+    print(
+        f"{measure}: indicator={indicator}, Lisboa={lisboa_code}, "
+        f"years={result['year'].min()}-{result['year'].max()}, rows={len(result)}"
+    )
+    return result, provenance
+
+
+def _build_ine_series() -> tuple[pd.DataFrame, pd.DataFrame]:
     sources = _load_sources()
     ine_sources = sources["ine"]
     if not isinstance(ine_sources, dict):
         raise TypeError("config/sources.toml must define an [ine] table.")
 
-    client = INEClient(ROOT / "data" / "raw" / "ine")
     series: list[pd.DataFrame] = []
+    provenance: list[dict[str, object]] = []
     for measure, source in ine_sources.items():
         if measure not in VALUE_NAMES:
             continue
         if not isinstance(source, dict):
             raise TypeError(f"INE source {measure!r} must be a table.")
-        indicator = str(source["indicator"])
-        payload = client.fetch_indicator(indicator, refresh=True)
-        flat = flatten_ine_payload(payload)
-        flat["year"] = infer_year(flat["period"])
-        filters = infer_total_filters(flat)
-        canonical = canonicalise_ine_measure(
-            flat,
-            value_name=VALUE_NAMES[measure],
-            filters=filters,
-            minimum_year=2017,
+        frame, source_provenance = _fetch_lisbon_indicator(
+            measure=measure,
+            indicator=str(source["indicator"]),
         )
-        lisbon = _lisbon_series(canonical, value_name=VALUE_NAMES[measure])
-        print(
-            f"{measure}: indicator={indicator}, filters={filters}, "
-            f"years={lisbon['year'].min()}-{lisbon['year'].max()}, rows={len(lisbon)}"
-        )
-        series.append(lisbon)
+        series.append(frame)
+        provenance.append(source_provenance)
 
     if not series:
         raise ValueError("No configured INE series were loaded.")
     result = series[0]
     for next_series in series[1:]:
         result = result.merge(next_series, on="year", how="outer", validate="one_to_one")
-    return result.sort_values("year").reset_index(drop=True)
+    return result.sort_values("year").reset_index(drop=True), pd.DataFrame(provenance)
 
 
 def _add_indices(frame: pd.DataFrame) -> pd.DataFrame:
@@ -132,26 +310,17 @@ def _save_figures(frame: pd.DataFrame) -> None:
     plt.close(fig)
 
     tourism = frame.dropna(subset=["tourism_intensity"])
+    platform = frame.dropna(subset=["listed_units"])
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.plot(
-        tourism["year"],
-        tourism["tourism_intensity"],
-        marker="o",
-        label="Tourist nights / resident",
-    )
-    observed = frame.dropna(subset=["entire_home_per_1000_dwellings"])
-    if not observed.empty:
-        ax.scatter(
-            observed["year"],
-            observed["entire_home_per_1000_dwellings"],
-            marker="s",
-            label="Entire-home listings / 1,000 dwellings",
-        )
-    ax.set_title("Lisbon tourism intensity and observed platform exposure")
+    ax.plot(tourism["year"], tourism["tourism_intensity"], marker="o")
     ax.set_xlabel("Year")
-    ax.set_ylabel("Observed intensity")
-    ax.legend()
+    ax.set_ylabel("Tourist overnight stays per resident")
     ax.grid(alpha=0.25)
+    if not platform.empty:
+        secondary = ax.twinx()
+        secondary.scatter(platform["year"], platform["listed_units"], marker="s")
+        secondary.set_ylabel("Observed platform listings")
+    ax.set_title("Lisbon tourism intensity and observed platform listings")
     fig.tight_layout()
     fig.savefig(figure_dir / "lisbon_tourism_platform_exposure.png", dpi=180)
     plt.close(fig)
@@ -159,11 +328,12 @@ def _save_figures(frame: pd.DataFrame) -> None:
 
 def main() -> None:
     """Build, export, and print the observed Lisbon longitudinal dataset."""
-    ine = _add_indices(_build_ine_series())
-    result = _join_airbnb(ine)
+    ine, provenance = _build_ine_series()
+    result = _join_airbnb(_add_indices(ine))
     output_dir = ROOT / "results" / "processed"
     output_dir.mkdir(parents=True, exist_ok=True)
     result.to_csv(output_dir / "lisbon_longitudinal.csv", index=False)
+    provenance.to_csv(output_dir / "lisbon_ine_provenance.csv", index=False)
     _save_figures(result)
 
     columns = [
@@ -178,6 +348,8 @@ def main() -> None:
     ]
     print("\nLisbon longitudinal series:")
     print(result[columns].to_string(index=False))
+    print("\nINE provenance:")
+    print(provenance.to_string(index=False))
 
 
 if __name__ == "__main__":

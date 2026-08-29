@@ -39,7 +39,8 @@ jobs:
         run: ruff format --check src scripts tests
       - name: Lint
         run: ruff check src scripts tests
-      - name: Type check
+      - name: Type check minimum supported Python
+        if: matrix.python-version == '3.11'
         run: mypy src
       - name: Test
         run: pytest

@@ -52,6 +52,8 @@ or project-review context:
   forecasting, churn, segmentation, and fraud examples.
 - Experimentation and statistics: A/B testing, power analysis, Bayesian methods,
   bandits, causal inference, and validation checks.
+- Decision science: probabilistic forecasting linked to constrained optimization
+  and evaluation through realised operational cost.
 - Operational data science: model monitoring examples, reproducible demos,
   API-oriented workflows, and clear testing conventions.
 - AI engineering: RAG, retrieval evaluation, telemetry, and guardrail patterns
@@ -73,6 +75,7 @@ Use this short list first when reviewing:
 
 Use this map when you want to jump directly to a project area:
 
+- [Mobility demand and fleet optimization](projects/mobility_demand_optimization/)
 - [Portugal housing, tourism and short-term accommodation](projects/portugal_housing_tourism/)
 - [churn prediction](projects/churn_prediction/)
 - [customer segmentation](projects/customer_segmentation/)

@@ -84,29 +84,31 @@ def _categories(metadata: dict[str, Any]) -> list[dict[str, Any]]:
     return records
 
 
+def _dimension_descriptions(metadata: dict[str, Any]) -> dict[str, str]:
+    descriptions = metadata.get("Dimensoes", {}).get("Descricao_Dim", [])
+    if not isinstance(descriptions, list):
+        raise ValueError("INE metadata dimension descriptions must be a list.")
+    return {
+        str(item["dim_num"]): str(item.get("abrv", ""))
+        for item in descriptions
+        if isinstance(item, dict) and item.get("dim_num") is not None
+    }
+
+
 def _dimension_numbers(
     metadata: dict[str, Any],
     categories: list[dict[str, Any]],
 ) -> tuple[str, str, list[str]]:
     """Identify time/geography dimensions from labels and category semantics."""
-    descriptions = metadata.get("Dimensoes", {}).get("Descricao_Dim", [])
-    if not isinstance(descriptions, list):
-        raise ValueError("INE metadata dimension descriptions must be a list.")
-
-    all_dims = [
-        str(item["dim_num"])
-        for item in descriptions
-        if isinstance(item, dict) and item.get("dim_num") is not None
-    ]
+    descriptions = _dimension_descriptions(metadata)
+    all_dims = list(descriptions)
     if not all_dims:
         raise ValueError("INE metadata contains no dimensions.")
 
     time_candidates = {
-        str(item["dim_num"])
-        for item in descriptions
-        if isinstance(item, dict)
-        and item.get("dim_num") is not None
-        and ("período" in str(item.get("abrv", "")).casefold() or "periodo" in str(item.get("abrv", "")).casefold())
+        dim
+        for dim, label in descriptions.items()
+        if "período" in label.casefold() or "periodo" in label.casefold()
     }
     if len(time_candidates) != 1:
         time_candidates = {
@@ -149,10 +151,12 @@ def _lisboa_code(categories: list[dict[str, Any]], geography_dim: str) -> str:
 
 
 def _total_codes(
+    metadata: dict[str, Any],
     categories: list[dict[str, Any]],
     other_dims: list[str],
 ) -> dict[str, str]:
-    """Select one explicit aggregate category for every non-time/geography dimension."""
+    """Select one documented aggregate for every non-time/geography dimension."""
+    descriptions = _dimension_descriptions(metadata)
     selected: dict[str, str] = {}
     for dim in other_dims:
         records = [record for record in categories if str(record.get("dim_num")) == dim]
@@ -163,14 +167,28 @@ def _total_codes(
         }
         if len(totals) == 1:
             selected[dim] = next(iter(totals))
-        elif len(records) == 1:
+            continue
+
+        description = descriptions.get(dim, "").casefold()
+        if "sexo" in description:
+            both_sexes = {
+                str(record["categ_cod"])
+                for record in records
+                if str(record.get("categ_dsg", "")).strip().casefold() == "hm"
+            }
+            if len(both_sexes) == 1:
+                selected[dim] = next(iter(both_sexes))
+                continue
+
+        if len(records) == 1:
             selected[dim] = str(records[0]["categ_cod"])
-        else:
-            labels = sorted({str(record.get("categ_dsg", "")) for record in records})[:15]
-            raise ValueError(
-                f"Cannot select an unambiguous aggregate for INE dimension {dim}. "
-                f"Observed labels include {labels!r}."
-            )
+            continue
+
+        labels = sorted({str(record.get("categ_dsg", "")) for record in records})[:15]
+        raise ValueError(
+            f"Cannot select an unambiguous aggregate for INE dimension {dim} "
+            f"({descriptions.get(dim, '')!r}). Observed labels include {labels!r}."
+        )
     return selected
 
 
@@ -197,7 +215,7 @@ def _fetch_lisbon_indicator(
     categories = _categories(metadata)
     time_dim, geography_dim, other_dims = _dimension_numbers(metadata, categories)
     lisboa = _lisboa_code(categories, geography_dim)
-    totals = _total_codes(categories, other_dims)
+    totals = _total_codes(metadata, categories, other_dims)
 
     observations: list[pd.DataFrame] = []
     extraction_dates: list[str] = []

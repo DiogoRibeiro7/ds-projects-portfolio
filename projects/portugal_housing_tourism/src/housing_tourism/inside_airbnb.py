@@ -59,8 +59,11 @@ def load_snapshot_manifest(path: Path) -> list[SnapshotSpec]:
     if frame[["snapshot_date", "url"]].isna().any().any():
         raise ValueError("Snapshot manifest contains missing dates or URLs.")
     specs = [
-        SnapshotSpec(snapshot_date=row.snapshot_date, url=row.url)
-        for row in frame[["snapshot_date", "url"]].itertuples(index=False)
+        SnapshotSpec(
+            snapshot_date=str(record["snapshot_date"]),
+            url=str(record["url"]),
+        )
+        for record in frame[["snapshot_date", "url"]].to_dict(orient="records")
     ]
     dates = [spec.date for spec in specs]
     if len(dates) != len(set(dates)):

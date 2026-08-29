@@ -17,7 +17,11 @@ from housing_tourism.rnal import RNALClient, surviving_registration_panel  # noq
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--snapshot-date", required=True, help="ISO retrieval date, e.g. 2026-08-29")
+    parser.add_argument(
+        "--snapshot-date",
+        required=True,
+        help="ISO retrieval date, e.g. 2026-08-29",
+    )
     parser.add_argument("--start-year", type=int, default=2017)
     parser.add_argument("--end-year", type=int, default=None)
     parser.add_argument("--refresh", action="store_true")

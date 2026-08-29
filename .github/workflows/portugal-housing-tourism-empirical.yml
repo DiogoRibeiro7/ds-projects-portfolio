@@ -1,0 +1,54 @@
+name: Portugal Housing Tourism Empirical Run
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "projects/portugal_housing_tourism/data/manifests/inside_airbnb_lisbon.csv"
+      - "projects/portugal_housing_tourism/scripts/fetch_inside_airbnb.py"
+      - "projects/portugal_housing_tourism/src/housing_tourism/inside_airbnb.py"
+      - ".github/workflows/portugal-housing-tourism-empirical.yml"
+
+jobs:
+  execute-verified-snapshots:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/portugal_housing_tourism
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+      - name: Fetch and summarise verified snapshots
+        run: python scripts/fetch_inside_airbnb.py
+      - name: Export compact CSV artifacts
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          from pathlib import Path
+
+          root = Path("data/processed")
+          annual = pd.read_parquet(root / "inside_airbnb_lisbon_annual.parquet")
+          provenance = pd.read_parquet(root / "inside_airbnb_lisbon_provenance.parquet")
+          annual.to_csv(root / "inside_airbnb_lisbon_annual.csv", index=False)
+          provenance.to_csv(root / "inside_airbnb_lisbon_provenance.csv", index=False)
+          print("Observed Lisbon listing snapshots:")
+          print(annual.to_string(index=False))
+          print("\nProvenance:")
+          print(provenance.to_string(index=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: portugal-housing-tourism-verified-snapshots
+          path: |
+            projects/portugal_housing_tourism/data/processed/inside_airbnb_lisbon_annual.csv
+            projects/portugal_housing_tourism/data/processed/inside_airbnb_lisbon_provenance.csv
+          if-no-files-found: error
+          retention-days: 30

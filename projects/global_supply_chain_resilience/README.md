@@ -4,7 +4,7 @@
 
 `active-portfolio` — research design and reproducible data pipeline are being built. No empirical results are claimed yet.
 
-The first ingestion milestone is implemented: raw OECD ICIO CSV/ZIP artifacts are loaded with exact-file provenance, structural validation, and explicit construction of the technical-coefficient matrix before any graph metric is computed.
+The ingestion layer is implemented and the first real-data probe is wired against the official OECD 2025 regular ICIO archive for 2016–2022. The probe targets the 2022 table, records exact-source provenance, and emits schema evidence before any vintage-specific economic mapping or graph metric is computed.
 
 ## Research question
 
@@ -20,7 +20,9 @@ The project treats the supply chain as a directed weighted production network ra
 
 ## Data-ingestion contract
 
-Downloaded OECD archives are immutable raw artifacts. The ingestion layer records a SHA-256 digest of the exact source bytes and preserves source row/column identifiers. Before analysis it rejects empty tables, duplicate labels, negative accounting flows, non-finite accounting values, non-positive gross output, and technical-coefficient columns whose intermediate-input shares exceed one.
+Downloaded OECD archives are immutable raw artifacts. The ingestion layer records a SHA-256 digest of the exact source bytes and preserves source row/column identifiers. Before analysis it rejects empty tables, duplicate labels, missing numeric accounting content, non-positive gross output, negative values inside the economically identified intermediate-use block, and technical-coefficient columns whose intermediate-input shares exceed one.
+
+Raw ICIO tables are **not** globally constrained to non-negative values because components such as changes in inventories may legitimately be negative. Sign constraints are applied only after the economic meaning of a block has been established.
 
 The raw-table parser does **not** guess which columns constitute the square intermediate-use block. That extraction mapping must be explicit for each ICIO vintage, because silently inferring final-demand or value-added columns would contaminate the production network.
 
@@ -31,6 +33,10 @@ A_{ij}=\frac{Z_{ij}}{x_j}.
 \]
 
 This orientation is frozen: row `i` is the supplying country-industry node and column `j` is the using country-industry node.
+
+## First empirical gate
+
+The reproducible probe downloads the official 2016–2022 regular ICIO archive and selects the unique 2022 CSV member. It records the archive SHA-256, table shape, row/column labels, overlap between row and column identifiers, and the count of negative numeric cells. These outputs are evidence for the subsequent vintage-specific mapping of intermediate use, final demand, value added, and gross output; they are not substantive supply-chain results.
 
 ## Analytical structure
 

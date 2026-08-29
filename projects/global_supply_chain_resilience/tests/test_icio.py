@@ -44,13 +44,14 @@ def test_load_icio_zip_requires_unambiguous_member(tmp_path) -> None:
     assert table.frame.loc["A", "A"] == 2
 
 
-def test_negative_accounting_values_are_rejected(tmp_path) -> None:
-    """ICIO monetary flows cannot silently contain negative values."""
-    path = tmp_path / "invalid.csv"
-    path.write_text("node,A,B\nA,1,-1\nB,0,1\n", encoding="utf-8")
+def test_raw_table_allows_negative_inventory_like_values(tmp_path) -> None:
+    """Raw final-demand entries may be negative before economic components are mapped."""
+    path = tmp_path / "raw.csv"
+    path.write_text("node,A,INVNT\nA,1,-0.5\n", encoding="utf-8")
 
-    with pytest.raises(ValueError, match="non-negative"):
-        load_icio_csv(path)
+    table = load_icio_csv(path)
+
+    assert table.frame.loc["A", "INVNT"] == pytest.approx(-0.5)
 
 
 def test_technical_coefficients_match_definition() -> None:
@@ -69,6 +70,19 @@ def test_technical_coefficients_match_definition() -> None:
     assert coefficients.sum(axis=0).to_dict() == pytest.approx(
         {"industry_a": 0.25, "industry_b": 0.40}
     )
+
+
+def test_technical_coefficients_reject_negative_intermediate_use() -> None:
+    """Negative values remain invalid once the intermediate-use block is identified."""
+    intermediate = pd.DataFrame(
+        [[20.0], [-1.0]],
+        index=["supplier_a", "supplier_b"],
+        columns=["industry_a"],
+    )
+    output = pd.Series([100.0], index=intermediate.columns)
+
+    with pytest.raises(ValueError, match="non-negative"):
+        technical_coefficients(intermediate, output)
 
 
 def test_technical_coefficients_reject_impossible_column_sum() -> None:

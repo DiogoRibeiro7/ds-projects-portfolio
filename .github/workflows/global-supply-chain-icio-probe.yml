@@ -1,0 +1,41 @@
+name: Global Supply Chain ICIO Probe
+
+on:
+  pull_request:
+    paths:
+      - "projects/global_supply_chain_resilience/**"
+      - ".github/workflows/global-supply-chain-icio-probe.yml"
+  workflow_dispatch:
+
+jobs:
+  test-and-probe:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/global_supply_chain_resilience
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+
+      - name: Run unit tests
+        run: pytest
+
+      - name: Probe official OECD 2022 ICIO table
+        run: python scripts/probe_oecd_icio.py --output-dir artifacts/icio_probe
+
+      - name: Upload empirical schema evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: global-supply-chain-icio-2022-probe
+          path: projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_schema.json
+          if-no-files-found: error
+          retention-days: 30

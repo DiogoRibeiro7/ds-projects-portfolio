@@ -39,7 +39,13 @@ def _validate_sha256(value: str) -> None:
 
 
 def _validate_frame(frame: pd.DataFrame) -> None:
-    """Reject structurally invalid raw ICIO tables before downstream analysis."""
+    """Reject structurally invalid raw ICIO tables before downstream analysis.
+
+    Raw ICIO tables may legitimately contain negative entries outside the
+    intermediate-use block, notably changes in inventories. Sign constraints are
+    therefore applied later to economically defined components such as ``Z`` rather
+    than indiscriminately to the full source table.
+    """
     if frame.empty:
         raise ValueError("ICIO table must not be empty.")
     if frame.index.has_duplicates:
@@ -56,8 +62,6 @@ def _validate_frame(frame: pd.DataFrame) -> None:
     finite = values[np.isfinite(values)]
     if finite.size == 0:
         raise ValueError("ICIO table contains no finite accounting values.")
-    if np.any(finite < 0.0):
-        raise ValueError("ICIO accounting values must be non-negative.")
 
 
 def _parse_csv_bytes(raw: bytes, *, source_name: str, digest: str) -> ICIOTable:
@@ -78,18 +82,7 @@ def _parse_csv_bytes(raw: bytes, *, source_name: str, digest: str) -> ICIOTable:
 
 
 def load_icio_csv(path: str | Path) -> ICIOTable:
-    """Load and validate one OECD ICIO CSV file.
-
-    Args:
-        path: Local path to the raw CSV file.
-
-    Returns:
-        A validated table carrying the exact-file SHA-256 digest.
-
-    Raises:
-        FileNotFoundError: If the path does not exist.
-        ValueError: If the source cannot be parsed or fails structural validation.
-    """
+    """Load and validate one OECD ICIO CSV file."""
     source = Path(path)
     raw = source.read_bytes()
     digest = sha256(raw).hexdigest()
@@ -102,17 +95,6 @@ def load_icio_zip(path: str | Path, *, member: str | None = None) -> ICIOTable:
     The archive digest, rather than only the extracted CSV digest, is stored so the
     provenance points to the exact raw distribution artifact. If ``member`` is not
     supplied, the archive must contain exactly one CSV file.
-
-    Args:
-        path: Local path to the downloaded ZIP archive.
-        member: Optional exact CSV member name.
-
-    Returns:
-        A validated ICIO table with archive-level provenance.
-
-    Raises:
-        FileNotFoundError: If the archive does not exist.
-        ValueError: If member selection is ambiguous or the archive is invalid.
     """
     source = Path(path)
     raw_archive = source.read_bytes()

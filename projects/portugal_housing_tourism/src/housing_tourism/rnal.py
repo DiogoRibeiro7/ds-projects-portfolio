@@ -113,9 +113,13 @@ class RNALClient:
             raise ValueError("RNAL returned no registrations.")
         for column in ("DataRegisto", "DataAberturaPublico"):
             if column in frame.columns:
-                frame[column] = pd.to_datetime(frame[column], unit="ms", errors="coerce")
+                frame[column] = pd.to_datetime(
+                    frame[column], unit="ms", errors="coerce"
+                )
         if "NrRNAL" in frame.columns:
-            frame["NrRNAL"] = pd.to_numeric(frame["NrRNAL"], errors="coerce").astype("Int64")
+            frame["NrRNAL"] = pd.to_numeric(
+                frame["NrRNAL"], errors="coerce"
+            ).astype("Int64")
         if "Concelho" in frame.columns:
             frame["Concelho"] = frame["Concelho"].astype("string").str.strip()
         frame["snapshot_date"] = parsed_snapshot
@@ -187,7 +191,9 @@ def surviving_registration_panel(
     result = result.join(pre_start, on=municipality_col)
     result["pre_start"] = result["pre_start"].fillna(0).astype(int)
     result["al_surviving_registrations"] = (
-        result.groupby(municipality_col, observed=True)["new_surviving_registrations"].cumsum()
+        result.groupby(municipality_col, observed=True)[
+            "new_surviving_registrations"
+        ].cumsum()
         + result["pre_start"]
     )
     return result.drop(columns=["registration_year", "pre_start"])

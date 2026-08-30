@@ -65,7 +65,7 @@ def _audit_measure(
         "current_last_year": int(current["year"].max()),
         "overlap_first_year": int(overlap["year"].min()),
         "overlap_last_year": int(overlap["year"].max()),
-        "overlap_years": int(len(overlap)),
+        "overlap_years": len(overlap),
         "max_abs_relative_difference": float(overlap["relative_difference"].abs().max()),
         "mean_abs_relative_difference": float(overlap["relative_difference"].abs().mean()),
         "old_geo_code": old_provenance["geo_code"],

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from hashlib import sha256
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
@@ -17,15 +18,32 @@ import pandas as pd
 from curl_cffi import requests
 
 OFFICIAL_URL = "https://webfs-sti.oecd.org/files/STI-PIE/ICIO/2025/2016-2022_SML.zip"
+OECD_PAGE = "https://www.oecd.org/en/data/datasets/inter-country-input-output-tables.html"
+RETRY_STATUS_CODES = {403, 408, 425, 429, 500, 502, 503, 504}
+MAX_ATTEMPTS = 4
+
+
+def _validate_zip(raw: bytes) -> None:
+    """Reject empty or non-ZIP responses before they can enter provenance."""
+    if not raw:
+        raise RuntimeError("OECD ICIO download returned an empty response.")
+    try:
+        from io import BytesIO
+
+        with ZipFile(BytesIO(raw)) as archive:
+            if not archive.namelist():
+                raise RuntimeError("OECD ICIO archive contains no members.")
+    except BadZipFile as exc:
+        raise RuntimeError("OECD ICIO response is not a valid ZIP archive.") from exc
 
 
 def download(url: str, destination: Path) -> str:
-    """Download ``url`` using a browser-compatible HTTPS client.
+    """Download the fixed official OECD archive with bounded browser-like retries.
 
-    OECD's file host may reject generic Python HTTP clients with HTTP 403 while
-    serving the same official resource to browser-like TLS clients. The response
-    is therefore retrieved with Chrome impersonation and then validated as a ZIP
-    archive before any data are parsed.
+    OECD's file host intermittently returns HTTP 403 to otherwise valid automated
+    requests. Retries stay on the same official URL and never fall back to mirrors.
+    Each attempt uses a fresh browser-compatible session and first visits the public
+    OECD dataset page so cookies/referer state resemble an ordinary browser flow.
 
     Args:
         url: Fixed official OECD archive URL.
@@ -35,25 +53,46 @@ def download(url: str, destination: Path) -> str:
         SHA-256 digest of the exact downloaded archive bytes.
 
     Raises:
-        RuntimeError: If the response is empty or not a valid ZIP archive.
+        RuntimeError: If all bounded attempts fail or the response is not a ZIP.
     """
-    response = requests.get(url, impersonate="chrome", timeout=180)
-    response.raise_for_status()
-    raw = bytes(response.content)
-    if not raw:
-        raise RuntimeError("OECD ICIO download returned an empty response.")
+    last_error: Exception | None = None
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            with requests.Session(impersonate="chrome") as session:
+                session.get(
+                    OECD_PAGE,
+                    timeout=60,
+                    headers={"Accept": "text/html,application/xhtml+xml"},
+                )
+                response = session.get(
+                    url,
+                    timeout=180,
+                    headers={
+                        "Accept": "application/zip,application/octet-stream,*/*",
+                        "Referer": OECD_PAGE,
+                    },
+                )
+                if response.status_code in RETRY_STATUS_CODES:
+                    raise RuntimeError(
+                        f"OECD ICIO download returned retryable HTTP {response.status_code}."
+                    )
+                response.raise_for_status()
+                raw = bytes(response.content)
+                _validate_zip(raw)
 
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(raw)
-    try:
-        with ZipFile(destination) as archive:
-            if not archive.namelist():
-                raise RuntimeError("OECD ICIO archive contains no members.")
-    except BadZipFile as exc:
-        destination.unlink(missing_ok=True)
-        raise RuntimeError("OECD ICIO response is not a valid ZIP archive.") from exc
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(raw)
+                return sha256(raw).hexdigest()
+        except Exception as exc:  # bounded retry around an external official host
+            last_error = exc
+            destination.unlink(missing_ok=True)
+            if attempt == MAX_ATTEMPTS:
+                break
+            time.sleep(2 ** (attempt - 1))
 
-    return sha256(raw).hexdigest()
+    raise RuntimeError(
+        f"Could not download the official OECD ICIO archive after {MAX_ATTEMPTS} attempts."
+    ) from last_error
 
 
 def choose_2022_member(archive_path: Path) -> str:

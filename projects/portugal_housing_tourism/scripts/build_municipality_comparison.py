@@ -1,4 +1,4 @@
-"""Build a national municipality comparison for the 2022-2023 affordability change."""
+"""Build an observed-municipality comparison for the 2022-2023 affordability change."""
 
 from __future__ import annotations
 
@@ -38,6 +38,7 @@ from housing_tourism.municipality import (  # noqa: E402
 )
 
 YEARS = (2022, 2023)
+MIN_AFFORDABILITY_COVERAGE = 0.50
 MEASURES = {
     "rent": "rent_eur_m2",
     "income": "income_eur",
@@ -146,21 +147,42 @@ def _build_endpoints() -> pd.DataFrame:
     return result.sort_values(["geo_code", "year"]).reset_index(drop=True)
 
 
+def _measure_coverage(endpoints: pd.DataFrame, column: str) -> dict[str, int]:
+    coverage: dict[str, int] = {}
+    for year in YEARS:
+        observed = endpoints.loc[endpoints["year"].eq(year) & endpoints[column].notna(), "geo_code"]
+        coverage[str(year)] = int(observed.nunique())
+    complete = endpoints.loc[endpoints[column].notna()].groupby("geo_code")["year"].nunique()
+    coverage["both_years"] = int(complete.ge(2).sum())
+    return coverage
+
+
 def main() -> None:
-    """Fetch the national endpoint panel and rank the 2022-2023 affordability change."""
+    """Fetch endpoint data and rank the observed 2022-2023 affordability sample."""
     endpoints = _build_endpoints()
     comparison = municipality_change_panel(endpoints, start_year=2022, end_year=2023)
-    if len(comparison) < 250:
+    municipality_universe = int(endpoints["geo_code"].nunique())
+    affordability_coverage = len(comparison) / municipality_universe
+    if affordability_coverage < MIN_AFFORDABILITY_COVERAGE:
         raise ValueError(
-            f"Too few municipalities have complete 2022-2023 data: {len(comparison)}."
+            f"Affordability coverage {affordability_coverage:.1%} is below the "
+            f"{MIN_AFFORDABILITY_COVERAGE:.0%} minimum guard."
         )
 
     lisbon = summarise_reference_municipality(comparison, geo_name="Lisboa")
     porto = summarise_reference_municipality(comparison, geo_name="Porto")
+    tourism_observed = int(comparison["tourism_intensity_change_pct"].notna().sum())
     summary = {
         "start_year": 2022,
         "end_year": 2023,
-        "complete_municipalities": len(comparison),
+        "municipality_universe": municipality_universe,
+        "complete_affordability_municipalities": len(comparison),
+        "affordability_coverage_pct": 100.0 * affordability_coverage,
+        "tourism_change_observed_municipalities": tourism_observed,
+        "measure_coverage": {
+            value_name: _measure_coverage(endpoints, value_name)
+            for value_name in MEASURES.values()
+        },
         "lisboa": lisbon,
         "porto": porto,
         "median_rent_income_ratio_change_pct": float(
@@ -176,7 +198,7 @@ def main() -> None:
     comparison.to_csv(COMPARISON_PATH, index=False, float_format="%.6f")
     SUMMARY_PATH.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
-    print("\nNational 2022-2023 municipality comparison:")
+    print("\nObserved 2022-2023 municipality comparison:")
     print(json.dumps(summary, indent=2, sort_keys=True))
     print("\nTop 15 affordability deteriorations:")
     print(

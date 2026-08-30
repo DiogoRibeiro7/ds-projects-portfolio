@@ -10,6 +10,8 @@ on:
       - "projects/portugal_housing_tourism/scripts/build_lisbon_bridged.py"
       - "projects/portugal_housing_tourism/results/processed/lisbon_longitudinal_legacy.csv"
       - "projects/portugal_housing_tourism/results/processed/lisbon_nuts2024_bridge_summary.csv"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_longitudinal_bridged.csv"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_ine_bridge_provenance.csv"
       - ".github/workflows/portugal-housing-tourism-bridged-longitudinal.yml"
 
 jobs:
@@ -33,8 +35,26 @@ jobs:
         run: ruff format --check scripts/build_lisbon_bridged.py
       - name: Lint
         run: ruff check scripts/build_lisbon_bridged.py
+      - name: Preserve committed provenance
+        run: cp results/processed/lisbon_ine_bridge_provenance.csv /tmp/committed_bridge_provenance.csv
       - name: Build guarded bridged series
         run: python scripts/build_lisbon_bridged.py
+      - name: Verify committed numerical evidence
+        run: git diff --exit-code -- results/processed/lisbon_longitudinal_bridged.csv
+      - name: Verify provenance structure
+        run: |
+          python - <<'PY'
+          import pandas as pd
+
+          committed = pd.read_csv("/tmp/committed_bridge_provenance.csv")
+          regenerated = pd.read_csv("results/processed/lisbon_ine_bridge_provenance.csv")
+          ignored = ["extraction_date"]
+          pd.testing.assert_frame_equal(
+              committed.drop(columns=ignored),
+              regenerated.drop(columns=ignored),
+              check_dtype=False,
+          )
+          PY
       - name: Upload bridged results
         uses: actions/upload-artifact@v4
         with:

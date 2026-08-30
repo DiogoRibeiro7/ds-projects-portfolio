@@ -69,7 +69,9 @@ def _fetch_tail_years(
     time_dim, geography_dim, other_dims = _dimension_numbers(metadata, categories)
     lisboa = _lisboa_code(categories, geography_dim)
     totals = _total_codes(metadata, categories, other_dims)
-    periods = [(year, code) for year, code in _period_codes(categories, time_dim) if year > after_year]
+    periods = [
+        (year, code) for year, code in _period_codes(categories, time_dim) if year > after_year
+    ]
 
     value_name = VALUE_NAMES[measure]
     observations: list[pd.DataFrame] = []
@@ -129,7 +131,9 @@ def _fetch_tail_years(
     return tail, provenance
 
 
-def _apply_current_tails(legacy: pd.DataFrame, audit: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+def _apply_current_tails(
+    legacy: pd.DataFrame, audit: pd.DataFrame
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Fill only post-legacy years using current NUTS-2024 observations."""
     result = legacy.copy()
     provenance: list[dict[str, object]] = []
@@ -156,7 +160,9 @@ def _apply_current_tails(legacy: pd.DataFrame, audit: pd.DataFrame) -> tuple[pd.
             indicator,
             after_year=legacy_last_year,
         )
-        result = result.merge(tail, on="year", how="outer", suffixes=("", "_current"), validate="one_to_one")
+        result = result.merge(
+            tail, on="year", how="outer", suffixes=("", "_current"), validate="one_to_one"
+        )
         current_column = f"{value_name}_current"
         if current_column in result.columns:
             result[value_name] = result[value_name].combine_first(result[current_column])

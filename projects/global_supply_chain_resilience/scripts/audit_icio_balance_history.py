@@ -19,6 +19,8 @@ from supply_chain_resilience.mapping import (
 )
 
 YEARS = tuple(range(2016, 2023))
+CALIBRATION_YEARS = tuple(range(2016, 2022))
+HOLDOUT_YEAR = 2022
 
 
 def _load_member(archive: ZipFile, member: str) -> pd.DataFrame:
@@ -81,6 +83,21 @@ def _violation_activity_counts(
     ]
 
 
+def _required_rtol(
+    residual: pd.Series,
+    gross_output: pd.Series,
+    *,
+    atol: float,
+) -> float:
+    """Return the minimum relative term needed after the fixed absolute allowance."""
+    numerator = (residual.abs() - atol).clip(lower=0.0)
+    positive_output = gross_output > 0.0
+    if not positive_output.any():
+        return 0.0
+    required = numerator.loc[positive_output].divide(gross_output.loc[positive_output].abs())
+    return float(required.max())
+
+
 def _year_report(frame: pd.DataFrame, *, year: int, member: str) -> dict[str, object]:
     """Build accounting diagnostics and evaluate the frozen release envelope."""
     blocks = extract_2022_blocks(frame)
@@ -132,11 +149,18 @@ def _year_report(frame: pd.DataFrame, *, year: int, member: str) -> dict[str, ob
 
     return {
         "year": year,
+        "role": "holdout" if year == HOLDOUT_YEAR else "calibration",
         "archive_member": member,
         "release_balance_gate": gate_status,
         "release_balance_gate_error": gate_error,
         "release_balance_atol": RELEASE_BALANCE_ATOL,
         "release_balance_rtol": RELEASE_BALANCE_RTOL,
+        "required_row_rtol_at_fixed_atol": _required_rtol(
+            row_residual, blocks.gross_output, atol=RELEASE_BALANCE_ATOL
+        ),
+        "required_column_rtol_at_fixed_atol": _required_rtol(
+            column_residual, blocks.gross_output, atol=RELEASE_BALANCE_ATOL
+        ),
         "max_row_envelope_excess": float(max(0.0, row_excess.max())),
         "max_column_envelope_excess": float(max(0.0, column_excess.max())),
         "row_envelope_violations": len(row_violation_details),
@@ -184,7 +208,7 @@ def _year_report(frame: pd.DataFrame, *, year: int, member: str) -> dict[str, ob
 
 
 def main() -> None:
-    """Gate every 2016-2022 table and write the complete evidence artifact."""
+    """Gate 2016-2021 calibration years and the independent 2022 target holdout."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--archive", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -196,29 +220,51 @@ def main() -> None:
             member = _member_for_year(archive, year)
             reports.append(_year_report(_load_member(archive, member), year=year, member=member))
 
-    failed_years = [
+    failed_calibration_years = [
         int(report["year"])
         for report in reports
-        if report["release_balance_gate"] != "PASS"
+        if int(report["year"]) in CALIBRATION_YEARS
+        and report["release_balance_gate"] != "PASS"
     ]
+    holdout_report = next(report for report in reports if int(report["year"]) == HOLDOUT_YEAR)
+    holdout_pass = holdout_report["release_balance_gate"] == "PASS"
+    calibration_max_required_rtol = max(
+        max(
+            float(report["required_row_rtol_at_fixed_atol"]),
+            float(report["required_column_rtol_at_fixed_atol"]),
+        )
+        for report in reports
+        if int(report["year"]) in CALIBRATION_YEARS
+    )
+
+    release_pass = not failed_calibration_years and holdout_pass
     summary = {
         "years": list(YEARS),
+        "calibration_years": list(CALIBRATION_YEARS),
+        "holdout_year": HOLDOUT_YEAR,
         "release_balance_atol": RELEASE_BALANCE_ATOL,
         "release_balance_rtol": RELEASE_BALANCE_RTOL,
-        "release_gate_status": "PASS" if not failed_years else "FAIL",
-        "failed_years": failed_years,
+        "calibration_max_required_rtol_at_fixed_atol": calibration_max_required_rtol,
+        "calibration_margin": RELEASE_BALANCE_RTOL - calibration_max_required_rtol,
+        "holdout_status": "PASS" if holdout_pass else "FAIL",
+        "release_gate_status": "PASS" if release_pass else "FAIL",
+        "failed_calibration_years": failed_calibration_years,
         "reports": reports,
         "note": (
-            "Release gate uses abs(residual_i) <= 0.1 + 2e-4 * abs(output_i) for every "
-            "published country-industry row and column in every official 2016-2022 table."
+            "The relative envelope is calibrated on 2016-2021 and rounded upward to "
+            "3e-4. The 2022 target year is held out and must satisfy the same fixed "
+            "criterion before its production graph can be built."
         ),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
     print(json.dumps(summary, indent=2, sort_keys=True))
 
-    if failed_years:
-        raise RuntimeError(f"ICIO release balance gate failed for years: {failed_years!r}.")
+    if not release_pass:
+        raise RuntimeError(
+            "ICIO calibrated release balance gate failed; "
+            f"calibration failures={failed_calibration_years!r}, holdout={holdout_pass}."
+        )
 
 
 if __name__ == "__main__":

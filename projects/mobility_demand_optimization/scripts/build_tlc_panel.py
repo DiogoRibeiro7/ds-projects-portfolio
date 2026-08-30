@@ -11,7 +11,8 @@ import pandas as pd
 from mobility_optimization.backtest import FROZEN_BACKTEST
 from mobility_optimization.data import (
     TripQualityReport,
-    aggregate_yellow_file,
+    YELLOW_PICKUP_COLUMNS,
+    aggregate_pickups_frame,
     build_dense_demand_panel,
     combine_hourly_counts,
     download_yellow_month,
@@ -47,6 +48,37 @@ def report_to_dict(report: TripQualityReport) -> dict[str, int]:
         "outside_study_window": report.outside_study_window,
         "rejected_rows": report.rejected_rows,
     }
+
+
+def _aggregate_nominal_month(
+    path: Path,
+    *,
+    year: int,
+    month: int,
+    valid_zone_ids: tuple[int, ...],
+) -> tuple[pd.DataFrame, dict[str, int]]:
+    """Aggregate one source file after enforcing its nominal calendar month."""
+    frame = pd.read_parquet(path, columns=list(YELLOW_PICKUP_COLUMNS))
+    pickup_time = pd.to_datetime(frame["tpep_pickup_datetime"], errors="coerce")
+    month_start = pd.Timestamp(year=year, month=month, day=1)
+    month_end = month_start + pd.offsets.MonthBegin(1)
+    missing_time = pickup_time.isna()
+    in_source_month = pickup_time.ge(month_start) & pickup_time.lt(month_end)
+    outside_source_month = (~missing_time & ~in_source_month).sum()
+
+    filtered = frame.loc[in_source_month].copy()
+    counts, report = aggregate_pickups_frame(
+        filtered,
+        valid_zone_ids=valid_zone_ids,
+        start=FROZEN_BACKTEST.train_start,
+        end=FROZEN_BACKTEST.test_end,
+    )
+    quality = report_to_dict(report)
+    quality["total_rows"] = int(len(frame))
+    quality["missing_pickup_time"] = int(missing_time.sum())
+    quality["outside_source_month"] = int(outside_source_month)
+    quality["rejected_rows"] = int(len(frame) - report.valid_rows)
+    return counts, quality
 
 
 def main() -> None:
@@ -85,14 +117,14 @@ def main() -> None:
             raise FileNotFoundError(
                 f"{path} is missing. Re-run with --download or provide the official parquet."
             )
-        counts, report = aggregate_yellow_file(
+        counts, source_quality = _aggregate_nominal_month(
             path,
+            year=spec.year,
+            month=spec.month,
             valid_zone_ids=valid_zone_ids,
-            start=FROZEN_BACKTEST.train_start,
-            end=FROZEN_BACKTEST.test_end,
         )
         monthly_counts.append(counts)
-        quality[spec.filename] = report_to_dict(report)
+        quality[spec.filename] = source_quality
 
     counts = combine_hourly_counts(monthly_counts)
     selected_zones = select_top_zones(
@@ -118,6 +150,7 @@ def main() -> None:
         "start": str(FROZEN_BACKTEST.train_start),
         "end_exclusive": str(FROZEN_BACKTEST.test_end),
         "test_origins": int(len(FROZEN_BACKTEST.test_origins())),
+        "source_month_rule": "each monthly parquet is restricted to its nominal calendar month before aggregation",
         "quality_by_file": quality,
     }
     manifest_path = args.output.with_suffix(".manifest.json")

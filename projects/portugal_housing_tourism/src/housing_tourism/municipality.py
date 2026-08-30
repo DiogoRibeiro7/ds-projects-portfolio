@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 
@@ -44,43 +43,49 @@ def municipality_change_panel(
     subset["rent_income_ratio"] = subset["rent_eur_m2"] / subset["income_eur"]
     subset["tourism_intensity"] = subset["overnight_stays"] / subset["resident_population"]
 
-    names = subset[["geo_code", "geo_name"]].drop_duplicates("geo_code")
-    wide = subset.pivot(index="geo_code", columns="year", values=[
+    endpoint_columns = [
+        "geo_code",
+        "geo_name",
         "rent_eur_m2",
         "income_eur",
         "rent_income_ratio",
         "tourism_intensity",
-    ])
-    required_pairs = [(column, year) for column in wide.columns.levels[0] for year in (start_year, end_year)]
-    if not all(pair in wide.columns for pair in required_pairs):
-        raise ValueError("The panel does not contain both endpoint years for every requested measure.")
+    ]
+    start = subset.loc[subset["year"].eq(start_year), endpoint_columns].copy()
+    end = subset.loc[subset["year"].eq(end_year), endpoint_columns].copy()
+    start = start.rename(
+        columns={column: f"{column}_start" for column in endpoint_columns if column != "geo_code"}
+    )
+    end = end.rename(
+        columns={column: f"{column}_end" for column in endpoint_columns if column != "geo_code"}
+    )
+    result = start.merge(end, on="geo_code", how="inner", validate="one_to_one")
 
-    result = names.set_index("geo_code").join(wide).reset_index()
-    complete = result[
-        [
-            ("rent_eur_m2", start_year),
-            ("rent_eur_m2", end_year),
-            ("income_eur", start_year),
-            ("income_eur", end_year),
-            ("rent_income_ratio", start_year),
-            ("rent_income_ratio", end_year),
-            ("tourism_intensity", start_year),
-            ("tourism_intensity", end_year),
-        ]
-    ].notna().all(axis=1)
-    result = result.loc[complete].copy()
+    complete_columns = [
+        "rent_eur_m2_start",
+        "rent_eur_m2_end",
+        "income_eur_start",
+        "income_eur_end",
+        "rent_income_ratio_start",
+        "rent_income_ratio_end",
+        "tourism_intensity_start",
+        "tourism_intensity_end",
+    ]
+    result = result.loc[result[complete_columns].notna().all(axis=1)].copy()
+    if not result["geo_name_start"].astype(str).eq(result["geo_name_end"].astype(str)).all():
+        raise ValueError("Municipality names changed between endpoint observations.")
 
     def pct_change(column: str) -> pd.Series:
-        start = result[(column, start_year)].astype(float)
-        end = result[(column, end_year)].astype(float)
-        if (start <= 0).any() or (end <= 0).any():
+        start_values = result[f"{column}_start"].astype(float)
+        end_values = result[f"{column}_end"].astype(float)
+        if (start_values <= 0).any() or (end_values <= 0).any():
             raise ValueError(f"{column} endpoints must be strictly positive.")
-        return 100.0 * (end / start - 1.0)
+        return 100.0 * (end_values / start_values - 1.0)
 
     output = pd.DataFrame(
         {
             "geo_code": result["geo_code"].astype(str),
-            "geo_name": result["geo_name"].astype(str),
+            "geo_name": result["geo_name_start"].astype(str),
             "rent_change_pct": pct_change("rent_eur_m2"),
             "income_change_pct": pct_change("income_eur"),
             "rent_income_ratio_change_pct": pct_change("rent_income_ratio"),
@@ -89,16 +94,22 @@ def municipality_change_panel(
     )
     ratio_change = output["rent_income_ratio_change_pct"]
     output["affordability_percentile"] = ratio_change.rank(method="average", pct=True) * 100.0
-    output["affordability_rank_desc"] = ratio_change.rank(method="min", ascending=False).astype(int)
+    output["affordability_rank_desc"] = ratio_change.rank(
+        method="min", ascending=False
+    ).astype(int)
     output["municipality_count"] = len(output)
     return output.sort_values(["affordability_rank_desc", "geo_name"]).reset_index(drop=True)
 
 
-def summarise_reference_municipality(panel: pd.DataFrame, *, geo_name: str) -> dict[str, float | int]:
+def summarise_reference_municipality(
+    panel: pd.DataFrame, *, geo_name: str
+) -> dict[str, float | int]:
     """Extract one municipality's rank and change metrics from a completed comparison panel."""
     matches = panel.loc[panel["geo_name"].astype(str).str.casefold() == geo_name.casefold()]
     if len(matches) != 1:
-        raise ValueError(f"Expected exactly one municipality named {geo_name!r}, found {len(matches)}.")
+        raise ValueError(
+            f"Expected exactly one municipality named {geo_name!r}, found {len(matches)}."
+        )
     row = matches.iloc[0]
     return {
         "rent_change_pct": float(row["rent_change_pct"]),

@@ -32,10 +32,18 @@ jobs:
       - name: Probe official OECD 2022 ICIO table
         run: python scripts/probe_oecd_icio.py --output-dir artifacts/icio_probe
 
-      - name: Upload empirical schema evidence
+      - name: Build validated 2022 production graph
+        run: >-
+          python scripts/build_2022_network.py
+          --archive artifacts/icio_probe/2016-2022_SML.zip
+          --output artifacts/icio_probe/icio_2022_network.json
+
+      - name: Upload empirical ICIO evidence
         uses: actions/upload-artifact@v4
         with:
-          name: global-supply-chain-icio-2022-probe
-          path: projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_schema.json
+          name: global-supply-chain-icio-2022-evidence
+          path: |
+            projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_schema.json
+            projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_network.json
           if-no-files-found: error
           retention-days: 30

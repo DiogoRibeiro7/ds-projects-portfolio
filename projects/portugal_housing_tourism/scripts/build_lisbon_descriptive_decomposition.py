@@ -31,12 +31,8 @@ EPISODES = (
 def build_annual_table(frame: pd.DataFrame) -> pd.DataFrame:
     """Build annual indexed levels and observed platform exposure columns."""
     result = pd.DataFrame({"year": frame["year"]})
-    result["rent_index_2017"] = index_to_base_year(
-        frame, value_col="rent_eur_m2", base_year=2017
-    )
-    result["income_index_2017"] = index_to_base_year(
-        frame, value_col="income_eur", base_year=2017
-    )
+    result["rent_index_2017"] = index_to_base_year(frame, value_col="rent_eur_m2", base_year=2017)
+    result["income_index_2017"] = index_to_base_year(frame, value_col="income_eur", base_year=2017)
     result["lhdi"] = frame["lhdi"]
     result["tourism_intensity"] = frame["tourism_intensity"]
     result["tourism_index_2019"] = index_to_base_year(

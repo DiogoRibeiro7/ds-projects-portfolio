@@ -180,8 +180,7 @@ def main() -> None:
         "affordability_coverage_pct": 100.0 * affordability_coverage,
         "tourism_change_observed_municipalities": tourism_observed,
         "measure_coverage": {
-            value_name: _measure_coverage(endpoints, value_name)
-            for value_name in MEASURES.values()
+            value_name: _measure_coverage(endpoints, value_name) for value_name in MEASURES.values()
         },
         "lisboa": lisbon,
         "porto": porto,

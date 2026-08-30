@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 from shutil import copyfileobj
+from tempfile import TemporaryDirectory
 from urllib.request import urlopen
+from zipfile import BadZipFile, ZipFile
 
 import geopandas as gpd
 import numpy as np
@@ -40,6 +42,41 @@ def download_taxi_zones(*, destination: Path, overwrite: bool = False) -> Path:
     return destination
 
 
+def _extract_shapefile(archive: Path, *, destination: Path) -> Path:
+    """Validate and extract one ESRI shapefile from the TLC ZIP archive.
+
+    Args:
+        archive: Downloaded TLC ZIP archive.
+        destination: Empty directory used for extraction.
+
+    Returns:
+        Path to the extracted ``.shp`` file.
+
+    Raises:
+        ValueError: If the archive is invalid or does not contain exactly one shapefile.
+    """
+    if not archive.is_file():
+        raise ValueError(f"Taxi-zone archive does not exist: {archive}")
+
+    try:
+        with ZipFile(archive) as bundle:
+            names = bundle.namelist()
+            shapefiles = [name for name in names if name.lower().endswith(".shp")]
+            if len(shapefiles) != 1:
+                raise ValueError(
+                    "Taxi-zone archive must contain exactly one .shp file; "
+                    f"found {len(shapefiles)}."
+                )
+            bundle.extractall(destination)
+    except BadZipFile as exc:
+        raise ValueError("Taxi-zone download is not a valid ZIP archive.") from exc
+
+    shapefile = destination / shapefiles[0]
+    if not shapefile.is_file():
+        raise ValueError("Extracted taxi-zone shapefile is missing.")
+    return shapefile
+
+
 def load_zone_centroids(
     archive: Path,
     *,
@@ -51,7 +88,7 @@ def load_zone_centroids(
     Args:
         archive: Official taxi-zone ZIP archive.
         zone_ids: Unique zone identifiers in desired matrix order.
-        projected_crs: Metric/projection CRS used before centroid calculation.
+        projected_crs: Projected CRS used before centroid calculation.
 
     Returns:
         ``(n_zones, 2)`` array of centroid x/y coordinates.
@@ -62,7 +99,10 @@ def load_zone_centroids(
     if not zone_ids or len(set(zone_ids)) != len(zone_ids):
         raise ValueError("zone_ids must be a non-empty sequence of unique identifiers.")
 
-    zones = gpd.read_file(f"zip://{archive}")
+    with TemporaryDirectory(prefix="tlc-taxi-zones-") as temporary:
+        shapefile = _extract_shapefile(archive, destination=Path(temporary))
+        zones = gpd.read_file(shapefile)
+
     if "LocationID" not in zones.columns:
         raise ValueError("Taxi-zone geometry is missing LocationID.")
     if zones.crs is None:

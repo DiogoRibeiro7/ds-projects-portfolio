@@ -68,9 +68,6 @@ def _load_trip_profiles(zones: tuple[int, ...]) -> pd.DataFrame:
                 "destination": destination.loc[keep].astype(int),
             }
         )
-        # Lag zero means available at the next hourly decision epoch. Any trip
-        # extending beyond six hours is clipped into the final bucket so fleet
-        # mass remains explicit rather than disappearing from the finite horizon.
         next_decision = valid["timestamp"] + pd.Timedelta(hours=1)
         lag = np.ceil(
             np.maximum(
@@ -100,6 +97,18 @@ def _profile_tensor(frame: pd.DataFrame, *, zones: tuple[int, ...]) -> np.ndarra
     return tensor
 
 
+def _index_profile_tensors(
+    profiles: pd.DataFrame,
+    *,
+    zones: tuple[int, ...],
+) -> dict[pd.Timestamp, np.ndarray]:
+    """Build each hourly duration/OD tensor once before the rolling simulation."""
+    return {
+        pd.Timestamp(timestamp): _profile_tensor(frame, zones=zones)
+        for timestamp, frame in profiles.groupby("timestamp", sort=False)
+    }
+
+
 def _evaluate(observed: np.ndarray, supply: np.ndarray, relocation_cost: float) -> dict[str, float]:
     """Return realised cost and service metrics for one policy-hour."""
     costs = realised_operational_cost(
@@ -121,7 +130,13 @@ def _evaluate(observed: np.ndarray, supply: np.ndarray, relocation_cost: float) 
 
 def main() -> None:
     """Run the observed-trip-duration state sensitivity over the frozen test window."""
-    required = [PANEL_PATH, FORECAST_PATH, PROBABILISTIC_SUMMARY, SPATIAL_MATRIX_PATH, SPATIAL_SUMMARY_PATH]
+    required = [
+        PANEL_PATH,
+        FORECAST_PATH,
+        PROBABILISTIC_SUMMARY,
+        SPATIAL_MATRIX_PATH,
+        SPATIAL_SUMMARY_PATH,
+    ]
     missing = [str(path) for path in required if not path.exists()]
     if missing:
         raise FileNotFoundError(f"Required empirical artifacts are missing: {missing}")
@@ -143,6 +158,12 @@ def main() -> None:
     relocation_costs = costs_frame.loc[list(zones), list(zones)].to_numpy(dtype=np.float64)
 
     profiles = _load_trip_profiles(zones)
+    profile_tensors = _index_profile_tensors(profiles, zones=zones)
+    empty_profile = np.zeros(
+        (MAX_ARRIVAL_LAG_HOURS, len(zones), len(zones)),
+        dtype=np.float64,
+    )
+
     panel_lookup = panel.set_index(["timestamp", "zone_id"])["demand"]
     first_timestamp = pd.Timestamp(forecasts["timestamp"].min())
     previous_index = pd.MultiIndex.from_product([[first_timestamp - pd.Timedelta(hours=1)], zones])
@@ -168,7 +189,7 @@ def main() -> None:
         observed = ordered["y_true"].to_numpy(dtype=np.float64)
         mean = ordered["y_pred"].to_numpy(dtype=np.float64)
         nb_target = count_quantile(mean, alpha=alpha, quantile=SERVICE_QUANTILE)
-        hourly_profiles = _profile_tensor(profiles.loc[profiles["timestamp"].eq(timestamp)], zones=zones)
+        hourly_profiles = profile_tensors.get(timestamp, empty_profile)
 
         for name in policy_names:
             available[name] = available[name] + future_arrivals[name].pop(
@@ -200,7 +221,6 @@ def main() -> None:
                 demand=observed,
                 trip_counts_by_lag=hourly_profiles,
             )
-            # Only idle vehicles remain immediately available for the next hour.
             available[name] = transition.idle_next_hour
             for lag_index, arrivals in enumerate(transition.arrivals_by_lag):
                 arrival_time = timestamp + pd.Timedelta(hours=lag_index + 1)

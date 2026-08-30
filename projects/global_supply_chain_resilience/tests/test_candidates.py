@@ -13,6 +13,18 @@ def test_persistent_top_k_uses_intersection_and_reference_order() -> None:
         0.01: pd.Series({"CCC_C": 8.0, "AAA_A": 7.0, "DDD_D": 2.0, "BBB_B": 1.0}),
     }
 
+    # Only AAA_A appears in the top two at every threshold. CCC_C is not in
+    # the unthresholded top two, so it cannot be threshold-persistent.
+    assert persistent_top_k(rankings, k=2) == ["AAA_A"]
+
+
+def test_persistent_top_k_can_preserve_multiple_nodes() -> None:
+    rankings = {
+        0.0: pd.Series({"AAA_A": 5.0, "CCC_C": 4.0, "BBB_B": 3.0, "DDD_D": 2.0}),
+        0.001: pd.Series({"CCC_C": 6.0, "AAA_A": 5.0, "BBB_B": 1.0, "DDD_D": 0.5}),
+        0.01: pd.Series({"CCC_C": 8.0, "AAA_A": 7.0, "DDD_D": 2.0, "BBB_B": 1.0}),
+    }
+
     assert persistent_top_k(rankings, k=2) == ["AAA_A", "CCC_C"]
 
 

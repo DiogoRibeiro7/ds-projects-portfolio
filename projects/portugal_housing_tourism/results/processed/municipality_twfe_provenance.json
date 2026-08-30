@@ -1,0 +1,12 @@
+{
+  "artifact_id": 9734394970,
+  "artifact_name": "portugal-housing-tourism-twfe",
+  "artifact_sha256": "dffd6102d64ac528f1dc81bddae26d97caaab5a834cd2e588b99d880537d423a",
+  "artifact_size_bytes": 63635,
+  "pr": 559,
+  "pr_head_sha": "70b372d0569fd8ff0a1a472505665cf68a88c425",
+  "workflow": "Portugal Housing Tourism TWFE",
+  "workflow_run_id": 33319206560,
+  "workflow_run_number": 3,
+  "workflow_status": "success"
+}

@@ -1,0 +1,6 @@
+measure,old_indicator,current_indicator,old_last_year,current_last_year,overlap_first_year,overlap_last_year,overlap_years,max_abs_relative_difference,mean_abs_relative_difference,old_geo_code,current_geo_code
+rent,0009631,0012600,2023,2024,2020,2023,4,0.0,0.0,1701106,1A01106
+income,0009934,0012749,2021,2024,2018,2021,4,0.0,0.0,1701106,1A01106
+housing_stock,0008329,0014137,2022,2022,2022,2022,1,0.0,0.0,1701106,1A01106
+population,0008272,0012917,2023,2025,2021,2023,3,0.0,0.0,1701106,1A01106
+overnight_stays,0009877,0013214,2025,2025,2022,2025,4,0.0,0.0,1701106,1A01106

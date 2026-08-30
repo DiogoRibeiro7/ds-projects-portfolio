@@ -23,6 +23,31 @@ indicator = "0009877"
 name = "Overnight stays in tourist accommodation by accommodation type, annual, NUTS 2013"
 url = "https://www.ine.pt/xurl/indx/0009877/PT"
 
+[ine_current.rent]
+indicator = "0012600"
+name = "Median rent of new residential lease contracts (EUR/m2), annual, NUTS 2024"
+url = "https://www.ine.pt/xurl/indx/0012600/PT"
+
+[ine_current.income]
+indicator = "0012749"
+name = "Median gross declared income per taxpayer (EUR), annual, NUTS 2024"
+url = "https://www.ine.pt/xurl/indx/0012749/PT"
+
+[ine_current.housing_stock]
+indicator = "0014137"
+name = "Classical family dwellings, housing stock (number), annual, NUTS 2024"
+url = "https://www.ine.pt/xurl/indx/0014137/PT"
+
+[ine_current.population]
+indicator = "0012917"
+name = "Resident population (number), annual, NUTS 2024"
+url = "https://www.ine.pt/xurl/indx/0012917/PT"
+
+[ine_current.overnight_stays]
+indicator = "0013214"
+name = "Overnight stays in tourist accommodation by accommodation type, annual, NUTS 2024"
+url = "https://www.ine.pt/xurl/indx/0013214/PT"
+
 [rnal]
 name = "Registo Nacional de Alojamento Local (RNAL)"
 url = "https://dadosabertos.turismodeportugal.pt/datasets/4e62eb1977564991bd01e61d7aa8266f_6/explore"

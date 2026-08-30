@@ -1,0 +1,48 @@
+name: Portugal Housing Tourism NUTS 2024 Bridge
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "projects/portugal_housing_tourism/config/sources.toml"
+      - "projects/portugal_housing_tourism/scripts/build_lisbon_longitudinal.py"
+      - "projects/portugal_housing_tourism/scripts/audit_nuts2024_bridge.py"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_nuts2024_overlap.csv"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_nuts2024_bridge_summary.csv"
+      - ".github/workflows/portugal-housing-tourism-nuts2024-bridge.yml"
+
+jobs:
+  audit-bridge:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/portugal_housing_tourism
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project and Ruff
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install ruff==0.14.0
+      - name: Check bridge formatting
+        run: ruff format --check scripts/build_lisbon_longitudinal.py scripts/audit_nuts2024_bridge.py
+      - name: Lint bridge scripts
+        run: ruff check scripts/build_lisbon_longitudinal.py scripts/audit_nuts2024_bridge.py
+      - name: Audit NUTS 2024 overlap
+        run: python scripts/audit_nuts2024_bridge.py
+      - name: Verify committed audit evidence
+        run: git diff --exit-code -- results/processed/lisbon_nuts2024_overlap.csv results/processed/lisbon_nuts2024_bridge_summary.csv
+      - name: Upload bridge audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: portugal-housing-tourism-nuts2024-bridge
+          path: |
+            projects/portugal_housing_tourism/results/processed/lisbon_nuts2024_overlap.csv
+            projects/portugal_housing_tourism/results/processed/lisbon_nuts2024_bridge_summary.csv
+          if-no-files-found: error
+          retention-days: 30

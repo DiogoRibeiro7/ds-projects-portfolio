@@ -45,7 +45,7 @@ jobs:
 
       - name: Run primary stochastic SAA study
         working-directory: projects/mobility_demand_optimization
-        run: python scripts/run_v2_stochastic.py
+        run: python scripts/run_v2_stochastic_verified.py
 
       - name: Print primary v2 summary
         working-directory: projects/mobility_demand_optimization

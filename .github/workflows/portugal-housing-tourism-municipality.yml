@@ -1,0 +1,48 @@
+name: Portugal Housing Tourism Municipality Comparison
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "projects/portugal_housing_tourism/config/sources.toml"
+      - "projects/portugal_housing_tourism/src/housing_tourism/municipality.py"
+      - "projects/portugal_housing_tourism/tests/test_municipality.py"
+      - "projects/portugal_housing_tourism/scripts/build_municipality_comparison.py"
+      - ".github/workflows/portugal-housing-tourism-municipality.yml"
+
+jobs:
+  validate-municipality-comparison:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/portugal_housing_tourism
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project and validation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest ruff==0.14.0
+      - name: Check formatting
+        run: ruff format --check src/housing_tourism/municipality.py tests/test_municipality.py scripts/build_municipality_comparison.py
+      - name: Lint
+        run: ruff check src/housing_tourism/municipality.py tests/test_municipality.py scripts/build_municipality_comparison.py
+      - name: Test municipality helpers
+        run: pytest tests/test_municipality.py
+      - name: Build municipality comparison
+        run: python scripts/build_municipality_comparison.py
+      - name: Upload municipality evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: portugal-housing-tourism-municipality-comparison
+          path: |
+            projects/portugal_housing_tourism/results/processed/municipality_endpoints_2022_2023.csv
+            projects/portugal_housing_tourism/results/processed/municipality_comparison_2022_2023.csv
+            projects/portugal_housing_tourism/results/processed/municipality_comparison_summary.json
+          if-no-files-found: error
+          retention-days: 30

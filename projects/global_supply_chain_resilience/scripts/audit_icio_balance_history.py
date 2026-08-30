@@ -43,6 +43,44 @@ def _activity(label: str) -> str:
     return label.split("_", maxsplit=1)[1]
 
 
+def _violation_details(
+    residual: pd.Series,
+    relative: pd.Series,
+    gross_output: pd.Series,
+    allowance: pd.Series,
+    excess: pd.Series,
+) -> list[dict[str, float | str]]:
+    """Return every release-envelope violation, largest excess first."""
+    labels = excess.loc[excess > 0.0].sort_values(ascending=False).index
+    return [
+        {
+            "label": str(label),
+            "activity": _activity(str(label)),
+            "residual": float(residual.loc[label]),
+            "absolute_residual": float(abs(residual.loc[label])),
+            "gross_output": float(gross_output.loc[label]),
+            "allowance": float(allowance.loc[label]),
+            "envelope_excess": float(excess.loc[label]),
+            "relative_residual": float(relative.loc[label]),
+        }
+        for label in labels
+    ]
+
+
+def _violation_activity_counts(
+    details: list[dict[str, float | str]],
+) -> list[dict[str, int | str]]:
+    """Count release-envelope violations by activity code."""
+    counts: dict[str, int] = {}
+    for detail in details:
+        activity = str(detail["activity"])
+        counts[activity] = counts.get(activity, 0) + 1
+    return [
+        {"activity": activity, "violations": count}
+        for activity, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    ]
+
+
 def _year_report(frame: pd.DataFrame, *, year: int, member: str) -> dict[str, object]:
     """Build accounting diagnostics and evaluate the frozen release envelope."""
     blocks = extract_2022_blocks(frame)
@@ -53,6 +91,20 @@ def _year_report(frame: pd.DataFrame, *, year: int, member: str) -> dict[str, ob
     allowance = RELEASE_BALANCE_ATOL + RELEASE_BALANCE_RTOL * blocks.gross_output.abs()
     row_excess = row_residual.abs() - allowance
     column_excess = column_residual.abs() - allowance
+    row_violation_details = _violation_details(
+        row_residual,
+        row_relative,
+        blocks.gross_output,
+        allowance,
+        row_excess,
+    )
+    column_violation_details = _violation_details(
+        column_residual,
+        column_relative,
+        blocks.gross_output,
+        allowance,
+        column_excess,
+    )
 
     activity_rows = pd.DataFrame(
         {
@@ -87,8 +139,12 @@ def _year_report(frame: pd.DataFrame, *, year: int, member: str) -> dict[str, ob
         "release_balance_rtol": RELEASE_BALANCE_RTOL,
         "max_row_envelope_excess": float(max(0.0, row_excess.max())),
         "max_column_envelope_excess": float(max(0.0, column_excess.max())),
-        "row_envelope_violations": int((row_excess > 0.0).sum()),
-        "column_envelope_violations": int((column_excess > 0.0).sum()),
+        "row_envelope_violations": len(row_violation_details),
+        "column_envelope_violations": len(column_violation_details),
+        "row_violation_activity_counts": _violation_activity_counts(row_violation_details),
+        "column_violation_activity_counts": _violation_activity_counts(column_violation_details),
+        "row_violation_details": row_violation_details,
+        "column_violation_details": column_violation_details,
         "published_industry_labels": int(len(blocks.gross_output)),
         "zero_output_labels": int((blocks.gross_output == 0.0).sum()),
         "max_abs_row_balance_error": float(row_residual.abs().max()),
@@ -140,7 +196,11 @@ def main() -> None:
             member = _member_for_year(archive, year)
             reports.append(_year_report(_load_member(archive, member), year=year, member=member))
 
-    failed_years = [int(report["year"]) for report in reports if report["release_balance_gate"] != "PASS"]
+    failed_years = [
+        int(report["year"])
+        for report in reports
+        if report["release_balance_gate"] != "PASS"
+    ]
     summary = {
         "years": list(YEARS),
         "release_balance_atol": RELEASE_BALANCE_ATOL,

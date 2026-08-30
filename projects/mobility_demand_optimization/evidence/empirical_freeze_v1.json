@@ -1,0 +1,127 @@
+{
+  "freeze_version": "v1",
+  "freeze_date": "2026-08-30",
+  "provenance": {
+    "repository": "DiogoRibeiro7/ds-projects-portfolio",
+    "project": "projects/mobility_demand_optimization",
+    "source_pull_request": 544,
+    "source_workflow_run": 33307567684,
+    "source_workflow_head_sha": "650ec60c575e7197e8ef246d4dd709f0fe147362",
+    "merged_main_commit": "afc13977374e890d5a6e98ff1e883aa13d424283",
+    "workflow_artifact_id": 9730991376,
+    "workflow_artifact_sha256": "c00d7e0b16efc7e70e922de013555b4bd726597cadfe3305d1e9513b4e93a205"
+  },
+  "data": {
+    "source": "NYC Taxi & Limousine Commission Yellow Taxi Trip Records",
+    "source_months": "2025-01 through 2026-05",
+    "source_rows": 67721884,
+    "valid_rows": 67589085,
+    "rejected_rows": 132799,
+    "rejected_fraction": 0.001960946626942629,
+    "panel_rows": 371520,
+    "analysis_zones": 30,
+    "demand_definition": "observed pickup count per TLC zone and civil clock hour",
+    "latent_demand_claim": false
+  },
+  "design": {
+    "training": "[2025-01-01, 2026-01-01)",
+    "validation": "[2026-01-01, 2026-03-01)",
+    "test": "[2026-03-01, 2026-06-01)",
+    "validation_origins": 59,
+    "test_origins": 92,
+    "forecast_horizon_hours": 24,
+    "origin_frequency_hours": 24,
+    "seasonal_lag_hours": 168,
+    "zone_selection": "top 30 pickup zones using training data only",
+    "dst_rule": "prospectively flagged DST-transition rows excluded from headline forecast metrics"
+  },
+  "point_forecasts": {
+    "test": {
+      "seasonal_naive_168h": {
+        "mae": 25.590720390720392,
+        "wape": 0.19552060984280142
+      },
+      "poisson_hour_of_week": {
+        "mae": 20.252101888275824,
+        "wape": 0.15473199860485726
+      }
+    },
+    "poisson_relative_wape_reduction_vs_seasonal_naive": 0.20861540515211266
+  },
+  "probabilistic_forecasts": {
+    "selection_rule": "minimum mean pinball loss across q={0.1,0.5,0.9} on validation only",
+    "selected_negative_binomial_alpha": 0.05,
+    "test": {
+      "poisson": {
+        "nominal_interval": 0.8,
+        "interval_coverage": 0.5072010869565218,
+        "mean_interval_width": 26.926479468599034,
+        "mean_pinball": 7.5799365942028984,
+        "median_mae": 20.27602657004831
+      },
+      "negative_binomial": {
+        "nominal_interval": 0.8,
+        "interval_coverage": 0.8695803140096618,
+        "mean_interval_width": 81.30988828502416,
+        "mean_pinball": 6.663791767310788,
+        "median_mae": 20.04812801932367
+      }
+    },
+    "negative_binomial_relative_pinball_reduction": 0.12086444464361006
+  },
+  "decision_model": {
+    "fleet_size": 4532.0,
+    "unmet_penalty": 5.0,
+    "idle_penalty": 1.0,
+    "negative_binomial_service_quantile": 0.8333333333333334,
+    "headline_comparison": "poisson_mean versus negative_binomial_service_quantile"
+  },
+  "decision_sensitivities": {
+    "uniform_relocation_cost": {
+      "poisson_mean_cost": 4828.555340037509,
+      "negative_binomial_cost": 4865.646654855038,
+      "negative_binomial_minus_poisson": 37.09131481752901,
+      "poisson_service_level": 0.8885635836393038,
+      "negative_binomial_service_level": 0.8874155212133908
+    },
+    "spatial_centroid_relocation_cost": {
+      "cost_source": "official TLC taxi-zone geometry, EPSG:2263 centroid distance",
+      "median_off_diagonal_cost": 0.25,
+      "poisson_mean_cost": 4835.257519726395,
+      "negative_binomial_cost": 4883.606272836182,
+      "negative_binomial_minus_poisson": 48.34875310978696,
+      "poisson_service_level": 0.8883986973118959,
+      "negative_binomial_service_level": 0.8869365746075142
+    },
+    "policy_dependent_rolling_state": {
+      "poisson_mean_cost": 5430.149768499986,
+      "negative_binomial_cost": 5963.1750731858665,
+      "negative_binomial_minus_poisson": 533.0253046858805,
+      "poisson_service_level": 0.8641413108528224,
+      "negative_binomial_service_level": 0.8495088644996222,
+      "no_rebalancing_cost": 8341.840588596839,
+      "no_rebalancing_service_level": 0.7109648891800834
+    },
+    "observed_trip_duration_state": {
+      "maximum_explicit_arrival_lag_hours": 6,
+      "poisson_mean_cost": 7311.702572260893,
+      "negative_binomial_cost": 7661.756509215836,
+      "negative_binomial_minus_poisson": 350.0539369549424,
+      "negative_binomial_relative_cost_excess": 0.04568847059207441,
+      "poisson_service_level": 0.7871880488486226,
+      "negative_binomial_service_level": 0.7781544753215144,
+      "poisson_service_level_advantage_percentage_points": 0.9033573527108207,
+      "no_rebalancing_cost": 9138.59957766227,
+      "no_rebalancing_service_level": 0.6756632589037024
+    }
+  },
+  "headline_finding": "The validation-selected Negative-Binomial predictive distribution is materially better calibrated than Poisson, but its 5/6 service-quantile allocation has higher realised operational cost than allocation to the Poisson mean across every frozen decision sensitivity tested.",
+  "interpretation_boundary": [
+    "This is a decision-model result, not a causal estimate of real-world taxi dispatch savings.",
+    "Observed pickups are a served-demand proxy and do not identify latent unmet taxi demand.",
+    "Fleet-state sensitivities condition on trips whose pickup and dropoff are both inside the frozen top-30-zone region.",
+    "Centroid distance is a spatial cost proxy, not observed road travel time.",
+    "Passenger-trip availability uses observed dropoff-time buckets, with lags beyond six hours clipped into the final bucket.",
+    "Relocation itself is still instantaneous within the hourly decision epoch."
+  ]
+}

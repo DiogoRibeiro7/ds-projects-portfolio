@@ -1,0 +1,47 @@
+name: Portugal Housing Tourism Panel Support
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "projects/portugal_housing_tourism/config/sources.toml"
+      - "projects/portugal_housing_tourism/src/housing_tourism/panel_support.py"
+      - "projects/portugal_housing_tourism/tests/test_panel_support.py"
+      - "projects/portugal_housing_tourism/scripts/build_municipality_panel_support.py"
+      - ".github/workflows/portugal-housing-tourism-panel-support.yml"
+
+jobs:
+  validate-panel-support:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/portugal_housing_tourism
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project and validation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest ruff==0.14.0
+      - name: Check formatting
+        run: ruff format --check src/housing_tourism/panel_support.py tests/test_panel_support.py scripts/build_municipality_panel_support.py
+      - name: Lint
+        run: ruff check src/housing_tourism/panel_support.py tests/test_panel_support.py scripts/build_municipality_panel_support.py
+      - name: Test panel support helpers
+        run: pytest tests/test_panel_support.py
+      - name: Build panel support audit
+        run: python scripts/build_municipality_panel_support.py
+      - name: Upload panel support evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: portugal-housing-tourism-panel-support
+          path: |
+            projects/portugal_housing_tourism/results/processed/municipality_panel_support_2022_2024.csv
+            projects/portugal_housing_tourism/results/processed/municipality_panel_support_2022_2024.json
+          if-no-files-found: error
+          retention-days: 30

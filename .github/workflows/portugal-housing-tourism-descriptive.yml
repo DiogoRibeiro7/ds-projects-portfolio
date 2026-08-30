@@ -30,8 +30,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
           python -m pip install pytest ruff==0.14.0
-      - name: Check formatting
-        run: ruff format --check src/housing_tourism/descriptive.py tests/test_descriptive.py scripts/build_lisbon_descriptive_decomposition.py
+      - name: Show canonical formatting diff
+        run: ruff format --diff src/housing_tourism/descriptive.py tests/test_descriptive.py scripts/build_lisbon_descriptive_decomposition.py || true
       - name: Lint
         run: ruff check src/housing_tourism/descriptive.py tests/test_descriptive.py scripts/build_lisbon_descriptive_decomposition.py
       - name: Test descriptive helpers

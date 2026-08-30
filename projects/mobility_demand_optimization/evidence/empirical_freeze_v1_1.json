@@ -1,0 +1,165 @@
+{
+  "freeze_version": "v1.1",
+  "freeze_date": "2026-08-30",
+  "status": "scientific-integrity correction; substantive conclusion unchanged",
+  "supersedes_for_quantitative_use": "v1",
+  "preserves_v1_immutable": true,
+  "provenance": {
+    "repository": "DiogoRibeiro7/ds-projects-portfolio",
+    "project": "projects/mobility_demand_optimization",
+    "integrity_pull_request": 554,
+    "source_workflow_run": 33314503964,
+    "source_workflow_head_sha": "3106e734dc2cccaf093bb10b33e4ce2273716ea5",
+    "merged_integrity_commit": "0924568d5a6cee37910c0ee635157cc659712b1e",
+    "workflow_artifact_id": 9733056093,
+    "workflow_artifact_sha256": "618ff8e217b11e6b02288b2a0fce4dabf56b54e366af317a268e5bff18542c9f",
+    "previous_freeze": "evidence/empirical_freeze_v1.json"
+  },
+  "integrity_corrections": {
+    "source_month": "each monthly TLC parquet is restricted to its nominal calendar month before aggregation",
+    "headline_dst": "prospectively flagged DST-transition target rows/hours are excluded consistently from probabilistic and decision headline summaries",
+    "state_trajectory_rule": "DST hours remain in rolling and duration-aware trajectories and are excluded only from headline summaries"
+  },
+  "data": {
+    "source_rows": 67721884,
+    "valid_rows": 67588842,
+    "rejected_rows": 133042,
+    "rejected_fraction": 0.0019645348319016053,
+    "outside_source_month_rows": 282,
+    "net_additional_rejected_rows_vs_v1": 243,
+    "panel_rows": 371520,
+    "analysis_zones": 30,
+    "selected_zones_changed_vs_v1": false,
+    "demand_definition": "observed pickup count per TLC zone and civil clock hour",
+    "latent_demand_claim": false
+  },
+  "design": {
+    "training": "[2025-01-01, 2026-01-01)",
+    "validation": "[2026-01-01, 2026-03-01)",
+    "test": "[2026-03-01, 2026-06-01)",
+    "validation_origins": 59,
+    "test_origins": 92,
+    "forecast_horizon_hours": 24,
+    "origin_frequency_hours": 24,
+    "seasonal_lag_hours": 168,
+    "forecast_headline_rows_test": 65520,
+    "decision_headline_hours_test": 2184,
+    "zone_selection": "top 30 pickup zones using training data only"
+  },
+  "point_forecasts": {
+    "test": {
+      "seasonal_naive_168h": {
+        "mae": 25.5906746031746,
+        "wape": 0.1955206932065608
+      },
+      "poisson_hour_of_week": {
+        "mae": 20.252183628115084,
+        "wape": 0.1547329659462907
+      }
+    },
+    "poisson_relative_wape_reduction_vs_seasonal_naive": 0.20861079505880875
+  },
+  "probabilistic_forecasts": {
+    "selection_rule": "minimum mean pinball loss across q={0.1,0.5,0.9} on validation only",
+    "selected_negative_binomial_alpha": 0.05,
+    "selected_alpha_changed_vs_v1": false,
+    "test": {
+      "poisson": {
+        "nominal_interval": 0.8,
+        "interval_coverage": 0.5084554334554334,
+        "mean_interval_width": 26.94096459096459,
+        "mean_pinball": 7.553109483109483,
+        "median_mae": 20.220848595848597
+      },
+      "negative_binomial": {
+        "nominal_interval": 0.8,
+        "interval_coverage": 0.8705433455433456,
+        "mean_interval_width": 81.4147435897436,
+        "mean_pinball": 6.641368538868538,
+        "median_mae": 19.997954822954824
+      }
+    },
+    "negative_binomial_relative_pinball_reduction": 0.12071067502461219
+  },
+  "decision_model": {
+    "fleet_size": 4532.0,
+    "unmet_penalty": 5.0,
+    "idle_penalty": 1.0,
+    "negative_binomial_service_quantile": 0.8333333333333334
+  },
+  "decision_sensitivities": {
+    "uniform_relocation_cost": {
+      "poisson_mean_cost": 4851.976953760813,
+      "negative_binomial_cost": 4889.376812248789,
+      "negative_binomial_minus_poisson": 37.39985848797642,
+      "poisson_service_level": 0.887922843099431,
+      "negative_binomial_service_level": 0.8867638793239117
+    },
+    "spatial_centroid_relocation_cost": {
+      "poisson_mean_cost": 4858.022156018203,
+      "negative_binomial_cost": 4906.796875682624,
+      "negative_binomial_minus_poisson": 48.774719664421355,
+      "poisson_service_level": 0.8877909509390083,
+      "negative_binomial_service_level": 0.8863093281365115,
+      "cost_source": "official TLC taxi-zone geometry, EPSG:2263 centroid distance",
+      "median_off_diagonal_cost": 0.25
+    },
+    "policy_dependent_rolling_state": {
+      "poisson_mean_cost": 5451.107105581795,
+      "negative_binomial_cost": 5984.404669261912,
+      "negative_binomial_minus_poisson": 533.2975636801175,
+      "poisson_service_level": 0.8635556740081677,
+      "negative_binomial_service_level": 0.8489417022181547,
+      "no_rebalancing_cost": 8356.435572448994,
+      "no_rebalancing_service_level": 0.7106950631831056
+    },
+    "observed_trip_duration_state": {
+      "maximum_explicit_arrival_lag_hours": 6,
+      "poisson_mean_cost": 7345.639621144929,
+      "negative_binomial_cost": 7695.1880240000255,
+      "negative_binomial_minus_poisson": 349.54840285509636,
+      "negative_binomial_relative_cost_excess_vs_poisson": 0.04758583607190547,
+      "poisson_service_level": 0.786278134678808,
+      "negative_binomial_service_level": 0.7772723935085722,
+      "poisson_service_level_advantage_percentage_points": 0.9005741170235781,
+      "no_rebalancing_cost": 9163.216878790121,
+      "no_rebalancing_service_level": 0.6751075317984265
+    }
+  },
+  "deltas_from_v1": {
+    "valid_rows": -243,
+    "rejected_rows": 243,
+    "poisson_test_wape_relative_percent": 0.0006251721959005252,
+    "poisson_test_pinball_absolute": -0.02682711109341529,
+    "negative_binomial_test_pinball_absolute": -0.022423228442249865,
+    "uniform_poisson_cost_relative_percent": 0.48506462231250325,
+    "uniform_negative_binomial_cost_relative_percent": 0.48770819332046855,
+    "spatial_poisson_cost_relative_percent": 0.47080504396994627,
+    "spatial_negative_binomial_cost_relative_percent": 0.4748663498004291,
+    "rolling_poisson_cost_relative_percent": 0.3859439974083445,
+    "rolling_negative_binomial_cost_relative_percent": 0.3560116182318218,
+    "duration_poisson_cost_relative_percent": 0.4641470102023204,
+    "duration_negative_binomial_cost_relative_percent": 0.4363426943152948,
+    "duration_nb_minus_poisson_gap_v1": 350.0539369549424,
+    "duration_nb_minus_poisson_gap_v1_1": 349.54840285509636,
+    "duration_gap_change": -0.5055340998460451
+  },
+  "materiality_assessment": {
+    "substantive_conclusion_changed": false,
+    "selected_model_changed": false,
+    "zone_set_changed": false,
+    "fleet_size_changed": false,
+    "largest_absolute_policy_cost_relative_change_percent": 0.48770819332046855,
+    "verdict": "v1.1 integrity correction; no material change to the headline ranking"
+  },
+  "headline_finding": "The validation-selected Negative-Binomial predictive distribution remains materially better calibrated than Poisson, but its 5/6 service-quantile allocation has higher realised operational cost than allocation to the Poisson mean across every corrected decision sensitivity.",
+  "interpretation_boundary": [
+    "v1 remains an immutable historical freeze; v1.1 supersedes it for quantitative citation.",
+    "This is a decision-model result, not a causal estimate of real-world taxi dispatch savings.",
+    "Observed pickups are a served-demand proxy and do not identify latent unmet taxi demand.",
+    "Fleet-state sensitivities condition on trips whose pickup and dropoff are both inside the frozen top-30-zone region.",
+    "Centroid distance is a spatial cost proxy, not observed road travel time.",
+    "Passenger-trip availability uses observed dropoff-time buckets, with lags beyond six hours clipped into the final bucket.",
+    "Relocation itself is still instantaneous within the hourly decision epoch."
+  ]
+}

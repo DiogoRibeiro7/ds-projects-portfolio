@@ -18,7 +18,6 @@ from mobility_optimization.data import (
     month_range,
 )
 from mobility_optimization.frozen_inputs import (
-    FROZEN_RELOCATION_SEMANTIC_SHA256,
     FROZEN_RELOCATION_SOURCE_SHA256,
     load_frozen_relocation_matrix,
 )
@@ -97,7 +96,6 @@ def main() -> None:
         "zones": list(zones),
         "zone_source": "evidence/v2_relocation_cost_matrix.csv",
         "relocation_matrix_source_artifact_sha256": FROZEN_RELOCATION_SOURCE_SHA256,
-        "relocation_matrix_semantic_sha256": FROZEN_RELOCATION_SEMANTIC_SHA256,
         "relocation_matrix_repository_bytes_sha256": repository_matrix_sha256,
         "start": str(START),
         "end_exclusive": str(END),

@@ -29,8 +29,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
           python -m pip install ruff==0.14.0
-      - name: Show canonical formatting diff
-        run: ruff format --diff scripts/build_lisbon_bridged.py
+      - name: Check formatting
+        run: ruff format --check scripts/build_lisbon_bridged.py
       - name: Lint
         run: ruff check scripts/build_lisbon_bridged.py
       - name: Build guarded bridged series

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 
@@ -18,26 +17,17 @@ from mobility_optimization.data import (
     load_service_zone_ids,
     month_range,
 )
+from mobility_optimization.frozen_inputs import (
+    FROZEN_RELOCATION_SEMANTIC_SHA256,
+    FROZEN_RELOCATION_SOURCE_SHA256,
+    load_frozen_relocation_matrix,
+)
 
 RAW_DIR = Path("data/raw/tlc")
 OUTPUT = Path("data/v2/processed/mobility_demand_hourly.parquet")
 MATRIX_PATH = Path("evidence/v2_relocation_cost_matrix.csv")
-MATRIX_SHA256 = "bf3ebdf7eaa8391c4a5c4554fbb39d0a098f5d4fc31af429cd39f7b4b17bb8b4"
 START = pd.Timestamp("2025-01-01")
 END = pd.Timestamp("2026-07-01")
-
-
-def _frozen_zones() -> tuple[int, ...]:
-    """Load the exact v1.1 zone order from the frozen relocation matrix."""
-    digest = hashlib.sha256(MATRIX_PATH.read_bytes()).hexdigest()
-    if digest != MATRIX_SHA256:
-        raise ValueError(f"Frozen v2 relocation matrix checksum mismatch: {digest}")
-    matrix = pd.read_csv(MATRIX_PATH, index_col=0)
-    columns = tuple(int(value) for value in matrix.columns)
-    rows = tuple(int(value) for value in matrix.index)
-    if rows != columns or len(columns) != 30:
-        raise ValueError("Frozen v2 relocation matrix must contain the same 30 zones on both axes.")
-    return columns
 
 
 def _nominal_month_counts(
@@ -78,7 +68,7 @@ def main() -> None:
     zone_lookup = RAW_DIR / "taxi_zone_lookup.csv"
     download_zone_lookup(destination=zone_lookup)
     valid_zone_ids = load_service_zone_ids(zone_lookup)
-    zones = _frozen_zones()
+    zones, _, repository_matrix_sha256 = load_frozen_relocation_matrix(MATRIX_PATH)
     if not set(zones).issubset(valid_zone_ids):
         raise ValueError("Frozen v1.1 zones are not all present in the official TLC lookup.")
 
@@ -106,7 +96,9 @@ def main() -> None:
         "rows": int(len(panel)),
         "zones": list(zones),
         "zone_source": "evidence/v2_relocation_cost_matrix.csv",
-        "relocation_matrix_sha256": MATRIX_SHA256,
+        "relocation_matrix_source_artifact_sha256": FROZEN_RELOCATION_SOURCE_SHA256,
+        "relocation_matrix_semantic_sha256": FROZEN_RELOCATION_SEMANTIC_SHA256,
+        "relocation_matrix_repository_bytes_sha256": repository_matrix_sha256,
         "start": str(START),
         "end_exclusive": str(END),
         "source_month_rule": "each TLC parquet restricted to its nominal month",

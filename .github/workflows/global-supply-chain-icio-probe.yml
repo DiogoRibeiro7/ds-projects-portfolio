@@ -65,6 +65,12 @@ jobs:
           --csv-output artifacts/icio_probe/icio_2022_supplier_importance.csv
           --summary-output artifacts/icio_probe/icio_2022_supplier_importance_summary.json
 
+      - name: Freeze threshold-persistent supplier candidates
+        run: >-
+          python scripts/freeze_supplier_shock_candidates.py
+          --archive artifacts/icio_probe/2016-2022_SML.zip
+          --output artifacts/icio_probe/icio_2022_supplier_shock_candidates.json
+
       - name: Upload empirical ICIO evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -80,5 +86,6 @@ jobs:
             projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_dependency_sensitivity.json
             projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_supplier_importance.csv
             projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_supplier_importance_summary.json
+            projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_supplier_shock_candidates.json
           if-no-files-found: warn
           retention-days: 30

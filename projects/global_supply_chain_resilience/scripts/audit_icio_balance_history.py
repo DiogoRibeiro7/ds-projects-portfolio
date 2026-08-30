@@ -1,4 +1,4 @@
-"""Audit OECD ICIO accounting residuals across all years in the official archive."""
+"""Audit and gate OECD ICIO accounting residuals across the official release archive."""
 
 from __future__ import annotations
 
@@ -11,7 +11,12 @@ import numpy as np
 import pandas as pd
 
 from supply_chain_resilience.diagnostics import accounting_residuals, relative_residuals
-from supply_chain_resilience.mapping import extract_2022_blocks
+from supply_chain_resilience.mapping import (
+    RELEASE_BALANCE_ATOL,
+    RELEASE_BALANCE_RTOL,
+    extract_2022_blocks,
+    validate_2022_accounting,
+)
 
 YEARS = tuple(range(2016, 2023))
 
@@ -39,11 +44,15 @@ def _activity(label: str) -> str:
 
 
 def _year_report(frame: pd.DataFrame, *, year: int, member: str) -> dict[str, object]:
-    """Build non-acceptance accounting diagnostics for one ICIO year."""
+    """Build accounting diagnostics and evaluate the frozen release envelope."""
     blocks = extract_2022_blocks(frame)
     row_residual, column_residual = accounting_residuals(blocks)
     row_relative = relative_residuals(row_residual, blocks.gross_output)
     column_relative = relative_residuals(column_residual, blocks.gross_output)
+
+    allowance = RELEASE_BALANCE_ATOL + RELEASE_BALANCE_RTOL * blocks.gross_output.abs()
+    row_excess = row_residual.abs() - allowance
+    column_excess = column_residual.abs() - allowance
 
     activity_rows = pd.DataFrame(
         {
@@ -61,9 +70,25 @@ def _year_report(frame: pd.DataFrame, *, year: int, member: str) -> dict[str, ob
     top_row = row_residual.abs().sort_values(ascending=False).head(10)
     top_column = column_residual.abs().sort_values(ascending=False).head(10)
 
+    gate_status = "PASS"
+    gate_error: str | None = None
+    try:
+        validate_2022_accounting(blocks)
+    except ValueError as exc:
+        gate_status = "FAIL"
+        gate_error = str(exc)
+
     return {
         "year": year,
         "archive_member": member,
+        "release_balance_gate": gate_status,
+        "release_balance_gate_error": gate_error,
+        "release_balance_atol": RELEASE_BALANCE_ATOL,
+        "release_balance_rtol": RELEASE_BALANCE_RTOL,
+        "max_row_envelope_excess": float(max(0.0, row_excess.max())),
+        "max_column_envelope_excess": float(max(0.0, column_excess.max())),
+        "row_envelope_violations": int((row_excess > 0.0).sum()),
+        "column_envelope_violations": int((column_excess > 0.0).sum()),
         "published_industry_labels": int(len(blocks.gross_output)),
         "zero_output_labels": int((blocks.gross_output == 0.0).sum()),
         "max_abs_row_balance_error": float(row_residual.abs().max()),
@@ -103,7 +128,7 @@ def _year_report(frame: pd.DataFrame, *, year: int, member: str) -> dict[str, ob
 
 
 def main() -> None:
-    """Audit balance residuals for 2016-2022 and write a single JSON artifact."""
+    """Gate every 2016-2022 table and write the complete evidence artifact."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--archive", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -115,18 +140,25 @@ def main() -> None:
             member = _member_for_year(archive, year)
             reports.append(_year_report(_load_member(archive, member), year=year, member=member))
 
+    failed_years = [int(report["year"]) for report in reports if report["release_balance_gate"] != "PASS"]
     summary = {
         "years": list(YEARS),
+        "release_balance_atol": RELEASE_BALANCE_ATOL,
+        "release_balance_rtol": RELEASE_BALANCE_RTOL,
+        "release_gate_status": "PASS" if not failed_years else "FAIL",
+        "failed_years": failed_years,
         "reports": reports,
         "note": (
-            "Diagnostic only. No accounting tolerance is selected by this audit; "
-            "the purpose is to test whether residual scale and activity structure "
-            "are stable across the official 2016-2022 archive."
+            "Release gate uses abs(residual_i) <= 0.1 + 2e-4 * abs(output_i) for every "
+            "published country-industry row and column in every official 2016-2022 table."
         ),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
     print(json.dumps(summary, indent=2, sort_keys=True))
+
+    if failed_years:
+        raise RuntimeError(f"ICIO release balance gate failed for years: {failed_years!r}.")
 
 
 if __name__ == "__main__":

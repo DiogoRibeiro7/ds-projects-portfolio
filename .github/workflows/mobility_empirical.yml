@@ -59,6 +59,10 @@ jobs:
         working-directory: projects/mobility_demand_optimization
         run: python scripts/run_rolling_allocation.py
 
+      - name: Run duration-aware fleet-state sensitivity
+        working-directory: projects/mobility_demand_optimization
+        run: python scripts/run_duration_aware_allocation.py
+
       - name: Print empirical summaries
         working-directory: projects/mobility_demand_optimization
         run: |
@@ -67,6 +71,7 @@ jobs:
           cat data/results/allocation/summary.json
           cat data/results/spatial_allocation/summary.json
           cat data/results/rolling_allocation/summary.json
+          cat data/results/duration_aware_allocation/summary.json
 
       - name: Upload processed evidence
         uses: actions/upload-artifact@v4
@@ -86,3 +91,5 @@ jobs:
             projects/mobility_demand_optimization/data/results/spatial_allocation/*.csv
             projects/mobility_demand_optimization/data/results/rolling_allocation/summary.json
             projects/mobility_demand_optimization/data/results/rolling_allocation/*.csv
+            projects/mobility_demand_optimization/data/results/duration_aware_allocation/summary.json
+            projects/mobility_demand_optimization/data/results/duration_aware_allocation/*.csv

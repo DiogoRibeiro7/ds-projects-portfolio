@@ -43,6 +43,19 @@ def test_reference_summary_extracts_rank_and_changes() -> None:
     assert summary["income_change_pct"] == pytest.approx(5.0)
 
 
+def test_missing_tourism_does_not_remove_affordability_observation() -> None:
+    frame = _panel()
+    frame.loc[(frame["geo_code"] == "B") & (frame["year"] == 2023), "overnight_stays"] = None
+
+    result = municipality_change_panel(frame, start_year=2022, end_year=2023)
+    beta = result.loc[result["geo_name"].eq("Beta")].iloc[0]
+    summary = summarise_reference_municipality(result, geo_name="Beta")
+
+    assert len(result) == 3
+    assert pd.isna(beta["tourism_intensity_change_pct"])
+    assert summary["tourism_intensity_change_pct"] is None
+
+
 def test_duplicate_geography_year_is_rejected() -> None:
     frame = pd.concat([_panel(), _panel().iloc[[0]]], ignore_index=True)
 

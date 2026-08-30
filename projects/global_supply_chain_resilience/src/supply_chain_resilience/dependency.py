@@ -40,7 +40,7 @@ def structural_dependency_metrics(blocks: ICIOBlocks) -> pd.DataFrame:
         index=z.index,
         dtype="object",
     )
-    grouped = z.groupby(supplier_countries, axis=0, sort=True).sum()
+    grouped = z.groupby(supplier_countries, sort=True).sum()
 
     records: list[dict[str, float | str]] = []
     for label in z.columns:

@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Probabilistic mobility-demand forecasting and constrained fleet allocation"
 requires-python = ">=3.11"
 dependencies = [
+    "geopandas>=1.0",
     "numpy>=1.26",
     "pandas>=2.2",
     "pyarrow>=15.0",

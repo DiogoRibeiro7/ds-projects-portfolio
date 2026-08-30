@@ -63,6 +63,10 @@ jobs:
         working-directory: projects/mobility_demand_optimization
         run: python scripts/run_duration_aware_allocation.py
 
+      - name: Align decision headline summaries
+        working-directory: projects/mobility_demand_optimization
+        run: python scripts/align_headline_summaries.py
+
       - name: Print empirical summaries
         working-directory: projects/mobility_demand_optimization
         run: |

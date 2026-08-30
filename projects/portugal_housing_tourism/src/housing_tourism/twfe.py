@@ -93,9 +93,7 @@ def fit_twfe_bundle(sample: pd.DataFrame) -> dict[str, Any]:
     affordability = _fit_one(sample, "log_affordability")
     rent = _fit_one(sample, "log_rent")
     income = _fit_one(sample, "log_income")
-    identity_gap = affordability["coefficient"] - (
-        rent["coefficient"] - income["coefficient"]
-    )
+    identity_gap = affordability["coefficient"] - (rent["coefficient"] - income["coefficient"])
     return {
         "affordability": affordability,
         "rent": rent,

@@ -28,11 +28,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
           python -m pip install pytest ruff==0.14.0
-      - name: Show canonical formatting diff
-        run: |
-          ruff format src/housing_tourism/panel_support.py tests/test_panel_support.py scripts/build_municipality_panel_support.py
-          git diff -- src/housing_tourism/panel_support.py tests/test_panel_support.py scripts/build_municipality_panel_support.py
-      - name: Lint formatted workspace
+      - name: Check formatting
+        run: ruff format --check src/housing_tourism/panel_support.py tests/test_panel_support.py scripts/build_municipality_panel_support.py
+      - name: Lint
         run: ruff check src/housing_tourism/panel_support.py tests/test_panel_support.py scripts/build_municipality_panel_support.py
       - name: Test panel support helpers
         run: pytest tests/test_panel_support.py

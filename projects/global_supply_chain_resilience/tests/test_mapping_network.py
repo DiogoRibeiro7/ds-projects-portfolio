@@ -6,6 +6,8 @@ import pandas as pd
 import pytest
 
 from supply_chain_resilience.mapping import (
+    RELEASE_BALANCE_ATOL,
+    RELEASE_BALANCE_RTOL,
     active_production_blocks,
     extract_2022_blocks,
     validate_2022_accounting,
@@ -69,6 +71,34 @@ def test_validate_2022_accounting_accepts_balanced_table() -> None:
     validate_2022_accounting(extract_2022_blocks(_balanced_frame()))
 
 
+def test_release_gate_accepts_residual_inside_scale_aware_envelope() -> None:
+    """Small release-construction residuals should be accepted by the default gate."""
+    frame = _balanced_frame()
+    allowance = RELEASE_BALANCE_ATOL + RELEASE_BALANCE_RTOL * 100.0
+    frame.loc["AAA_A", "AAA_HFCE"] += 0.9 * allowance
+
+    validate_2022_accounting(extract_2022_blocks(frame))
+
+
+def test_release_gate_rejects_residual_outside_scale_aware_envelope() -> None:
+    """Residuals above the absolute-plus-relative envelope should still fail."""
+    frame = _balanced_frame()
+    allowance = RELEASE_BALANCE_ATOL + RELEASE_BALANCE_RTOL * 100.0
+    frame.loc["AAA_A", "AAA_HFCE"] += 1.1 * allowance
+
+    with pytest.raises(ValueError, match="release balance envelope"):
+        validate_2022_accounting(extract_2022_blocks(frame))
+
+
+def test_strict_override_remains_available_for_synthetic_checks() -> None:
+    """Tests and callers can still demand exact-style accounting explicitly."""
+    frame = _balanced_frame()
+    frame.loc["AAA_A", "AAA_HFCE"] += 1e-4
+
+    with pytest.raises(ValueError, match="Output-use"):
+        validate_2022_accounting(extract_2022_blocks(frame), rtol=0.0, atol=1e-6)
+
+
 def test_zero_output_industry_is_retained_then_excluded_from_active_network() -> None:
     """Published inactive labels stay in accounting but not technical coefficients."""
     blocks = extract_2022_blocks(_balanced_frame_with_inactive_industry())
@@ -91,8 +121,8 @@ def test_zero_output_industry_with_intermediate_flow_is_rejected() -> None:
         active_production_blocks(blocks)
 
 
-def test_validate_2022_accounting_rejects_output_use_mismatch() -> None:
-    """Output-use inconsistencies should block graph construction."""
+def test_validate_2022_accounting_rejects_large_output_use_mismatch() -> None:
+    """Economically material output-use inconsistencies must block graph construction."""
     frame = _balanced_frame()
     frame.loc["AAA_A", "AAA_HFCE"] += 1.0
     blocks = extract_2022_blocks(frame)

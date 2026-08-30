@@ -35,7 +35,10 @@ def summarise_panel_support(
         measures[column] = {
             "by_year": {
                 str(year): int(
-                    subset.loc[subset["year"].eq(year) & subset[column].notna(), "geo_code"].nunique()
+                    subset.loc[
+                        subset["year"].eq(year) & subset[column].notna(),
+                        "geo_code",
+                    ].nunique()
                 )
                 for year in years
             },

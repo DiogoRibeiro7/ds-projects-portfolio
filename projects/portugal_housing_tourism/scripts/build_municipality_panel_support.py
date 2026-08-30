@@ -163,7 +163,10 @@ def main() -> None:
 
     PANEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     panel.to_csv(PANEL_PATH, index=False, float_format="%.6f")
-    SUMMARY_PATH.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    SUMMARY_PATH.write_text(
+        json.dumps(summary, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
     print("\nMunicipality panel support audit:")
     print(json.dumps(summary, indent=2, sort_keys=True))

@@ -57,7 +57,13 @@ def build_episode_table(frame: pd.DataFrame) -> pd.DataFrame:
     rows: list[dict[str, str | int | float]] = []
     for name, start_year, end_year in EPISODES:
         record: dict[str, str | int | float] = {"episode": name}
-        record.update(decompose_episode(frame, start_year=start_year, end_year=end_year).as_record())
+        record.update(
+            decompose_episode(
+                frame,
+                start_year=start_year,
+                end_year=end_year,
+            ).as_record()
+        )
         rows.append(record)
     return pd.DataFrame(rows)
 

@@ -73,6 +73,28 @@ def _log_change_pct(start: float, end: float, *, name: str) -> float:
     return 100.0 * float(np.log(end / start))
 
 
+def _endpoint_value(
+    frame: pd.DataFrame,
+    *,
+    year_col: str,
+    year: int,
+    value_col: str,
+) -> float:
+    """Return one positive finite endpoint value for a unique year."""
+    values = pd.to_numeric(
+        frame.loc[frame[year_col].eq(year), value_col],
+        errors="raise",
+    ).to_numpy(dtype=float)
+    if len(values) != 1:
+        raise ValueError(f"Expected exactly one {value_col} observation in {year}.")
+    value = float(values[0])
+    if not np.isfinite(value):
+        raise ValueError(f"{value_col} endpoints must be finite.")
+    if value <= 0:
+        raise ValueError(f"{value_col} endpoints must be strictly positive.")
+    return value
+
+
 def decompose_episode(
     frame: pd.DataFrame,
     *,
@@ -90,21 +112,25 @@ def decompose_episode(
         raise KeyError(f"Missing required columns: {sorted(missing)}")
     if end_year <= start_year:
         raise ValueError("end_year must be greater than start_year.")
-
-    indexed = frame.set_index(year_col)
-    if start_year not in indexed.index or end_year not in indexed.index:
-        raise ValueError("Both episode endpoints must be present in the frame.")
-    if not indexed.index.is_unique:
+    if frame[year_col].duplicated().any():
         raise ValueError(f"{year_col} must uniquely identify rows.")
 
-    start = indexed.loc[start_year]
-    end = indexed.loc[end_year]
-    start_rent = float(start[rent_col])
-    end_rent = float(end[rent_col])
-    start_income = float(start[income_col])
-    end_income = float(end[income_col])
-    start_tourism = float(start[tourism_col])
-    end_tourism = float(end[tourism_col])
+    start_rent = _endpoint_value(frame, year_col=year_col, year=start_year, value_col=rent_col)
+    end_rent = _endpoint_value(frame, year_col=year_col, year=end_year, value_col=rent_col)
+    start_income = _endpoint_value(frame, year_col=year_col, year=start_year, value_col=income_col)
+    end_income = _endpoint_value(frame, year_col=year_col, year=end_year, value_col=income_col)
+    start_tourism = _endpoint_value(
+        frame,
+        year_col=year_col,
+        year=start_year,
+        value_col=tourism_col,
+    )
+    end_tourism = _endpoint_value(
+        frame,
+        year_col=year_col,
+        year=end_year,
+        value_col=tourism_col,
+    )
 
     rent_log = _log_change_pct(start_rent, end_rent, name=rent_col)
     income_log = _log_change_pct(start_income, end_income, name=income_col)

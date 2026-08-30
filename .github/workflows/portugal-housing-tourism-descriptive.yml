@@ -1,0 +1,45 @@
+name: Portugal Housing Tourism Descriptive Decomposition
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "projects/portugal_housing_tourism/src/housing_tourism/descriptive.py"
+      - "projects/portugal_housing_tourism/tests/test_descriptive.py"
+      - "projects/portugal_housing_tourism/scripts/build_lisbon_descriptive_decomposition.py"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_longitudinal_bridged.csv"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_descriptive_annual.csv"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_descriptive_episodes.csv"
+      - ".github/workflows/portugal-housing-tourism-descriptive.yml"
+
+jobs:
+  validate-descriptive:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/portugal_housing_tourism
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project and validation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest ruff==0.14.0
+      - name: Check formatting
+        run: ruff format --check src/housing_tourism/descriptive.py tests/test_descriptive.py scripts/build_lisbon_descriptive_decomposition.py
+      - name: Lint
+        run: ruff check src/housing_tourism/descriptive.py tests/test_descriptive.py scripts/build_lisbon_descriptive_decomposition.py
+      - name: Test descriptive helpers
+        run: pytest tests/test_descriptive.py
+      - name: Regenerate descriptive evidence
+        run: python scripts/build_lisbon_descriptive_decomposition.py
+      - name: Verify committed descriptive evidence
+        run: |
+          git diff --exit-code -- \
+            projects/portugal_housing_tourism/results/processed/lisbon_descriptive_annual.csv \
+            projects/portugal_housing_tourism/results/processed/lisbon_descriptive_episodes.csv

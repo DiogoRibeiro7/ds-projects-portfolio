@@ -19,18 +19,19 @@ projects:
     repository: ./projects/mobility_demand_optimization/
     category: Decision Science & Operations Research
     status: active-portfolio
-    summary: Probabilistic spatiotemporal demand forecasting linked to constrained fleet allocation and operational regret evaluation.
+    summary: Real-data NYC TLC study showing that better probabilistic calibration need not produce lower operational fleet-allocation cost under the tested decision rule.
     methods:
       - probabilistic forecasting
       - rolling-origin evaluation
-      - mathematical optimization
-      - decision regret
+      - linear optimization
+      - operational sensitivity analysis
     technologies:
       - Python
       - NumPy
       - pandas
-      - OR-Tools
-    featured: false
+      - SciPy
+      - GeoPandas
+    featured: true
   - name: Portugal Housing Tourism Pressure
     repository: ./projects/portugal_housing_tourism/
     category: Applied Economic Analytics

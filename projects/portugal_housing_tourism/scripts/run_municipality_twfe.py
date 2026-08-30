@@ -14,6 +14,7 @@ for path in (SRC, SCRIPTS):
         sys.path.insert(0, str(path))
 
 from build_municipality_panel_support import _build_panel  # noqa: E402
+
 from housing_tourism.twfe import fit_twfe_bundle, prepare_twfe_sample  # noqa: E402
 
 YEARS = (2022, 2023, 2024)

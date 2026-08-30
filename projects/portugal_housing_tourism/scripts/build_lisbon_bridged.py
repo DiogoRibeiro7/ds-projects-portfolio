@@ -23,6 +23,7 @@ from build_lisbon_longitudinal import (  # noqa: E402
     _period_codes,
     _total_codes,
 )
+
 from housing_tourism.data import (  # noqa: E402
     canonicalise_ine_measure,
     flatten_ine_payload,

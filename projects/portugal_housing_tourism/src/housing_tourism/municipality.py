@@ -82,10 +82,12 @@ def municipality_change_panel(
 
     tourism_start = result["tourism_intensity_start"].astype(float)
     tourism_end = result["tourism_intensity_end"].astype(float)
-    tourism_observed = tourism_start.notna() & tourism_end.notna() & (tourism_start > 0) & (tourism_end > 0)
+    tourism_observed = (
+        tourism_start.notna() & tourism_end.notna() & (tourism_start > 0) & (tourism_end > 0)
+    )
     tourism_change = pd.Series(float("nan"), index=result.index, dtype=float)
-    tourism_change.loc[tourism_observed] = (
-        100.0 * (tourism_end.loc[tourism_observed] / tourism_start.loc[tourism_observed] - 1.0)
+    tourism_change.loc[tourism_observed] = 100.0 * (
+        tourism_end.loc[tourism_observed] / tourism_start.loc[tourism_observed] - 1.0
     )
 
     output = pd.DataFrame(

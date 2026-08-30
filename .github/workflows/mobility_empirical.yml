@@ -55,6 +55,10 @@ jobs:
         working-directory: projects/mobility_demand_optimization
         run: python scripts/run_spatial_allocation.py
 
+      - name: Run rolling fleet-state sensitivity
+        working-directory: projects/mobility_demand_optimization
+        run: python scripts/run_rolling_allocation.py
+
       - name: Print empirical summaries
         working-directory: projects/mobility_demand_optimization
         run: |
@@ -62,6 +66,7 @@ jobs:
           cat data/results/probabilistic_counts/summary.json
           cat data/results/allocation/summary.json
           cat data/results/spatial_allocation/summary.json
+          cat data/results/rolling_allocation/summary.json
 
       - name: Upload processed evidence
         uses: actions/upload-artifact@v4
@@ -79,3 +84,5 @@ jobs:
             projects/mobility_demand_optimization/data/results/allocation/*.csv
             projects/mobility_demand_optimization/data/results/spatial_allocation/summary.json
             projects/mobility_demand_optimization/data/results/spatial_allocation/*.csv
+            projects/mobility_demand_optimization/data/results/rolling_allocation/summary.json
+            projects/mobility_demand_optimization/data/results/rolling_allocation/*.csv

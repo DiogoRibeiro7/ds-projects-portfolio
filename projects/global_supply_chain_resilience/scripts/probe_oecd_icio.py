@@ -11,23 +11,48 @@ import argparse
 import json
 from hashlib import sha256
 from pathlib import Path
-from urllib.request import Request, urlopen
-from zipfile import ZipFile
+from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
+from curl_cffi import requests
 
 OFFICIAL_URL = "https://webfs-sti.oecd.org/files/STI-PIE/ICIO/2025/2016-2022_SML.zip"
 
 
 def download(url: str, destination: Path) -> str:
-    """Download ``url`` to ``destination`` and return its SHA-256 digest."""
-    request = Request(url, headers={"User-Agent": "ds-projects-portfolio/1.0"})
-    with urlopen(request, timeout=180) as response:  # noqa: S310 - fixed HTTPS OECD source
-        raw = response.read()
+    """Download ``url`` using a browser-compatible HTTPS client.
+
+    OECD's file host may reject generic Python HTTP clients with HTTP 403 while
+    serving the same official resource to browser-like TLS clients. The response
+    is therefore retrieved with Chrome impersonation and then validated as a ZIP
+    archive before any data are parsed.
+
+    Args:
+        url: Fixed official OECD archive URL.
+        destination: Local path for the immutable raw archive.
+
+    Returns:
+        SHA-256 digest of the exact downloaded archive bytes.
+
+    Raises:
+        RuntimeError: If the response is empty or not a valid ZIP archive.
+    """
+    response = requests.get(url, impersonate="chrome", timeout=180)
+    response.raise_for_status()
+    raw = bytes(response.content)
     if not raw:
         raise RuntimeError("OECD ICIO download returned an empty response.")
+
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(raw)
+    try:
+        with ZipFile(destination) as archive:
+            if not archive.namelist():
+                raise RuntimeError("OECD ICIO archive contains no members.")
+    except BadZipFile as exc:
+        destination.unlink(missing_ok=True)
+        raise RuntimeError("OECD ICIO response is not a valid ZIP archive.") from exc
+
     return sha256(raw).hexdigest()
 
 

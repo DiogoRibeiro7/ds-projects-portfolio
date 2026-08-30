@@ -25,12 +25,21 @@ def spectral_radius_diagnostics(coefficients: pd.DataFrame) -> AdmissibilityDiag
     if not np.isfinite(values).all() or (values < 0.0).any():
         raise ValueError("coefficients must be finite and non-negative.")
 
-    matrix = csc_matrix(values)
-    eigenvalues, eigenvectors = eigs(matrix, k=1, which="LM")
-    eigenvalue = eigenvalues[0]
-    vector = eigenvectors[:, 0]
+    if len(coefficients) <= 2:
+        eigenvalues, eigenvectors = np.linalg.eig(values)
+        dominant = int(np.argmax(np.abs(eigenvalues)))
+        eigenvalue = eigenvalues[dominant]
+        vector = eigenvectors[:, dominant]
+        matrix_for_residual = values
+    else:
+        matrix = csc_matrix(values)
+        eigenvalues, eigenvectors = eigs(matrix, k=1, which="LM")
+        eigenvalue = eigenvalues[0]
+        vector = eigenvectors[:, 0]
+        matrix_for_residual = matrix
+
     spectral_radius = float(abs(eigenvalue))
-    numerator = np.linalg.norm(matrix @ vector - eigenvalue * vector)
+    numerator = np.linalg.norm(matrix_for_residual @ vector - eigenvalue * vector)
     denominator = max(np.linalg.norm(vector), np.finfo(float).eps)
     eigen_residual = float(numerator / denominator)
     return AdmissibilityDiagnostics(

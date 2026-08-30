@@ -118,7 +118,9 @@ def _dimension_numbers(
             and len(str(entry.get("categ_dsg", "")).strip()) == 4
         }
     if len(time_candidates) != 1:
-        raise ValueError(f"Could not identify a unique INE time dimension: {sorted(time_candidates)}")
+        raise ValueError(
+            f"Could not identify a unique INE time dimension: {sorted(time_candidates)}"
+        )
     time_dim = next(iter(time_candidates))
 
     geography_candidates = {
@@ -264,7 +266,9 @@ def _fetch_lisbon_indicator(
         "statistical_source": "Instituto Nacional de Estatística (INE), Portugal",
         "transport": "Pipeworx INE proxy",
         "transport_url": INE_MIRROR_ENDPOINT,
-        "extraction_date": max(extraction_dates) if extraction_dates else metadata.get("DataExtracao"),
+        "extraction_date": max(extraction_dates)
+        if extraction_dates
+        else metadata.get("DataExtracao"),
         "total_dimension_codes": json.dumps(totals, ensure_ascii=False, sort_keys=True),
     }
     print(

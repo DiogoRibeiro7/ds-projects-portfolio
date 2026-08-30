@@ -1,0 +1,48 @@
+name: Portugal Housing Tourism TWFE
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "projects/portugal_housing_tourism/src/housing_tourism/twfe.py"
+      - "projects/portugal_housing_tourism/tests/test_twfe.py"
+      - "projects/portugal_housing_tourism/scripts/run_municipality_twfe.py"
+      - "projects/portugal_housing_tourism/scripts/build_municipality_panel_support.py"
+      - ".github/workflows/portugal-housing-tourism-twfe.yml"
+
+jobs:
+  validate-twfe:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/portugal_housing_tourism
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project and validation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest ruff==0.14.0
+      - name: Check formatting
+        run: ruff format --check src/housing_tourism/twfe.py tests/test_twfe.py scripts/run_municipality_twfe.py
+      - name: Lint
+        run: ruff check src/housing_tourism/twfe.py tests/test_twfe.py scripts/run_municipality_twfe.py
+      - name: Test TWFE helpers
+        run: pytest tests/test_twfe.py
+      - name: Run municipality TWFE
+        run: python scripts/run_municipality_twfe.py
+      - name: Upload TWFE evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: portugal-housing-tourism-twfe
+          path: |
+            projects/portugal_housing_tourism/results/processed/municipality_twfe_sample_unbalanced.csv
+            projects/portugal_housing_tourism/results/processed/municipality_twfe_sample_balanced.csv
+            projects/portugal_housing_tourism/results/processed/municipality_twfe_results.json
+          if-no-files-found: error
+          retention-days: 30

@@ -28,12 +28,15 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
           python -m pip install pytest ruff==0.14.0
-      - name: Show canonical formatting diff
+      - name: Show canonical formatter and lint fixes
         run: |
           ruff format src/housing_tourism/twfe.py tests/test_twfe.py scripts/run_municipality_twfe.py
+          ruff check --fix src/housing_tourism/twfe.py tests/test_twfe.py scripts/run_municipality_twfe.py
           git diff -- src/housing_tourism/twfe.py tests/test_twfe.py scripts/run_municipality_twfe.py
-      - name: Lint formatted workspace
-        run: ruff check src/housing_tourism/twfe.py tests/test_twfe.py scripts/run_municipality_twfe.py
+      - name: Verify formatted workspace
+        run: |
+          ruff format --check src/housing_tourism/twfe.py tests/test_twfe.py scripts/run_municipality_twfe.py
+          ruff check src/housing_tourism/twfe.py tests/test_twfe.py scripts/run_municipality_twfe.py
       - name: Test TWFE helpers
         run: pytest tests/test_twfe.py
       - name: Run municipality TWFE

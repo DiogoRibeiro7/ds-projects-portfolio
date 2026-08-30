@@ -44,9 +44,9 @@ name = "Resident population (number), annual, NUTS 2024"
 url = "https://www.ine.pt/xurl/indx/0012917/PT"
 
 [ine_current.overnight_stays]
-indicator = "0013208"
-name = "Overnight stays in tourist accommodation by country of residence, annual, NUTS 2024"
-url = "https://www.ine.pt/xurl/indx/0013208/PT"
+indicator = "0013214"
+name = "Overnight stays in tourist accommodation by accommodation type, annual, NUTS 2024"
+url = "https://www.ine.pt/xurl/indx/0013214/PT"
 
 [rnal]
 name = "Registo Nacional de Alojamento Local (RNAL)"

@@ -1,0 +1,6 @@
+measure,indicator_code,geo_code,geo_name,bridge_after_year,tail_first_year,tail_last_year,tail_rows,overlap_equality,statistical_source,transport,extraction_date
+rent,0012600,1A01106,Lisboa,2023,2024.0,2024.0,1,exact_frozen_audit,"Instituto Nacional de Estatística (INE), Portugal",Pipeworx INE proxy,2026-08-30T09:16:14.368+01:00
+income,0012749,1A01106,Lisboa,2021,2022.0,2024.0,3,exact_frozen_audit,"Instituto Nacional de Estatística (INE), Portugal",Pipeworx INE proxy,2026-08-30T09:16:20.766+01:00
+housing_stock,0014137,,,2022,,,0,exact_frozen_audit,,,
+population,0012917,1A01106,Lisboa,2023,2024.0,2025.0,2,exact_frozen_audit,"Instituto Nacional de Estatística (INE), Portugal",Pipeworx INE proxy,2026-08-30T09:16:24.055+01:00
+overnight_stays,0013214,,,2025,,,0,exact_frozen_audit,,,

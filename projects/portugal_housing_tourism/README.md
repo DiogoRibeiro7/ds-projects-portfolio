@@ -54,15 +54,17 @@ EHPI is generated only after an explicit statistical model and counterfactual ha
 
 ## Data sources
 
-| Measure | INE indicator | Source |
-|---|---:|---|
-| Median rent of new leases, EUR/m² | `0009631` | INE local housing rent statistics |
-| Median gross declared income per taxpayer | `0009934` | INE local income statistics |
-| Classical family dwelling stock | `0008329` | INE housing stock statistics |
-| Resident population | `0008272` | INE annual population estimates |
-| Tourist overnight stays | `0009182` | INE tourist accommodation survey |
-| Alojamento Local | — | Turismo de Portugal / RNAL |
-| Point-in-time platform listings, Lisbon | — | Inside Airbnb dated snapshots |
+| Measure | Legacy INE indicator | Current INE indicator | Source |
+|---|---:|---:|---|
+| Median rent of new leases, EUR/m² | `0009631` | `0012600` | INE local housing rent statistics |
+| Median gross declared income per taxpayer | `0009934` | `0012749` | INE local income statistics |
+| Classical family dwelling stock | `0008329` | `0014137` | INE housing stock statistics |
+| Resident population | `0008272` | `0012917` | INE annual population estimates |
+| Tourist overnight stays by accommodation type | `0009877` | `0013214` | INE tourist accommodation survey |
+| Alojamento Local | — | — | Turismo de Portugal / RNAL |
+| Point-in-time platform listings, Lisbon | — | — | Inside Airbnb dated snapshots |
+
+The NUTS-2013 and NUTS-2024 Lisbon municipality series are bridged only after an empirical overlap audit. Every available overlap observation is numerically identical; the bridge therefore preserves the legacy series through its final year and appends only later observations from the current indicator. If a future source revision breaks that equality, the guarded bridge fails.
 
 ## Historical short-term-rental exposure
 
@@ -99,6 +101,24 @@ Between these two observed dates, total listed units are 2.9% higher and entire-
 
 The compact outputs and source hashes are stored in `results/processed/inside_airbnb_lisbon_annual.csv` and `results/processed/inside_airbnb_lisbon_provenance.csv`. Raw third-party listing files are not committed.
 
+## Lisbon descriptive decomposition
+
+The first decomposition uses the exact identity
+
+```text
+Delta log(rent / income) = Delta log(rent) - Delta log(income)
+```
+
+to separate movement in the affordability proxy into rent and income components. It is descriptive accounting, not a causal model.
+
+The post-2022 deterioration is concentrated almost entirely in 2022–2023. Rent rose 18.17% while median declared income rose 3.10%, increasing the rent-to-income proxy by 14.61%. In log terms, the affordability gap widened by 13.64 percentage points. From 2023 to 2024, rent rose 4.66% and income 4.37%, so the rent-to-income proxy changed by only 0.29%.
+
+Across 2022–2024 as a whole, rent increased 23.68% and income 7.60%, producing a 14.94% deterioration in the rent-to-income proxy. LHDI consequently rose from 106.20 in 2022 to 121.72 in 2023 and 122.07 in 2024.
+
+Tourism followed a different timing pattern. Tourism intensity collapsed by 65.92% between 2019 and 2021, then recovered strongly. In 2024 it was 95.03% of its 2019 level and in 2025 it reached 97.39% of the 2019 benchmark. The observed December 2024 platform snapshot contains 36.35 listings and 26.86 entire-home listings per 1,000 residents. These parallel movements are not interpreted as evidence that tourism or platform listings caused the rent acceleration.
+
+The reproducible annual indices and episode decompositions are stored in `results/processed/lisbon_descriptive_annual.csv` and `results/processed/lisbon_descriptive_episodes.csv`.
+
 ## Important measurement rule
 
 `RNAL registration != active tourist dwelling != platform listing`.
@@ -109,4 +129,4 @@ The public RNAL layer exposes registration dates but no cancellation/end-date fi
 
 **Research case study · Active**
 
-The analytical framework, data clients, index definitions, tests and first observed Lisbon platform snapshots are now executed reproducibly. The empirical exposure series remains sparse because 2025 and earlier archive dates have not yet been independently verified, so the project remains non-featured and should not yet be presented as a completed causal or policy analysis.
+The analytical framework, data clients, index definitions, NUTS-vintage bridge, Lisbon descriptive decomposition, tests and first observed Lisbon platform snapshots are now executed reproducibly. The platform-exposure series remains sparse because 2025 and earlier archive dates have not yet been independently verified, so the project remains non-featured and should not yet be presented as a completed causal or policy analysis.

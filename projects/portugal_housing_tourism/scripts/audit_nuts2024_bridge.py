@@ -49,9 +49,7 @@ def _audit_measure(
     overlap["measure"] = measure
     overlap["old_indicator"] = old_indicator
     overlap["current_indicator"] = current_indicator
-    overlap["absolute_difference"] = (
-        overlap[f"{value_name}_current"] - overlap[f"{value_name}_old"]
-    )
+    overlap["absolute_difference"] = overlap[f"{value_name}_current"] - overlap[f"{value_name}_old"]
     overlap["relative_difference"] = _relative_difference(
         overlap[f"{value_name}_old"],
         overlap[f"{value_name}_current"],

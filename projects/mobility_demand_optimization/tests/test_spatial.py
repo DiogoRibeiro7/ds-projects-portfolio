@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+from zipfile import ZipFile
+
 import numpy as np
 import pytest
 
-from mobility_optimization.spatial import normalized_distance_cost_matrix
+from mobility_optimization.spatial import _extract_shapefile, normalized_distance_cost_matrix
 
 
 def test_distance_cost_matrix_is_symmetric_and_zero_diagonal() -> None:
@@ -31,3 +34,23 @@ def test_invalid_spatial_coordinates_are_rejected() -> None:
     """A relocation matrix needs at least two finite two-dimensional centroids."""
     with pytest.raises(ValueError, match="shape"):
         normalized_distance_cost_matrix([[0.0, 0.0]])
+
+
+def test_invalid_zip_archive_is_rejected(tmp_path: Path) -> None:
+    """A non-ZIP download must fail before GeoPandas is called."""
+    archive = tmp_path / "taxi_zones.zip"
+    archive.write_bytes(b"not a zip archive")
+
+    with pytest.raises(ValueError, match="valid ZIP"):
+        _extract_shapefile(archive, destination=tmp_path / "extract")
+
+
+def test_archive_must_contain_exactly_one_shapefile(tmp_path: Path) -> None:
+    """Ambiguous archives should not be passed to the geometry reader."""
+    archive = tmp_path / "taxi_zones.zip"
+    with ZipFile(archive, mode="w") as bundle:
+        bundle.writestr("first.shp", b"")
+        bundle.writestr("second.shp", b"")
+
+    with pytest.raises(ValueError, match="exactly one"):
+        _extract_shapefile(archive, destination=tmp_path / "extract")

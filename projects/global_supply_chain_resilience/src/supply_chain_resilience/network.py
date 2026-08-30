@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import networkx as nx
-import pandas as pd
+import numpy as np
 
 from supply_chain_resilience.icio import technical_coefficients
 from supply_chain_resilience.mapping import ICIOBlocks
@@ -35,10 +35,16 @@ def build_production_graph(
     for node, output in blocks.gross_output.items():
         graph.add_node(str(node), gross_output=float(output))
 
-    stacked: pd.Series = coefficients.stack()
-    for (supplier, user), weight in stacked.items():
-        value = float(weight)
-        if value > minimum_coefficient:
-            graph.add_edge(str(supplier), str(user), weight=value)
+    values = coefficients.to_numpy(dtype=float)
+    row_indices, column_indices = np.nonzero(values > minimum_coefficient)
+    row_labels = coefficients.index.to_numpy(dtype=str)
+    column_labels = coefficients.columns.to_numpy(dtype=str)
+
+    for row_index, column_index in zip(row_indices, column_indices, strict=True):
+        graph.add_edge(
+            row_labels[row_index],
+            column_labels[column_index],
+            weight=float(values[row_index, column_index]),
+        )
 
     return graph

@@ -1,0 +1,73 @@
+{
+  "version": "0.1",
+  "year": 2022,
+  "source_sha256": "46db55c45747e26dde5c1716d072b2aa74ace362a4424491ac646d2ab175befb",
+  "candidate_source": {
+    "workflow_run": 33336582840,
+    "artifact_digest": "sha256:b9b20e87aa1da78c8c1318823f9528b2ce20e324d5f78bd1fd7800cea74e42fa",
+    "candidate_rule": "top-20 at every A[i,j] threshold in both foreign intermediate sales and foreign downstream input-share mass, excluding ROW"
+  },
+  "candidate_nodes": [
+    "CHN_C26",
+    "CHN_C20",
+    "USA_G",
+    "CHN_C27",
+    "RUS_B06",
+    "NOR_B06",
+    "USA_B06"
+  ],
+  "coefficient_orientation": "A[i,j] = Z[i,j] / x[j], supplier i to using industry j",
+  "propagation_model": {
+    "name": "linear downstream fixed-coefficient exposure cascade",
+    "equation": "q = s + A^T q",
+    "solution": "q = (I - A^T)^(-1) s",
+    "path_decomposition": "q = sum_{k=0}^infinity (A^T)^k s",
+    "interpretation": "q is a gross-output-normalised downstream exposure index under proportional input loss, fixed coefficients, no substitution, no inventories and linear retransmission. It is not a causal forecast, physical capacity solution or demand-side Leontief multiplier."
+  },
+  "admissibility": {
+    "spectral_radius_rule": "rho(A) < 1 - 1e-8",
+    "eigen_residual_max": 1e-8,
+    "solver_relative_residual_max": 1e-10,
+    "finite_required": true,
+    "nonnegative_tolerance": -1e-12,
+    "action_if_failed": "Do not compute or report empirical propagation outcomes; report the failed gate and redesign prospectively."
+  },
+  "shock_design": {
+    "primary_fraction": 0.1,
+    "scale_checks": [0.05, 0.2],
+    "application": "one candidate node at a time; no joint shock in the primary analysis",
+    "normalisation": "candidate comparison uses per-unit amplification, which is invariant to shock magnitude in this linear model",
+    "linearity_note": "The 5%, 10% and 20% scenarios must scale exactly up to numerical tolerance; they are a model-consistency check rather than independent robustness evidence."
+  },
+  "primary_matrix": "unthresholded active 2022 technical-coefficient matrix",
+  "network_sensitivity": {
+    "minimum_input_share_thresholds": [0.001, 0.005, 0.01],
+    "candidate_set_fixed": true,
+    "rebalance_after_thresholding": false,
+    "interpretation": "diagnostic topology sensitivity only; thresholded matrices are not treated as alternative balanced ICIO systems"
+  },
+  "outcomes": {
+    "exogenous_burden": "delta * x[i]",
+    "total_output_equivalent_exposure": "sum_j x[j] * q[j]",
+    "propagated_exposure": "total_output_equivalent_exposure - exogenous_burden",
+    "amplification": "total_output_equivalent_exposure / exogenous_burden",
+    "first_round_downstream_exposure": "sum_j x[j] * (A^T s)[j]",
+    "higher_order_exposure": "sum_j x[j] * (q - s - A^T s)[j]",
+    "foreign_propagated_exposure": "sum over j outside shocked supplier country of x[j] * q[j]",
+    "foreign_spillover_share": "foreign_propagated_exposure / propagated_exposure when propagated_exposure > 0",
+    "max_nonshocked_exposure_index": "max q[j] over j != shocked node",
+    "top_affected_nodes": "top 20 by x[j] * q[j], with q[j], gross output, country and activity reported"
+  },
+  "ranking_outputs": {
+    "primary_supplier_ranking": "descending unthresholded per-unit amplification",
+    "secondary_supplier_ranking": "descending unthresholded total output-equivalent exposure under the 10% shock",
+    "threshold_stability": "Spearman across all seven candidates and top-3 Jaccard versus the unthresholded ranking"
+  },
+  "scientific_boundaries": [
+    "No causal interpretation.",
+    "No endogenous substitution, inventories, prices, capacity reallocation or recovery dynamics.",
+    "No claim that the simulated percentage is an observed or forecast real-world disruption magnitude.",
+    "No candidate may be added or removed after propagation results are inspected.",
+    "No threshold may replace the unthresholded matrix as primary after results are inspected."
+  ]
+}

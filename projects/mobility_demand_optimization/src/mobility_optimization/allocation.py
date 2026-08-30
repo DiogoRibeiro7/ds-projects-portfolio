@@ -73,14 +73,15 @@ def allocate_fleet(
         row_start = i * n_zones
         a_ub[i, row_start : row_start + n_zones] = 1.0
 
-    # Supply after relocations equals initial - outbound + inbound. The equality
-    # target - supply = unmet - idle is expressed linearly below.
+    # Supply after relocations equals initial - outbound + inbound. Using
+    # target - supply = unmet - idle gives
+    # outbound - inbound - unmet + idle = initial - target.
     a_eq = np.zeros((n_zones, n_vars), dtype=np.float64)
-    b_eq = target - initial
+    b_eq = initial - target
     for j in range(n_zones):
         for i in range(n_zones):
-            a_eq[j, i * n_zones + j] -= 1.0  # inbound lowers target-minus-supply
-            a_eq[j, j * n_zones + i] += 1.0  # outbound raises target-minus-supply
+            a_eq[j, i * n_zones + j] -= 1.0  # inbound
+            a_eq[j, j * n_zones + i] += 1.0  # outbound
         a_eq[j, n_flow + j] -= 1.0  # unmet
         a_eq[j, n_flow + n_zones + j] += 1.0  # idle
 
@@ -101,6 +102,9 @@ def allocate_fleet(
     inbound = flows.sum(axis=0)
     final_supply = initial - outbound + inbound
     relocation = float(np.sum(flows * costs))
+
+    if not np.isclose(final_supply.sum(), initial.sum()):
+        raise RuntimeError("Fleet conservation failed after optimization.")
 
     return AllocationResult(
         supply=final_supply.astype(np.float64),

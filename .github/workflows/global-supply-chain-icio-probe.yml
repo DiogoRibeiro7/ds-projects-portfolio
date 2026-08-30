@@ -45,6 +45,13 @@ jobs:
           --diagnostics-output artifacts/icio_probe/icio_2022_accounting_diagnostics.json
           --output artifacts/icio_probe/icio_2022_network.json
 
+      - name: Compute 2022 structural dependency baseline
+        run: >-
+          python scripts/analyze_2022_dependency.py
+          --archive artifacts/icio_probe/2016-2022_SML.zip
+          --csv-output artifacts/icio_probe/icio_2022_dependency_metrics.csv
+          --summary-output artifacts/icio_probe/icio_2022_dependency_summary.json
+
       - name: Upload empirical ICIO evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -55,5 +62,7 @@ jobs:
             projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2016_2022_balance_audit.json
             projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_accounting_diagnostics.json
             projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_network.json
+            projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_dependency_metrics.csv
+            projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_dependency_summary.json
           if-no-files-found: warn
           retention-days: 30

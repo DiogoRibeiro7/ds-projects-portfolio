@@ -1,0 +1,66 @@
+name: Portugal Housing Tourism Bridged Longitudinal
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "projects/portugal_housing_tourism/config/sources.toml"
+      - "projects/portugal_housing_tourism/scripts/build_lisbon_longitudinal.py"
+      - "projects/portugal_housing_tourism/scripts/build_lisbon_bridged.py"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_longitudinal_legacy.csv"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_nuts2024_bridge_summary.csv"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_longitudinal_bridged.csv"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_ine_bridge_provenance.csv"
+      - ".github/workflows/portugal-housing-tourism-bridged-longitudinal.yml"
+
+jobs:
+  build-bridged-series:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/portugal_housing_tourism
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project and Ruff
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install ruff==0.14.0
+      - name: Check formatting
+        run: ruff format --check scripts/build_lisbon_bridged.py
+      - name: Lint
+        run: ruff check scripts/build_lisbon_bridged.py
+      - name: Preserve committed provenance
+        run: cp results/processed/lisbon_ine_bridge_provenance.csv /tmp/committed_bridge_provenance.csv
+      - name: Build guarded bridged series
+        run: python scripts/build_lisbon_bridged.py
+      - name: Verify committed numerical evidence
+        run: git diff --exit-code -- results/processed/lisbon_longitudinal_bridged.csv
+      - name: Verify provenance structure
+        run: |
+          python - <<'PY'
+          import pandas as pd
+
+          committed = pd.read_csv("/tmp/committed_bridge_provenance.csv")
+          regenerated = pd.read_csv("results/processed/lisbon_ine_bridge_provenance.csv")
+          ignored = ["extraction_date"]
+          pd.testing.assert_frame_equal(
+              committed.drop(columns=ignored),
+              regenerated.drop(columns=ignored),
+              check_dtype=False,
+          )
+          PY
+      - name: Upload bridged results
+        uses: actions/upload-artifact@v4
+        with:
+          name: portugal-housing-tourism-bridged-longitudinal
+          path: |
+            projects/portugal_housing_tourism/results/processed/lisbon_longitudinal_bridged.csv
+            projects/portugal_housing_tourism/results/processed/lisbon_ine_bridge_provenance.csv
+          if-no-files-found: error
+          retention-days: 30

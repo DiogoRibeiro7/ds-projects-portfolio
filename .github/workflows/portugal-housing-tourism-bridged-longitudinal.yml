@@ -8,6 +8,8 @@ on:
       - "projects/portugal_housing_tourism/config/sources.toml"
       - "projects/portugal_housing_tourism/scripts/build_lisbon_longitudinal.py"
       - "projects/portugal_housing_tourism/scripts/build_lisbon_bridged.py"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_longitudinal_legacy.csv"
+      - "projects/portugal_housing_tourism/results/processed/lisbon_nuts2024_bridge_summary.csv"
       - ".github/workflows/portugal-housing-tourism-bridged-longitudinal.yml"
 
 jobs:
@@ -27,8 +29,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
           python -m pip install ruff==0.14.0
-      - name: Check formatting
-        run: ruff format --check scripts/build_lisbon_bridged.py
+      - name: Show canonical formatting diff
+        run: ruff format --diff scripts/build_lisbon_bridged.py
       - name: Lint
         run: ruff check scripts/build_lisbon_bridged.py
       - name: Build guarded bridged series

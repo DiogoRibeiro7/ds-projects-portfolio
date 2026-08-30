@@ -1,4 +1,4 @@
-"""Vintage-specific mapping for the OECD 2025 ICIO 2022 regular table."""
+"""Vintage-specific mapping for the OECD 2025 ICIO regular tables."""
 
 from __future__ import annotations
 
@@ -9,6 +9,13 @@ import pandas as pd
 
 FINAL_DEMAND_SUFFIXES = ("HFCE", "NPISH", "GGFC", "GFCF", "INVNT", "DPABR")
 SPECIAL_ROWS = {"TLS", "VA", "OUT"}
+
+# Release-aware accounting envelope. OECD ICIO construction may retain small
+# balancing residuals, and values below 0.1 million USD can be zeroed during the
+# balancing process. The relative allowance was selected only after auditing every
+# published year in the official 2016-2022 archive, not from the 2022 target alone.
+RELEASE_BALANCE_ATOL = 0.1
+RELEASE_BALANCE_RTOL = 2e-4
 
 
 @dataclass(frozen=True)
@@ -28,10 +35,12 @@ def _is_final_demand(label: str) -> bool:
 
 
 def extract_2022_blocks(frame: pd.DataFrame) -> ICIOBlocks:
-    """Extract Z, x, f, value added, and taxes from the OECD 2022 regular ICIO table.
+    """Extract Z, x, f, value added, and taxes from a regular ICIO table.
 
-    Zero-output country-industry labels are retained in the accounting system and
-    are removed only when constructing the active production subsystem.
+    The name is retained for API compatibility with the original 2022 mapping,
+    but the label-driven extraction is also used by the 2016-2022 release audit.
+    Zero-output country-industry labels remain in the published accounting system
+    and are removed only when constructing the active production subsystem.
     """
     if frame.empty:
         raise ValueError("ICIO frame must not be empty.")
@@ -86,26 +95,71 @@ def extract_2022_blocks(frame: pd.DataFrame) -> ICIOBlocks:
     )
 
 
+def accounting_residuals(blocks: ICIOBlocks) -> tuple[pd.Series, pd.Series]:
+    """Return signed output-use and input-cost residuals."""
+    z = blocks.intermediate_use
+    x = blocks.gross_output
+    row_residual = z.sum(axis=1) + blocks.final_demand.sum(axis=1) - x
+    column_residual = z.sum(axis=0) + blocks.value_added + blocks.taxes_less_subsidies - x
+    return row_residual.astype(float), column_residual.astype(float)
+
+
+def _validate_residual_envelope(
+    residual: pd.Series,
+    gross_output: pd.Series,
+    *,
+    rtol: float,
+    atol: float,
+    identity_name: str,
+) -> None:
+    """Require every residual to lie within ``atol + rtol * |x|``."""
+    if rtol < 0.0 or atol < 0.0 or not np.isfinite(rtol) or not np.isfinite(atol):
+        raise ValueError("rtol and atol must be finite and non-negative.")
+    if not residual.index.equals(gross_output.index):
+        raise ValueError("residual and gross_output indexes must match exactly.")
+
+    allowance = atol + rtol * gross_output.abs()
+    violation = residual.abs() - allowance
+    if (violation > 0.0).any():
+        label = str(violation.idxmax())
+        raise ValueError(
+            f"{identity_name} accounting identity exceeded release balance envelope; "
+            f"label={label}, residual={float(residual.loc[label]):.6g}, "
+            f"allowance={float(allowance.loc[label]):.6g}."
+        )
+
+
 def validate_2022_accounting(
     blocks: ICIOBlocks,
     *,
-    rtol: float = 1e-7,
-    atol: float = 1e-5,
+    rtol: float = RELEASE_BALANCE_RTOL,
+    atol: float = RELEASE_BALANCE_ATOL,
 ) -> None:
-    """Validate row and column accounting identities for all published industries."""
-    z = blocks.intermediate_use
-    x = blocks.gross_output
-    f = blocks.final_demand
+    """Validate ICIO identities against the release-aware balance envelope.
 
-    row_total = z.sum(axis=1) + f.sum(axis=1)
-    if not np.allclose(row_total.to_numpy(), x.to_numpy(), rtol=rtol, atol=atol):
-        max_error = float(np.max(np.abs(row_total.to_numpy() - x.to_numpy())))
-        raise ValueError(f"Output-use accounting identity failed; max absolute error={max_error:.6g}.")
+    The gate is deliberately per-industry rather than aggregate: every published
+    country-industry residual must satisfy
 
-    input_total = z.sum(axis=0) + blocks.value_added + blocks.taxes_less_subsidies
-    if not np.allclose(input_total.to_numpy(), x.to_numpy(), rtol=rtol, atol=atol):
-        max_error = float(np.max(np.abs(input_total.to_numpy() - x.to_numpy())))
-        raise ValueError(f"Input-cost accounting identity failed; max absolute error={max_error:.6g}.")
+    ``abs(residual_i) <= atol + rtol * abs(output_i)``.
+
+    The defaults are release-level constants derived from the complete official
+    2016-2022 audit. Callers may pass stricter values in tests or diagnostics.
+    """
+    row_residual, column_residual = accounting_residuals(blocks)
+    _validate_residual_envelope(
+        row_residual,
+        blocks.gross_output,
+        rtol=rtol,
+        atol=atol,
+        identity_name="Output-use",
+    )
+    _validate_residual_envelope(
+        column_residual,
+        blocks.gross_output,
+        rtol=rtol,
+        atol=atol,
+        identity_name="Input-cost",
+    )
 
 
 def active_production_blocks(
@@ -118,7 +172,9 @@ def active_production_blocks(
 
     Technical coefficients are undefined for zero-output using industries. A zero-
     output label is excluded only if its intermediate-use row and column are both
-    zero up to ``flow_atol``.
+    zero up to ``flow_atol``. The published system must be validated before calling
+    this function; the returned active subsystem is revalidated under the same
+    release-aware envelope.
     """
     if output_atol < 0.0 or flow_atol < 0.0:
         raise ValueError("output_atol and flow_atol must be non-negative.")
@@ -127,6 +183,7 @@ def active_production_blocks(
     active_mask = x > output_atol
     inactive_labels = tuple(str(label) for label in x.index[~active_mask])
     if not inactive_labels:
+        validate_2022_accounting(blocks)
         return blocks, inactive_labels
 
     inactive_rows = blocks.intermediate_use.loc[list(inactive_labels), :]

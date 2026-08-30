@@ -85,8 +85,8 @@ def test_technical_coefficients_reject_negative_intermediate_use() -> None:
         technical_coefficients(intermediate, output)
 
 
-def test_technical_coefficients_reject_impossible_column_sum() -> None:
-    """Intermediate-input coefficients above one fail the accounting gate."""
+def test_technical_coefficients_allow_column_sum_above_one() -> None:
+    """Coefficient construction must not impose a separate productivity assumption."""
     intermediate = pd.DataFrame(
         [[70.0], [50.0]],
         index=["supplier_a", "supplier_b"],
@@ -94,5 +94,6 @@ def test_technical_coefficients_reject_impossible_column_sum() -> None:
     )
     output = pd.Series([100.0], index=intermediate.columns)
 
-    with pytest.raises(ValueError, match="exceed one"):
-        technical_coefficients(intermediate, output)
+    coefficients = technical_coefficients(intermediate, output)
+
+    assert coefficients.sum(axis=0).iloc[0] == pytest.approx(1.2)

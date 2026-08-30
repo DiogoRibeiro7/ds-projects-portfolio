@@ -1,0 +1,80 @@
+{
+  "version": "0.1",
+  "year": 2022,
+  "source_sha256": "46db55c45747e26dde5c1716d072b2aa74ace362a4424491ac646d2ab175befb",
+  "purpose": "Evaluate how much observed sourcing must be reallocated to reduce direct exposure to the seven frozen supplier shocks, while preserving input-activity composition and imposing data-scaled supplier headroom constraints.",
+  "scientific_boundary": "This is an assumption-bound procurement reallocation experiment, not a monetary-cost estimate, procurement recommendation, causal effect, or globally coordinated equilibrium.",
+  "frozen_shock_nodes": ["CHN_C26", "CHN_C20", "USA_G", "CHN_C27", "RUS_B06", "NOR_B06", "USA_B06"],
+  "shock_fraction": 0.1,
+  "buyer_selection": {
+    "material_input_threshold": "reuse the 2022 median positive intermediate-input threshold from the structural-dependency baseline",
+    "direct_exposure_requirement": "baseline worst-case direct loss to at least one frozen shock node must be positive",
+    "ranking_metric": "baseline worst-case direct loss divided by total intermediate input",
+    "selected_buyers": 10,
+    "tie_break": "descending intermediate-input value, then lexical node label",
+    "note": "Buyer identities are generated mechanically before optimization outcomes are inspected."
+  },
+  "decision_variable": "z_prime[i] = counterfactual intermediate-input flow from supplier node i to the selected buyer j",
+  "technology_preservation": {
+    "constraint": "for every supplier activity g, sum_{i: activity(i)=g} z_prime[i] equals the observed 2022 sum for that activity",
+    "interpretation": "geography may change, but the buyer's supplying-activity composition is fixed exactly"
+  },
+  "self_supply": {
+    "constraint": "if supplier node i equals buyer node j, z_prime[i] is fixed at its observed value",
+    "reason": "the optimizer may not manufacture resilience by reallocating procurement into the buyer's own aggregate node"
+  },
+  "alternative_supplier_support": {
+    "eligible": "active 2022 supplier nodes in the same supplying activity",
+    "new_route_condition": "a supplier may receive incremental allocation only if its observed 2022 foreign intermediate sales are positive"
+  },
+  "capacity_headroom": {
+    "primary_fraction_of_observed_foreign_sales": 0.05,
+    "sensitivity_fractions": [0.01, 0.1],
+    "constraint": "z_prime[i] <= z_observed[i] + kappa * foreign_intermediate_sales[i]",
+    "interpretation": "kappa is a scenario headroom assumption, not an estimated spare-capacity parameter"
+  },
+  "concentration_safeguard": {
+    "constraint": "within each supplying activity, no supplier-country share may exceed the largest observed supplier-country share for that activity-buyer block",
+    "reason": "risk reduction may not be achieved by replacing one concentrated source with an even more concentrated source"
+  },
+  "risk_measure": {
+    "baseline": "R0_j = max_{h in frozen shocks} shock_fraction * z_observed[h] / total_intermediate_input_j",
+    "counterfactual": "R_j(z_prime) = max_{h in frozen shocks} shock_fraction * z_prime[h] / total_intermediate_input_j",
+    "interpretation": "worst-case direct technical-input loss across the frozen supplier shocks; indirect propagation is evaluated after optimization, not optimized directly"
+  },
+  "reallocation_burden": {
+    "formula": "T_j = 0.5 * sum_i |z_prime[i] - z_observed[i]| / total_intermediate_input_j",
+    "interpretation": "share turnover away from observed 2022 sourcing; it is not a monetary cost"
+  },
+  "frontier": {
+    "optimization": "minimize reallocation burden T_j subject to a required reduction in direct risk",
+    "risk_reduction_targets": [0.25, 0.5, 0.75],
+    "constraint": "R_j(z_prime) <= (1 - eta) * R0_j",
+    "infeasible_cases": "retain as infeasible frontier points; do not relax constraints after seeing results"
+  },
+  "primary_policy_for_system_evaluation": {
+    "risk_reduction_target": 0.5,
+    "capacity_headroom_fraction": 0.05,
+    "evaluation": "for each feasible selected buyer, modify only that buyer column of Z/A, recompute the spectral-radius admissibility gate, and rerun all seven frozen 10% propagation shocks",
+    "aggregation_boundary": "buyer-specific counterfactuals are evaluated separately and must not be summed as if all reallocations could occur simultaneously"
+  },
+  "post_optimization_outcomes": [
+    "reallocation burden",
+    "direct worst-case risk before and after",
+    "number of supplier nodes with changed allocation",
+    "largest supplier increase and decrease",
+    "post-change spectral radius and admissibility status",
+    "buyer exposure index under each frozen shock",
+    "global total output-equivalent exposure under each frozen shock",
+    "worst-case global exposure before and after",
+    "foreign spillover exposure before and after"
+  ],
+  "guardrails": [
+    "No monetary-cost language unless an external price/cost source is added prospectively.",
+    "No substitution across supplying activities.",
+    "No post-result changes to buyer selection, risk targets, capacity headroom, concentration safeguards, or shock set.",
+    "A counterfactual matrix that fails the frozen spectral-radius gate is not propagated.",
+    "The direct-risk objective and full propagation evaluation are reported separately.",
+    "Infeasibility is a substantive result, not a reason to relax the design post hoc."
+  ]
+}

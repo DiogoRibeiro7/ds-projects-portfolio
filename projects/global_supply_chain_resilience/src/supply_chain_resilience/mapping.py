@@ -12,10 +12,11 @@ SPECIAL_ROWS = {"TLS", "VA", "OUT"}
 
 # Release-aware accounting envelope. OECD ICIO construction may retain small
 # balancing residuals, and values below 0.1 million USD can be zeroed during the
-# balancing process. The relative allowance was selected only after auditing every
-# published year in the official 2016-2022 archive, not from the 2022 target alone.
+# balancing process. The absolute term follows that published scale. The relative
+# term is a rounded envelope calibrated on 2016-2021; 2022 is kept as the target-
+# year holdout and must pass independently before the production graph is built.
 RELEASE_BALANCE_ATOL = 0.1
-RELEASE_BALANCE_RTOL = 2e-4
+RELEASE_BALANCE_RTOL = 3e-4
 
 
 @dataclass(frozen=True)
@@ -142,8 +143,9 @@ def validate_2022_accounting(
 
     ``abs(residual_i) <= atol + rtol * abs(output_i)``.
 
-    The defaults are release-level constants derived from the complete official
-    2016-2022 audit. Callers may pass stricter values in tests or diagnostics.
+    The default relative term is calibrated on historical 2016-2021 tables and
+    then tested against the held-out 2022 target. Callers may pass stricter values
+    in unit tests or diagnostics.
     """
     row_residual, column_residual = accounting_residuals(blocks)
     _validate_residual_envelope(

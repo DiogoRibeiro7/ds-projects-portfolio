@@ -10,7 +10,11 @@ from zipfile import ZipFile
 import numpy as np
 import pandas as pd
 
-from supply_chain_resilience.mapping import extract_2022_blocks, validate_2022_accounting
+from supply_chain_resilience.mapping import (
+    active_production_blocks,
+    extract_2022_blocks,
+    validate_2022_accounting,
+)
 from supply_chain_resilience.network import build_production_graph
 
 
@@ -24,29 +28,42 @@ def load_2022_csv(archive_path: Path, member: str = "2022_SML.csv") -> pd.DataFr
 
 
 def main() -> None:
-    """Validate the real 2022 mapping, build the graph, and write evidence."""
+    """Validate the real 2022 mapping, build the active graph, and write evidence."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--archive", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
     frame = load_2022_csv(args.archive)
-    blocks = extract_2022_blocks(frame)
-    validate_2022_accounting(blocks)
+    published_blocks = extract_2022_blocks(frame)
+    validate_2022_accounting(published_blocks)
+    blocks, inactive_labels = active_production_blocks(published_blocks)
 
     graph = build_production_graph(blocks)
-    z = blocks.intermediate_use
-    x = blocks.gross_output
-    f = blocks.final_demand
+    z = published_blocks.intermediate_use
+    x = published_blocks.gross_output
+    f = published_blocks.final_demand
 
     row_residual = z.sum(axis=1) + f.sum(axis=1) - x
-    column_residual = z.sum(axis=0) + blocks.value_added + blocks.taxes_less_subsidies - x
+    column_residual = (
+        z.sum(axis=0)
+        + published_blocks.value_added
+        + published_blocks.taxes_less_subsidies
+        - x
+    )
 
     report = {
-        "nodes": graph.number_of_nodes(),
+        "published_industry_labels": int(len(published_blocks.gross_output)),
+        "active_nodes": graph.number_of_nodes(),
+        "inactive_zero_output_labels": int(len(inactive_labels)),
+        "inactive_zero_output_sample": list(inactive_labels[:20]),
         "edges": graph.number_of_edges(),
         "density": float(graph.number_of_edges() / (graph.number_of_nodes() ** 2)),
-        "intermediate_use_shape": [int(z.shape[0]), int(z.shape[1])],
+        "published_intermediate_use_shape": [int(z.shape[0]), int(z.shape[1])],
+        "active_intermediate_use_shape": [
+            int(blocks.intermediate_use.shape[0]),
+            int(blocks.intermediate_use.shape[1]),
+        ],
         "final_demand_columns": int(f.shape[1]),
         "gross_output_total": float(x.sum()),
         "intermediate_use_total": float(z.to_numpy().sum()),

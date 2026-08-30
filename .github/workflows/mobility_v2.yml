@@ -35,6 +35,27 @@ jobs:
         working-directory: projects/mobility_demand_optimization
         run: python -m pytest -q
 
+      - name: Verify official June source is published
+        run: |
+          python - <<'PY'
+          from urllib.request import Request, urlopen
+
+          page_url = "https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page"
+          filename = "yellow_tripdata_2026-06.parquet"
+          request = Request(
+              page_url,
+              headers={"User-Agent": "mobility-demand-optimization/2.0 source-availability-check"},
+          )
+          with urlopen(request, timeout=60) as response:
+              page = response.read().decode("utf-8", errors="replace")
+          if filename not in page:
+              raise SystemExit(
+                  "Official TLC June 2026 Yellow Taxi parquet is not yet published; "
+                  "confirmatory v2 execution remains blocked before holdout ingestion."
+              )
+          print(f"Official TLC source advertised: {filename}")
+          PY
+
       - name: Build frozen-zone panel through June
         working-directory: projects/mobility_demand_optimization
         run: python scripts/build_v2_panel.py

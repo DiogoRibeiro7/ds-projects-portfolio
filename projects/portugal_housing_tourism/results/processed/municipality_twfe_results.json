@@ -1,0 +1,78 @@
+{
+  "balanced_sensitivity": {
+    "affordability": {
+      "ci_95_high": 0.10430311285154167,
+      "ci_95_low": -0.025768622262219792,
+      "coefficient": 0.03926724529466094,
+      "municipalities": 198,
+      "n_observations": 594,
+      "p_value": 0.23665710843636256,
+      "std_error_clustered": 0.033182174810290066,
+      "years": [2022, 2023, 2024]
+    },
+    "coefficient_identity_gap": -3.011479954295737e-15,
+    "income": {
+      "ci_95_high": 0.013903674729514311,
+      "ci_95_low": -0.01124704651556074,
+      "coefficient": 0.0013283141069767856,
+      "municipalities": 198,
+      "n_observations": 594,
+      "p_value": 0.8359882365962453,
+      "std_error_clustered": 0.006416118215299039,
+      "years": [2022, 2023, 2024]
+    },
+    "rent": {
+      "ci_95_high": 0.10423928879125544,
+      "ci_95_low": -0.02304816998797396,
+      "coefficient": 0.04059555940164074,
+      "municipalities": 198,
+      "n_observations": 594,
+      "p_value": 0.21123542647218774,
+      "std_error_clustered": 0.032471887183452515,
+      "years": [2022, 2023, 2024]
+    }
+  },
+  "design": {
+    "causal_claim": false,
+    "estimand": "descriptive within-municipality association",
+    "exposure": "log tourism intensity: overnight stays per resident",
+    "fixed_effects": ["municipality", "year"],
+    "primary_sample": "complete municipality-years, municipalities with at least two years",
+    "sensitivity_sample": "municipalities complete in all three years",
+    "standard_errors": "clustered by municipality",
+    "years": [2022, 2023, 2024]
+  },
+  "primary_unbalanced": {
+    "affordability": {
+      "ci_95_high": 0.0876725258849945,
+      "ci_95_low": -0.016429701544517568,
+      "coefficient": 0.03562141217023847,
+      "municipalities": 208,
+      "n_observations": 614,
+      "p_value": 0.17981978950729138,
+      "std_error_clustered": 0.026557178665183943,
+      "years": [2022, 2023, 2024]
+    },
+    "coefficient_identity_gap": 5.759281940243e-16,
+    "income": {
+      "ci_95_high": 0.00912470921895132,
+      "ci_95_low": -0.011499056931481438,
+      "coefficient": -0.0011871738562650586,
+      "municipalities": 208,
+      "n_observations": 614,
+      "p_value": 0.8214780554516015,
+      "std_error_clustered": 0.00526126151120898,
+      "years": [2022, 2023, 2024]
+    },
+    "rent": {
+      "ci_95_high": 0.08588165660295849,
+      "ci_95_low": -0.017013179975012824,
+      "coefficient": 0.03443423831397283,
+      "municipalities": 208,
+      "n_observations": 614,
+      "p_value": 0.18958012288533144,
+      "std_error_clustered": 0.02624916513507204,
+      "years": [2022, 2023, 2024]
+    }
+  }
+}

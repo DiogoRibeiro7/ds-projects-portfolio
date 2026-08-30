@@ -1,0 +1,96 @@
+{
+  "design_version": "v2.0-preregistered",
+  "frozen_on": "2026-08-30",
+  "parent_evidence": {
+    "freeze": "evidence/empirical_freeze_v1_1.json",
+    "merge_commit": "4f6ac3ebe123d27a2536eb73e00849f385442c30"
+  },
+  "scientific_question": "Does joint sample-average optimisation under the frozen Negative-Binomial predictive distribution reduce realised operational loss relative to deterministic allocation against the same conditional mean?",
+  "test_window": {
+    "start": "2026-06-01T00:00:00",
+    "end_exclusive": "2026-07-01T00:00:00",
+    "use_for_tuning": false
+  },
+  "zones": {
+    "count": 30,
+    "selection": "reuse v1.1 frozen top-30 set without reselection"
+  },
+  "forecast": {
+    "mean_model": "expanding Poisson hour-of-week",
+    "stochastic_distribution": "Negative Binomial NB2",
+    "variance": "mu + alpha * mu^2",
+    "alpha": 0.05,
+    "reselect_alpha": false
+  },
+  "scenario_generation": {
+    "primary_scenarios": 128,
+    "primary_dependence": "conditionally independent across zones",
+    "base_seed": 20260830,
+    "timestamp_seed_derivation": "deterministic",
+    "secondary_scenario_counts": [64, 128, 256]
+  },
+  "decision": {
+    "primary_policy": "negative_binomial_stochastic_saa",
+    "primary_comparator": "poisson_mean_deterministic",
+    "context_policies": [
+      "negative_binomial_service_quantile_v1",
+      "no_rebalancing"
+    ],
+    "continuous_fleet": true,
+    "fleet_size": 4532.0,
+    "unmet_penalty": 5.0,
+    "idle_penalty": 1.0,
+    "relocation_cost": {
+      "source": "v1.1 TLC-zone projected centroid-distance matrix",
+      "median_off_diagonal": 0.25,
+      "primary_multiplier": 1.0
+    }
+  },
+  "state_model": {
+    "policy_dependent": true,
+    "observed_passenger_trip_duration": true,
+    "maximum_explicit_arrival_lag_hours": 6,
+    "within_region_conditioning": "pickup and dropoff both inside frozen top-30 zones",
+    "empty_vehicle_relocation_time": "instantaneous within decision epoch"
+  },
+  "primary_estimand": "mean hourly realised cost difference: NB stochastic SAA minus Poisson mean deterministic",
+  "headline_metrics": [
+    "mean_total_cost",
+    "mean_paired_cost_difference"
+  ],
+  "secondary_metrics": [
+    "service_level",
+    "unmet_cost",
+    "idle_cost",
+    "relocation_cost",
+    "paired_hourly_win_rate",
+    "median_paired_cost_difference",
+    "paired_difference_q05",
+    "paired_difference_q50",
+    "paired_difference_q95"
+  ],
+  "paired_uncertainty": {
+    "method": "moving-block bootstrap",
+    "block_length_hours": 24,
+    "replications": 4999,
+    "base_seed": 20260831
+  },
+  "secondary_sensitivity_grid": {
+    "scenario_counts": [64, 128, 256],
+    "unmet_penalties_with_idle_1": [2.0, 5.0, 10.0],
+    "relocation_cost_multipliers": [0.5, 1.0, 2.0]
+  },
+  "deferred": [
+    "correlated multivariate demand scenarios",
+    "copulas",
+    "residual-bootstrap dependence",
+    "distributionally robust optimisation",
+    "explicit empty-vehicle relocation travel time",
+    "external-region fleet reservoir",
+    "new forecast models",
+    "integer fleet optimisation",
+    "alpha retuning",
+    "zone reselection"
+  ],
+  "reporting_rule": "report the primary result regardless of sign; no sensitivity cell may replace the primary analysis"
+}

@@ -10,12 +10,14 @@ from housing_tourism.twfe import fit_twfe_bundle, prepare_twfe_sample
 
 def _panel() -> pd.DataFrame:
     rows: list[dict[str, object]] = []
-    for geo_code, geo_name, scale in [
-        ("A", "Alpha", 1.0),
-        ("B", "Beta", 1.2),
-        ("C", "Gamma", 0.9),
-    ]:
-        for year, tourism in [(2022, 10.0), (2023, 12.0), (2024, 15.0)]:
+    municipality_design = [
+        ("A", "Alpha", 1.0, (10.0, 12.0, 15.0)),
+        ("B", "Beta", 1.2, (8.0, 13.0, 18.0)),
+        ("C", "Gamma", 0.9, (12.0, 11.0, 16.0)),
+    ]
+    years = (2022, 2023, 2024)
+    for geo_code, geo_name, scale, tourism_path in municipality_design:
+        for year, tourism in zip(years, tourism_path, strict=True):
             rows.append(
                 {
                     "geo_code": geo_code,

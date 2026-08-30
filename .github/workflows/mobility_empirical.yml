@@ -47,11 +47,16 @@ jobs:
         working-directory: projects/mobility_demand_optimization
         run: python scripts/run_probabilistic_counts.py
 
+      - name: Run fleet-allocation decision backtest
+        working-directory: projects/mobility_demand_optimization
+        run: python scripts/run_allocation.py
+
       - name: Print empirical summaries
         working-directory: projects/mobility_demand_optimization
         run: |
           cat data/results/baselines/summary.json
           cat data/results/probabilistic_counts/summary.json
+          cat data/results/allocation/summary.json
 
       - name: Upload processed evidence
         uses: actions/upload-artifact@v4
@@ -65,3 +70,5 @@ jobs:
             projects/mobility_demand_optimization/data/results/baselines/*.parquet
             projects/mobility_demand_optimization/data/results/probabilistic_counts/summary.json
             projects/mobility_demand_optimization/data/results/probabilistic_counts/*.csv
+            projects/mobility_demand_optimization/data/results/allocation/summary.json
+            projects/mobility_demand_optimization/data/results/allocation/*.csv

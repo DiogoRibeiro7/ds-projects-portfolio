@@ -133,8 +133,7 @@ def _fetch_measure(measure: str, indicator: str) -> pd.DataFrame:
 
 def _build_panel() -> pd.DataFrame:
     frames = [
-        _fetch_measure(measure, indicator)
-        for measure, indicator in _load_current_sources().items()
+        _fetch_measure(measure, indicator) for measure, indicator in _load_current_sources().items()
     ]
     panel = frames[0]
     for frame in frames[1:]:

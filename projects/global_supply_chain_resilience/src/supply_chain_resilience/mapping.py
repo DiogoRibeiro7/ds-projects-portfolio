@@ -30,9 +30,8 @@ def _is_final_demand(label: str) -> bool:
 def extract_2022_blocks(frame: pd.DataFrame) -> ICIOBlocks:
     """Extract Z, x, f, value added, and taxes from the OECD 2022 regular ICIO table.
 
-    The mapping is label-driven and frozen from the observed 2022 schema artifact:
-    country-industry identifiers appear in both rows and columns, final-demand columns
-    use six explicit suffixes, and special accounting rows/columns are named.
+    Zero-output country-industry labels are retained in the accounting system and
+    are removed only when constructing the active production subsystem.
     """
     if frame.empty:
         raise ValueError("ICIO frame must not be empty.")
@@ -47,9 +46,7 @@ def extract_2022_blocks(frame: pd.DataFrame) -> ICIOBlocks:
     row_labels = [str(value) for value in frame.index]
     column_labels = [str(value) for value in frame.columns]
     industry_labels = [
-        label
-        for label in row_labels
-        if label not in SPECIAL_ROWS and label in frame.columns
+        label for label in row_labels if label not in SPECIAL_ROWS and label in frame.columns
     ]
     if not industry_labels:
         raise ValueError("No overlapping country-industry labels were identified.")
@@ -76,8 +73,9 @@ def extract_2022_blocks(frame: pd.DataFrame) -> ICIOBlocks:
         raise ValueError("Mapped ICIO blocks must contain only finite numeric values.")
     if (z < 0.0).any(axis=None):
         raise ValueError("Intermediate-use block must be non-negative.")
-    if (gross_output <= 0.0).any():
-        raise ValueError("Gross output must be strictly positive for all industries.")
+    if (gross_output < 0.0).any():
+        minimum = float(gross_output.min())
+        raise ValueError(f"Gross output must be non-negative; minimum observed={minimum:.6g}.")
 
     return ICIOBlocks(
         intermediate_use=z,
@@ -88,8 +86,13 @@ def extract_2022_blocks(frame: pd.DataFrame) -> ICIOBlocks:
     )
 
 
-def validate_2022_accounting(blocks: ICIOBlocks, *, rtol: float = 1e-7, atol: float = 1e-5) -> None:
-    """Validate row and column accounting identities for the mapped 2022 ICIO table."""
+def validate_2022_accounting(
+    blocks: ICIOBlocks,
+    *,
+    rtol: float = 1e-7,
+    atol: float = 1e-5,
+) -> None:
+    """Validate row and column accounting identities for all published industries."""
     z = blocks.intermediate_use
     x = blocks.gross_output
     f = blocks.final_demand
@@ -103,3 +106,47 @@ def validate_2022_accounting(blocks: ICIOBlocks, *, rtol: float = 1e-7, atol: fl
     if not np.allclose(input_total.to_numpy(), x.to_numpy(), rtol=rtol, atol=atol):
         max_error = float(np.max(np.abs(input_total.to_numpy() - x.to_numpy())))
         raise ValueError(f"Input-cost accounting identity failed; max absolute error={max_error:.6g}.")
+
+
+def active_production_blocks(
+    blocks: ICIOBlocks,
+    *,
+    output_atol: float = 1e-12,
+    flow_atol: float = 1e-12,
+) -> tuple[ICIOBlocks, tuple[str, ...]]:
+    """Return the positive-output production subsystem and excluded inactive labels.
+
+    Technical coefficients are undefined for zero-output using industries. A zero-
+    output label is excluded only if its intermediate-use row and column are both
+    zero up to ``flow_atol``.
+    """
+    if output_atol < 0.0 or flow_atol < 0.0:
+        raise ValueError("output_atol and flow_atol must be non-negative.")
+
+    x = blocks.gross_output
+    active_mask = x > output_atol
+    inactive_labels = tuple(str(label) for label in x.index[~active_mask])
+    if not inactive_labels:
+        return blocks, inactive_labels
+
+    inactive_rows = blocks.intermediate_use.loc[list(inactive_labels), :]
+    inactive_columns = blocks.intermediate_use.loc[:, list(inactive_labels)]
+    max_row_flow = float(np.max(inactive_rows.to_numpy(), initial=0.0))
+    max_column_flow = float(np.max(inactive_columns.to_numpy(), initial=0.0))
+    max_inactive_flow = max(max_row_flow, max_column_flow)
+    if max_inactive_flow > flow_atol:
+        raise ValueError(
+            "Zero-output industries have material intermediate-use flows; "
+            f"maximum flow={max_inactive_flow:.6g}."
+        )
+
+    active_labels = [str(label) for label in x.index[active_mask]]
+    active = ICIOBlocks(
+        intermediate_use=blocks.intermediate_use.loc[active_labels, active_labels],
+        gross_output=blocks.gross_output.loc[active_labels],
+        final_demand=blocks.final_demand.loc[active_labels, :],
+        value_added=blocks.value_added.loc[active_labels],
+        taxes_less_subsidies=blocks.taxes_less_subsidies.loc[active_labels],
+    )
+    validate_2022_accounting(active)
+    return active, inactive_labels

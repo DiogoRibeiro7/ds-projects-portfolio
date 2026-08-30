@@ -36,14 +36,17 @@ jobs:
         run: >-
           python scripts/build_2022_network.py
           --archive artifacts/icio_probe/2016-2022_SML.zip
+          --diagnostics-output artifacts/icio_probe/icio_2022_accounting_diagnostics.json
           --output artifacts/icio_probe/icio_2022_network.json
 
       - name: Upload empirical ICIO evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: global-supply-chain-icio-2022-evidence
           path: |
             projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_schema.json
+            projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_accounting_diagnostics.json
             projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_network.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30

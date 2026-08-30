@@ -26,7 +26,12 @@ from build_lisbon_longitudinal import (  # noqa: E402
     _period_codes,
     _total_codes,
 )
-from housing_tourism.data import canonicalise_ine_measure, flatten_ine_payload, infer_year  # noqa: E402
+
+from housing_tourism.data import (  # noqa: E402
+    canonicalise_ine_measure,
+    flatten_ine_payload,
+    infer_year,
+)
 from housing_tourism.municipality import (  # noqa: E402
     municipality_change_panel,
     summarise_reference_municipality,
@@ -59,9 +64,7 @@ def _load_current_sources() -> dict[str, str]:
     return indicators
 
 
-def _municipality_codes(
-    categories: list[dict[str, Any]], geography_dim: str
-) -> dict[str, str]:
+def _municipality_codes(categories: list[dict[str, Any]], geography_dim: str) -> dict[str, str]:
     codes = {
         str(record["categ_cod"]): str(record.get("categ_dsg", "")).strip()
         for record in categories
@@ -70,12 +73,16 @@ def _municipality_codes(
         and record.get("categ_cod") is not None
     }
     if len(codes) < 300:
-        raise ValueError(f"Expected national municipality metadata coverage, found only {len(codes)} codes.")
+        raise ValueError(
+            f"Expected national municipality metadata coverage, found only {len(codes)} codes."
+        )
     return codes
 
 
 def _period_code(categories: list[dict[str, Any]], time_dim: str, year: int) -> str:
-    matches = [code for observed_year, code in _period_codes(categories, time_dim) if observed_year == year]
+    matches = [
+        code for observed_year, code in _period_codes(categories, time_dim) if observed_year == year
+    ]
     if len(matches) != 1:
         raise ValueError(f"Expected one period code for {year}, found {len(matches)}.")
     return matches[0]
@@ -133,7 +140,9 @@ def _build_endpoints() -> pd.DataFrame:
     frames = [_fetch_bulk_measure(measure, indicator) for measure, indicator in indicators.items()]
     result = frames[0]
     for frame in frames[1:]:
-        result = result.merge(frame, on=["geo_code", "geo_name", "year"], how="outer", validate="one_to_one")
+        result = result.merge(
+            frame, on=["geo_code", "geo_name", "year"], how="outer", validate="one_to_one"
+        )
     return result.sort_values(["geo_code", "year"]).reset_index(drop=True)
 
 
@@ -142,7 +151,9 @@ def main() -> None:
     endpoints = _build_endpoints()
     comparison = municipality_change_panel(endpoints, start_year=2022, end_year=2023)
     if len(comparison) < 250:
-        raise ValueError(f"Too few municipalities have complete 2022-2023 data: {len(comparison)}.")
+        raise ValueError(
+            f"Too few municipalities have complete 2022-2023 data: {len(comparison)}."
+        )
 
     lisbon = summarise_reference_municipality(comparison, geo_name="Lisboa")
     porto = summarise_reference_municipality(comparison, geo_name="Porto")
@@ -152,8 +163,12 @@ def main() -> None:
         "complete_municipalities": len(comparison),
         "lisboa": lisbon,
         "porto": porto,
-        "median_rent_income_ratio_change_pct": float(comparison["rent_income_ratio_change_pct"].median()),
-        "mean_rent_income_ratio_change_pct": float(comparison["rent_income_ratio_change_pct"].mean()),
+        "median_rent_income_ratio_change_pct": float(
+            comparison["rent_income_ratio_change_pct"].median()
+        ),
+        "mean_rent_income_ratio_change_pct": float(
+            comparison["rent_income_ratio_change_pct"].mean()
+        ),
     }
 
     ENDPOINTS_PATH.parent.mkdir(parents=True, exist_ok=True)

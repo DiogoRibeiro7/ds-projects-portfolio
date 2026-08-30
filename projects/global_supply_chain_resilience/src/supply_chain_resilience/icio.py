@@ -19,13 +19,7 @@ import pandas as pd
 
 @dataclass(frozen=True)
 class ICIOTable:
-    """Validated raw ICIO table plus immutable source metadata.
-
-    Attributes:
-        frame: Parsed ICIO table with row labels preserved as the index.
-        source_name: Filename of the raw CSV or archive member.
-        source_sha256: SHA-256 digest of the exact bytes used for ingestion.
-    """
+    """Validated raw ICIO table plus immutable source metadata."""
 
     frame: pd.DataFrame
     source_name: str
@@ -39,13 +33,7 @@ def _validate_sha256(value: str) -> None:
 
 
 def _validate_frame(frame: pd.DataFrame) -> None:
-    """Reject structurally invalid raw ICIO tables before downstream analysis.
-
-    Raw ICIO tables may legitimately contain negative entries outside the
-    intermediate-use block, notably changes in inventories. Sign constraints are
-    therefore applied later to economically defined components such as ``Z`` rather
-    than indiscriminately to the full source table.
-    """
+    """Reject structurally invalid raw ICIO tables before downstream analysis."""
     if frame.empty:
         raise ValueError("ICIO table must not be empty.")
     if frame.index.has_duplicates:
@@ -90,12 +78,7 @@ def load_icio_csv(path: str | Path) -> ICIOTable:
 
 
 def load_icio_zip(path: str | Path, *, member: str | None = None) -> ICIOTable:
-    """Load one CSV member from an OECD ICIO ZIP archive.
-
-    The archive digest, rather than only the extracted CSV digest, is stored so the
-    provenance points to the exact raw distribution artifact. If ``member`` is not
-    supplied, the archive must contain exactly one CSV file.
-    """
+    """Load one CSV member from an OECD ICIO ZIP archive."""
     source = Path(path)
     raw_archive = source.read_bytes()
     digest = sha256(raw_archive).hexdigest()
@@ -130,9 +113,10 @@ def technical_coefficients(
 
     ``A[i, j] = Z[i, j] / x[j]``.
 
-    Gross output must therefore be strictly positive for every using industry.
-    This function does not infer which raw ICIO columns form ``Z``; that mapping is
-    intentionally left explicit at the extraction layer.
+    Gross output must be strictly positive for every using industry. Coefficient
+    construction does not require each column sum to be at most one: that stronger
+    condition is neither part of the definition of ``A`` nor necessary for graph
+    analysis. Productivity/invertibility checks belong to any later Leontief layer.
     """
     if intermediate_use.empty:
         raise ValueError("intermediate_use must not be empty.")
@@ -151,7 +135,8 @@ def technical_coefficients(
         raise ValueError("gross output must be strictly positive.")
 
     coefficients = z.divide(x, axis="columns")
-    column_sums = coefficients.sum(axis=0)
-    if (column_sums > 1.0 + 1e-9).any():
-        raise ValueError("technical coefficients exceed one for at least one using industry.")
+    if not np.all(np.isfinite(coefficients.to_numpy())):
+        raise ValueError("technical coefficients must contain only finite values.")
+    if (coefficients < 0.0).any(axis=None):
+        raise ValueError("technical coefficients must be non-negative.")
     return coefficients

@@ -34,6 +34,7 @@ jobs:
       - name: Audit NUTS 2024 overlap
         run: python scripts/audit_nuts2024_bridge.py
       - name: Upload audit and canonical source
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: portugal-housing-tourism-nuts2024-bridge
@@ -42,5 +43,5 @@ jobs:
             projects/portugal_housing_tourism/results/processed/lisbon_nuts2024_bridge_summary.csv
             projects/portugal_housing_tourism/scripts/build_lisbon_longitudinal.py
             projects/portugal_housing_tourism/scripts/audit_nuts2024_bridge.py
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30

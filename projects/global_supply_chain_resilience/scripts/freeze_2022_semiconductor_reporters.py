@@ -13,7 +13,61 @@ DATA_AVAILABILITY_ENDPOINT = "https://comtradeapi.un.org/public/v1/getDA/C/A/HS"
 PREVIEW_ENDPOINT = "https://comtradeapi.un.org/public/v1/preview/C/A/HS"
 REFERENCE_YEAR = 2022
 HS_HEADING = "8542"
-MAX_PREVIEW_RECORDS = 500
+MAX_WORLD_ROWS_PER_REPORTER = 2
+
+
+def _fetch_reporter_world_imports(
+    availability_rows: list[dict[str, object]],
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    """Fetch one reporter-scoped HS 8542 World-import aggregate at a time.
+
+    The public preview endpoint is reporter-scoped; it does not document an
+    all-reporters reporter code.  Each query asks for partner World and allows at
+    most two records so an unexpected duplicate/classification split fails rather
+    than being silently collapsed.
+    """
+    reporter_codes = sorted({int(row["reporterCode"]) for row in availability_rows})
+    if len(reporter_codes) != len(availability_rows):
+        raise RuntimeError("2022 data availability contains duplicate reporter codes.")
+
+    world_rows: list[dict[str, object]] = []
+    query_evidence: list[dict[str, object]] = []
+    for reporter_code in reporter_codes:
+        response = get_official_json(
+            PREVIEW_ENDPOINT,
+            {
+                "period": REFERENCE_YEAR,
+                "reportercode": reporter_code,
+                "cmdCode": HS_HEADING,
+                "flowCode": "M",
+                "partnerCode": "0",
+                "partner2Code": "0",
+                "customsCode": "C00",
+                "motCode": "0",
+                "maxRecords": MAX_WORLD_ROWS_PER_REPORTER,
+                "breakdownMode": "classic",
+                "includeDesc": "true",
+            },
+        )
+        rows = extract_data_rows(response.payload)
+        if len(rows) >= MAX_WORLD_ROWS_PER_REPORTER:
+            raise RuntimeError(
+                f"UN Comtrade reporter {reporter_code} returned at least "
+                f"{MAX_WORLD_ROWS_PER_REPORTER} World-import rows; expected at most one."
+            )
+        world_rows.extend(rows)
+        query_evidence.append(
+            {
+                "reporter_code": reporter_code,
+                "endpoint": response.endpoint,
+                "query": response.query,
+                "retrieved_at_utc": response.retrieved_at_utc,
+                "canonical_sha256": response.canonical_sha256,
+                "row_count": len(rows),
+            }
+        )
+
+    return world_rows, query_evidence
 
 
 def main() -> None:
@@ -26,30 +80,9 @@ def main() -> None:
     if not availability_rows:
         raise RuntimeError("UN Comtrade returned no 2022 annual HS data-availability rows.")
 
-    world_imports = get_official_json(
-        PREVIEW_ENDPOINT,
-        {
-            "period": REFERENCE_YEAR,
-            "reporterCode": "0",
-            "cmdCode": HS_HEADING,
-            "flowCode": "M",
-            "partnerCode": "0",
-            "partner2Code": "0",
-            "customsCode": "C00",
-            "motCode": "0",
-            "maxRecords": MAX_PREVIEW_RECORDS,
-            "breakdownMode": "classic",
-            "includeDesc": "true",
-        },
-    )
-    world_rows = extract_data_rows(world_imports.payload)
+    world_rows, query_evidence = _fetch_reporter_world_imports(availability_rows)
     if not world_rows:
-        raise RuntimeError("UN Comtrade returned no World-import HS 8542 rows.")
-    if len(world_rows) >= MAX_PREVIEW_RECORDS:
-        raise RuntimeError(
-            "UN Comtrade all-reporter World-import preview reached the 500-row cap; "
-            "the reporter universe cannot be frozen from a potentially truncated response."
-        )
+        raise RuntimeError("UN Comtrade returned no reporter-scoped World-import HS 8542 rows.")
 
     reporters = freeze_positive_reporter_universe(
         availability_rows,
@@ -71,13 +104,12 @@ def main() -> None:
             "schema": response_schema(availability_rows),
         },
         "world_import_gate": {
-            "endpoint": world_imports.endpoint,
-            "query": world_imports.query,
-            "retrieved_at_utc": world_imports.retrieved_at_utc,
-            "canonical_sha256": world_imports.canonical_sha256,
+            "strategy": "one official public-preview World-import query per available 2022 reporter",
+            "reporter_queries": len(query_evidence),
+            "reporters_with_returned_world_row": len(world_rows),
+            "max_rows_per_reporter_query": MAX_WORLD_ROWS_PER_REPORTER,
             "schema": response_schema(world_rows),
-            "public_preview_cap": MAX_PREVIEW_RECORDS,
-            "cap_reached": False,
+            "query_evidence": query_evidence,
         },
         "available_2022_hs_reporter_datasets": len(availability_rows),
         "positive_hs8542_import_reporters": len(reporters),

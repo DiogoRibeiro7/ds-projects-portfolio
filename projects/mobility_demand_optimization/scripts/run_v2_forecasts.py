@@ -46,7 +46,7 @@ def main() -> None:
         "rows": int(len(forecasts)),
         "conditional_mean_model": "expanding Poisson hour-of-week",
         "negative_binomial_alpha_for_scenarios": 0.05,
-        "alpha_reselected": false,
+        "alpha_reselected": False,
     }
     (OUTPUT_DIR / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 

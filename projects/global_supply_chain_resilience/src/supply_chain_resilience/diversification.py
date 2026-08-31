@@ -37,6 +37,25 @@ def baseline_direct_risk(
     )
 
 
+def rank_exposed_buyers(exposed: pd.DataFrame, *, limit: int) -> pd.DataFrame:
+    """Apply the frozen buyer ranking without colliding with a ``node`` index name."""
+    required = {"baseline_worst_case_direct_risk", "intermediate_input"}
+    missing = required.difference(exposed.columns)
+    if missing:
+        raise ValueError(f"buyer ranking is missing required columns: {sorted(missing)}")
+    if limit <= 0:
+        raise ValueError("limit must be positive.")
+
+    ranked = exposed.copy()
+    ranked["_node_label"] = ranked.index.astype(str)
+    ranked = ranked.sort_values(
+        ["baseline_worst_case_direct_risk", "intermediate_input", "_node_label"],
+        ascending=[False, False, True],
+        kind="stable",
+    ).drop(columns="_node_label")
+    return ranked.head(limit)
+
+
 def optimize_buyer_sourcing(
     observed: pd.Series,
     foreign_sales: pd.Series,

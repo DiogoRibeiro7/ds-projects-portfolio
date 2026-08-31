@@ -2,123 +2,200 @@
 
 ## Status
 
-`active-portfolio` — the 2022 OECD ICIO production system, structural-dependency baseline, supplier-side importance audit, shock-candidate freeze, and preregistered downstream propagation experiment are now implemented and empirically validated. Diversification optimization is the next prospective decision layer.
+`validated-portfolio` — the 2022 OECD ICIO production-network analysis, structural-dependency baseline, supplier-side importance audit, preregistered propagation experiment, diversification optimization, and UN Comtrade semiconductor case study are implemented and empirically validated.
 
-The validated 2022 active production system contains 3,999 country-industry nodes after excluding 51 zero-output labels. The preregistered propagation model passed its admissibility gate with spectral radius approximately 0.5964. These are model-based exposure results under fixed technical coefficients, not causal forecasts of real disruptions.
+The project studies two deliberately separate systems:
+
+1. country-industry production dependence from OECD ICIO;
+2. product-level semiconductor trade concentration from UN Comtrade.
+
+They are compared descriptively only. Trade value is not treated as technological dependence, fabrication origin, or a substitute for input-output structure.
 
 ## Research question
 
 Which country-industry nodes create the greatest systemic supply-chain vulnerability, how do disruptions propagate through production dependencies, and which diversification strategies reduce exposure with the least sourcing reallocation?
 
-The project treats the supply chain as a directed weighted production network rather than as a collection of independent bilateral trade flows.
+## Core 2022 production-network evidence
 
-## Primary data
-
-- **OECD Inter-Country Input-Output (ICIO) tables**: primary source for country-industry production dependencies. The current release covers 1995–2022, 80 economies plus a rest-of-world aggregate, and 50 economic activities.
-- **UN Comtrade**: product-level bilateral trade data for a semiconductor case study. This is kept analytically distinct from input-output dependence.
-- **World Bank Logistics Performance Index**: contextual logistics information only. It is not treated as an annual panel because survey waves are sparse.
-
-## Data-ingestion contract
-
-Downloaded OECD archives are immutable raw artifacts. The ingestion layer records a SHA-256 digest of the exact source bytes and preserves source row/column identifiers. Before analysis it rejects empty tables, duplicate labels, missing numeric accounting content, negative values inside the economically identified intermediate-use block, and non-positive gross output for active production nodes.
-
-Raw ICIO tables are **not** globally constrained to non-negative values because components such as changes in inventories may legitimately be negative. Sign constraints are applied only after the economic meaning of a block has been established.
-
-The raw-table parser does **not** guess which columns constitute the square intermediate-use block. That extraction mapping is explicit for the 2025 ICIO vintage.
-
-For the intermediate-use matrix `Z` and gross-output vector `x`, the project defines
+The validated active ICIO production system contains **3,999 country-industry nodes**, after excluding 51 zero-output labels. The downstream fixed-coefficient model
 
 \[
-A_{ij}=\frac{Z_{ij}}{x_j}.
+q=s+A^\top q
 \]
 
-This orientation is frozen: row `i` is the supplying country-industry node and column `j` is the using country-industry node.
-
-A technical-coefficient column is **not** rejected merely because its entries sum above one. Coefficient construction is kept separate from productivity and invertibility. Any inverse-based propagation analysis must pass its own spectral-radius and numerical admissibility gate.
-
-## Empirical validation
-
-The production pipeline downloads the official 2016–2022 regular ICIO archive, verifies exact-source provenance, calibrates the release-balance envelope on 2016–2021, and applies the same frozen criterion to the independent 2022 holdout before constructing the active production system.
-
-The 2022 downstream exposure model then uses
+is solved only after its numerical admissibility gate. For 2022,
 
 \[
-q=s+A^\top q,
+\rho(A)=0.5963952234<1.
 \]
 
-and only solves
+The seven supplier shocks were frozen before propagation outcomes were inspected:
+
+- `CHN_C26`
+- `CHN_C20`
+- `USA_G`
+- `CHN_C27`
+- `RUS_B06`
+- `NOR_B06`
+- `USA_B06`
+
+At the primary 10% shock level, per-unit amplification ranks highest for `CHN_C20`, `RUS_B06`, and `NOR_B06`; absolute exposure rankings differ because scale and network position are distinct quantities.
+
+## Diversification result
+
+The optimization layer minimizes observed sourcing reallocation burden rather than inventing monetary procurement costs. Ten buyers were frozen prospectively for the primary 50% direct-risk-reduction target with 5% supplier headroom.
+
+Six buyer-specific problems were feasible:
+
+- `NOR_C19`
+- `BLR_C19`
+- `SVK_C19`
+- `SWE_C19`
+- `HUN_C19`
+- `ARE_C26`
+
+Four were infeasible under the frozen constraints:
+
+- `USA_C19`
+- `CHN_C26`
+- `CHN_C20`
+- `CHN_C22`
+
+The central decision result is:
 
 \[
-q=(I-A^\top)^{-1}s
+\boxed{
+\text{local diversification can reduce buyer exposure without reducing global systemic exposure}
+}
 \]
 
-if the empirical technical-coefficient matrix satisfies the preregistered admissibility gate. The observed 2022 matrix passed with
+For all six feasible buyer-specific policies, worst-case direct exposure fell by 50%, yet global propagated exposure increased slightly after the counterfactual network was re-evaluated. This is a model-based result under fixed technical coefficients, not a causal forecast of real-world disruption.
+
+## Semiconductor case study — HS 8542
+
+The confirmatory trade study uses 2022 annual UN Comtrade data for **HS 8542 — electronic integrated circuits**. The primary reporter universe contains **167 reporters** after prospectively excluding the overlapping EU and ASEAN aggregate reporters.
+
+### Import concentration
+
+The median positive-importer threshold defines **84 material importers**. Across them:
+
+- median all-reported partner HHI: **0.1844**;
+- median largest-partner share: **31.96%**;
+- median top-three share: **64.31%**.
+
+The largest HS 8542 import markets are China, Hong Kong SAR, Singapore, Other Asia, nes, and Korea.
+
+Among named suppliers, China is especially pervasive across the 84 material importers:
+
+- largest named supplier for **35/84**;
+- at least 10% share for **60/84**;
+- at least 25% for **28/84**;
+- at least 50% for **6/84**.
+
+`Other Asia, nes` is kept separate from named-country statistics. It represents about **30.16%** of material-importer bilateral value and about **99.3%** of all residual/special-partner value, so silently assigning it to Taiwan would materially distort the evidence.
+
+### Export scale
+
+Among the frozen primary reporters, **149** report positive HS 8542 exports to World. Their reported total is approximately **1.077 trillion** in current trade-value units.
+
+The largest exporter-reported sources are:
+
+1. Hong Kong SAR — about 213.8 bn;
+2. Other Asia, nes — about 183.7 bn;
+3. China — about 154.5 bn;
+4. Singapore — about 122.0 bn;
+5. Korea — about 112.8 bn.
+
+These are commercial trade positions, not fabrication-capacity estimates.
+
+### Mirror-data audit
+
+The top 50 named bilateral import links were frozen by importer-reported value and then checked against reverse exporter-reported observations.
+
+Of 50 links:
+
+- 49 have an observed mirror;
+- median relative difference is **36.96%**;
+- the 90th percentile is **71.86%**;
+- **18/49** differ by at least 50%;
+- exporter-reported value is below importer-reported value in **37/49** observed links.
+
+The largest observed relative discrepancy is Thailand → China, with about a **90.13%** max-denominator difference. This audit supports the methodological rule that importer and exporter reports must remain separate observations rather than being averaged into a synthetic flow.
+
+## HS 8542 versus ICIO C26
+
+The trade evidence was compared descriptively with OECD ICIO activity **C26 — computer, electronic and optical products** using exact ISO3-to-ICIO country matches only.
+
+For export scale:
 
 \[
-\rho(A)\approx0.5964.
+\rho_S=0.9144
 \]
 
-The seven frozen supplier shocks are `CHN_C26`, `CHN_C20`, `USA_G`, `CHN_C27`, `RUS_B06`, `NOR_B06`, and `USA_B06`. They were selected mechanically from threshold-persistent supplier rankings before propagation outcomes were inspected.
+across 74 matched countries.
 
-## Analytical structure
-
-### 1. Build the production network
-
-For year `t`, define a directed weighted graph
+For downstream importance:
 
 \[
-G_t=(V,E,W_t),
+\rho_S=0.8814
 \]
 
-where each node is a country-industry pair and each directed edge represents intermediate-input dependence.
+across 79 matched countries.
 
-### 2. Structural dependency
+Both top-10 lists overlap in 8 of 10 countries. The agreement is therefore strong, but the rank discrepancies are informative. Hong Kong SAR is the clearest example: it ranks **#1** in HS 8542 export trade but only **#43** in C26 foreign intermediate sales, consistent with the importance of trade routing and re-export structures.
 
-Measure direct foreign-input dependence, domestic input share, supplier-country concentration, effective supplier counts, and supplier-side downstream importance. Ratio rankings are accompanied by material-scale filters and prospective threshold sensitivity checks.
+The comparison is descriptive only: HS 8542 is narrower than C26, and agreement does not validate either dataset or identify technological dependence.
 
-### 3. Input-output stress testing
+## Optional HS6 decomposition — closed by preregistered gate
 
-Use explicitly assumption-bound fixed-coefficient experiments. Inverse-based calculations are allowed only after a separate productivity/invertibility gate. They are **not causal estimates of real disruptions**.
+The secondary decomposition was allowed only if the five frozen HS6 codes were comparable across every classification version represented in the 167-reporter universe.
 
-### 4. Shock propagation
+The frozen classification counts are:
 
-Simulate the frozen single-supplier disruptions and quantify direct and higher-order exposure, foreign spillovers, and output-equivalent exposure. The primary 10% shock is accompanied by 5% and 20% linearity checks and input-share threshold sensitivity diagnostics.
+- H2: 1 reporter
+- H3: 6
+- H4: 6
+- H5: 41
+- H6: 113
 
-### 5. Diversification optimization
+H3–H6 contain all five frozen codes, but H2 contains `854290` and lacks `854231`, `854232`, `854233`, and `854239`.
 
-The optimization layer does **not** invent monetary procurement costs. It minimizes observed sourcing reallocation burden subject to prespecified reductions in worst-case direct exposure to the frozen shocks.
+Therefore:
 
-For a selected buyer `j`, counterfactual sourcing preserves the observed supplying-activity composition exactly while allowing geographic reallocation within each activity. Supplier headroom, concentration safeguards, self-supply restrictions, and alternative-supplier support are frozen prospectively. The main frontier asks how much sourcing turnover is required to reduce direct worst-case risk by 25%, 50%, and 75%.
+\[
+\boxed{\text{the global 167-reporter HS6 decomposition is not permitted}}
+\]
 
-The primary system evaluation uses the 50% risk-reduction target with 5% supplier headroom, then re-runs the full admissibility gate and all seven propagation shocks for each buyer-specific counterfactual. Buyer-specific policies are evaluated separately rather than summed into an infeasible globally coordinated reallocation.
+No H2 reporter is dropped post hoc and no six-digit trade-value analysis is run.
 
-### 6. Semiconductor case study
+## Data and reproducibility
 
-Use product-level trade flows to examine semiconductor concentration and alternative sourcing patterns. Product trade flows and ICIO production dependencies remain separate estimands throughout the analysis.
+Primary sources:
 
-## Planned outputs
+- **OECD Inter-Country Input-Output tables** for production dependencies;
+- **UN Comtrade** for the semiconductor trade case study;
+- **World Bank Logistics Performance Index** as contextual logistics information only.
 
-1. `01_build_network.ipynb` — ingest, validate, and construct country-industry networks.
-2. `02_structural_dependency.ipynb` — concentration, centrality, communities, and dependence.
-3. `03_stress_tests.ipynb` — fixed-coefficient disruption scenarios and sensitivity analysis.
-4. `04_shock_propagation.ipynb` — systemic exposure and resilience metrics.
-5. `05_diversification_optimization.ipynb` — constrained sourcing optimization and reallocation-resilience frontier.
-6. `06_semiconductor_case_study.ipynb` — detailed product-level application.
+Every substantive stage is separated from its design gate. Source downloads and analytical artifacts record exact provenance, including workflow run IDs, artifact IDs, digests, retrieval metadata, and source hashes where applicable.
 
-Reusable code lives in `src/`; notebooks are analysis/reporting surfaces rather than the sole implementation.
+The compact final evidence ledger is:
+
+`protocol/final_evidence_2022.json`
+
+Raw and derived empirical artifacts remain GitHub Actions evidence rather than being copied into the repository as stale CSV snapshots.
 
 ## Scientific guardrails
 
-- No random mixing of years when temporal validation is relevant.
 - No causal language for static input-output stress tests.
-- No assumption that trade value equals technological dependence.
-- No use of LPI as annual data between survey waves.
-- Network rankings include stability/sensitivity checks.
-- Optimization assumptions, headroom constraints, concentration safeguards, and feasibility constraints are explicit.
+- No assumption that trade value equals technological dependence or fabrication origin.
+- No random mixing of years when temporal validation matters.
+- No silent reconciliation of importer and exporter mirror data.
+- No fuzzy or post-result country remapping in the HS8542↔C26 comparison.
+- `Other Asia, nes` is not mapped to Taiwan.
+- No forced HS6 decomposition across incompatible HS revisions.
 - Reallocation burden is not called monetary cost without an external cost source.
-- Missingness, aggregation changes, concordances, and rest-of-world treatment are documented.
-- Exposure, vulnerability, systemic importance, resilience, and optimization burden are kept conceptually distinct.
+- Exposure, vulnerability, systemic importance, resilience, and optimization burden remain distinct concepts.
 
 ## Portfolio objective
 
-Demonstrate network science, linear algebra, economic modelling, stress testing, uncertainty analysis, constrained optimization, and decision support in one coherent applied project.
+Demonstrate network science, linear algebra, economic modelling, stress testing, constrained optimization, reproducible evidence gates, and decision support in one coherent applied project.

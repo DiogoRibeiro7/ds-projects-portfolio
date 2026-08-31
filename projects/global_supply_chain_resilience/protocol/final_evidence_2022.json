@@ -1,0 +1,142 @@
+{
+  "version": "1.0",
+  "status": "final validated 2022 evidence ledger",
+  "scope": "Global Supply Chain Resilience Under Disruption",
+  "reference_year": 2022,
+  "icio": {
+    "active_nodes": 3999,
+    "inactive_zero_output_labels": 51,
+    "spectral_radius": 0.5963952233551405,
+    "frozen_supplier_shocks": ["CHN_C26", "CHN_C20", "USA_G", "CHN_C27", "RUS_B06", "NOR_B06", "USA_B06"],
+    "per_unit_propagation_amplification_primary_10pct_order": [
+      ["CHN_C20", 4.03218],
+      ["RUS_B06", 4.01366],
+      ["NOR_B06", 3.88933],
+      ["USA_B06", 3.42919],
+      ["CHN_C26", 2.58082],
+      ["CHN_C27", 2.45971],
+      ["USA_G", 1.82326]
+    ],
+    "diversification": {
+      "primary_target_risk_reduction": 0.5,
+      "supplier_headroom": 0.05,
+      "selected_buyers": ["NOR_C19", "BLR_C19", "USA_C19", "SVK_C19", "CHN_C26", "CHN_C20", "SWE_C19", "HUN_C19", "CHN_C22", "ARE_C26"],
+      "feasible_buyers": ["NOR_C19", "BLR_C19", "SVK_C19", "SWE_C19", "HUN_C19", "ARE_C26"],
+      "infeasible_buyers": ["USA_C19", "CHN_C26", "CHN_C20", "CHN_C22"],
+      "validated_finding": "For all six feasible buyer-specific policies, local worst-case direct exposure fell by 50 percent while global propagated exposure increased slightly. Local diversification therefore need not reduce global systemic exposure."
+    }
+  },
+  "semiconductor_hs8542": {
+    "importer_concentration": {
+      "workflow_run": 33417837534,
+      "artifact_id": 9767995550,
+      "artifact_digest": "sha256:0445610ba5a9d4df2d617cac543d1a14d9c4b1e5c5d295665541a9eadc99f41c",
+      "source_reporters": 169,
+      "primary_reporters": 167,
+      "material_importers": 84,
+      "materiality_threshold": 6360353.778999999,
+      "positive_bilateral_links": 7774,
+      "named_country_positive_links": 7581,
+      "median_material_hhi_all_reported": 0.1843826408487687,
+      "median_material_largest_partner_share": 0.319615404590331,
+      "median_material_top3_partner_share": 0.643091620950085,
+      "max_world_reconciliation_absolute_deviation": 3.778988149072404e-07,
+      "largest_importers": [
+        ["China", 416525200000.0],
+        ["China, Hong Kong SAR", 222209400000.0],
+        ["Singapore", 107960600000.0],
+        ["Other Asia, nes", 87522510000.0],
+        ["Rep. of Korea", 62400260000.0]
+      ]
+    },
+    "exporter_and_supplier_diagnostics": {
+      "workflow_run": 33421394224,
+      "artifact_id": 9769297706,
+      "artifact_digest": "sha256:d0880c017239378022d00ab64b5162ec2d76815a113b597fca7328899aff7fae",
+      "positive_exporters": 149,
+      "positive_world_exports_total": 1076983452458.2051,
+      "top_exporters": [
+        ["China, Hong Kong SAR", 213801054086.169, 0.1985184206852668],
+        ["Other Asia, nes", 183667676507.22, 0.1705389958295089],
+        ["China", 154524110996.0, 0.1434786306542594],
+        ["Singapore", 121992934040.502, 0.113272802624826],
+        ["Rep. of Korea", 112847160489.0, 0.1047807747012522]
+      ],
+      "china_named_supplier": {
+        "total_importer_reported_value_across_material_importers": 216237521841.535,
+        "largest_named_supplier_count": 35,
+        "material_importer_count_ge_10pct": 60,
+        "material_importer_count_ge_25pct": 28,
+        "material_importer_count_ge_50pct": 6
+      },
+      "other_asia_nes": {
+        "total_importer_reported_value_across_material_importers": 378816695161.01,
+        "share_of_material_importer_bilateral_value": 0.30159513510792085,
+        "share_of_residual_partner_value": 0.9930180458464876,
+        "material_importer_count_ge_10pct": 39,
+        "material_importer_count_ge_25pct": 13,
+        "material_importer_count_ge_50pct": 1
+      }
+    },
+    "mirror_audit": {
+      "workflow_run": 33423306450,
+      "artifact_id": 9769862014,
+      "artifact_digest": "sha256:65df3f2bab17b8244ee13343a6ad370cadb8e5d4026b4511b9789077b60b4e81",
+      "frozen_links": 50,
+      "observed_mirrors": 49,
+      "missing_mirrors": 1,
+      "median_relative_difference": 0.36963378741727404,
+      "p90_relative_difference": 0.7185592385225915,
+      "max_relative_difference": 0.9013098753618319,
+      "links_ge_50pct_relative_difference": 18,
+      "exporter_report_below_importer_report": 37,
+      "worst_observed_link": {
+        "importer": "China",
+        "exporter": "Thailand",
+        "importer_reported_value": 7574325000.0,
+        "exporter_reported_value": 747511100.0,
+        "relative_difference": 0.9013098753618319
+      },
+      "missing_link": "China importer / China exporter self-partner row"
+    },
+    "icio_c26_comparison": {
+      "workflow_run": 33426581709,
+      "artifact_id": 9770963204,
+      "artifact_digest": "sha256:374ddbaa6ba03b90bf2f841103a684c7832c8b33dc64b0ab1d70e7d8d1f19a7f",
+      "export_scale": {
+        "matched_countries": 74,
+        "spearman_rho": 0.914372454646427,
+        "spearman_p_value": 5.451762355711881e-30,
+        "top10_overlap": 8,
+        "top10_jaccard": 0.6666666666666666,
+        "largest_rank_discrepancy": {"country": "HKG", "trade_rank": 1, "icio_rank": 43}
+      },
+      "downstream_importance": {
+        "matched_countries": 79,
+        "spearman_rho": 0.8814264849074976,
+        "spearman_p_value": 8.449270699123445e-27,
+        "top10_overlap": 8,
+        "top10_jaccard": 0.6666666666666666,
+        "largest_rank_discrepancy": {"country": "HKG", "trade_rank": 12, "icio_rank": 47}
+      },
+      "matching_boundary": "Exact ISO alpha-3 to ICIO country-code equality only; Other Asia, nes (S19) is not mapped to TWN."
+    },
+    "hs6_gate": {
+      "workflow_run": 33436777947,
+      "artifact_id": 9774700066,
+      "artifact_digest": "sha256:f36814032cafce6c4783e3e13f4d27b6d764639ddc21b0d1b479250d05e602e3",
+      "global_gate_pass": false,
+      "classification_reporter_counts": {"H2": 1, "H3": 6, "H4": 6, "H5": 41, "H6": 113},
+      "incompatible_classifications": ["H2"],
+      "affected_reporters": 1,
+      "decision": "Global 167-reporter HS6 decomposition is not permitted; stop before HS6 trade-value analysis."
+    }
+  },
+  "scientific_boundaries": [
+    "Fixed-coefficient ICIO stress tests are model-based exposure experiments, not causal disruption forecasts.",
+    "Trade value is commercial prominence, not technological dependence or fabrication origin.",
+    "Importer and exporter mirror observations are never averaged or silently reconciled.",
+    "HS 8542 is narrower than OECD ICIO C26; their rank agreement is descriptive rather than validation.",
+    "The optional global HS6 decomposition is closed because the frozen reporter universe is not classification-compatible."
+  ]
+}

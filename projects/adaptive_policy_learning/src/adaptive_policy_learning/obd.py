@@ -7,7 +7,6 @@ from dataclasses import asdict, dataclass
 from hashlib import sha256
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any
 from zipfile import ZipFile, ZipInfo
 
 
@@ -60,7 +59,7 @@ def sha256_file(path: Path, *, chunk_size: int = 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
-def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict[str, Any]:
+def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict[str, object]:
     """Audit official OBD structure without emitting CTR or reward summaries."""
     if not path.is_file():
         raise FileNotFoundError(path)

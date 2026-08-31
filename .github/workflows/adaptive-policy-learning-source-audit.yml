@@ -2,6 +2,11 @@ name: Adaptive Policy Learning Source Audit
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "projects/adaptive_policy_learning/protocol/source_audit_trigger_v0_1.txt"
 
 jobs:
   audit-official-obd:

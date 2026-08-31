@@ -5,6 +5,12 @@ on:
     paths:
       - "projects/global_supply_chain_resilience/**"
       - ".github/workflows/global-supply-chain-semiconductor-concentration.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "projects/global_supply_chain_resilience/**"
+      - ".github/workflows/global-supply-chain-semiconductor-concentration.yml"
   workflow_dispatch:
 
 jobs:

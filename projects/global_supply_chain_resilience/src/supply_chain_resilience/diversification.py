@@ -89,8 +89,7 @@ def optimize_buyer_sourcing(
     for label in labels:
         base = float(observed.loc[label])
         if label == buyer_node:
-            upper = base
-            lower = base
+            lower = upper = base
         elif base <= 0.0 and float(foreign_sales.loc[label]) <= 0.0:
             lower = upper = 0.0
         else:
@@ -100,58 +99,64 @@ def optimize_buyer_sourcing(
     bounds.extend([(0.0, None)] * n)
 
     activities = sorted(set(supplier_activity))
+    activity_array = supplier_activity.to_numpy()
+    country_array = supplier_country.to_numpy()
     a_eq = lil_matrix((len(activities), 2 * n), dtype=float)
     b_eq = np.zeros(len(activities), dtype=float)
     for row, activity in enumerate(activities):
-        mask = supplier_activity.to_numpy() == activity
-        a_eq[row, np.flatnonzero(mask)] = 1.0
-        b_eq[row] = float(observed.iloc[np.flatnonzero(mask)].sum())
+        idx = np.flatnonzero(activity_array == activity)
+        a_eq[row, idx] = 1.0
+        b_eq[row] = float(observed.iloc[idx].sum())
 
-    ub_rows: list[tuple[np.ndarray, float]] = []
+    concentration_pairs: list[tuple[str, str]] = []
+    for activity in activities:
+        idx = np.flatnonzero(activity_array == activity)
+        if float(observed.iloc[idx].sum()) <= 0.0:
+            continue
+        concentration_pairs.extend((activity, country) for country in sorted(set(country_array[idx])))
 
-    # Absolute-deviation linearization: z'_i - d_i <= z_i and -z'_i - d_i <= -z_i.
+    shock_set = set(shock_nodes)
+    shock_positions = [i for i, label in enumerate(labels) if label in shock_set]
+    row_count = 2 * n + len(shock_positions) + len(concentration_pairs)
+    a_ub = lil_matrix((row_count, 2 * n), dtype=float)
+    b_ub = np.zeros(row_count, dtype=float)
+    row = 0
+
+    # Absolute-deviation linearization.
     for i in range(n):
-        row = np.zeros(2 * n)
-        row[i] = 1.0
-        row[n + i] = -1.0
-        ub_rows.append((row, float(observed.iloc[i])))
-        row = np.zeros(2 * n)
-        row[i] = -1.0
-        row[n + i] = -1.0
-        ub_rows.append((row, -float(observed.iloc[i])))
+        a_ub[row, i] = 1.0
+        a_ub[row, n + i] = -1.0
+        b_ub[row] = float(observed.iloc[i])
+        row += 1
+        a_ub[row, i] = -1.0
+        a_ub[row, n + i] = -1.0
+        b_ub[row] = -float(observed.iloc[i])
+        row += 1
 
     # Frozen-shock direct-risk cap.
-    shock_set = set(shock_nodes)
-    for i, label in enumerate(labels):
-        if label in shock_set:
-            row = np.zeros(2 * n)
-            row[i] = 1.0
-            ub_rows.append((row, max_shocked_flow))
+    for i in shock_positions:
+        a_ub[row, i] = 1.0
+        b_ub[row] = max_shocked_flow
+        row += 1
 
-    # Country concentration safeguard within each supplying activity.
-    for activity in activities:
-        activity_idx = np.flatnonzero(supplier_activity.to_numpy() == activity)
+    # Country concentration safeguard within each supplying activity. The row is
+    # added for every country with an active supplier in that activity, including
+    # newly activated countries that had zero observed flow to this buyer.
+    for activity, country in concentration_pairs:
+        activity_idx = np.flatnonzero(activity_array == activity)
         activity_total = float(observed.iloc[activity_idx].sum())
-        if activity_total <= 0.0:
-            continue
         observed_by_country = observed.iloc[activity_idx].groupby(
             supplier_country.iloc[activity_idx], sort=False
         ).sum()
         largest_observed_share = float(observed_by_country.max() / activity_total)
-        for country in observed_by_country.index:
-            country_idx = np.flatnonzero(
-                (supplier_activity.to_numpy() == activity)
-                & (supplier_country.to_numpy() == country)
-            )
-            row = np.zeros(2 * n)
-            row[country_idx] = 1.0
-            ub_rows.append((row, largest_observed_share * activity_total))
+        country_idx = np.flatnonzero((activity_array == activity) & (country_array == country))
+        a_ub[row, country_idx] = 1.0
+        b_ub[row] = largest_observed_share * activity_total
+        row += 1
 
-    a_ub = np.vstack([row for row, _ in ub_rows]) if ub_rows else None
-    b_ub = np.array([rhs for _, rhs in ub_rows], dtype=float) if ub_rows else None
     result = linprog(
         c,
-        A_ub=a_ub,
+        A_ub=a_ub.tocsr(),
         b_ub=b_ub,
         A_eq=a_eq.tocsr(),
         b_eq=b_eq,

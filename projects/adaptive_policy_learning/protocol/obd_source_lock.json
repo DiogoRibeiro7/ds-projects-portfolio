@@ -1,0 +1,78 @@
+{
+  "version": "0.1-source-lock",
+  "frozen_at": "2026-08-31",
+  "workflow_run_id": 33427934935,
+  "workflow_head_sha": "c55415f9ac7f926da673d82606b7d7397525a12c",
+  "artifact": {
+    "id": 9771583181,
+    "name": "adaptive-policy-learning-obd-source-audit",
+    "digest": "sha256:67ca43b6fbca19dcff78d014a722967d0d4b61bda84829adbb015cc78bf8500b"
+  },
+  "archive": {
+    "filename": "open_bandit_dataset.zip",
+    "size_bytes": 412931917,
+    "sha256": "e8ec18196582a5937381a1776382ca940689b90a18d2dcd1fb635be6df614d78"
+  },
+  "campaign": "all",
+  "archive_catalog": {
+    "action_count": 80,
+    "action_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79]
+  },
+  "published_comparison": {
+    "documented_action_count": 81,
+    "documented_action_ids": "0..80",
+    "documentation_matches_archive_catalog": false
+  },
+  "logged_files": {
+    "bts": {
+      "member": "open_bandit_dataset/bts/all/all.csv",
+      "sha256": "05ba8416e6626be0dc16ee09a434d736eca1c4c274e10eabe3931521c4aeede2",
+      "row_count": 12357200,
+      "timestamp_min": "2019-11-24 00:00:00.047846+00:00",
+      "timestamp_max": "2019-11-30 23:59:59.920907+00:00",
+      "raw_positions": ["1","2","3"],
+      "propensity_field": "propensity_score",
+      "observed_action_count": 80,
+      "missing_catalog_action_ids": []
+    },
+    "random": {
+      "member": "open_bandit_dataset/random/all/all.csv",
+      "sha256": "f24fdf91e38de41dcd15f2482279358766556be04155b35882e327b465d104b7",
+      "row_count": 1374327,
+      "timestamp_min": "2019-11-24 00:00:00.007365+00:00",
+      "timestamp_max": "2019-11-30 23:59:59.408889+00:00",
+      "raw_positions": ["1","2","3"],
+      "propensity_field": "propensity_score",
+      "observed_action_count": 80,
+      "missing_catalog_action_ids": []
+    }
+  },
+  "item_context": {
+    "bts": {
+      "member": "open_bandit_dataset/bts/all/item_context.csv",
+      "sha256": "79fe2a9baf18d9584fd4865ce6322864655d1d1cf43f80efea9fc1161dd18f61",
+      "row_count": 80,
+      "item_min": 0,
+      "item_max": 79
+    },
+    "random": {
+      "member": "open_bandit_dataset/random/all/item_context.csv",
+      "sha256": "88345bc52dea9965cf148f02c661d03ce566f278b2b870ec0c70c5d3da1c2d1c",
+      "row_count": 80,
+      "item_min": 0,
+      "item_max": 79
+    }
+  },
+  "position_contract": {
+    "leftmost_raw_position": 1,
+    "normalized_leftmost_position": 0
+  },
+  "identifiability_precheck": {
+    "uniform_random_target": "Uniform over the exact archived action catalog, hence target probability 1/80 for each archived action.",
+    "full_log_bts_catalog_coverage": true,
+    "full_log_random_catalog_coverage": true,
+    "primary_position_evaluation_window_support_pending": true,
+    "outcome_summaries_inspected": false
+  },
+  "scientific_boundary": "Source provenance, schema, catalog, and action-support metadata only; no click count, CTR, reward mean, OPE estimate, policy ranking, challenger value, or promotion decision was inspected or recorded."
+}

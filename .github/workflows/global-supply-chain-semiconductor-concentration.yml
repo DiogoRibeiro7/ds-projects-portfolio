@@ -1,0 +1,49 @@
+name: Global Supply Chain Semiconductor Concentration
+
+on:
+  pull_request:
+    paths:
+      - "projects/global_supply_chain_resilience/**"
+      - ".github/workflows/global-supply-chain-semiconductor-concentration.yml"
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: projects/global_supply_chain_resilience
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+
+      - name: Run unit tests
+        run: pytest
+
+      - name: Run preregistered 2022 HS 8542 concentration analysis
+        run: >-
+          python scripts/run_2022_semiconductor_concentration.py
+          --manifest protocol/semiconductor_reporter_universe_2022.json
+          --summary-output artifacts/comtrade_semiconductor/semiconductor_2022_concentration_summary.json
+          --metrics-output artifacts/comtrade_semiconductor/semiconductor_2022_importer_metrics.csv
+          --links-output artifacts/comtrade_semiconductor/semiconductor_2022_bilateral_links.csv
+          --rankings-output artifacts/comtrade_semiconductor/semiconductor_2022_rankings.json
+
+      - name: Upload semiconductor concentration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: global-supply-chain-semiconductor-2022-concentration
+          path: projects/global_supply_chain_resilience/artifacts/comtrade_semiconductor/
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,110 @@
+{
+  "version": "0.1",
+  "reference_year": 2022,
+  "research_question": "How concentrated were bilateral imports of electronic integrated circuits in 2022, which partner economies dominated importer exposure, and how does product-trade concentration compare descriptively with the broader ICIO production-dependency evidence?",
+  "source": {
+    "provider": "United Nations Statistics Division, UN Comtrade",
+    "dataset": "final annual merchandise trade data",
+    "frequency": "A",
+    "type_code": "C",
+    "classification": "HS",
+    "commodity_heading": "8542",
+    "commodity_description": "Electronic integrated circuits",
+    "primary_flow": "imports",
+    "secondary_flow": "exports to World for exporter-scale diagnostics",
+    "revision_policy": "UN Comtrade maintains a single current version and may revise annual data. Every evidence artifact must therefore record retrieval UTC time, data-availability metadata, publication metadata when returned, query parameters and a SHA-256 digest of the normalized raw response.",
+    "access_policy": "Use official UN Comtrade API endpoints only. Never substitute mirrors or scraped trade websites. A subscription key may be supplied through CI secrets but must never be committed or logged."
+  },
+  "scope": {
+    "primary_product_scope": "HS heading 8542 at four digits, because the case study was prospectively scoped to HS 8542 and the primary analysis is cross-sectional rather than a long time series.",
+    "parts_note": "Heading 8542 includes parts of electronic integrated circuits (for example HS 2017 code 854290). The primary heading-level estimand therefore covers the complete 8542 trade heading, not devices-only semiconductor fabrication output.",
+    "secondary_six_digit_breakdown": ["854231", "854232", "854233", "854239", "854290"],
+    "six_digit_gate": "Run the secondary breakdown only after returned classification metadata and code coverage are audited. Do not force a six-digit decomposition across incompatible reported classifications.",
+    "time_scope": "2022 only for the confirmatory case study. No trend claims are allowed without a separate concordance-aware temporal design."
+  },
+  "reporter_universe": {
+    "construction": "Query UN Comtrade data availability for 2022 annual HS final data, then retain reporters with positive HS 8542 import value returned by the official API.",
+    "freeze": "The exact reporter code/name set and data-availability metadata are written to the first evidence artifact before substantive concentration results are interpreted.",
+    "icio_intersection": "Create a separate matched subset for economies that can be mapped explicitly to the OECD ICIO country geography. Never drop non-ICIO reporters from the trade-only global analysis merely to increase cross-dataset agreement."
+  },
+  "bilateral_panel": {
+    "unit": "reporter-importer x partner-exporter for 2022 HS 8542 imports",
+    "primary_value": "primaryValue/tradeValue in current USD as returned by UN Comtrade",
+    "quantity_policy": "net weight and supplementary quantity are diagnostics only because coverage and quantity units may differ; they are never substituted for trade value when missing.",
+    "world_partner": "World aggregate rows are retained only for denominator/reconciliation diagnostics and are not treated as bilateral suppliers.",
+    "special_partners": "Non-country or residual partner categories are preserved and explicitly flagged. They contribute to an all-reported-partner concentration measure but are excluded from named-country rankings. Their value share is reported separately.",
+    "duplicates": "Reject duplicate reporter-period-flow-commodity-partner keys after applying the frozen aggregation level unless metadata explain a required additional dimension; do not silently sum unexplained duplicates."
+  },
+  "primary_importer_metrics": {
+    "total_import_value": "sum of bilateral HS 8542 import value over all non-World partner categories",
+    "partner_share": "bilateral import value divided by reporter total bilateral HS 8542 import value",
+    "partner_hhi_all_reported": "sum of squared partner shares over all non-World partner categories",
+    "effective_partner_count": "1 / partner_hhi_all_reported when HHI > 0",
+    "largest_partner_share": "maximum partner share",
+    "top3_partner_share": "sum of the three largest partner shares",
+    "named_country_hhi": "HHI renormalized over named-country partners only",
+    "residual_partner_share": "share attributed to non-country/residual partner categories",
+    "world_reconciliation_ratio": "bilateral non-World total divided by the returned World aggregate when both are positive; report rather than repair discrepancies"
+  },
+  "primary_rankings": [
+    "largest importer totals by HS 8542 import value",
+    "highest material importer concentration by all-reported-partner HHI",
+    "largest named bilateral dependencies by importer partner share",
+    "largest named bilateral dependencies by trade value"
+  ],
+  "materiality_rules": {
+    "importer_concentration_ranking": "restrict to reporters with total HS 8542 imports at or above the median positive importer total",
+    "bilateral_share_ranking": "require reporter total HS 8542 imports at or above the same frozen materiality threshold",
+    "threshold_freeze": "materiality threshold is computed once from the unfiltered positive 2022 reporter universe and written to evidence before rankings are interpreted"
+  },
+  "exporter_scale_diagnostics": {
+    "source": "reporter-reported 2022 exports of HS 8542 to World",
+    "metrics": [
+      "export value",
+      "share of total reported World exports across positive reporters",
+      "global exporter HHI",
+      "number of material importers for which the exporter is the largest named partner",
+      "number of material importers for which the exporter supplies at least 10%, 25% and 50% of HS 8542 imports"
+    ],
+    "boundary": "Do not sum mirrored importer and exporter reports into one flow estimate and do not average them."
+  },
+  "mirror_quality_audit": {
+    "scope": "top 50 named bilateral import links by value from the frozen primary importer panel",
+    "comparison": "compare importer-reported imports with the corresponding exporter-reported exports when both observations exist",
+    "metrics": ["absolute difference", "relative difference using max(import, export) denominator", "signed log ratio when both values are positive"],
+    "interpretation": "mirror asymmetry is a data-quality/valuation/timing diagnostic, not a reason to overwrite the importer-reported primary value"
+  },
+  "secondary_product_breakdown": {
+    "codes": {
+      "854231": "processors and controllers",
+      "854232": "memories",
+      "854233": "amplifiers",
+      "854239": "other electronic integrated circuits",
+      "854290": "parts of electronic integrated circuits"
+    },
+    "outputs": "repeat importer concentration summaries by six-digit category only if the six-digit gate passes",
+    "no_posthoc_scope_change": "Do not drop 854290 from the primary 8542 heading after seeing results. A devices-only subtotal may be reported only as an explicitly secondary decomposition."
+  },
+  "icio_comparison": {
+    "scope": "descriptive matched-country comparison only",
+    "icio_activity": "C26, computer, electronic and optical products",
+    "trade_measure": "country HS 8542 export share and/or foreign-supplier importance from the trade panel",
+    "icio_measure": "country-aggregated C26 foreign intermediate sales/downstream dependence from the already validated 2022 ICIO evidence",
+    "allowed_outputs": ["rank correlation", "rank comparison table", "outlier cases"],
+    "forbidden_interpretation": "HS 8542 bilateral trade is not treated as technological input dependence, and ICIO C26 is broader than semiconductors. Agreement or disagreement is descriptive, not validation of one dataset by the other."
+  },
+  "sensitivity": {
+    "reporter_coverage": "repeat concentration summaries on the ICIO-matched reporter subset",
+    "residual_partners": "compare all-reported-partner HHI with named-country HHI and report residual-partner shares",
+    "parts": "if the six-digit gate passes, compare full 8542 with devices-only 854231+854232+854233+854239",
+    "mirror_asymmetry": "flag but do not exclude high-asymmetry links in the primary analysis; provide a sensitivity table for top links"
+  },
+  "scientific_boundaries": [
+    "Trade value is not technological dependence.",
+    "Trade routing and re-exports can make a partner commercially important without identifying fabrication origin.",
+    "The 2022 cross-section does not support causal or dynamic resilience claims.",
+    "UN Comtrade revisions are not historically versioned, so retrieval metadata are part of the evidence contract.",
+    "No composite semiconductor vulnerability score will be invented after results are inspected.",
+    "No country, partner, or product subheading may be selected or excluded because its result is convenient."
+  ]
+}

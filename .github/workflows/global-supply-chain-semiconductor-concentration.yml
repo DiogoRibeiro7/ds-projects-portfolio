@@ -22,6 +22,9 @@ jobs:
         working-directory: projects/global_supply_chain_resilience
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Require main for substantive execution
         if: github.event_name != 'pull_request'
         run: |
@@ -29,9 +32,6 @@ jobs:
             echo "Semiconductor concentration execution is permitted only from main; got $GITHUB_REF." >&2
             exit 1
           fi
-
-      - name: Check out repository
-        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5

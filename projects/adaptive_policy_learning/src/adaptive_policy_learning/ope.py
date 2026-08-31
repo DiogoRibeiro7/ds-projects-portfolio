@@ -104,6 +104,7 @@ def overlap_diagnostics(logging_propensity: np.ndarray, weights: np.ndarray) -> 
     if sum_w2 <= 0.0:
         raise ValueError("ESS is undefined when every importance weight is zero.")
     ess = sum_w * sum_w / sum_w2
+    quantiles = np.asarray(np.quantile(weight_arr, [0.50, 0.90, 0.95, 0.99]), dtype=float)
     return OverlapDiagnostics(
         n=int(weight_arr.size),
         ess=ess,
@@ -111,10 +112,10 @@ def overlap_diagnostics(logging_propensity: np.ndarray, weights: np.ndarray) -> 
         propensity_min=float(np.min(logging)),
         propensity_median=float(np.median(logging)),
         propensity_max=float(np.max(logging)),
-        weight_p50=float(np.quantile(weight_arr, 0.50)),
-        weight_p90=float(np.quantile(weight_arr, 0.90)),
-        weight_p95=float(np.quantile(weight_arr, 0.95)),
-        weight_p99=float(np.quantile(weight_arr, 0.99)),
+        weight_p50=float(quantiles[0]),
+        weight_p90=float(quantiles[1]),
+        weight_p95=float(quantiles[2]),
+        weight_p99=float(quantiles[3]),
         weight_max=float(np.max(weight_arr)),
     )
 

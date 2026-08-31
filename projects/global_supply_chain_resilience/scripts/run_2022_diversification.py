@@ -13,7 +13,11 @@ import numpy as np
 import pandas as pd
 
 from supply_chain_resilience.dependency import structural_dependency_metrics
-from supply_chain_resilience.diversification import baseline_direct_risk, optimize_buyer_sourcing
+from supply_chain_resilience.diversification import (
+    baseline_direct_risk,
+    optimize_buyer_sourcing,
+    rank_exposed_buyers,
+)
 from supply_chain_resilience.icio import technical_coefficients
 from supply_chain_resilience.mapping import active_production_blocks, extract_2022_blocks, validate_2022_accounting
 from supply_chain_resilience.propagation import one_node_shock, solve_downstream_exposure, spectral_radius_diagnostics
@@ -56,18 +60,7 @@ def _select_buyers(blocks: object) -> tuple[pd.DataFrame, float]:
         )
     material["baseline_worst_case_direct_risk"] = risks
     exposed = material.loc[material["baseline_worst_case_direct_risk"] > 0.0].copy()
-
-    # ``structural_dependency_metrics`` intentionally names its index ``node``.
-    # Keep that index intact for downstream buyer selection, and use a uniquely
-    # named temporary column for the preregistered lexical tie-break. This avoids
-    # pandas treating ``node`` as both an index level and a column label.
-    exposed["_node_label"] = exposed.index.astype(str)
-    exposed = exposed.sort_values(
-        ["baseline_worst_case_direct_risk", "intermediate_input", "_node_label"],
-        ascending=[False, False, True],
-        kind="stable",
-    ).drop(columns="_node_label")
-    return exposed.head(SELECTED_BUYERS), material_threshold
+    return rank_exposed_buyers(exposed, limit=SELECTED_BUYERS), material_threshold
 
 
 def main() -> None:

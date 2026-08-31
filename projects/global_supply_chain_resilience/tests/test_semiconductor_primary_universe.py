@@ -42,12 +42,12 @@ def test_primary_reporters_exclude_only_overlap_groups() -> None:
     assert 975 not in codes
 
 
-def test_primary_reporters_require_registered_aggregate_groups() -> None:
+def test_primary_reporters_reject_missing_source_reporter() -> None:
     runner = _load_runner()
     manifest = _manifest()
     manifest["reporters"] = [
         row for row in manifest["reporters"] if int(row["reporter_code"]) != 975
     ]
 
-    with pytest.raises(ValueError, match="missing expected aggregate reporters"):
+    with pytest.raises(ValueError, match="expected exactly 169 unique source reporters"):
         runner.primary_reporters_from_manifest(manifest)

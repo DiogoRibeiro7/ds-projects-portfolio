@@ -45,7 +45,7 @@ def importance_weights(
     if cap is not None:
         if not np.isfinite(cap) or cap <= 0.0:
             raise ValueError("importance-weight cap must be finite and positive.")
-        weights = np.minimum(weights, float(cap))
+        np.minimum(weights, float(cap), out=weights)
     return weights
 
 

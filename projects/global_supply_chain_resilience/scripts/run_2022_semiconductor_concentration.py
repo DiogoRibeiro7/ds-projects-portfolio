@@ -19,16 +19,37 @@ REFERENCE_YEAR = 2022
 HS_HEADING = "8542"
 MAX_PREVIEW_RECORDS = 500
 PUBLIC_PREVIEW_MIN_INTERVAL_SECONDS = 1.05
+AGGREGATE_REPORTER_CODES = frozenset({97, 975})
+EXPECTED_PRIMARY_REPORTERS = 167
 
 
-def _verify_live_dataset_contract(manifest: dict[str, object]) -> None:
+def primary_reporters_from_manifest(manifest: dict[str, object]) -> list[dict[str, object]]:
+    """Return the prospectively corrected individual country/area reporter universe."""
+    frozen = manifest["reporters"]
+    if not isinstance(frozen, list):
+        raise ValueError("reporter manifest reporters must be a list.")
+    source_codes = {int(row["reporter_code"]) for row in frozen if isinstance(row, dict)}
+    missing = AGGREGATE_REPORTER_CODES.difference(source_codes)
+    if missing:
+        raise ValueError(f"source manifest is missing expected aggregate reporters: {sorted(missing)}")
+    reporters = [
+        row
+        for row in frozen
+        if isinstance(row, dict) and int(row["reporter_code"]) not in AGGREGATE_REPORTER_CODES
+    ]
+    if len(reporters) != EXPECTED_PRIMARY_REPORTERS:
+        raise ValueError(
+            f"expected exactly {EXPECTED_PRIMARY_REPORTERS} primary reporters after aggregate "
+            f"exclusion; got {len(reporters)}."
+        )
+    return reporters
+
+
+def _verify_live_dataset_contract(reporters: list[dict[str, object]]) -> None:
     response = get_official_json(DATA_AVAILABILITY_ENDPOINT, {"period": REFERENCE_YEAR})
     rows = extract_data_rows(response.payload)
     live = {int(row["reporterCode"]): row for row in rows}
-    frozen = manifest["reporters"]
-    assert isinstance(frozen, list)
-    for reporter in frozen:
-        assert isinstance(reporter, dict)
+    for reporter in reporters:
         code = int(reporter["reporter_code"])
         if code not in live:
             raise RuntimeError(f"frozen reporter {code} is absent from current 2022 data availability.")
@@ -42,7 +63,9 @@ def _verify_live_dataset_contract(manifest: dict[str, object]) -> None:
             raise RuntimeError(f"classification changed for frozen reporter {code}.")
 
 
-def _fetch_reporter_panel(reporter_code: int, previous_started: float | None) -> tuple[list[dict[str, object]], float, dict[str, object]]:
+def _fetch_reporter_panel(
+    reporter_code: int, previous_started: float | None
+) -> tuple[list[dict[str, object]], float, dict[str, object]]:
     if previous_started is not None:
         elapsed = time.monotonic() - previous_started
         if elapsed < PUBLIC_PREVIEW_MIN_INTERVAL_SECONDS:
@@ -92,11 +115,12 @@ def main() -> None:
         raise ValueError("reporter manifest year does not match executable lock.")
     if str(manifest["commodity_heading"]) != HS_HEADING:
         raise ValueError("reporter manifest commodity does not match executable lock.")
-    reporters = manifest["reporters"]
-    if not isinstance(reporters, list) or len(reporters) != 169:
-        raise ValueError("expected exactly 169 frozen reporters.")
+    source_reporters = manifest["reporters"]
+    if not isinstance(source_reporters, list):
+        raise ValueError("reporter manifest reporters must be a list.")
+    reporters = primary_reporters_from_manifest(manifest)
 
-    _verify_live_dataset_contract(manifest)
+    _verify_live_dataset_contract(reporters)
 
     metric_rows: list[dict[str, object]] = []
     link_rows: list[dict[str, object]] = []
@@ -104,7 +128,6 @@ def main() -> None:
     previous_started: float | None = None
 
     for reporter in reporters:
-        assert isinstance(reporter, dict)
         code = int(reporter["reporter_code"])
         rows, previous_started, evidence = _fetch_reporter_panel(code, previous_started)
         metrics, bilateral = importer_concentration_metrics(
@@ -162,6 +185,8 @@ def main() -> None:
     summary = {
         "reference_year": REFERENCE_YEAR,
         "commodity_heading": HS_HEADING,
+        "source_reporter_manifest_count": len(source_reporters),
+        "excluded_aggregate_reporter_codes": sorted(AGGREGATE_REPORTER_CODES),
         "frozen_reporter_count": len(reporters),
         "special_reporter_count": int(metrics["is_special_reporter"].sum()),
         "materiality_threshold": materiality_threshold,
@@ -180,7 +205,10 @@ def main() -> None:
         "query_evidence": query_evidence,
         "scientific_boundary": (
             "Importer-reported HS 8542 trade values measure commercial bilateral concentration, "
-            "not technological dependence or fabrication origin."
+            "not technological dependence or fabrication origin. European Union (97) and ASEAN "
+            "(975) are excluded from the primary reporter universe because they overlap member "
+            "reporters; the exclusion was prospectively registered in PR #593 before any bilateral "
+            "concentration result was produced."
         ),
     }
 
@@ -190,7 +218,13 @@ def main() -> None:
     metrics.to_csv(args.metrics_output, index=False)
     links.to_csv(args.links_output, index=False)
     args.rankings_output.write_text(json.dumps(rankings, indent=2, sort_keys=True), encoding="utf-8")
-    print(json.dumps({key: value for key, value in summary.items() if key != "query_evidence"}, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            {key: value for key, value in summary.items() if key != "query_evidence"},
+            indent=2,
+            sort_keys=True,
+        )
+    )
 
 
 if __name__ == "__main__":

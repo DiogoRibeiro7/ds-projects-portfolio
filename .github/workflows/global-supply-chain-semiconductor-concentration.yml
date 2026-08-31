@@ -16,6 +16,14 @@ jobs:
         working-directory: projects/global_supply_chain_resilience
 
     steps:
+      - name: Require main for substantive execution
+        if: github.event_name != 'pull_request'
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Semiconductor concentration execution is permitted only from main; got $GITHUB_REF." >&2
+            exit 1
+          fi
+
       - name: Check out repository
         uses: actions/checkout@v4
 
@@ -31,6 +39,7 @@ jobs:
         run: pytest
 
       - name: Run preregistered 2022 HS 8542 concentration analysis
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: >-
           python scripts/run_2022_semiconductor_concentration.py
           --manifest protocol/semiconductor_reporter_universe_2022.json
@@ -40,10 +49,10 @@ jobs:
           --rankings-output artifacts/comtrade_semiconductor/semiconductor_2022_rankings.json
 
       - name: Upload semiconductor concentration evidence
-        if: always()
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: global-supply-chain-semiconductor-2022-concentration
           path: projects/global_supply_chain_resilience/artifacts/comtrade_semiconductor/
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 30

@@ -16,6 +16,10 @@ REFERENCE_YEAR = 2022
 HS_HEADING = "8542"
 MAX_WORLD_ROWS_PER_REPORTER = 2
 PUBLIC_PREVIEW_MIN_INTERVAL_SECONDS = 1.05
+AGGREGATE_REPORTER_GROUPS = {
+    97: "European Union",
+    975: "ASEAN",
+}
 
 
 def _fetch_reporter_world_imports(
@@ -23,10 +27,9 @@ def _fetch_reporter_world_imports(
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Fetch one reporter-scoped HS 8542 World-import aggregate at a time.
 
-    UN Comtrade documents the public/free API at one request per second.  The
+    UN Comtrade documents the public/free API at one request per second. The
     loop therefore enforces a small margin above that interval rather than using
-    429 responses as implicit pacing.  This affects transport only; the reporter
-    universe and positive-import inclusion rule are unchanged.
+    429 responses as implicit pacing. This affects transport only.
     """
     reporter_codes = sorted({int(row["reporterCode"]) for row in availability_rows})
     if len(reporter_codes) != len(availability_rows):
@@ -93,14 +96,32 @@ def main() -> None:
     if not world_rows:
         raise RuntimeError("UN Comtrade returned no reporter-scoped World-import HS 8542 rows.")
 
-    reporters = freeze_positive_reporter_universe(
+    all_positive_reporters = freeze_positive_reporter_universe(
         availability_rows,
         world_rows,
         reference_year=REFERENCE_YEAR,
         commodity_heading=HS_HEADING,
     )
+    observed_positive_codes = {int(row["reporter_code"]) for row in all_positive_reporters}
+    missing_groups = set(AGGREGATE_REPORTER_GROUPS).difference(observed_positive_codes)
+    if missing_groups:
+        raise RuntimeError(
+            "Prospectively identified aggregate reporter groups were absent from the positive "
+            f"reporter gate: {sorted(missing_groups)}"
+        )
+
+    reporters = [
+        row
+        for row in all_positive_reporters
+        if int(row["reporter_code"]) not in AGGREGATE_REPORTER_GROUPS
+    ]
     if not reporters:
-        raise RuntimeError("No positive 2022 HS 8542 import reporters were identified.")
+        raise RuntimeError("No positive 2022 HS 8542 individual reporters were identified.")
+
+    excluded_groups = [
+        {"reporter_code": code, "reporter_desc": AGGREGATE_REPORTER_GROUPS[code]}
+        for code in sorted(AGGREGATE_REPORTER_GROUPS)
+    ]
 
     report = {
         "reference_year": REFERENCE_YEAR,
@@ -123,12 +144,16 @@ def main() -> None:
             "query_evidence": query_evidence,
         },
         "available_2022_hs_reporter_datasets": len(availability_rows),
-        "positive_hs8542_import_reporters": len(reporters),
+        "positive_hs8542_import_reporters_before_group_exclusion": len(all_positive_reporters),
+        "excluded_aggregate_reporter_groups": excluded_groups,
+        "primary_positive_hs8542_import_reporters": len(reporters),
         "reporters": reporters,
         "scientific_boundary": (
-            "This artifact freezes the exact positive-import reporter universe and Comtrade "
-            "dataset-release metadata. It intentionally omits trade values, concentration metrics, "
-            "and rankings; those remain unseen until the subsequent bilateral-analysis gate."
+            "This artifact freezes the exact positive-import individual country/area reporter "
+            "universe and Comtrade dataset-release metadata. European Union (97) and ASEAN "
+            "(975) are excluded prospectively because they overlap their member reporters. "
+            "Residual/special individual reporting areas are retained. The artifact intentionally "
+            "omits trade values, concentration metrics, and rankings."
         ),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

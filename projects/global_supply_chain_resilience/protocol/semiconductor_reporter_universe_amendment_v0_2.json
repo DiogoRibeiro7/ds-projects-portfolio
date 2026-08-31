@@ -1,0 +1,24 @@
+{
+  "version": "0.2",
+  "status": "prospective correction",
+  "reference_year": 2022,
+  "commodity_heading": "8542",
+  "supersedes_manifest_version": "protocol/semiconductor_reporter_universe_2022.json v0.1 for primary-universe semantics only",
+  "source_positive_reporter_count": 169,
+  "excluded_aggregate_reporter_groups": [
+    {"reporter_code": 97, "reporter_desc": "European Union"},
+    {"reporter_code": 975, "reporter_desc": "ASEAN"}
+  ],
+  "primary_reporter_count": 167,
+  "retained_special_area_rule": "Residual or special individual reporting areas, including Other Asia, nes (490), remain eligible; the exclusion is based on overlap with member reporters, not on nonstandard ISO labels.",
+  "rationale": "European Union and ASEAN are aggregate reporting groups that overlap their member economies. Including them in the same primary global reporter universe double counts economic activity and changes the materiality threshold.",
+  "chronology": {
+    "correction_first_registered_pr": 593,
+    "correction_first_registered_at_utc": "2026-08-31T11:32:12Z",
+    "premature_concentration_pr": 594,
+    "premature_concentration_run": 33392524645,
+    "premature_run_outcome": "failed before any bilateral reporter query or concentration artifact was produced",
+    "failure": "ValueError: expected exactly 169 frozen reporters."
+  },
+  "scientific_boundary": "No bilateral concentration metric, ranking or materiality threshold was produced before this correction. The first valid substantive run must use exactly 167 primary reporters and must execute from main, not a pull-request merge ref."
+}

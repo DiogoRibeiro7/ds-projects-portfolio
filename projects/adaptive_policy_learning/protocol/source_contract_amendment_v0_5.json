@@ -1,0 +1,41 @@
+{
+  "version": "0.5-cardinality-lock",
+  "amends": [
+    "design_lock.json v0.1-preregistered",
+    "source_contract_amendment_v0_2.json",
+    "source_contract_amendment_v0_3.json",
+    "source_contract_amendment_v0_4.json"
+  ],
+  "frozen_at": "2026-08-31",
+  "reason": "The successful value-free official archive audit established that the executable all-campaign catalog contains exactly 80 actions with item IDs 0 through 79, despite published documentation describing 81 actions 0 through 80.",
+  "source_evidence": {
+    "workflow_run_id": 33427934935,
+    "workflow_head_sha": "c55415f9ac7f926da673d82606b7d7397525a12c",
+    "archive_sha256": "e8ec18196582a5937381a1776382ca940689b90a18d2dcd1fb635be6df614d78",
+    "archive_catalog_action_count": 80,
+    "archive_catalog_action_ids": "0..79",
+    "bts_observed_action_count": 80,
+    "random_observed_action_count": 80,
+    "missing_bts_catalog_actions": [],
+    "missing_random_catalog_actions": []
+  },
+  "correction": {
+    "old_source_fact": "nominal_actions = 81 and documented IDs 0..80",
+    "new_executable_source_fact": "n_actions = 80 with archived IDs 0..79",
+    "target_policy_interpretation": "The preregistered estimand already defines uniform_random as probability 1/n_actions for every action. Therefore the executable target is uniform over the archived catalog with probability 1/80 per action; the target-policy family is unchanged.",
+    "positivity_interpretation": "At the full-log catalog level, both BTS and Random observe every archived action, so the 81-to-80 correction is not itself a positivity failure. Position-1 evaluation-window support remains to be audited before OPE."
+  },
+  "unchanged": [
+    "campaign = all",
+    "logging policy = bts",
+    "on-policy reference = random",
+    "raw primary position = 1",
+    "chronological 70/30 BTS split",
+    "Random reference restricted to BTS evaluation timestamps",
+    "IPS/SNIPS/DM/DR estimator set",
+    "epsilon = 0.10 challenger",
+    "ESS fraction promotion threshold = 0.10",
+    "95% paired moving-block-bootstrap promotion gate"
+  ],
+  "outcome_visibility": "No click count, CTR, reward mean, OPE estimate, challenger value, policy ranking, or promotion result was inspected to make this correction."
+}

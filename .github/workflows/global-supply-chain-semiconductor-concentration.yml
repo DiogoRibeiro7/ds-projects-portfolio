@@ -48,7 +48,7 @@ jobs:
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: >-
           python scripts/run_2022_semiconductor_concentration.py
-          --manifest protocol/semiconductor_reporter_universe_2022.json
+          --manifest protocol/semiconductor_reporter_lock_2022.json
           --summary-output artifacts/comtrade_semiconductor/semiconductor_2022_concentration_summary.json
           --metrics-output artifacts/comtrade_semiconductor/semiconductor_2022_importer_metrics.csv
           --links-output artifacts/comtrade_semiconductor/semiconductor_2022_bilateral_links.csv

@@ -1,0 +1,113 @@
+{
+  "version": "0.1-preregistered",
+  "frozen_at": "2026-08-31",
+  "research_question": "How reliable are off-policy estimators for real logged recommendation data, and can a transparent lower-confidence-bound rule prevent unsupported promotion of a learned challenger policy?",
+  "source": {
+    "provider": "ZOZO Research",
+    "dataset": "Open Bandit Dataset",
+    "campaign": "all",
+    "logging_policy": "bts",
+    "on_policy_reference": "random",
+    "position": 1,
+    "outcome": "click",
+    "action_field": "item_id",
+    "logging_propensity_field": "propensity_score",
+    "nominal_actions": 81,
+    "source_policy": "Use only the official ZOZO Research Open Bandit Dataset release. Do not substitute mirrors or synthetic data for the primary empirical result."
+  },
+  "estimand_benchmark": {
+    "target_policy": "uniform_random",
+    "target_probability": "1 / n_actions for every action at the leftmost recommendation position",
+    "logged_feedback": "Bernoulli Thompson Sampling observations",
+    "reference_value": "Empirical CTR of independently logged Random-policy observations restricted to the same evaluation time window",
+    "reference_interpretation": "The Random-policy CTR is an on-policy reference estimate with sampling uncertainty, not an exact population ground truth.",
+    "primary_error_metrics": [
+      "absolute estimation error relative to the on-policy reference",
+      "relative estimation error when the reference CTR is positive"
+    ]
+  },
+  "temporal_design": {
+    "sort_key": "timestamp",
+    "bts_train_fraction": 0.70,
+    "bts_evaluation_fraction": 0.30,
+    "split_rule": "Chronological split after filtering campaign=all and position=1. No random row split.",
+    "random_reference_window": "Restrict Random-policy observations to timestamps within the BTS evaluation interval.",
+    "no_leakage": "Reward-model fitting and challenger-policy construction use BTS training observations only. All OPE estimates and promotion decisions use the later BTS evaluation interval only."
+  },
+  "reward_model": {
+    "family": "L2-penalized logistic regression",
+    "features": "User features plus item-context features and the action-specific user-item affinity available at decision time.",
+    "preprocessing": "Fit all encoders/scalers on the BTS training interval only. Numeric inputs may be standardized; categorical inputs may be one-hot encoded. Missing-value handling must be deterministic and fitted on training only.",
+    "purpose": "Estimate q(x,a)=P(click=1|x,a) for Direct Method, Doubly Robust evaluation, and the frozen challenger policy.",
+    "forbidden": [
+      "No deep neural reward model in the primary analysis.",
+      "No evaluation-period hyperparameter tuning.",
+      "No outcome-derived feature engineering."
+    ]
+  },
+  "ope_estimators": {
+    "benchmark": ["ips", "snips", "direct_method", "doubly_robust"],
+    "primary_for_policy_gate": "doubly_robust",
+    "definitions": {
+      "ips": "mean_i [ w_i r_i ]",
+      "snips": "sum_i [ w_i r_i ] / sum_i [ w_i ]",
+      "direct_method": "mean_i sum_a pi_e(a|x_i) q_hat(x_i,a)",
+      "doubly_robust": "mean_i [ dm_i + w_i (r_i-q_hat(x_i,a_i)) ]",
+      "importance_weight": "w_i = pi_e(a_i|x_i) / pi_b(a_i|x_i)"
+    },
+    "primary_weights": "Unclipped importance weights.",
+    "sensitivity_weight_caps": [5.0, 10.0, 20.0],
+    "invalid_support": "Any non-finite or non-positive logged propensity is a hard failure."
+  },
+  "challenger_policy": {
+    "family": "epsilon_greedy_reward_model",
+    "epsilon": 0.10,
+    "construction": "For each context choose the action with highest training-fitted q_hat with probability 1-epsilon, and mix uniformly across all actions with total probability epsilon.",
+    "tie_break": "Lowest item_id among exact q_hat ties.",
+    "policy_freeze": "Model coefficients, preprocessing state and epsilon are fixed before the BTS evaluation interval is read for policy value."
+  },
+  "overlap_diagnostics": {
+    "effective_sample_size": "(sum_i w_i)^2 / sum_i w_i^2",
+    "report": [
+      "evaluation row count",
+      "ESS",
+      "ESS fraction",
+      "minimum/median/maximum logged propensity",
+      "importance-weight p50/p90/p95/p99/max"
+    ],
+    "promotion_minimum_ess_fraction": 0.10
+  },
+  "uncertainty": {
+    "method": "paired moving-block bootstrap over chronologically ordered evaluation rows",
+    "block_length_hours": 24,
+    "replications": 1999,
+    "seed": 20260831,
+    "confidence_level": 0.95,
+    "paired_difference": "DR challenger value minus observed BTS mean reward on the same evaluation resample"
+  },
+  "promotion_rule": {
+    "decision": "promote_challenger",
+    "required_conditions": [
+      "Lower endpoint of the 95% bootstrap interval for challenger-minus-BTS value is strictly greater than zero.",
+      "Challenger importance-weight ESS fraction is at least 0.10.",
+      "All executable provenance and overlap checks pass."
+    ],
+    "otherwise": "do_not_promote",
+    "reporting": "Report the decision regardless of sign. Do not tune epsilon, reward model, split, or estimator after seeing the evaluation result."
+  },
+  "secondary_analyses": {
+    "campaigns": ["men", "women"],
+    "positions": [2, 3],
+    "weight_clipping": [5.0, 10.0, 20.0],
+    "sample_size_stress_test": [0.05, 0.10, 0.25, 0.50, 1.0],
+    "rule": "Secondary analyses cannot replace the primary campaign=all, position=1 conclusion."
+  },
+  "scientific_boundaries": [
+    "Clicks are an engagement outcome, not revenue or long-term welfare.",
+    "The real-world benchmark evaluates OPE under the support and logging policies present in the Open Bandit Dataset.",
+    "The independently logged Random CTR is a reference estimate, not an exact counterfactual truth for every context distribution.",
+    "No claim of causal generalization beyond the logged recommendation environment.",
+    "No reinforcement-learning claim: the primary project is contextual one-step policy evaluation and selection.",
+    "No policy is described as safe merely because its point estimate is larger."
+  ]
+}

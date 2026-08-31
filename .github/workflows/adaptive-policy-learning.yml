@@ -1,0 +1,36 @@
+name: Adaptive Policy Learning
+
+on:
+  pull_request:
+    paths:
+      - "projects/adaptive_policy_learning/**"
+      - ".github/workflows/adaptive-policy-learning.yml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/adaptive_policy_learning
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+
+      - name: Run unit tests
+        run: pytest
+
+      - name: Run Ruff
+        run: ruff check .
+
+      - name: Run mypy
+        run: mypy src

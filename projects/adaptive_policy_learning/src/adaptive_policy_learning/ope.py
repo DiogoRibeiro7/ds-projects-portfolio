@@ -41,7 +41,7 @@ def importance_weights(
         raise ValueError("target probabilities must be finite and lie in [0, 1].")
     if np.any(~np.isfinite(logging)) or np.any(logging <= 0.0) or np.any(logging > 1.0):
         raise ValueError("logging propensities must be finite and lie in (0, 1].")
-    weights = target / logging
+    weights: np.ndarray = np.asarray(target / logging, dtype=float)
     if cap is not None:
         if not np.isfinite(cap) or cap <= 0.0:
             raise ValueError("importance-weight cap must be finite and positive.")

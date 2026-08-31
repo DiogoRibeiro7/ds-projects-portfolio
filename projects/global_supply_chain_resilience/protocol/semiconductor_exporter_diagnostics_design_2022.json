@@ -1,0 +1,57 @@
+{
+  "version": "0.1",
+  "status": "prospective exporter-diagnostics freeze",
+  "reference_year": 2022,
+  "commodity_heading": "8542",
+  "source": "official UN Comtrade only",
+  "primary_reporter_universe": {
+    "source_lock": "protocol/semiconductor_reporter_lock_2022.json",
+    "source_reporters": 169,
+    "excluded_overlapping_aggregate_reporters": [97, 975],
+    "primary_reporters": 167
+  },
+  "exporter_scale_query": {
+    "flow": "X",
+    "partner": "World",
+    "frequency": "A",
+    "type": "C",
+    "classification": "HS",
+    "commodity": "8542",
+    "customs_code": "C00",
+    "mode_of_transport": "0",
+    "breakdown_mode": "classic",
+    "reporter_scope": "exactly the 167 primary reporters",
+    "positive_value_rule": "retain finite strictly positive exporter-reported World exports",
+    "no_export_rule": "zero or missing exporter-reported World exports remain zero/missing and are not inferred from importer mirrors"
+  },
+  "exporter_metrics": [
+    "exporter_reported_world_export_value",
+    "share_of_positive_primary_reporter_world_exports",
+    "exporter_rank_by_world_exports"
+  ],
+  "importer_dependency_diagnostics": {
+    "authoritative_import_evidence": {
+      "workflow_run": 33417837534,
+      "artifact_id": 9767995550,
+      "artifact_digest": "sha256:0445610ba5a9d4df2d617cac543d1a14d9c4b1e5c5d295665541a9eadc99f41c"
+    },
+    "importer_denominator": "84 material importers defined by the prospectively frozen median positive-importer threshold",
+    "partner_scope": "official-Comtrade named country/area partners only for named-supplier diagnostics; residual/special partner areas remain separate",
+    "largest_named_supplier_count": "number of material importers for which the named partner has the largest named-country partner share",
+    "dependency_thresholds": [0.10, 0.25, 0.50],
+    "threshold_counts": "for each named supplier, count material importers whose all-reported bilateral denominator share from that supplier is at least the threshold",
+    "residual_area_diagnostic": "report Other Asia, nes (490) separately using the same 10/25/50 percent importer-share counts; never label it a named country supplier"
+  },
+  "ranking_outputs": [
+    "top exporters by exporter-reported World HS8542 exports",
+    "top named suppliers by total importer-reported bilateral HS8542 value across material importers",
+    "top named suppliers by largest-named-supplier count",
+    "top named suppliers by material-importer dependency counts at 10, 25 and 50 percent",
+    "Other Asia, nes residual-area dependency counts reported separately"
+  ],
+  "mirror_rule": "Exporter-reported exports and importer-reported imports are distinct observations. They are never averaged, substituted, silently reconciled, or used to overwrite each other.",
+  "materiality_rule": "Reuse the frozen importer materiality classification from the authoritative importer artifact; do not recompute a new importer threshold from exporter results.",
+  "tie_rule": "Sort descending by the primary metric, then descending by trade value where applicable, then ascending by partner/reporter code for deterministic ties.",
+  "provenance": "Record query parameters, UTC retrieval time, canonical response SHA-256, row counts, dataset checksum/classification verification, and official partner-reference provenance.",
+  "scientific_boundary": "Exporter diagnostics measure reported commercial export scale and importer-side bilateral concentration. They do not identify fabrication origin, semiconductor production capacity, technological dependence, value added, or causal systemic importance. No exporter World values have been inspected at the time of this freeze."
+}

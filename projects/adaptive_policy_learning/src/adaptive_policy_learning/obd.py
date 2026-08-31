@@ -35,6 +35,7 @@ class LoggedFileAudit:
     action_count: int
     action_min: int
     action_max: int
+    action_ids: tuple[int, ...]
 
 
 @dataclass(frozen=True)
@@ -72,12 +73,8 @@ def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict
             logged[policy] = _audit_logged_csv(archive, logged_info)
             contexts[policy] = _audit_item_context(archive, context_info)
 
-    if logged["bts"].action_count != logged["random"].action_count:
-        raise ValueError("BTS and Random all-campaign action counts differ.")
     if contexts["bts"].item_count != contexts["random"].item_count:
         raise ValueError("BTS and Random item-context counts differ.")
-    if contexts["bts"].item_count != logged["bts"].action_count:
-        raise ValueError("logged action count and item-context count disagree.")
 
     leftmost_raw_position = _leftmost_common_position(logged)
     if max(logged["bts"].timestamp_min, logged["random"].timestamp_min) > min(
@@ -88,6 +85,17 @@ def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict
     if enforce_official_contract:
         _enforce_official_contract(logged, contexts)
 
+    support = {
+        policy: {
+            "observed_action_count": logged[policy].action_count,
+            "observed_action_ids": list(logged[policy].action_ids),
+            "missing_catalog_action_ids": sorted(
+                EXPECTED_ACTION_IDS.difference(logged[policy].action_ids)
+            ),
+        }
+        for policy in POLICIES
+    }
+
     return {
         "archive": {
             "filename": path.name,
@@ -97,15 +105,15 @@ def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict
         "campaign": CAMPAIGN,
         "logged_files": {key: asdict(value) for key, value in logged.items()},
         "item_context": {key: asdict(value) for key, value in contexts.items()},
-        "audited_action_count": logged["bts"].action_count,
-        "expected_action_count": len(EXPECTED_ACTION_IDS),
+        "catalog_action_count": len(EXPECTED_ACTION_IDS),
+        "logged_action_support": support,
         "leftmost_raw_position": leftmost_raw_position,
         "normalized_leftmost_position": 0,
         "official_contract_enforced": enforce_official_contract,
         "scientific_boundary": (
-            "This source audit contains provenance and schema metadata only. It intentionally "
-            "omits click counts, CTRs, reward means, OPE estimates, policy rankings, challenger "
-            "values, and promotion decisions."
+            "This source audit contains provenance, schema, and observed action-support metadata "
+            "only. It intentionally omits click counts, CTRs, reward means, OPE estimates, policy "
+            "rankings, challenger values, and promotion decisions."
         ),
     }
 
@@ -116,10 +124,11 @@ def _enforce_official_contract(
     for policy in POLICIES:
         logged_row = logged[policy]
         context_row = contexts[policy]
-        if logged_row.action_count != 81 or logged_row.action_min != 0 or logged_row.action_max != 80:
-            raise ValueError(f"{policy} logged all-campaign action universe is not exactly 0..80.")
         if context_row.item_count != 81 or context_row.item_min != 0 or context_row.item_max != 80:
             raise ValueError(f"{policy} item context universe is not exactly 0..80.")
+        observed = set(logged_row.action_ids)
+        if not observed or not observed.issubset(EXPECTED_ACTION_IDS):
+            raise ValueError(f"{policy} logged actions are not a non-empty subset of catalog 0..80.")
         if set(logged_row.raw_positions) != EXPECTED_RAW_POSITIONS:
             raise ValueError(f"{policy} raw positions are not exactly 1, 2, 3.")
         if logged_row.propensity_field != PRIMARY_PROPENSITY_FIELD:
@@ -182,6 +191,7 @@ def _audit_logged_csv(archive: ZipFile, info: ZipInfo) -> LoggedFileAudit:
     if row_count == 0 or not actions or timestamp_min is None or timestamp_max is None:
         raise ValueError(f"{info.filename} contains no usable rows.")
 
+    action_ids = tuple(sorted(actions))
     return LoggedFileAudit(
         member=info.filename,
         compressed_size=info.compress_size,
@@ -193,9 +203,10 @@ def _audit_logged_csv(archive: ZipFile, info: ZipInfo) -> LoggedFileAudit:
         timestamp_min=timestamp_min,
         timestamp_max=timestamp_max,
         raw_positions=tuple(sorted(positions, key=float)),
-        action_count=len(actions),
-        action_min=min(actions),
-        action_max=max(actions),
+        action_count=len(action_ids),
+        action_min=action_ids[0],
+        action_max=action_ids[-1],
+        action_ids=action_ids,
     )
 
 

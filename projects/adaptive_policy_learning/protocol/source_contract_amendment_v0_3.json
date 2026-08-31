@@ -1,0 +1,25 @@
+{
+  "version": "0.3-observed-support",
+  "amends": "source_contract_amendment_v0_2.json",
+  "frozen_at": "2026-08-31",
+  "reason": "The first official value-free source audit of the ZOZO Open Bandit Dataset showed that the all-campaign item catalog and the set of item IDs actually observed in logged rows are distinct concepts.",
+  "evidence_boundary": "The official archive was downloaded and scanned only for provenance, schema, timestamp ranges, positions, propensities, catalog IDs, and observed action support. No click counts, CTRs, reward means, OPE estimates, policy rankings, challenger values, or promotion decisions were inspected.",
+  "clarifications": {
+    "catalog": "The all-campaign item-context catalog remains 81 nominal actions with item IDs 0 through 80.",
+    "logged_support": "A behavior-policy log is not required to contain every catalog action at least once. Logged action IDs must instead form a non-empty subset of the official 0..80 catalog, and the audit must record the observed and missing IDs explicitly.",
+    "identifiability": "Whether the preregistered uniform target policy is identifiable under BTS logging is a support question to be decided from the frozen support audit. The target policy will not be silently changed after observing support."
+  },
+  "unchanged": [
+    "campaign = all",
+    "logging policy = bts",
+    "on-policy reference = random",
+    "raw primary position = 1 (leftmost)",
+    "nominal catalog actions = 81",
+    "chronological 70/30 BTS split",
+    "random reference restricted to the BTS evaluation time window",
+    "IPS/SNIPS/DM/DR estimator set",
+    "epsilon = 0.10 challenger",
+    "ESS fraction promotion threshold = 0.10",
+    "95% paired moving-block-bootstrap promotion gate"
+  ]
+}

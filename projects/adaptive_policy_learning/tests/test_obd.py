@@ -38,6 +38,14 @@ def _logged_rows(*, pscore: float = 0.5) -> list[dict[str, object]]:
             "propensity_score": pscore,
             "user_feature_0": "B",
         },
+        {
+            "timestamp": "2019-11-25 00:02:00",
+            "item_id": 0,
+            "position": 3,
+            "click": 0,
+            "propensity_score": pscore,
+            "user_feature_0": "A",
+        },
     ]
 
 
@@ -56,28 +64,38 @@ def _build_archive(path: Path, *, pscore: float = 0.5) -> None:
             _write_csv(archive, f"{prefix}/item_context.csv", _item_rows())
 
 
-def test_audit_archive_reports_schema_without_outcome_aggregates(tmp_path: Path) -> None:
+def test_audit_archive_uses_archive_catalog_without_outcome_aggregates(tmp_path: Path) -> None:
     path = tmp_path / "open_bandit_dataset.zip"
     _build_archive(path)
 
-    report = audit_archive(path, enforce_official_contract=False)
+    report = audit_archive(path)
 
     assert report["campaign"] == "all"
-    assert report["catalog_action_count"] == 81
+    assert report["archive_catalog_action_count"] == 2
+    assert report["archive_catalog_action_ids"] == [0, 1]
+    assert report["documented_action_count"] == 81
+    assert report["documentation_matches_archive_catalog"] is False
     assert report["leftmost_raw_position"] == "1"
     assert report["normalized_leftmost_position"] == 0
     assert report["logged_files"]["bts"]["propensity_field"] == "propensity_score"
-    assert report["logged_files"]["bts"]["row_count"] == 2
+    assert report["logged_files"]["bts"]["row_count"] == 3
     assert report["logged_action_support"]["bts"]["observed_action_ids"] == [0, 1]
+    assert report["logged_action_support"]["bts"]["missing_catalog_action_ids"] == []
     assert "ctr" not in report
     assert "reward_mean" not in report
 
 
-def test_audit_archive_strict_contract_rejects_nonofficial_catalog(tmp_path: Path) -> None:
+def test_audit_archive_rejects_logged_action_outside_context_catalog(tmp_path: Path) -> None:
     path = tmp_path / "open_bandit_dataset.zip"
-    _build_archive(path)
+    with ZipFile(path, "w", compression=ZIP_DEFLATED) as archive:
+        for policy in ("bts", "random"):
+            prefix = f"open_bandit_dataset/{policy}/all"
+            rows = _logged_rows()
+            rows[0]["item_id"] = 7
+            _write_csv(archive, f"{prefix}/all.csv", rows)
+            _write_csv(archive, f"{prefix}/item_context.csv", _item_rows())
 
-    with pytest.raises(ValueError, match="item context universe"):
+    with pytest.raises(ValueError, match="item-context catalog"):
         audit_archive(path)
 
 

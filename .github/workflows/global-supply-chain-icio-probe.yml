@@ -80,6 +80,16 @@ jobs:
           --scenario-output artifacts/icio_probe/icio_2022_propagation_scenarios.csv
           --top-affected-output artifacts/icio_probe/icio_2022_propagation_top_affected.csv
 
+      - name: Run preregistered diversification optimization
+        run: >-
+          python scripts/run_2022_diversification.py
+          --archive artifacts/icio_probe/2016-2022_SML.zip
+          --protocol protocol/diversification_optimization_design.json
+          --summary-output artifacts/icio_probe/icio_2022_diversification_summary.json
+          --frontier-output artifacts/icio_probe/icio_2022_diversification_frontier.csv
+          --allocation-output artifacts/icio_probe/icio_2022_diversification_allocations.csv
+          --system-output artifacts/icio_probe/icio_2022_diversification_system_evaluation.csv
+
       - name: Upload empirical ICIO evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -99,5 +109,9 @@ jobs:
             projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_propagation_summary.json
             projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_propagation_scenarios.csv
             projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_propagation_top_affected.csv
+            projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_diversification_summary.json
+            projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_diversification_frontier.csv
+            projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_diversification_allocations.csv
+            projects/global_supply_chain_resilience/artifacts/icio_probe/icio_2022_diversification_system_evaluation.csv
           if-no-files-found: warn
           retention-days: 30

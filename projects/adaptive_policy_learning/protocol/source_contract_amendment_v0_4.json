@@ -1,0 +1,15 @@
+{
+  "version": "0.4-archive-truth",
+  "amends": "source_contract_amendment_v0_3.json",
+  "frozen_at": "2026-08-31",
+  "reason": "Two official value-free source-audit runs showed that both the logged action support and the archived item-context catalog can differ from the published 0..80 range. The archive must therefore be treated as the executable source of truth for catalog/support, while published ranges remain comparison metadata.",
+  "contract": {
+    "catalog": "derive exact item IDs from the archived item_context.csv files and require BTS and Random catalogs to agree exactly",
+    "logged_support": "require each behavior-policy logged action set to be a non-empty subset of its archived item-context catalog",
+    "published_range": "retain documented 0..80 / 81-action claim as comparison metadata only; do not force it onto the archive",
+    "positions": "raw positions must remain exactly 1, 2, 3",
+    "propensity": "propensity_score remains mandatory",
+    "target_policy": "do not modify the preregistered target policy until the exact archive catalog and logged support have been frozen and identifiability assessed"
+  },
+  "outcome_visibility": "No click count, CTR, reward mean, OPE estimate, challenger value, policy ranking, or promotion result was inspected to make this amendment."
+}

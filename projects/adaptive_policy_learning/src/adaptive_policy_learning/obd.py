@@ -14,7 +14,7 @@ LEGACY_PROPENSITY_FIELD = "action_prob"
 REQUIRED_BASE_FIELDS = frozenset({"timestamp", "item_id", "position", "click"})
 POLICIES = ("bts", "random")
 CAMPAIGN = "all"
-EXPECTED_ACTION_IDS = frozenset(range(81))
+DOCUMENTED_ACTION_IDS = frozenset(range(81))
 EXPECTED_RAW_POSITIONS = frozenset({"1", "2", "3"})
 
 
@@ -49,6 +49,7 @@ class ItemContextAudit:
     item_count: int
     item_min: int
     item_max: int
+    item_ids: tuple[int, ...]
 
 
 def sha256_file(path: Path, *, chunk_size: int = 1024 * 1024) -> str:
@@ -73,8 +74,8 @@ def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict
             logged[policy] = _audit_logged_csv(archive, logged_info)
             contexts[policy] = _audit_item_context(archive, context_info)
 
-    if contexts["bts"].item_count != contexts["random"].item_count:
-        raise ValueError("BTS and Random item-context counts differ.")
+    if contexts["bts"].item_ids != contexts["random"].item_ids:
+        raise ValueError("BTS and Random item-context catalogs differ.")
 
     leftmost_raw_position = _leftmost_common_position(logged)
     if max(logged["bts"].timestamp_min, logged["random"].timestamp_min) > min(
@@ -85,12 +86,13 @@ def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict
     if enforce_official_contract:
         _enforce_official_contract(logged, contexts)
 
+    catalog_ids = frozenset(contexts["bts"].item_ids)
     support = {
         policy: {
             "observed_action_count": logged[policy].action_count,
             "observed_action_ids": list(logged[policy].action_ids),
             "missing_catalog_action_ids": sorted(
-                EXPECTED_ACTION_IDS.difference(logged[policy].action_ids)
+                catalog_ids.difference(logged[policy].action_ids)
             ),
         }
         for policy in POLICIES
@@ -105,15 +107,19 @@ def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict
         "campaign": CAMPAIGN,
         "logged_files": {key: asdict(value) for key, value in logged.items()},
         "item_context": {key: asdict(value) for key, value in contexts.items()},
-        "catalog_action_count": len(EXPECTED_ACTION_IDS),
+        "archive_catalog_action_count": len(catalog_ids),
+        "archive_catalog_action_ids": sorted(catalog_ids),
+        "documented_action_count": len(DOCUMENTED_ACTION_IDS),
+        "documented_action_ids": sorted(DOCUMENTED_ACTION_IDS),
+        "documentation_matches_archive_catalog": catalog_ids == DOCUMENTED_ACTION_IDS,
         "logged_action_support": support,
         "leftmost_raw_position": leftmost_raw_position,
         "normalized_leftmost_position": 0,
         "official_contract_enforced": enforce_official_contract,
         "scientific_boundary": (
-            "This source audit contains provenance, schema, and observed action-support metadata "
-            "only. It intentionally omits click counts, CTRs, reward means, OPE estimates, policy "
-            "rankings, challenger values, and promotion decisions."
+            "This source audit contains provenance, schema, catalog, and observed action-support "
+            "metadata only. It intentionally omits click counts, CTRs, reward means, OPE estimates, "
+            "policy rankings, challenger values, and promotion decisions."
         ),
     }
 
@@ -123,12 +129,12 @@ def _enforce_official_contract(
 ) -> None:
     for policy in POLICIES:
         logged_row = logged[policy]
-        context_row = contexts[policy]
-        if context_row.item_count != 81 or context_row.item_min != 0 or context_row.item_max != 80:
-            raise ValueError(f"{policy} item context universe is not exactly 0..80.")
+        context_ids = set(contexts[policy].item_ids)
         observed = set(logged_row.action_ids)
-        if not observed or not observed.issubset(EXPECTED_ACTION_IDS):
-            raise ValueError(f"{policy} logged actions are not a non-empty subset of catalog 0..80.")
+        if not context_ids:
+            raise ValueError(f"{policy} item-context catalog is empty.")
+        if not observed or not observed.issubset(context_ids):
+            raise ValueError(f"{policy} logged actions are not a non-empty subset of its item-context catalog.")
         if set(logged_row.raw_positions) != EXPECTED_RAW_POSITIONS:
             raise ValueError(f"{policy} raw positions are not exactly 1, 2, 3.")
         if logged_row.propensity_field != PRIMARY_PROPENSITY_FIELD:
@@ -226,6 +232,7 @@ def _audit_item_context(archive: ZipFile, info: ZipInfo) -> ItemContextAudit:
             items.add(item)
     if row_count == 0:
         raise ValueError(f"{info.filename} contains no items.")
+    item_ids = tuple(sorted(items))
     return ItemContextAudit(
         member=info.filename,
         compressed_size=info.compress_size,
@@ -233,9 +240,10 @@ def _audit_item_context(archive: ZipFile, info: ZipInfo) -> ItemContextAudit:
         sha256=_member_sha256(archive, info),
         row_count=row_count,
         columns=columns,
-        item_count=len(items),
-        item_min=min(items),
-        item_max=max(items),
+        item_count=len(item_ids),
+        item_min=item_ids[0],
+        item_max=item_ids[-1],
+        item_ids=item_ids,
     )
 
 

@@ -7,7 +7,12 @@ name = "adaptive-policy-learning"
 version = "0.1.0"
 description = "Off-policy evaluation and conservative contextual policy selection"
 requires-python = ">=3.11"
-dependencies = ["numpy>=1.26"]
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "scipy>=1.13",
+  "scikit-learn>=1.5",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.8"]
@@ -24,3 +29,7 @@ line-length = 100
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["pandas", "pandas.*", "scipy", "scipy.*", "sklearn", "sklearn.*"]
+ignore_missing_imports = true

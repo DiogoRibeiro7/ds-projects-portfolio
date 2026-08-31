@@ -9,7 +9,6 @@ from io import TextIOWrapper
 from pathlib import Path
 from zipfile import ZipFile, ZipInfo
 
-
 PRIMARY_PROPENSITY_FIELD = "propensity_score"
 LEGACY_PROPENSITY_FIELD = "action_prob"
 REQUIRED_BASE_FIELDS = frozenset({"timestamp", "item_id", "position", "click"})

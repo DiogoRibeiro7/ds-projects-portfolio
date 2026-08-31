@@ -63,20 +63,21 @@ def test_audit_archive_reports_schema_without_outcome_aggregates(tmp_path: Path)
     report = audit_archive(path, enforce_official_contract=False)
 
     assert report["campaign"] == "all"
-    assert report["audited_action_count"] == 2
+    assert report["catalog_action_count"] == 81
     assert report["leftmost_raw_position"] == "1"
     assert report["normalized_leftmost_position"] == 0
     assert report["logged_files"]["bts"]["propensity_field"] == "propensity_score"
     assert report["logged_files"]["bts"]["row_count"] == 2
+    assert report["logged_action_support"]["bts"]["observed_action_ids"] == [0, 1]
     assert "ctr" not in report
     assert "reward_mean" not in report
 
 
-def test_audit_archive_strict_contract_rejects_nonofficial_action_universe(tmp_path: Path) -> None:
+def test_audit_archive_strict_contract_rejects_nonofficial_catalog(tmp_path: Path) -> None:
     path = tmp_path / "open_bandit_dataset.zip"
     _build_archive(path)
 
-    with pytest.raises(ValueError, match="0..80"):
+    with pytest.raises(ValueError, match="item context universe"):
         audit_archive(path)
 
 

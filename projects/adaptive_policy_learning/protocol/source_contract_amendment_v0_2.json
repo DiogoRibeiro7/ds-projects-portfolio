@@ -2,28 +2,30 @@
   "version": "0.2-source-contract",
   "amends": "design_lock.json v0.1-preregistered",
   "frozen_at": "2026-08-31",
-  "reason": "Official Open Bandit Pipeline executable documentation resolves two source-schema assumptions before any empirical policy-value result is produced.",
-  "corrections": {
+  "reason": "Official ZOZO data documentation and the Open Bandit Pipeline executable loader clarify raw-file versus internal indexing before any empirical policy-value result is produced.",
+  "clarifications": {
     "position": {
       "v0_1": "position = 1 was described as the leftmost recommendation position",
-      "v0_2": "The primary position is the leftmost recommendation slot, defined as the minimum raw OBD position label and normalized to internal position 0.",
-      "basis": "OpenBanditDataset applies dense rank to raw position and subtracts one; therefore its internal position indexing begins at zero."
+      "v0_2": "This remains correct for the raw OBD files: raw positions 1, 2 and 3 are left, center and right. OpenBanditDataset subsequently dense-ranks those labels and subtracts one, so the leftmost slot is internal position 0 after loader normalization.",
+      "primary_filter": "For direct raw-file ingestion, filter raw position == 1. For data emitted by OpenBanditDataset, filter normalized position == 0."
     },
     "action_count": {
       "v0_1": "nominal_actions = 81",
-      "v0_2": "No fixed action count is assumed prospectively. The official source audit must derive the action universe from the all-campaign data and item context before OPE runs.",
-      "basis": "OpenBanditDataset defines n_actions from the observed action IDs rather than a hard-coded campaign constant."
+      "v0_2": "The official ZOZO data description confirms all-campaign item IDs 0 through 80, hence 81 nominal actions. The source audit must still verify that the retrieved archive matches this contract before OPE runs.",
+      "primary_contract": "observed action IDs and item-context IDs must jointly cover exactly 0 through 80"
     },
     "propensity_field": {
       "v0_1": "propensity_score",
-      "v0_2": "propensity_score remains the primary executable field. A legacy action_prob alias may be detected and reported but must not be silently substituted when both or neither are present.",
-      "basis": "Current OpenBanditDataset loader reads propensity_score into pscore."
+      "v0_2": "propensity_score is confirmed as the raw executable field and is loaded as pscore by OpenBanditDataset. A legacy action_prob alias may be detected and reported only for explicit compatibility diagnostics; it must never be silently preferred over propensity_score."
     }
   },
+  "official_archive_url": "https://research.zozo.com/data_release/open_bandit_dataset.zip",
   "unchanged": [
     "campaign = all",
     "logging policy = bts",
     "on-policy reference = random",
+    "raw primary position = 1 (leftmost)",
+    "nominal all-campaign actions = 81",
     "chronological 70/30 BTS split",
     "random reference restricted to the BTS evaluation time window",
     "IPS/SNIPS/DM/DR estimator set",
@@ -31,5 +33,5 @@
     "ESS fraction promotion threshold = 0.10",
     "95% paired moving-block-bootstrap promotion gate"
   ],
-  "outcome_visibility": "No Open Bandit Dataset CTR, reward mean, OPE estimate, challenger value, ranking, or promotion result was inspected to make this amendment."
+  "outcome_visibility": "No Open Bandit Dataset CTR, reward mean, OPE estimate, challenger value, ranking, or promotion result was inspected to make this clarification."
 }

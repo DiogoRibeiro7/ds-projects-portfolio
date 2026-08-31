@@ -1,5 +1,5 @@
-Adaptive Policy Learning official Open Bandit Dataset source audit trigger v0.2
+Adaptive Policy Learning official Open Bandit Dataset source audit trigger v0.3
 
-Purpose: rerun the main-only, value-free source/schema/support audit after the v0.3 support-contract correction was merged.
+Purpose: rerun the main-only, value-free source/schema/support audit after the v0.4 archive-truth correction was merged.
 
-Scientific boundary: this file authorizes provenance, schema, and observed action-support verification only. It does not authorize CTR summaries, reward means, OPE estimates, policy rankings, challenger values, or promotion decisions.
+Scientific boundary: this file authorizes provenance, schema, archived catalog, and observed action-support verification only. It does not authorize CTR summaries, reward means, OPE estimates, policy rankings, challenger values, or promotion decisions.

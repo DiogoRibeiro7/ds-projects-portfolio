@@ -12,7 +12,7 @@ from zipfile import ZipFile
 import numpy as np
 import pandas as pd
 
-from supply_chain_resilience.dependency import structural_dependency_metrics
+from supply_chain_resilience.dependency import split_country_activity, structural_dependency_metrics
 from supply_chain_resilience.diversification import (
     baseline_direct_risk,
     optimize_buyer_sourcing,
@@ -38,12 +38,29 @@ HEADROOMS = (0.01, 0.05, 0.10)
 PRIMARY_TARGET = 0.50
 PRIMARY_HEADROOM = 0.05
 SELECTED_BUYERS = 10
+CHANGE_TOLERANCE = 1e-8
 
 
-def _global_exposure(coefficients: pd.DataFrame, gross_output: pd.Series, shock_node: str) -> float:
+def _scenario_exposure_metrics(
+    coefficients: pd.DataFrame,
+    gross_output: pd.Series,
+    shock_node: str,
+    *,
+    buyer: str,
+) -> dict[str, float]:
     shock = one_node_shock(coefficients.index, shock_node, SHOCK_FRACTION)
     q, _ = solve_downstream_exposure(coefficients, shock)
-    return float((gross_output * q).sum())
+    contribution = gross_output * q
+    shocked_country, _ = split_country_activity(shock_node)
+    foreign_mask = pd.Series(
+        [split_country_activity(str(label))[0] != shocked_country for label in q.index],
+        index=q.index,
+    )
+    return {
+        "global_output_equivalent_exposure": float(contribution.sum()),
+        "buyer_exposure_index": float(q.loc[buyer]),
+        "foreign_output_equivalent_exposure": float(contribution.loc[foreign_mask].sum()),
+    }
 
 
 def _select_buyers(blocks: object) -> tuple[pd.DataFrame, float]:
@@ -117,21 +134,26 @@ def main() -> None:
                     risk_reduction_target=target,
                     headroom_fraction=headroom,
                 )
-                frontier_rows.append(
-                    {
-                        "buyer": buyer,
-                        "risk_reduction_target": target,
-                        "headroom_fraction": headroom,
-                        "feasible": result.feasible,
-                        "baseline_worst_case_direct_risk": baseline_risk,
-                        "achieved_worst_case_direct_risk": result.achieved_worst_case_direct_risk,
-                        "reallocation_burden": result.reallocation_burden,
-                        "solver_status": result.solver_status,
-                        "solver_message": result.solver_message,
-                    }
-                )
+                frontier_row: dict[str, object] = {
+                    "buyer": buyer,
+                    "risk_reduction_target": target,
+                    "headroom_fraction": headroom,
+                    "feasible": result.feasible,
+                    "baseline_worst_case_direct_risk": baseline_risk,
+                    "achieved_worst_case_direct_risk": result.achieved_worst_case_direct_risk,
+                    "reallocation_burden": result.reallocation_burden,
+                    "solver_status": result.solver_status,
+                    "solver_message": result.solver_message,
+                    "changed_supplier_nodes": np.nan,
+                    "largest_supplier_increase": np.nan,
+                    "largest_supplier_decrease": np.nan,
+                }
                 if result.feasible and result.allocation is not None:
-                    changed = (result.allocation - observed).abs() > 1e-8
+                    change = result.allocation - observed
+                    changed = change.abs() > CHANGE_TOLERANCE
+                    frontier_row["changed_supplier_nodes"] = int(changed.sum())
+                    frontier_row["largest_supplier_increase"] = float(change.max())
+                    frontier_row["largest_supplier_decrease"] = float(change.min())
                     for supplier in result.allocation.index[changed]:
                         allocation_rows.append(
                             {
@@ -141,19 +163,29 @@ def main() -> None:
                                 "supplier": str(supplier),
                                 "observed_flow": float(observed.loc[supplier]),
                                 "counterfactual_flow": float(result.allocation.loc[supplier]),
-                                "flow_change": float(result.allocation.loc[supplier] - observed.loc[supplier]),
+                                "flow_change": float(change.loc[supplier]),
                             }
                         )
                     if target == PRIMARY_TARGET and headroom == PRIMARY_HEADROOM:
                         primary_allocations[buyer] = result.allocation
+                frontier_rows.append(frontier_row)
 
     baseline_coefficients = technical_coefficients(blocks.intermediate_use, blocks.gross_output)
     baseline_diag = spectral_radius_diagnostics(baseline_coefficients)
     if not baseline_diag.admissible:
         raise ValueError("merged baseline propagation matrix is unexpectedly inadmissible.")
-    baseline_global = {
-        node: _global_exposure(baseline_coefficients, blocks.gross_output, node)
-        for node in SHOCK_NODES
+
+    baseline_by_buyer: dict[str, dict[str, dict[str, float]]] = {
+        buyer: {
+            node: _scenario_exposure_metrics(
+                baseline_coefficients,
+                blocks.gross_output,
+                node,
+                buyer=buyer,
+            )
+            for node in SHOCK_NODES
+        }
+        for buyer in selected_buyers
     }
 
     system_rows: list[dict[str, object]] = []
@@ -182,16 +214,34 @@ def main() -> None:
             "post_admissibility_status": "PASS" if diag.admissible else "FAIL",
         }
         if diag.admissible:
-            cf_global = {
-                node: _global_exposure(cf_coefficients, blocks.gross_output, node)
+            cf_metrics = {
+                node: _scenario_exposure_metrics(
+                    cf_coefficients,
+                    blocks.gross_output,
+                    node,
+                    buyer=buyer,
+                )
                 for node in SHOCK_NODES
             }
-            row["baseline_worst_global_exposure"] = max(baseline_global.values())
-            row["counterfactual_worst_global_exposure"] = max(cf_global.values())
-            row["worst_global_exposure_change"] = max(cf_global.values()) - max(baseline_global.values())
+            baseline_worst = max(
+                values["global_output_equivalent_exposure"]
+                for values in baseline_by_buyer[buyer].values()
+            )
+            counterfactual_worst = max(
+                values["global_output_equivalent_exposure"] for values in cf_metrics.values()
+            )
+            row["baseline_worst_global_exposure"] = baseline_worst
+            row["counterfactual_worst_global_exposure"] = counterfactual_worst
+            row["worst_global_exposure_change"] = counterfactual_worst - baseline_worst
             for node in SHOCK_NODES:
-                row[f"global_exposure_before__{node}"] = baseline_global[node]
-                row[f"global_exposure_after__{node}"] = cf_global[node]
+                before = baseline_by_buyer[buyer][node]
+                after = cf_metrics[node]
+                row[f"buyer_exposure_before__{node}"] = before["buyer_exposure_index"]
+                row[f"buyer_exposure_after__{node}"] = after["buyer_exposure_index"]
+                row[f"global_exposure_before__{node}"] = before["global_output_equivalent_exposure"]
+                row[f"global_exposure_after__{node}"] = after["global_output_equivalent_exposure"]
+                row[f"foreign_spillover_before__{node}"] = before["foreign_output_equivalent_exposure"]
+                row[f"foreign_spillover_after__{node}"] = after["foreign_output_equivalent_exposure"]
         system_rows.append(row)
 
     frontier = pd.DataFrame(frontier_rows)
@@ -223,6 +273,13 @@ def main() -> None:
         },
         "baseline_spectral_radius": baseline_diag.spectral_radius,
         "system_evaluations_run": int(system["post_admissibility_status"].eq("PASS").sum()),
+        "outcome_contract": {
+            "frontier_includes_changed_supplier_count": True,
+            "frontier_includes_largest_supplier_increase_decrease": True,
+            "system_includes_buyer_exposure_by_shock": True,
+            "system_includes_global_exposure_by_shock": True,
+            "system_includes_foreign_spillover_by_shock": True,
+        },
         "interpretation": (
             "Sourcing reallocation burden is normalized turnover relative to observed 2022 ICIO flows, "
             "not monetary procurement cost. Buyer-specific counterfactuals are evaluated separately."

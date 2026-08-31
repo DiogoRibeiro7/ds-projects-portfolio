@@ -6,6 +6,8 @@ on:
       - "projects/mobility_demand_optimization/**"
       - ".github/workflows/mobility_v2.yml"
   workflow_dispatch:
+  schedule:
+    - cron: "17 7 * * *"
 
 permissions:
   contents: read
@@ -35,9 +37,11 @@ jobs:
         working-directory: projects/mobility_demand_optimization
         run: python -m pytest -q
 
-      - name: Verify official June source is published
+      - name: Check official June source availability
+        id: june_source
         run: |
           python - <<'PY'
+          import os
           from urllib.request import Request, urlopen
 
           page_url = "https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page"
@@ -48,31 +52,42 @@ jobs:
           )
           with urlopen(request, timeout=60) as response:
               page = response.read().decode("utf-8", errors="replace")
-          if filename not in page:
-              raise SystemExit(
+
+          available = filename in page
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"available={'true' if available else 'false'}\n")
+
+          if available:
+              print(f"Official TLC source advertised: {filename}")
+          else:
+              print(
                   "Official TLC June 2026 Yellow Taxi parquet is not yet published; "
-                  "confirmatory v2 execution remains blocked before holdout ingestion."
+                  "confirmatory v2 execution remains pending before holdout ingestion."
               )
-          print(f"Official TLC source advertised: {filename}")
           PY
 
       - name: Build frozen-zone panel through June
+        if: steps.june_source.outputs.available == 'true'
         working-directory: projects/mobility_demand_optimization
         run: python scripts/build_v2_panel.py
 
       - name: Generate preregistered June forecasts
+        if: steps.june_source.outputs.available == 'true'
         working-directory: projects/mobility_demand_optimization
         run: python scripts/run_v2_forecasts.py
 
       - name: Run primary stochastic SAA study
+        if: steps.june_source.outputs.available == 'true'
         working-directory: projects/mobility_demand_optimization
         run: python scripts/run_v2_stochastic_verified.py
 
       - name: Print primary v2 summary
+        if: steps.june_source.outputs.available == 'true'
         working-directory: projects/mobility_demand_optimization
         run: cat data/v2/results/stochastic_primary/summary.json
 
       - name: Upload v2 confirmatory evidence
+        if: steps.june_source.outputs.available == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: mobility-v2-primary

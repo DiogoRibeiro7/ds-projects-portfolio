@@ -1,0 +1,5 @@
+Adaptive Policy Learning official Open Bandit Dataset source audit trigger v0.1
+
+Purpose: trigger the main-only, value-free source/schema audit workflow after the preregistered implementation and CI gates passed.
+
+Scientific boundary: this file authorizes provenance and schema verification only. It does not authorize CTR summaries, OPE estimates, policy rankings, challenger values, or promotion decisions.

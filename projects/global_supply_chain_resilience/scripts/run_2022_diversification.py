@@ -56,12 +56,17 @@ def _select_buyers(blocks: object) -> tuple[pd.DataFrame, float]:
         )
     material["baseline_worst_case_direct_risk"] = risks
     exposed = material.loc[material["baseline_worst_case_direct_risk"] > 0.0].copy()
-    exposed["node"] = exposed.index.astype(str)
+
+    # ``structural_dependency_metrics`` intentionally names its index ``node``.
+    # Keep that index intact for downstream buyer selection, and use a uniquely
+    # named temporary column for the preregistered lexical tie-break. This avoids
+    # pandas treating ``node`` as both an index level and a column label.
+    exposed["_node_label"] = exposed.index.astype(str)
     exposed = exposed.sort_values(
-        ["baseline_worst_case_direct_risk", "intermediate_input", "node"],
+        ["baseline_worst_case_direct_risk", "intermediate_input", "_node_label"],
         ascending=[False, False, True],
         kind="stable",
-    )
+    ).drop(columns="_node_label")
     return exposed.head(SELECTED_BUYERS), material_threshold
 
 

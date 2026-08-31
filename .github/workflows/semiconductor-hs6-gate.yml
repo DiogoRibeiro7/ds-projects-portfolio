@@ -1,0 +1,53 @@
+name: Semiconductor HS6 Coverage Gate
+
+on:
+  pull_request:
+    paths:
+      - "projects/global_supply_chain_resilience/**"
+      - ".github/workflows/semiconductor-hs6-gate.yml"
+  push:
+    branches: [main]
+    paths:
+      - "projects/global_supply_chain_resilience/**"
+      - ".github/workflows/semiconductor-hs6-gate.yml"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: projects/global_supply_chain_resilience
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+      - name: Test
+        run: pytest
+      - name: Download official commodity references
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p artifacts/hs6_reference
+          for c in H2 H3 H4 H5 H6; do
+            curl --fail --silent --show-error --location \
+              "https://comtradeapi.un.org/files/v1/app/reference/${c}.json" \
+              --output "artifacts/hs6_reference/${c}.json"
+          done
+      - name: Audit global HS6 compatibility
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: >-
+          python scripts/audit_2022_semiconductor_hs6_gate.py
+          --reporter-lock protocol/semiconductor_reporter_lock_2022.json
+          --reference-dir artifacts/hs6_reference
+          --output artifacts/semiconductor_hs6_gate/summary.json
+      - name: Upload gate evidence
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: global-supply-chain-semiconductor-2022-hs6-gate
+          path: projects/global_supply_chain_resilience/artifacts/semiconductor_hs6_gate/
+          if-no-files-found: error

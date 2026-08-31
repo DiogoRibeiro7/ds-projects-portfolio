@@ -1,0 +1,68 @@
+{
+  "version": "0.1",
+  "status": "prospective descriptive ICIO-comparison freeze",
+  "reference_year": 2022,
+  "trade_scope": "UN Comtrade HS 8542 semiconductor trade evidence",
+  "icio_scope": "OECD ICIO C26 computer, electronic and optical products",
+  "authoritative_trade_evidence": {
+    "importer_workflow_run": 33417837534,
+    "importer_artifact_id": 9767995550,
+    "importer_artifact_digest": "sha256:0445610ba5a9d4df2d617cac543d1a14d9c4b1e5c5d295665541a9eadc99f41c",
+    "exporter_workflow_run": 33421394224,
+    "exporter_artifact_id": 9769297706,
+    "exporter_artifact_digest": "sha256:d0880c017239378022d00ab64b5162ec2d76815a113b597fca7328899aff7fae",
+    "mirror_workflow_run": 33423306450,
+    "mirror_artifact_id": 9769862014,
+    "mirror_artifact_digest": "sha256:65df3f2bab17b8244ee13343a6ad370cadb8e5d4026b4511b9789077b60b4e81"
+  },
+  "authoritative_icio_evidence": {
+    "workflow_run": 33332046522,
+    "artifact_id": 9737938679,
+    "artifact_digest": "sha256:0040afc6c5d67336c9933322cf76022f9710ad2628a8b6d3b412c003bae1e11b",
+    "supplier_metric_implementation": "src/supply_chain_resilience/supplier.py",
+    "implementation_blob_sha": "baaf380eccc49a76dc4df428c8e36f428597a49e",
+    "activity": "C26"
+  },
+  "country_matching": {
+    "rule": "Match trade country/area ISO alpha-3 codes exactly to OECD ICIO country codes when identical. No fuzzy name matching and no manual reassignment after results are inspected.",
+    "exclude_from_match": [
+      "Other Asia, nes and other residual/special trade areas without an exact ICIO country code",
+      "trade reporters or suppliers without an exact C26 ICIO node",
+      "ICIO aggregate/rest-of-world codes without an exact trade country/area counterpart"
+    ],
+    "taiwan_rule": "Do not map Other Asia, nes (Comtrade code 490 / ISO S19) to TWN. Any Taiwan comparison requires a separately justified exact mapping and is outside this confirmatory comparison."
+  },
+  "comparison_pairs": [
+    {
+      "name": "export_scale",
+      "trade_measure": "exporter-reported HS 8542 World export value for each positive matched exporter",
+      "icio_measure": "C26 foreign_intermediate_sales for the same matched country",
+      "normalization": "Ranks are primary. Value shares within the matched sample may be reported secondarily, but raw monetary levels are not treated as directly equivalent across datasets."
+    },
+    {
+      "name": "downstream_importance",
+      "trade_measure": "sum across the frozen 84 material importers of each named supplier's importer-reported HS 8542 partner_share; call this trade_downstream_share_mass",
+      "icio_measure": "C26 foreign_downstream_input_share_mass for the same matched country",
+      "normalization": "Ranks are primary. The two masses are dimensionless but arise from different systems and are not interpreted as equal quantities."
+    }
+  ],
+  "statistics": {
+    "primary": "Spearman rank correlation for each comparison pair over the exact matched-country set",
+    "secondary": [
+      "matched-country rank table",
+      "rank difference = trade rank minus ICIO rank",
+      "largest absolute rank-difference outliers",
+      "top-10 overlap count and Jaccard index when at least 10 matched countries exist"
+    ],
+    "ties": "Use average ranks for Spearman calculation; deterministic displayed rankings sort descending by measure then ascending by country code.",
+    "missingness": "Report matched and excluded counts explicitly. Do not impute missing trade or ICIO measures."
+  },
+  "mirror_boundary": "Mirror-audit results remain a data-quality diagnostic only. Do not replace, average or correct importer-reported or exporter-reported trade values before the ICIO comparison.",
+  "interpretation": [
+    "This is a descriptive cross-system rank comparison, not validation of either dataset.",
+    "HS 8542 is narrower than ICIO C26.",
+    "Trade routing and re-exports may generate large discrepancies between commercial trade prominence and production-network importance.",
+    "No causal inference, fabrication-origin claim, technological-dependence claim or composite vulnerability score is permitted."
+  ],
+  "scientific_boundary": "The comparison design is frozen after the importer, exporter and mirror evidence is complete but before any HS8542-versus-C26 cross-dataset correlation or rank-difference result is calculated."
+}

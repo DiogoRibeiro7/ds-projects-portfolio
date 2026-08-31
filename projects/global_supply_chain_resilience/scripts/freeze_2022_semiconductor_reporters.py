@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from pathlib import Path
 
 from supply_chain_resilience.comtrade import extract_data_rows, get_official_json, response_schema
@@ -14,6 +15,7 @@ PREVIEW_ENDPOINT = "https://comtradeapi.un.org/public/v1/preview/C/A/HS"
 REFERENCE_YEAR = 2022
 HS_HEADING = "8542"
 MAX_WORLD_ROWS_PER_REPORTER = 2
+PUBLIC_PREVIEW_MIN_INTERVAL_SECONDS = 1.05
 
 
 def _fetch_reporter_world_imports(
@@ -21,10 +23,10 @@ def _fetch_reporter_world_imports(
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Fetch one reporter-scoped HS 8542 World-import aggregate at a time.
 
-    The public preview endpoint is reporter-scoped; it does not document an
-    all-reporters reporter code.  Each query asks for partner World and allows at
-    most two records so an unexpected duplicate/classification split fails rather
-    than being silently collapsed.
+    UN Comtrade documents the public/free API at one request per second.  The
+    loop therefore enforces a small margin above that interval rather than using
+    429 responses as implicit pacing.  This affects transport only; the reporter
+    universe and positive-import inclusion rule are unchanged.
     """
     reporter_codes = sorted({int(row["reporterCode"]) for row in availability_rows})
     if len(reporter_codes) != len(availability_rows):
@@ -32,7 +34,14 @@ def _fetch_reporter_world_imports(
 
     world_rows: list[dict[str, object]] = []
     query_evidence: list[dict[str, object]] = []
+    previous_started: float | None = None
     for reporter_code in reporter_codes:
+        if previous_started is not None:
+            elapsed = time.monotonic() - previous_started
+            if elapsed < PUBLIC_PREVIEW_MIN_INTERVAL_SECONDS:
+                time.sleep(PUBLIC_PREVIEW_MIN_INTERVAL_SECONDS - elapsed)
+        previous_started = time.monotonic()
+
         response = get_official_json(
             PREVIEW_ENDPOINT,
             {
@@ -104,7 +113,9 @@ def main() -> None:
             "schema": response_schema(availability_rows),
         },
         "world_import_gate": {
-            "strategy": "one official public-preview World-import query per available 2022 reporter",
+            "strategy": "one paced official public-preview World-import query per available 2022 reporter",
+            "documented_public_rate_limit": "1 request per second",
+            "minimum_request_interval_seconds": PUBLIC_PREVIEW_MIN_INTERVAL_SECONDS,
             "reporter_queries": len(query_evidence),
             "reporters_with_returned_world_row": len(world_rows),
             "max_rows_per_reporter_query": MAX_WORLD_ROWS_PER_REPORTER,

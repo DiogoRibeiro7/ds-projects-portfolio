@@ -6,6 +6,7 @@ import pytest
 from supply_chain_resilience.diversification import (
     baseline_direct_risk,
     optimize_buyer_sourcing,
+    rank_exposed_buyers,
 )
 
 
@@ -13,6 +14,22 @@ def test_baseline_direct_risk_uses_worst_frozen_supplier() -> None:
     observed = pd.Series({"AAA_X": 60.0, "BBB_X": 30.0, "CCC_X": 10.0})
     risk = baseline_direct_risk(observed, ("AAA_X", "BBB_X"), shock_fraction=0.10)
     assert risk == pytest.approx(0.06)
+
+
+def test_rank_exposed_buyers_handles_node_named_index_and_frozen_tiebreak() -> None:
+    exposed = pd.DataFrame(
+        {
+            "baseline_worst_case_direct_risk": [0.05, 0.05, 0.06, 0.05],
+            "intermediate_input": [100.0, 120.0, 90.0, 120.0],
+        },
+        index=pd.Index(["ZZZ_X", "BBB_X", "CCC_X", "AAA_X"], name="node"),
+    )
+
+    ranked = rank_exposed_buyers(exposed, limit=4)
+
+    assert list(ranked.index) == ["CCC_X", "AAA_X", "BBB_X", "ZZZ_X"]
+    assert ranked.index.name == "node"
+    assert "_node_label" not in ranked.columns
 
 
 def test_feasible_diversification_hits_risk_cap_with_minimum_turnover() -> None:

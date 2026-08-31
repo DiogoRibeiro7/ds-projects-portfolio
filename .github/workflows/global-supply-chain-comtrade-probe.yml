@@ -1,0 +1,44 @@
+name: Global Supply Chain Comtrade Probe
+
+on:
+  pull_request:
+    paths:
+      - "projects/global_supply_chain_resilience/**"
+      - ".github/workflows/global-supply-chain-comtrade-probe.yml"
+  workflow_dispatch:
+
+jobs:
+  test-and-probe:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/global_supply_chain_resilience
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+
+      - name: Run unit tests
+        run: pytest
+
+      - name: Probe official UN Comtrade 2022 HS 8542 schema
+        run: >-
+          python scripts/probe_un_comtrade_semiconductors.py
+          --output artifacts/comtrade_probe/semiconductor_2022_schema_probe.json
+
+      - name: Upload Comtrade probe evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: global-supply-chain-comtrade-2022-probe
+          path: projects/global_supply_chain_resilience/artifacts/comtrade_probe/semiconductor_2022_schema_probe.json
+          if-no-files-found: warn
+          retention-days: 30

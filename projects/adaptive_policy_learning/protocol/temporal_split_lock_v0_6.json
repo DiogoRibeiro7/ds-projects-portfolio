@@ -1,0 +1,39 @@
+{
+  "version": "0.6-temporal-split-lock",
+  "frozen_at": "2026-08-31",
+  "source_workflow_run_id": 33439169557,
+  "source_workflow_head_sha": "5435e46fc0ae80820bdd4777f55f19948290a751",
+  "source_artifact": {
+    "id": 9775754477,
+    "name": "adaptive-policy-learning-obd-source-audit",
+    "digest": "sha256:d01fcf349c9376fe734ec68d137921b28b084caac62a124dc282d8619c7e73a2"
+  },
+  "campaign": "all",
+  "raw_position": 1,
+  "split_rule": "Stable source order after raw-position-1 filtering; train_n=floor(0.70*n).",
+  "boundary_tie_rule": "Hard fail if the last training and first evaluation timestamps are equal.",
+  "bts_position_1": {
+    "row_count": 4118481,
+    "training_row_count": 2882936,
+    "evaluation_row_count": 1235545,
+    "training_last_timestamp": "2019-11-28 16:55:16.732969+00:00",
+    "evaluation_first_timestamp": "2019-11-28 16:55:17.867529+00:00",
+    "evaluation_last_timestamp": "2019-11-30 23:59:59.920907+00:00",
+    "evaluation_action_count": 80,
+    "evaluation_action_ids": "0..79"
+  },
+  "random_reference": {
+    "window_start": "2019-11-28 16:55:17.867529+00:00",
+    "window_end": "2019-11-30 23:59:59.920907+00:00",
+    "row_count": 137634,
+    "observed_action_count": 80,
+    "observed_action_ids": "0..79"
+  },
+  "identifiability": {
+    "uniform_target_probability": 0.0125,
+    "bts_evaluation_full_catalog_support": true,
+    "random_reference_full_catalog_support": true,
+    "primary_uniform_random_estimand_identifiable_at_observed_action_support_level": true
+  },
+  "outcome_visibility": "No click count, CTR, reward mean, OPE estimate, challenger value, policy ranking, or promotion decision was inspected to create this lock."
+}

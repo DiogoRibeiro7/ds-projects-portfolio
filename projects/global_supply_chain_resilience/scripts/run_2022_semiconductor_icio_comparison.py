@@ -29,11 +29,6 @@ def main() -> None:
     links = pd.read_csv(args.importer_links)
     icio = c26_supplier_frame(pd.read_csv(args.icio_suppliers))
 
-    if "S19" in set(exporters["reporter_iso"].astype(str)) and "TWN" not in set(
-        exporters["reporter_iso"].astype(str)
-    ):
-        pass
-
     export_table, export_summary = compare_ranked_measures(
         exporters,
         icio,
@@ -44,10 +39,6 @@ def main() -> None:
     )
 
     downstream = trade_downstream_share_mass(links)
-    if "S19" in set(downstream["partner_iso"].astype(str)) and "TWN" in set(
-        downstream.loc[downstream["partner_iso"].eq("S19"), "partner_iso"].astype(str)
-    ):
-        raise AssertionError("Other Asia, nes must not be remapped to TWN.")
     downstream_table, downstream_summary = compare_ranked_measures(
         downstream,
         icio,
@@ -91,8 +82,8 @@ def main() -> None:
         "scientific_boundary": (
             "This is a descriptive cross-system rank comparison. HS 8542 is narrower than ICIO C26; "
             "agreement or disagreement is not validation, causal evidence, fabrication-origin evidence, "
-            "or a technological-dependence measure. Other Asia, nes is not mapped to TWN, and mirror "
-            "values are not used to correct trade evidence."
+            "or a technological-dependence measure. Exact ISO3-to-ICIO matching is used, so Other Asia, "
+            "nes is not mapped to TWN, and mirror values are not used to correct trade evidence."
         ),
     }
 

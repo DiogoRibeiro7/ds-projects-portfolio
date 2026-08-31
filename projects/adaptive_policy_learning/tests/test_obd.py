@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+from io import StringIO
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -12,12 +13,8 @@ from adaptive_policy_learning.obd import audit_archive
 def _write_csv(archive: ZipFile, member: str, rows: list[dict[str, object]]) -> None:
     if not rows:
         raise ValueError("test fixture requires rows")
-    fieldnames = list(rows[0])
-    lines: list[str] = []
-    from io import StringIO
-
     buffer = StringIO()
-    writer = csv.DictWriter(buffer, fieldnames=fieldnames, lineterminator="\n")
+    writer = csv.DictWriter(buffer, fieldnames=list(rows[0]), lineterminator="\n")
     writer.writeheader()
     writer.writerows(rows)
     archive.writestr(member, buffer.getvalue())
@@ -63,7 +60,7 @@ def test_audit_archive_reports_schema_without_outcome_aggregates(tmp_path: Path)
     path = tmp_path / "open_bandit_dataset.zip"
     _build_archive(path)
 
-    report = audit_archive(path)
+    report = audit_archive(path, enforce_official_contract=False)
 
     assert report["campaign"] == "all"
     assert report["audited_action_count"] == 2
@@ -75,9 +72,17 @@ def test_audit_archive_reports_schema_without_outcome_aggregates(tmp_path: Path)
     assert "reward_mean" not in report
 
 
+def test_audit_archive_strict_contract_rejects_nonofficial_action_universe(tmp_path: Path) -> None:
+    path = tmp_path / "open_bandit_dataset.zip"
+    _build_archive(path)
+
+    with pytest.raises(ValueError, match="0..80"):
+        audit_archive(path)
+
+
 def test_audit_archive_rejects_invalid_propensity(tmp_path: Path) -> None:
     path = tmp_path / "open_bandit_dataset.zip"
     _build_archive(path, pscore=0.0)
 
     with pytest.raises(ValueError, match="propensity"):
-        audit_archive(path)
+        audit_archive(path, enforce_official_contract=False)

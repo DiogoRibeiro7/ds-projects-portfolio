@@ -1,0 +1,58 @@
+{
+  "version": "0.7-empirical-model-lock",
+  "frozen_at": "2026-08-31",
+  "amends": [
+    "design_lock.json v0.1-preregistered",
+    "source_contract_amendment_v0_5.json",
+    "temporal_split_lock_v0_6.json"
+  ],
+  "reward_model": {
+    "family": "L2-penalized logistic regression",
+    "implementation": "scikit-learn LogisticRegression",
+    "solver": "saga",
+    "penalty": "l2",
+    "C": 1.0,
+    "fit_intercept": true,
+    "max_iter": 200,
+    "tol": 0.0001,
+    "random_state": 20260831,
+    "class_weight": null,
+    "training_rows": 2882936,
+    "training_data": "BTS, campaign=all, raw position=1, rows before the frozen temporal boundary only"
+  },
+  "features": {
+    "user_features": "All raw user_feature_* columns, one-hot encoded with categories learned on BTS training only; unknown evaluation categories map to all-zero indicators for that field.",
+    "item_context": "Archived item_context.csv features for candidate action. item_feature_0 is numeric; remaining item_feature_* fields are treated as categorical and one-hot encoded with training/catalog-derived categories only.",
+    "user_item_affinity": "Exactly one scalar candidate-action affinity: user-item_affinity_{a} when scoring action a. Do not include affinities for non-candidate actions in q(x,a).",
+    "numeric_scaling": "Standardize numeric item_feature_0 and candidate affinity using BTS-training means and standard deviations only. Zero-variance numeric features are left unscaled after centering conventionally by setting scale=1.",
+    "interactions": "No additional interactions or polynomial features.",
+    "missing_values": "Categorical missing values become a literal __MISSING__ level learned from training; numeric missing values are imputed with the BTS-training median before scaling."
+  },
+  "candidate_scoring": {
+    "actions": "exact archived catalog IDs 0..79",
+    "uniform_target_probability": 0.0125,
+    "challenger_epsilon": 0.10,
+    "challenger_rule": "0.90 on the action with largest frozen q_hat plus 0.10/80 on every archived action; exact ties choose the lowest item_id.",
+    "evaluation_batching": "Candidate actions may be scored in deterministic batches for memory control; batching must not change arithmetic or policy probabilities."
+  },
+  "ope": {
+    "benchmark_estimators": ["ips", "snips", "direct_method", "doubly_robust"],
+    "primary_policy_gate": "doubly_robust",
+    "uniform_target_weights": "(1/80)/propensity_score on the logged action",
+    "challenger_weights": "pi_challenger(logged_action|x)/propensity_score",
+    "primary_weights": "unclipped",
+    "sensitivity_caps": [5.0, 10.0, 20.0]
+  },
+  "bootstrap": {
+    "method": "paired moving-block bootstrap over evaluation rows ordered by timestamp",
+    "block_length_hours": 24,
+    "replications": 1999,
+    "seed": 20260831,
+    "confidence_level": 0.95
+  },
+  "no_post_outcome_tuning": [
+    "Do not change C, solver, preprocessing, epsilon, split, target support, estimator, clipping rule, or bootstrap settings after evaluation outcomes are read.",
+    "If convergence fails at max_iter=200, report model-fit failure rather than increasing max_iter after inspecting policy-value results."
+  ],
+  "outcome_visibility": "This implementation lock was created before reading or aggregating evaluation-period click outcomes."
+}

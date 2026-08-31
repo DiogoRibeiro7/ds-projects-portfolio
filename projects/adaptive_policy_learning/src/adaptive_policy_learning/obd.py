@@ -16,6 +16,8 @@ LEGACY_PROPENSITY_FIELD = "action_prob"
 REQUIRED_BASE_FIELDS = frozenset({"timestamp", "item_id", "position", "click"})
 POLICIES = ("bts", "random")
 CAMPAIGN = "all"
+EXPECTED_ACTION_IDS = frozenset(range(81))
+EXPECTED_RAW_POSITIONS = frozenset({"1", "2", "3"})
 
 
 @dataclass(frozen=True)
@@ -58,7 +60,7 @@ def sha256_file(path: Path, *, chunk_size: int = 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
-def audit_archive(path: Path) -> dict[str, Any]:
+def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict[str, Any]:
     """Audit official OBD structure without emitting CTR or reward summaries."""
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -72,13 +74,11 @@ def audit_archive(path: Path) -> dict[str, Any]:
             logged[policy] = _audit_logged_csv(archive, logged_info)
             contexts[policy] = _audit_item_context(archive, context_info)
 
-    bts_actions = logged["bts"].action_count
-    random_actions = logged["random"].action_count
-    if bts_actions != random_actions:
+    if logged["bts"].action_count != logged["random"].action_count:
         raise ValueError("BTS and Random all-campaign action counts differ.")
     if contexts["bts"].item_count != contexts["random"].item_count:
         raise ValueError("BTS and Random item-context counts differ.")
-    if contexts["bts"].item_count != bts_actions:
+    if contexts["bts"].item_count != logged["bts"].action_count:
         raise ValueError("logged action count and item-context count disagree.")
 
     leftmost_raw_position = _leftmost_common_position(logged)
@@ -86,6 +86,9 @@ def audit_archive(path: Path) -> dict[str, Any]:
         logged["bts"].timestamp_max, logged["random"].timestamp_max
     ):
         raise ValueError("BTS and Random timestamp ranges do not overlap.")
+
+    if enforce_official_contract:
+        _enforce_official_contract(logged, contexts)
 
     return {
         "archive": {
@@ -96,15 +99,33 @@ def audit_archive(path: Path) -> dict[str, Any]:
         "campaign": CAMPAIGN,
         "logged_files": {key: asdict(value) for key, value in logged.items()},
         "item_context": {key: asdict(value) for key, value in contexts.items()},
-        "audited_action_count": bts_actions,
+        "audited_action_count": logged["bts"].action_count,
+        "expected_action_count": len(EXPECTED_ACTION_IDS),
         "leftmost_raw_position": leftmost_raw_position,
         "normalized_leftmost_position": 0,
+        "official_contract_enforced": enforce_official_contract,
         "scientific_boundary": (
             "This source audit contains provenance and schema metadata only. It intentionally "
             "omits click counts, CTRs, reward means, OPE estimates, policy rankings, challenger "
             "values, and promotion decisions."
         ),
     }
+
+
+def _enforce_official_contract(
+    logged: dict[str, LoggedFileAudit], contexts: dict[str, ItemContextAudit]
+) -> None:
+    for policy in POLICIES:
+        logged_row = logged[policy]
+        context_row = contexts[policy]
+        if logged_row.action_count != 81 or logged_row.action_min != 0 or logged_row.action_max != 80:
+            raise ValueError(f"{policy} logged all-campaign action universe is not exactly 0..80.")
+        if context_row.item_count != 81 or context_row.item_min != 0 or context_row.item_max != 80:
+            raise ValueError(f"{policy} item context universe is not exactly 0..80.")
+        if set(logged_row.raw_positions) != EXPECTED_RAW_POSITIONS:
+            raise ValueError(f"{policy} raw positions are not exactly 1, 2, 3.")
+        if logged_row.propensity_field != PRIMARY_PROPENSITY_FIELD:
+            raise ValueError(f"{policy} does not use the official propensity_score field.")
 
 
 def _find_unique_member(archive: ZipFile, suffix: str) -> ZipInfo:
@@ -150,6 +171,7 @@ def _audit_logged_csv(archive: ZipFile, info: ZipInfo) -> LoggedFileAudit:
             position = str(row["position"]).strip()
             if not position:
                 raise ValueError(f"{info.filename} contains an empty position.")
+            float(position)
             positions.add(position)
 
             click = int(row["click"])
@@ -172,7 +194,7 @@ def _audit_logged_csv(archive: ZipFile, info: ZipInfo) -> LoggedFileAudit:
         propensity_field=propensity,
         timestamp_min=timestamp_min,
         timestamp_max=timestamp_max,
-        raw_positions=tuple(sorted(positions, key=_position_sort_key)),
+        raw_positions=tuple(sorted(positions, key=float)),
         action_count=len(actions),
         action_min=min(actions),
         action_max=max(actions),
@@ -224,11 +246,4 @@ def _leftmost_common_position(logged: dict[str, LoggedFileAudit]) -> str:
     common = set(logged["bts"].raw_positions).intersection(logged["random"].raw_positions)
     if not common:
         raise ValueError("BTS and Random have no common raw position labels.")
-    return min(common, key=_position_sort_key)
-
-
-def _position_sort_key(value: str) -> tuple[int, float | str]:
-    try:
-        return (0, float(value))
-    except ValueError:
-        return (1, value)
+    return min(common, key=float)

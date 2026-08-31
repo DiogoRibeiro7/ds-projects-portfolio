@@ -11,9 +11,13 @@ import numpy as np
 import pandas as pd
 
 from supply_chain_resilience.comtrade import extract_data_rows, get_official_json
-from supply_chain_resilience.semiconductor import importer_concentration_metrics
+from supply_chain_resilience.semiconductor import (
+    importer_concentration_metrics,
+    partner_reference_sets,
+)
 
 DATA_AVAILABILITY_ENDPOINT = "https://comtradeapi.un.org/public/v1/getDA/C/A/HS"
+PARTNER_REFERENCE_ENDPOINT = "https://comtradeapi.un.org/files/v1/app/reference/partnerAreas.json"
 PREVIEW_ENDPOINT = "https://comtradeapi.un.org/public/v1/preview/C/A/HS"
 REFERENCE_YEAR = 2022
 HS_HEADING = "8542"
@@ -25,7 +29,6 @@ EXPECTED_PRIMARY_REPORTERS = 167
 
 
 def primary_reporters_from_manifest(manifest: dict[str, object]) -> list[dict[str, object]]:
-    """Return the prospectively corrected individual country/area reporter universe."""
     frozen = manifest.get("source_reporters", manifest.get("reporters"))
     if not isinstance(frozen, list):
         raise ValueError("reporter lock source_reporters must be a list.")
@@ -70,6 +73,23 @@ def _verify_live_dataset_contract(
         if str(row["classificationCode"]) != str(reporter["classification_code"]):
             raise RuntimeError(f"classification changed for frozen reporter {code}.")
     return live
+
+
+def _fetch_partner_reference() -> tuple[set[int], set[int], dict[str, object]]:
+    response = get_official_json(PARTNER_REFERENCE_ENDPOINT, {})
+    payload = response.payload
+    if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
+        raise RuntimeError("official Comtrade partner reference has unexpected schema.")
+    rows = [dict(row) for row in payload["results"] if isinstance(row, dict)]
+    known, named = partner_reference_sets(rows, reference_year=REFERENCE_YEAR)
+    evidence = {
+        "endpoint": response.endpoint,
+        "retrieved_at_utc": response.retrieved_at_utc,
+        "canonical_sha256": response.canonical_sha256,
+        "row_count": len(rows),
+        "named_country_area_code_count": len(named),
+    }
+    return known, named, evidence
 
 
 def _fetch_reporter_panel(
@@ -130,6 +150,7 @@ def main() -> None:
     reporters = primary_reporters_from_manifest(manifest)
 
     live = _verify_live_dataset_contract(reporters)
+    known_partner_codes, named_country_codes, partner_reference_evidence = _fetch_partner_reference()
 
     metric_rows: list[dict[str, object]] = []
     link_rows: list[dict[str, object]] = []
@@ -140,7 +161,11 @@ def main() -> None:
         code = int(reporter["reporter_code"])
         rows, previous_started, evidence = _fetch_reporter_panel(code, previous_started)
         metrics, bilateral = importer_concentration_metrics(
-            rows, reporter_code=code, commodity_heading=HS_HEADING
+            rows,
+            reporter_code=code,
+            commodity_heading=HS_HEADING,
+            known_partner_codes=known_partner_codes,
+            named_country_partner_codes=named_country_codes,
         )
         live_row = live[code]
         metrics.update(
@@ -211,14 +236,13 @@ def main() -> None:
         ),
         "source_reporter_manifest_run": manifest["source_workflow_run"],
         "source_reporter_manifest_artifact_digest": manifest["source_artifact_digest"],
+        "partner_reference_evidence": partner_reference_evidence,
         "query_count": len(query_evidence),
         "query_evidence": query_evidence,
         "scientific_boundary": (
             "Importer-reported HS 8542 trade values measure commercial bilateral concentration, "
-            "not technological dependence or fabrication origin. European Union (97) and ASEAN "
-            "(975) are excluded from the primary reporter universe because they overlap member "
-            "reporters; the exclusion was prospectively registered before any bilateral "
-            "concentration result was produced."
+            "not technological dependence or fabrication origin. Named country/area classification "
+            "uses the official UN Comtrade partner reference table, not ISO-string heuristics."
         ),
     }
 
@@ -228,13 +252,7 @@ def main() -> None:
     metrics.to_csv(args.metrics_output, index=False)
     links.to_csv(args.links_output, index=False)
     args.rankings_output.write_text(json.dumps(rankings, indent=2, sort_keys=True), encoding="utf-8")
-    print(
-        json.dumps(
-            {key: value for key, value in summary.items() if key != "query_evidence"},
-            indent=2,
-            sort_keys=True,
-        )
-    )
+    print(json.dumps({k: v for k, v in summary.items() if k != "query_evidence"}, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":

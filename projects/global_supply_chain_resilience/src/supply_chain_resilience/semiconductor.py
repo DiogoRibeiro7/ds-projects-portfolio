@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
 from math import isfinite
-import re
 from typing import Any
 
 
@@ -20,12 +20,7 @@ def freeze_positive_reporter_universe(
     reference_year: int,
     commodity_heading: str,
 ) -> list[dict[str, object]]:
-    """Freeze reporters with positive World-import value for the specified HS heading.
-
-    Trade values are used only as a mechanical positive-value inclusion gate and
-    are deliberately omitted from the returned metadata. Substantive trade
-    magnitudes remain unseen until the later concentration-analysis gate.
-    """
+    """Freeze reporters with positive World-import value for the specified HS heading."""
     required_availability = {
         "period",
         "reporterCode",
@@ -114,9 +109,37 @@ def freeze_positive_reporter_universe(
     return reporters
 
 
-def is_named_country_partner(partner_iso: object) -> bool:
-    """Return whether a Comtrade partner has an ordinary three-letter ISO code."""
-    return bool(re.fullmatch(r"[A-Z]{3}", str(partner_iso)))
+def partner_reference_sets(
+    reference_rows: list[dict[str, Any]], *, reference_year: int
+) -> tuple[set[int], set[int]]:
+    """Return known and named country/area partner codes from official Comtrade metadata.
+
+    A named country/area is an active, non-group reference entry with an official
+    ISO alpha-2 code. Residual categories such as Areas, nes, bunkers and free
+    zones lack alpha-2 codes and therefore remain outside the named-country layer.
+    """
+    start = date(reference_year, 1, 1)
+    end = date(reference_year, 12, 31)
+    known: set[int] = set()
+    named: set[int] = set()
+    for row in reference_rows:
+        _require_fields(
+            row,
+            {"PartnerCode", "entryEffectiveDate", "isGroup"},
+            context="partner-reference",
+        )
+        code = int(row["PartnerCode"])
+        if code in known:
+            raise ValueError(f"duplicate partner-reference PartnerCode={code}.")
+        known.add(code)
+        effective = date.fromisoformat(str(row["entryEffectiveDate"])[:10])
+        expired_raw = row.get("entryExpiredDate")
+        expired = date.max if not expired_raw else date.fromisoformat(str(expired_raw)[:10])
+        alpha2 = str(row.get("PartnerCodeIsoAlpha2", "")).strip()
+        active = effective <= end and expired >= start
+        if code != 0 and active and not bool(row["isGroup"]) and len(alpha2) == 2:
+            named.add(code)
+    return known, named
 
 
 def importer_concentration_metrics(
@@ -124,13 +147,10 @@ def importer_concentration_metrics(
     *,
     reporter_code: int,
     commodity_heading: str,
+    known_partner_codes: set[int],
+    named_country_partner_codes: set[int],
 ) -> tuple[dict[str, object], list[dict[str, object]]]:
-    """Compute the frozen 2022 HS 8542 importer concentration metrics.
-
-    World rows are excluded from the bilateral denominator. Residual/special
-    partner categories remain in the all-reported HHI and are reported separately;
-    named-country HHI is renormalized over ordinary three-letter ISO partners.
-    """
+    """Compute the frozen 2022 HS 8542 importer concentration metrics."""
     required = {
         "reporterCode",
         "partnerCode",
@@ -153,6 +173,8 @@ def importer_concentration_metrics(
         if str(row["cmdCode"]) != commodity_heading:
             raise ValueError("bilateral response contains an unexpected commodity code.")
         partner_code = int(row["partnerCode"])
+        if partner_code not in known_partner_codes:
+            raise ValueError(f"partnerCode={partner_code} is absent from official partner reference.")
         if partner_code in seen_partner_codes:
             raise ValueError(f"duplicate partnerCode={partner_code} for reporter {reporter_code}.")
         seen_partner_codes.add(partner_code)
@@ -170,7 +192,7 @@ def importer_concentration_metrics(
                 "partner_desc": str(row["partnerDesc"]),
                 "partner_iso": str(row["partnerISO"]),
                 "trade_value": value,
-                "is_named_country": is_named_country_partner(row["partnerISO"]),
+                "is_named_country": partner_code in named_country_partner_codes,
             }
         )
 

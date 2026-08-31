@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+import math
+
 import pytest
 
-from supply_chain_resilience.semiconductor import freeze_positive_reporter_universe
+from supply_chain_resilience.semiconductor import (
+    freeze_positive_reporter_universe,
+    importer_concentration_metrics,
+    is_named_country_partner,
+)
 
 
 def _availability(code: int, iso: str, name: str) -> dict[str, object]:
@@ -33,6 +39,24 @@ def _world_import(code: int, iso: str, name: str, value: float) -> dict[str, obj
         "primaryValue": value,
         "classificationCode": "H6",
         "classificationSearchCode": "HS",
+    }
+
+
+def _partner(
+    partner_code: int,
+    partner_iso: str,
+    value: float,
+    *,
+    reporter_code: int = 1,
+) -> dict[str, object]:
+    return {
+        "reporterCode": reporter_code,
+        "partnerCode": partner_code,
+        "partnerDesc": f"Partner {partner_code}",
+        "partnerISO": partner_iso,
+        "flowCode": "M",
+        "cmdCode": "8542",
+        "primaryValue": value,
     }
 
 
@@ -71,3 +95,45 @@ def test_freeze_positive_reporter_universe_requires_world_partner() -> None:
         freeze_positive_reporter_universe(
             availability, [row], reference_year=2022, commodity_heading="8542"
         )
+
+
+def test_named_country_partner_requires_three_letter_iso() -> None:
+    assert is_named_country_partner("CHN")
+    assert not is_named_country_partner("R4")
+    assert not is_named_country_partner("S19")
+    assert not is_named_country_partner("")
+
+
+def test_importer_concentration_metrics_follow_frozen_denominators() -> None:
+    rows = [
+        _partner(0, "W00", 120.0),
+        _partner(10, "AAA", 60.0),
+        _partner(20, "BBB", 30.0),
+        _partner(30, "R4", 10.0),
+    ]
+
+    metrics, bilateral = importer_concentration_metrics(
+        rows, reporter_code=1, commodity_heading="8542"
+    )
+
+    assert metrics["total_import_value"] == pytest.approx(100.0)
+    assert metrics["largest_partner_share"] == pytest.approx(0.6)
+    assert metrics["top3_partner_share"] == pytest.approx(1.0)
+    assert metrics["partner_hhi_all_reported"] == pytest.approx(0.46)
+    assert metrics["effective_partner_count"] == pytest.approx(1.0 / 0.46)
+    assert metrics["named_country_hhi"] == pytest.approx((2 / 3) ** 2 + (1 / 3) ** 2)
+    assert metrics["residual_partner_share"] == pytest.approx(0.1)
+    assert metrics["world_reconciliation_ratio"] == pytest.approx(100.0 / 120.0)
+    assert len(bilateral) == 3
+
+
+def test_importer_concentration_metrics_reject_duplicate_partner() -> None:
+    rows = [_partner(10, "AAA", 60.0), _partner(10, "AAA", 30.0)]
+    with pytest.raises(ValueError, match="duplicate partnerCode"):
+        importer_concentration_metrics(rows, reporter_code=1, commodity_heading="8542")
+
+
+def test_importer_concentration_metrics_allows_no_world_row() -> None:
+    rows = [_partner(10, "AAA", 60.0), _partner(20, "BBB", 40.0)]
+    metrics, _ = importer_concentration_metrics(rows, reporter_code=1, commodity_heading="8542")
+    assert math.isnan(float(metrics["world_reconciliation_ratio"]))

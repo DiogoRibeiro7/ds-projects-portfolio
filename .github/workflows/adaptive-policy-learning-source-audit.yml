@@ -50,10 +50,16 @@ jobs:
           --archive open_bandit_dataset.zip
           --output artifacts/source_audit/obd_source_audit.json
 
+      - name: Freeze primary temporal split without outcomes
+        run: >-
+          python scripts/audit_obd_temporal_split.py
+          --archive open_bandit_dataset.zip
+          --output artifacts/source_audit/obd_temporal_split_audit.json
+
       - name: Upload source audit evidence
         uses: actions/upload-artifact@v4
         with:
           name: adaptive-policy-learning-obd-source-audit
-          path: projects/adaptive_policy_learning/artifacts/source_audit/obd_source_audit.json
+          path: projects/adaptive_policy_learning/artifacts/source_audit/
           if-no-files-found: error
           retention-days: 30

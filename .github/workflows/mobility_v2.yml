@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   mobility-v2:
@@ -18,27 +19,55 @@ jobs:
     timeout-minutes: 120
 
     steps:
+      - name: Read v2 release gate
+        id: release_gate
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          state="$(gh api "repos/${GITHUB_REPOSITORY}/issues/578" --jq '.state')"
+          if [[ "$state" == "open" ]]; then
+            echo "open=true" >> "$GITHUB_OUTPUT"
+            echo "Mobility v2 release gate #578 is open."
+          else
+            echo "open=false" >> "$GITHUB_OUTPUT"
+            echo "Mobility v2 release gate #578 is closed; no confirmatory rerun is permitted."
+          fi
+
+      - name: Require main for confirmatory execution
+        if: github.event_name != 'pull_request' && steps.release_gate.outputs.open == 'true'
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Confirmatory v2 execution is permitted only from main; got $GITHUB_REF." >&2
+            exit 1
+          fi
+
       - name: Check out repository
+        if: github.event_name == 'pull_request' || steps.release_gate.outputs.open == 'true'
         uses: actions/checkout@v4
 
       - name: Set up Python
+        if: github.event_name == 'pull_request' || steps.release_gate.outputs.open == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
 
       - name: Install project
+        if: github.event_name == 'pull_request' || steps.release_gate.outputs.open == 'true'
         working-directory: projects/mobility_demand_optimization
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
 
       - name: Run mobility unit tests
+        if: github.event_name == 'pull_request' || steps.release_gate.outputs.open == 'true'
         working-directory: projects/mobility_demand_optimization
         run: python -m pytest -q
 
       - name: Check official June source availability
         id: june_source
+        if: github.event_name == 'pull_request' || steps.release_gate.outputs.open == 'true'
         run: |
           python - <<'PY'
           import os
@@ -67,27 +96,28 @@ jobs:
           PY
 
       - name: Build frozen-zone panel through June
-        if: steps.june_source.outputs.available == 'true'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.release_gate.outputs.open == 'true' && steps.june_source.outputs.available == 'true'
         working-directory: projects/mobility_demand_optimization
         run: python scripts/build_v2_panel.py
 
       - name: Generate preregistered June forecasts
-        if: steps.june_source.outputs.available == 'true'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.release_gate.outputs.open == 'true' && steps.june_source.outputs.available == 'true'
         working-directory: projects/mobility_demand_optimization
         run: python scripts/run_v2_forecasts.py
 
       - name: Run primary stochastic SAA study
-        if: steps.june_source.outputs.available == 'true'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.release_gate.outputs.open == 'true' && steps.june_source.outputs.available == 'true'
         working-directory: projects/mobility_demand_optimization
         run: python scripts/run_v2_stochastic_verified.py
 
       - name: Print primary v2 summary
-        if: steps.june_source.outputs.available == 'true'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.release_gate.outputs.open == 'true' && steps.june_source.outputs.available == 'true'
         working-directory: projects/mobility_demand_optimization
         run: cat data/v2/results/stochastic_primary/summary.json
 
       - name: Upload v2 confirmatory evidence
-        if: steps.june_source.outputs.available == 'true'
+        id: upload_evidence
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.release_gate.outputs.open == 'true' && steps.june_source.outputs.available == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: mobility-v2-primary
@@ -99,3 +129,15 @@ jobs:
             projects/mobility_demand_optimization/data/v2/results/forecasts/*.parquet
             projects/mobility_demand_optimization/data/v2/results/stochastic_primary/summary.json
             projects/mobility_demand_optimization/data/v2/results/stochastic_primary/hourly_policy_results.csv
+
+      - name: Close v2 release gate after successful evidence upload
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.release_gate.outputs.open == 'true' && steps.june_source.outputs.available == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/578/comments" \
+            -f body="Official June source was available and the preregistered mobility v2 confirmatory workflow completed successfully on main. Evidence upload succeeded. Run: ${RUN_URL}. Commit: ${GITHUB_SHA}. Issue #578 is now the one-shot completion sentinel; scheduled reruns must remain disabled."
+          gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/578" \
+            -f state=closed \
+            -f state_reason=completed

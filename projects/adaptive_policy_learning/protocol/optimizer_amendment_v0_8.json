@@ -1,0 +1,31 @@
+{
+  "version": "0.8-optimizer-budget-amendment",
+  "frozen_at": "2026-09-01",
+  "amends": [
+    "empirical_model_lock_v0_7.json"
+  ],
+  "triggering_evidence": {
+    "workflow_run_id": 33485115504,
+    "workflow_head_sha": "c7e77731e3870ab361d041d186c824cb2759ed07",
+    "failure": "reward model failed to converge at frozen max_iter=200",
+    "failure_stage": "training-only reward-model fit",
+    "evaluation_period_loaded": false,
+    "random_reference_loaded": false,
+    "ope_estimates_observed": false,
+    "policy_values_observed": false,
+    "promotion_decision_observed": false
+  },
+  "optimizer_amendment": {
+    "old_max_iter": 200,
+    "new_max_iter": 1000,
+    "solver": "saga",
+    "penalty": "l2",
+    "C": 1.0,
+    "tol": 0.0001,
+    "random_state": 20260831,
+    "class_weight": null,
+    "rule": "Only the numerical optimization budget changes. The likelihood, penalty, regularization strength, preprocessing, features, split, target policy, OPE estimators, clipping sensitivities, bootstrap settings, and promotion gate remain unchanged.",
+    "failure_rule": "If the model fails to converge at max_iter=1000, stop and report model-fit failure. Do not increase the budget again."
+  },
+  "scientific_interpretation": "This is a pre-evaluation numerical-optimization amendment made after observing only convergence status on BTS training data. It is not outcome-driven model selection or policy tuning."
+}

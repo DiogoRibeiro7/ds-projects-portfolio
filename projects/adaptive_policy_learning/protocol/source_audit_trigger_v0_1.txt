@@ -1,5 +1,5 @@
-Adaptive Policy Learning official Open Bandit Dataset empirical trigger v1.0
+Adaptive Policy Learning official Open Bandit Dataset empirical trigger v1.1
 
-Purpose: execute the first real primary OPE analysis on main after the source, support, temporal split, reward-model implementation, unit-test, Ruff, and mypy gates all passed.
+Purpose: execute the amended frozen primary OPE analysis on main under protocol v0.8 after the training-only v0.7 reward-model fit failed to converge at max_iter=200 and before any evaluation-period or Random-reference outcome was observed.
 
-Scientific boundary: this trigger authorizes the frozen primary empirical analysis exactly as specified by the committed v0.1-v0.7 protocol chain: uniform 1/80 benchmark, IPS/SNIPS/DM/DR, epsilon=0.10 challenger, overlap diagnostics, clipping sensitivity 5/10/20, 24-hour paired moving-block bootstrap with 1999 replications and seed 20260831, and the preregistered promotion rule. No post-outcome tuning is authorized.
+Scientific boundary: this trigger authorizes the v0.8 optimizer-budget amendment only. The reward model remains scikit-learn saga L2 logistic regression with C=1.0, tol=0.0001, the same frozen features, preprocessing, split, target support, estimators, epsilon=0.10 challenger, clipping sensitivity 5/10/20, 24-hour paired moving-block bootstrap with 1999 replications and seed 20260831, and the preregistered promotion rule. The sole amendment is max_iter=1000; no further post-outcome tuning is authorized.

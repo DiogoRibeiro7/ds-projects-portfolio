@@ -1,5 +1,5 @@
-Adaptive Policy Learning official Open Bandit Dataset source audit trigger v0.4
+Adaptive Policy Learning official Open Bandit Dataset empirical trigger v1.0
 
-Purpose: run the final main-only, value-free source/schema/catalog/support and temporal split audit after the source lock was merged.
+Purpose: execute the first real primary OPE analysis on main after the source, support, temporal split, reward-model implementation, unit-test, Ruff, and mypy gates all passed.
 
-Scientific boundary: this file authorizes provenance, schema, archived catalog, observed action-support, position-1 row counts, chronological split boundaries, and Random reference-window coverage only. It does not authorize CTR summaries, reward means, OPE estimates, policy rankings, challenger values, or promotion decisions.
+Scientific boundary: this trigger authorizes the frozen primary empirical analysis exactly as specified by the committed v0.1-v0.7 protocol chain: uniform 1/80 benchmark, IPS/SNIPS/DM/DR, epsilon=0.10 challenger, overlap diagnostics, clipping sensitivity 5/10/20, 24-hour paired moving-block bootstrap with 1999 replications and seed 20260831, and the preregistered promotion rule. No post-outcome tuning is authorized.

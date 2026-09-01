@@ -9,6 +9,8 @@ from pathlib import Path
 
 from adaptive_policy_learning.optimizer_v08 import run_primary_ope_v08
 
+DECLARED_CONVERGENCE_STOP = "reward model failed to converge at amended max_iter=1000"
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -27,6 +29,27 @@ def main() -> None:
             protocol_dir=args.protocol_dir,
             chunk_size=args.chunk_size,
         )
+    except RuntimeError as exc:
+        if str(exc) != DECLARED_CONVERGENCE_STOP:
+            raise
+        terminal = {
+            "status": "model_fit_failure",
+            "protocol_version": "0.8-optimizer-budget-amendment",
+            "code_sha": args.code_sha,
+            "failure_stage": "training_only_reward_model_fit",
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+            "max_iter": 1000,
+            "evaluation_outcomes_loaded": False,
+            "random_reference_outcomes_loaded": False,
+            "ope_estimates_computed": False,
+            "promotion_authorized": False,
+            "terminal_protocol_outcome": True,
+        }
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(terminal, indent=2, sort_keys=True), encoding="utf-8")
+        print(json.dumps(terminal, indent=2, sort_keys=True))
+        return
     except Exception as exc:
         failure = {
             "status": "failure",

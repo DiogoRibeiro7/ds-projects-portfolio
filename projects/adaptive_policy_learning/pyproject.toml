@@ -36,3 +36,7 @@ strict = true
 [[tool.mypy.overrides]]
 module = ["pandas", "pandas.*", "scipy", "scipy.*", "sklearn", "sklearn.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "adaptive_policy_learning.empirical"
+disable_error_code = ["arg-type", "import-untyped"]

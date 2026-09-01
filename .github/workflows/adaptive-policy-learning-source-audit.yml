@@ -56,10 +56,26 @@ jobs:
           --archive open_bandit_dataset.zip
           --output artifacts/source_audit/obd_temporal_split_audit.json
 
+      - name: Execute frozen primary OPE
+        run: >-
+          python scripts/run_primary_ope.py
+          --archive open_bandit_dataset.zip
+          --output artifacts/empirical/primary_ope_result.json
+          --code-sha "${{ github.sha }}"
+          --protocol-dir protocol
+
       - name: Upload source audit evidence
         uses: actions/upload-artifact@v4
         with:
           name: adaptive-policy-learning-obd-source-audit
           path: projects/adaptive_policy_learning/artifacts/source_audit/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload primary OPE result
+        uses: actions/upload-artifact@v4
+        with:
+          name: adaptive-policy-learning-primary-ope
+          path: projects/adaptive_policy_learning/artifacts/empirical/primary_ope_result.json
           if-no-files-found: error
           retention-days: 30

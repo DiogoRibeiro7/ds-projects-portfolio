@@ -1,0 +1,28 @@
+{
+  "version": "0.8-primary-empirical-terminal-status",
+  "recorded_at": "2026-09-01",
+  "workflow_run_id": 33491157874,
+  "workflow_job_id": 99802721963,
+  "head_sha": "d412e86d4ab0637761046e283bf9d5448cc7d5e2",
+  "artifact_id": 9794819452,
+  "artifact_name": "adaptive-policy-learning-primary-ope",
+  "artifact_digest": "sha256:65c4f7d458fa8de7af3d81f610b5cbc268bb0969b87bc075f36bc74a9e24a159",
+  "status": "model_fit_failure",
+  "failure_stage": "training_only_reward_model_fit",
+  "reward_model": {
+    "family": "L2-penalized logistic regression",
+    "solver": "saga",
+    "C": 1.0,
+    "tol": 0.0001,
+    "max_iter": 1000,
+    "random_state": 20260831
+  },
+  "failure": "reward model failed to converge at amended max_iter=1000",
+  "evaluation_outcomes_loaded": false,
+  "random_reference_outcomes_loaded": false,
+  "ope_estimates_computed": false,
+  "promotion_authorized": false,
+  "terminal_protocol_outcome": true,
+  "further_optimizer_budget_increases_authorized": false,
+  "interpretation": "The preregistered primary empirical analysis terminates at reward-model fitting. The model failed to converge under both the original max_iter=200 budget and the sole pre-evaluation optimizer-budget amendment max_iter=1000. No evaluation-period or Random-reference outcome was loaded, and no OPE estimate or promotion decision was computed."
+}

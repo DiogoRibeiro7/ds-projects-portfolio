@@ -22,6 +22,7 @@ def test_study2_newton_cholesky_fit_passes_on_well_conditioned_binary_data() -> 
     model, captured = _fit_study2_reward_model(x, y)
 
     assert model.solver == "newton-cholesky"
+    assert model.l1_ratio == 0.0
     assert model.max_iter == STUDY2_MAX_ITER
     assert int(model.n_iter_[0]) < STUDY2_MAX_ITER
     assert model.classes_.tolist() == [0, 1]
@@ -33,6 +34,7 @@ def test_study2_newton_cholesky_fit_passes_on_well_conditioned_binary_data() -> 
 def test_study2_training_gate_rejects_convergence_warning(monkeypatch: pytest.MonkeyPatch) -> None:
     class WarningModel:
         solver = "newton-cholesky"
+        l1_ratio = 0.0
         max_iter = STUDY2_MAX_ITER
         classes_ = np.array([0, 1])
         n_iter_ = np.array([1])

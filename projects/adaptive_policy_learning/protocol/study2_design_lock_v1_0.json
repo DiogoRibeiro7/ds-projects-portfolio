@@ -28,13 +28,15 @@
     "family": "L2-penalized logistic regression",
     "implementation": "scikit-learn LogisticRegression",
     "solver": "newton-cholesky",
-    "penalty": "l2",
+    "regularization": "l2",
+    "l1_ratio": 0.0,
     "C": 1.0,
     "fit_intercept": true,
     "tol": 0.0001,
     "max_iter": 100,
     "class_weight": null,
     "random_state": null,
+    "parameterization_note": "scikit-learn >=1.8 deprecates the explicit penalty='l2' argument. l1_ratio=0.0 with finite C is the current API spelling for the same pure L2 objective.",
     "rationale": "Use a deterministic exact-Newton solver designed for n_samples >> n_features and one-hot categorical designs. This replaces the SAGA numerical method that failed in Study 1 while preserving the same penalized logistic objective and feature specification.",
     "automatic_lbfgs_fallback": "not accepted as a successful training gate; any warning indicating newton-cholesky fallback or numerical instability terminates Study 2 before evaluation",
     "training_gate_pass": [
@@ -83,12 +85,7 @@
     "challenger_rule": "0.90 on the action with largest q_hat plus 0.10/80 on every archived action; exact ties choose the lowest item_id"
   },
   "ope": {
-    "benchmark_estimators": [
-      "ips",
-      "snips",
-      "direct_method",
-      "doubly_robust"
-    ],
+    "benchmark_estimators": ["ips", "snips", "direct_method", "doubly_robust"],
     "primary_policy_gate": "doubly_robust",
     "uniform_target_weights": "(1/80)/propensity_score on the logged action",
     "challenger_weights": "pi_challenger(logged_action|x)/propensity_score",

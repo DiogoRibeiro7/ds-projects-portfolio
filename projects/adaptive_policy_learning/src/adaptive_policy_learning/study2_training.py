@@ -62,6 +62,8 @@ def run_study2_training_qualification(
             "rows": base.TRAIN_ROWS,
             "n_features": layout.n_features,
             "solver": "newton-cholesky",
+            "regularization": "l2",
+            "l1_ratio": 0.0,
             "C": 1.0,
             "tol": 0.0001,
             "max_iter": STUDY2_MAX_ITER,
@@ -84,7 +86,7 @@ def _fit_study2_reward_model(
 ) -> tuple[LogisticRegression, list[str]]:
     model = LogisticRegression(
         solver="newton-cholesky",
-        penalty="l2",
+        l1_ratio=0.0,
         C=1.0,
         fit_intercept=True,
         max_iter=STUDY2_MAX_ITER,

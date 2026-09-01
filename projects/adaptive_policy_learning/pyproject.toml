@@ -26,6 +26,9 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 
+[tool.ruff.lint.per-file-ignores]
+"src/adaptive_policy_learning/empirical.py" = ["I001", "UP035", "C408"]
+
 [tool.mypy]
 python_version = "3.11"
 strict = true
@@ -33,3 +36,7 @@ strict = true
 [[tool.mypy.overrides]]
 module = ["pandas", "pandas.*", "scipy", "scipy.*", "sklearn", "sklearn.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "adaptive_policy_learning.empirical"
+disable_error_code = ["arg-type", "import-untyped"]

@@ -57,6 +57,7 @@ jobs:
           --output artifacts/source_audit/obd_temporal_split_audit.json
 
       - name: Initialize Study 2 primary result record
+        if: always()
         run: |
           mkdir -p artifacts/study2
           cat > artifacts/study2/study2_primary_ope_result.json <<EOF
@@ -65,7 +66,7 @@ jobs:
             "study": "Adaptive Policy Learning Study 2",
             "code_sha": "${{ github.sha }}",
             "stage": "primary_ope_execution_not_completed",
-            "note": "This placeholder is overwritten by the Study 2 runner on success or handled failure. If preserved, the OPE step was interrupted or timed out before it could write a terminal result."
+            "note": "This placeholder is overwritten by the Study 2 runner on success or handled failure. If preserved, a prerequisite failed, the OPE step was skipped, or execution was interrupted or timed out before a terminal result could be written."
           }
           EOF
 

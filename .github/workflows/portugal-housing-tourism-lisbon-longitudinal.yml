@@ -39,7 +39,7 @@ jobs:
       - name: Build observed Lisbon longitudinal series
         run: python scripts/build_lisbon_longitudinal.py
       - name: Upload processed table, provenance and figures
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: portugal-housing-tourism-lisbon-longitudinal
           path: |

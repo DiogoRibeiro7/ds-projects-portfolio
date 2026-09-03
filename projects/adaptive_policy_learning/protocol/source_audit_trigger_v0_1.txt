@@ -1,5 +1,5 @@
-Adaptive Policy Learning official Open Bandit Dataset empirical trigger v1.1
+Adaptive Policy Learning official Open Bandit Dataset Study 2 training qualification trigger v2.0
 
-Purpose: execute the amended frozen primary OPE analysis on main under protocol v0.8 after the training-only v0.7 reward-model fit failed to converge at max_iter=200 and before any evaluation-period or Random-reference outcome was observed.
+Purpose: execute the prospectively frozen Study 2 training-only qualification on main after the Study 2 design and qualification implementation passed tests, Ruff, and mypy and was merged.
 
-Scientific boundary: this trigger authorizes the v0.8 optimizer-budget amendment only. The reward model remains scikit-learn saga L2 logistic regression with C=1.0, tol=0.0001, the same frozen features, preprocessing, split, target support, estimators, epsilon=0.10 challenger, clipping sensitivity 5/10/20, 24-hour paired moving-block bootstrap with 1999 replications and seed 20260831, and the preregistered promotion rule. The sole amendment is max_iter=1000; no further post-outcome tuning is authorized.
+Scientific boundary: this trigger authorizes only official archive verification, the outcome-free temporal split audit, and fitting the Study 2 L2 logistic reward model on the frozen BTS training partition with solver=newton-cholesky, l1_ratio=0.0, C=1.0, tol=0.0001, and max_iter=100. BTS evaluation-period clicks, Random-reference clicks, OPE estimates, challenger values, rankings, bootstrap results, and promotion decisions remain forbidden. If the Study 2 training gate fails, Study 2 terminates and any redesign is Study 3.

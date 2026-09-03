@@ -186,7 +186,7 @@ def _load_qualification_lock(protocol_dir: Path) -> dict[str, object]:
     path = protocol_dir / QUALIFICATION_LOCK_FILE
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
-        raise RuntimeError("Study 2 qualification lock must be a JSON object")
+        raise TypeError("Study 2 qualification lock must be a JSON object")
     if payload.get("status") != "training_gate_passed":
         raise RuntimeError("Study 2 evaluation is not authorized by the qualification lock")
     if payload.get("evaluation_outcomes_loaded") is not False:
@@ -209,7 +209,7 @@ def _assert_qualification_reproduced(
     training = qualification.get("training")
     runtime = qualification.get("runtime")
     if not isinstance(training, dict) or not isinstance(runtime, dict):
-        raise RuntimeError("Study 2 qualification lock is missing training/runtime metadata")
+        raise TypeError("Study 2 qualification lock is missing training/runtime metadata")
 
     expected_sha = training.get("coefficient_sha256")
     if expected_sha != EXPECTED_QUALIFIED_COEFFICIENT_SHA256:

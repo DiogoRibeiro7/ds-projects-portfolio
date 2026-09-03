@@ -1,5 +1,9 @@
-Adaptive Policy Learning official Open Bandit Dataset Study 2 training qualification trigger v2.0
+Adaptive Policy Learning official Open Bandit Dataset Study 2 primary OPE trigger v2.1
 
-Purpose: execute the prospectively frozen Study 2 training-only qualification on main after the Study 2 design and qualification implementation passed tests, Ruff, and mypy and was merged.
+Purpose: execute the single prospectively authorized Study 2 primary off-policy evaluation on main after the Study 2 training qualification passed and the exact qualified model state was frozen.
 
-Scientific boundary: this trigger authorizes only official archive verification, the outcome-free temporal split audit, and fitting the Study 2 L2 logistic reward model on the frozen BTS training partition with solver=newton-cholesky, l1_ratio=0.0, C=1.0, tol=0.0001, and max_iter=100. BTS evaluation-period clicks, Random-reference clicks, OPE estimates, challenger values, rankings, bootstrap results, and promotion decisions remain forbidden. If the Study 2 training gate fails, Study 2 terminates and any redesign is Study 3.
+Pre-evaluation authorization: the runner must refit the frozen BTS training partition with newton-cholesky L2 logistic regression (l1_ratio=0.0, C=1.0, tol=0.0001, max_iter=100) and reproduce exactly 73 features, n_iter=6, zero optimizer warnings, the locked scientific runtime, and coefficient SHA256 7438db24286013c628dc7f74e2dd7f4913cdd05297c717fff78a214c9afb5684. Any mismatch aborts before BTS evaluation-period or Random-reference outcomes are opened.
+
+Primary analysis authorization: only after the qualification state is reproduced, open the frozen BTS evaluation window and exact matched Random reference window and compute the preregistered uniform benchmark and epsilon=0.10 challenger using IPS, SNIPS, DM, and DR; primary unclipped weights with clipping sensitivities 5/10/20; ESS and overlap diagnostics; paired 24-hour moving-block bootstrap with 1999 replications and seed 20260831; and the frozen promotion rule requiring the lower 95% bootstrap confidence bound for challenger DR minus observed BTS value to exceed zero and challenger ESS/n >= 0.10.
+
+Scientific boundary: this trigger authorizes one primary Study 2 OPE execution only. No solver, regularization, preprocessing, feature, split, support, epsilon, estimator, clipping, bootstrap, or promotion-rule changes are authorized after evaluation outcomes are opened. The workflow must preserve a result artifact on success, handled failure, prerequisite failure, interruption, or timeout.

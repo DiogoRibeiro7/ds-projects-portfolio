@@ -6,7 +6,7 @@
   "status": "training_gate_passed",
   "workflow_run_id": 33758643227,
   "workflow_job_id": 100659151758,
-  "head_sha": "55fcf6ab713e6d1b46045b0b8dd48fbcb56e2ed6",
+  "code_sha": "55fcf6ab713e6d1b46045b0b8dd48fbcb56e2ed6",
   "artifact": {
     "id": 9894906742,
     "name": "adaptive-policy-learning-study2-training",

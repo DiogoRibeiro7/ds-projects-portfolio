@@ -15,6 +15,7 @@ import sklearn
 
 from adaptive_policy_learning import empirical as base
 from adaptive_policy_learning.ope import overlap_diagnostics, promotion_decision
+from adaptive_policy_learning.study2_evaluation import evaluate_bts_study2
 from adaptive_policy_learning.study2_training import _fit_study2_reward_model
 
 QUALIFICATION_LOCK_FILE = "study2_training_qualification_lock_v1_1.json"
@@ -38,8 +39,6 @@ def run_study2_primary_ope(
     qualification = _load_qualification_lock(protocol_dir)
     design_hash = protocol_hash_study2(protocol_dir)
 
-    # Training-only phase. Nothing below this point opens BTS evaluation or Random
-    # reference outcomes until the qualification lock has been reproduced exactly.
     with ZipFile(archive_path) as archive:
         item_context = base._load_item_context(archive)
         training = base._extract_training_arrays(archive, chunk_size=chunk_size)
@@ -58,10 +57,8 @@ def run_study2_primary_ope(
         warnings_captured=captured,
     )
 
-    # Evaluation authorization starts only after the exact qualified coefficient
-    # state and scientific runtime have been reproduced.
     with ZipFile(archive_path) as archive:
-        evaluation = base._evaluate_bts(
+        evaluation = evaluate_bts_study2(
             archive,
             frozen_model,
             item_context,

@@ -37,7 +37,7 @@ jobs:
       - name: Build municipality comparison
         run: python scripts/build_municipality_comparison.py
       - name: Upload municipality evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: portugal-housing-tourism-municipality-comparison
           path: |

@@ -1,0 +1,121 @@
+{
+  "version": "1.0-study2-prospective-lock",
+  "created_at": "2026-09-01",
+  "study": "Adaptive Policy Learning Study 2",
+  "parent_study": {
+    "terminal_record": "primary_empirical_terminal_status_v0_8.json",
+    "terminal_status": "model_fit_failure",
+    "evaluation_outcomes_loaded": false,
+    "random_reference_outcomes_loaded": false,
+    "ope_estimates_computed": false
+  },
+  "research_question": "How reliable are off-policy estimators for real logged recommendation data, and can a transparent lower-confidence-bound rule prevent unsupported promotion of a learned challenger policy, when the reward model is fitted with a deterministic second-order optimizer appropriate for n_samples >> n_features?",
+  "source_and_split": {
+    "archive": "official ZOZO Open Bandit Dataset archive locked by obd_source_lock.json",
+    "archive_sha256": "e8ec18196582a5937381a1776382ca940689b90a18d2dcd1fb635be6df614d78",
+    "logging_policy": "BTS",
+    "campaign": "all",
+    "raw_position": 1,
+    "training_rows": 2882936,
+    "evaluation_rows": 1235545,
+    "evaluation_start": "2019-11-28 16:55:17.867529+00:00",
+    "evaluation_end": "2019-11-30 23:59:59.920907+00:00",
+    "random_reference_rows": 137634,
+    "action_catalog": "exact archived IDs 0..79",
+    "reuse_rule": "Study 2 reuses the exact source and temporal split from Study 1. Evaluation-period and Random-reference outcomes remain untouched at Study 2 lock time."
+  },
+  "reward_model": {
+    "family": "L2-penalized logistic regression",
+    "implementation": "scikit-learn LogisticRegression",
+    "solver": "newton-cholesky",
+    "regularization": "l2",
+    "l1_ratio": 0.0,
+    "C": 1.0,
+    "fit_intercept": true,
+    "tol": 0.0001,
+    "max_iter": 100,
+    "class_weight": null,
+    "random_state": null,
+    "parameterization_note": "scikit-learn >=1.8 deprecates the explicit penalty='l2' argument. l1_ratio=0.0 with finite C is the current API spelling for the same pure L2 objective.",
+    "rationale": "Use a deterministic exact-Newton solver designed for n_samples >> n_features and one-hot categorical designs. This replaces the SAGA numerical method that failed in Study 1 while preserving the same penalized logistic objective and feature specification.",
+    "automatic_lbfgs_fallback": "not accepted as a successful training gate; any warning indicating newton-cholesky fallback or numerical instability terminates Study 2 before evaluation",
+    "training_gate_pass": [
+      "no ConvergenceWarning",
+      "no warning indicating numerical fallback or Hessian instability",
+      "n_iter < 100",
+      "classes exactly [0, 1]",
+      "all fitted coefficients and intercept finite"
+    ],
+    "training_gate_failure_rule": "If any training gate criterion fails, Study 2 terminates as model_fit_failure. No solver, tolerance, regularization, feature, or iteration-budget amendment is authorized within Study 2."
+  },
+  "features": {
+    "inherit_from": "empirical_model_lock_v0_7.json",
+    "user_features": "All raw user_feature_* fields, one-hot encoded using BTS training levels only; unknown evaluation levels map to all-zero indicators for that field.",
+    "item_context": "Archived candidate-action item_context; item_feature_0 numeric, item_feature_1..3 categorical one-hot.",
+    "candidate_affinity": "Exactly user-item_affinity_{a} when scoring candidate action a; no non-candidate affinity columns in q(x,a).",
+    "numeric_scaling": "Same BTS-training-only median, mean, and standard-deviation preprocessing as Study 1.",
+    "interactions": "none",
+    "post_outcome_feature_changes": "forbidden"
+  },
+  "training_only_qualification": {
+    "must_run_before_evaluation": true,
+    "allowed_data": "BTS training partition only, including training clicks needed to fit the model",
+    "forbidden_data": [
+      "BTS evaluation-period clicks",
+      "Random reference-window clicks",
+      "any OPE estimate",
+      "any challenger value or ranking"
+    ],
+    "output": [
+      "status",
+      "protocol_hash",
+      "code_sha",
+      "archive_sha256",
+      "runtime versions",
+      "training row count",
+      "feature count",
+      "n_iter",
+      "coefficient SHA256",
+      "captured optimizer warnings"
+    ]
+  },
+  "target_policies": {
+    "uniform_benchmark_probability": 0.0125,
+    "challenger_epsilon": 0.10,
+    "challenger_rule": "0.90 on the action with largest q_hat plus 0.10/80 on every archived action; exact ties choose the lowest item_id"
+  },
+  "ope": {
+    "benchmark_estimators": ["ips", "snips", "direct_method", "doubly_robust"],
+    "primary_policy_gate": "doubly_robust",
+    "uniform_target_weights": "(1/80)/propensity_score on the logged action",
+    "challenger_weights": "pi_challenger(logged_action|x)/propensity_score",
+    "primary_weights": "unclipped",
+    "sensitivity_caps": [5.0, 10.0, 20.0],
+    "implementation": "reuse tested adaptive_policy_learning.ope primitives without semantic changes"
+  },
+  "bootstrap": {
+    "method": "paired moving-block bootstrap over evaluation rows ordered by timestamp",
+    "block_length_hours": 24,
+    "replications": 1999,
+    "seed": 20260831,
+    "confidence_level": 0.95
+  },
+  "promotion_rule": {
+    "promote_if": "lower endpoint of the 95% bootstrap CI for challenger DR minus observed BTS value is > 0 AND challenger ESS/n >= 0.10",
+    "minimum_ess_fraction": 0.10,
+    "otherwise": "do_not_promote"
+  },
+  "execution_sequence": [
+    "merge this prospective Study 2 lock and training-gate implementation",
+    "run training-only qualification on the official archive",
+    "if and only if the training gate passes, freeze the successful coefficient hash and implementation provenance without reading evaluation outcomes",
+    "execute the primary OPE once",
+    "package the result and stop"
+  ],
+  "no_post_outcome_tuning": [
+    "No change to solver, max_iter, tol, C, features, preprocessing, split, target support, epsilon, estimator, clipping rule, bootstrap, or promotion threshold after any evaluation-period or Random-reference outcome is loaded.",
+    "No secondary analyses before the Study 2 primary result is complete.",
+    "A failed Study 2 training gate ends Study 2; any redesign is Study 3."
+  ],
+  "outcome_visibility_at_lock": "No BTS evaluation-period click outcome, Random reference-window click outcome, OPE estimate, challenger value, or promotion decision has been read or computed in either Study 1 or Study 2."
+}

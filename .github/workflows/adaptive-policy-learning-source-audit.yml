@@ -12,7 +12,7 @@ jobs:
   audit-official-obd:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 180
     defaults:
       run:
         working-directory: projects/adaptive_policy_learning
@@ -56,7 +56,21 @@ jobs:
           --archive open_bandit_dataset.zip
           --output artifacts/source_audit/obd_temporal_split_audit.json
 
+      - name: Initialize Study 2 primary result record
+        run: |
+          mkdir -p artifacts/study2
+          cat > artifacts/study2/study2_primary_ope_result.json <<EOF
+          {
+            "status": "incomplete",
+            "study": "Adaptive Policy Learning Study 2",
+            "code_sha": "${{ github.sha }}",
+            "stage": "primary_ope_execution_not_completed",
+            "note": "This placeholder is overwritten by the Study 2 runner on success or handled failure. If preserved, the OPE step was interrupted or timed out before it could write a terminal result."
+          }
+          EOF
+
       - name: Execute authorized Study 2 primary OPE
+        timeout-minutes: 140
         run: >-
           python scripts/run_study2_primary_ope.py
           --archive open_bandit_dataset.zip

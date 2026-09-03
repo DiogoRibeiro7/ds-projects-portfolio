@@ -56,11 +56,11 @@ jobs:
           --archive open_bandit_dataset.zip
           --output artifacts/source_audit/obd_temporal_split_audit.json
 
-      - name: Execute amended primary OPE v0.8
+      - name: Execute Study 2 training-only qualification
         run: >-
-          python scripts/run_primary_ope_v08.py
+          python scripts/run_study2_training.py
           --archive open_bandit_dataset.zip
-          --output artifacts/empirical/primary_ope_result.json
+          --output artifacts/study2/study2_training_qualification.json
           --code-sha "${{ github.sha }}"
           --protocol-dir protocol
 
@@ -73,11 +73,11 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload primary OPE result
+      - name: Upload Study 2 training qualification
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: adaptive-policy-learning-primary-ope
-          path: projects/adaptive_policy_learning/artifacts/empirical/primary_ope_result.json
+          name: adaptive-policy-learning-study2-training
+          path: projects/adaptive_policy_learning/artifacts/study2/study2_training_qualification.json
           if-no-files-found: error
           retention-days: 30

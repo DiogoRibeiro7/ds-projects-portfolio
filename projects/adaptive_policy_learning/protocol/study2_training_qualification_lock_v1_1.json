@@ -1,0 +1,58 @@
+{
+  "version": "1.1-study2-training-qualification-lock",
+  "recorded_at": "2026-09-03",
+  "study": "Adaptive Policy Learning Study 2",
+  "parent_protocol": "study2_design_lock_v1_0.json",
+  "status": "training_gate_passed",
+  "workflow_run_id": 33758643227,
+  "workflow_job_id": 100659151758,
+  "head_sha": "55fcf6ab713e6d1b46045b0b8dd48fbcb56e2ed6",
+  "artifact": {
+    "id": 9894906742,
+    "name": "adaptive-policy-learning-study2-training",
+    "digest": "sha256:73d532834f423012e7abcc05ee0c302bc48a9a4aa59f2fdf5c410642d0a5edae"
+  },
+  "protocol_hash": "f06cd1c9f9327a6300684dba7f14c5775a8ce465e9404a5f6a0bd4907e988f0c",
+  "source_archive_sha256": "e8ec18196582a5937381a1776382ca940689b90a18d2dcd1fb635be6df614d78",
+  "runtime": {
+    "python": "3.11.16",
+    "numpy": "2.4.6",
+    "pandas": "3.0.5",
+    "scipy": "1.17.1",
+    "scikit_learn": "1.9.0"
+  },
+  "training": {
+    "rows": 2882936,
+    "n_features": 73,
+    "solver": "newton-cholesky",
+    "regularization": "l2",
+    "l1_ratio": 0.0,
+    "C": 1.0,
+    "tol": 0.0001,
+    "max_iter": 100,
+    "n_iter": 6,
+    "coefficient_sha256": "7438db24286013c628dc7f74e2dd7f4913cdd05297c717fff78a214c9afb5684",
+    "warnings": []
+  },
+  "evaluation_outcomes_loaded": false,
+  "random_reference_outcomes_loaded": false,
+  "ope_estimates_computed": false,
+  "qualification_interpretation": "The prospectively specified Study 2 Newton-Cholesky L2 logistic reward model passed all training-only gates on the complete frozen BTS training partition. It converged in 6 iterations, produced finite coefficients, and emitted no warnings.",
+  "evaluation_authorization": "Study 2 primary OPE may be executed only by code that first reproduces this exact coefficient SHA256 and training-gate state before opening the BTS evaluation period or Random reference outcomes.",
+  "post_qualification_changes_forbidden": [
+    "solver",
+    "regularization",
+    "C",
+    "tol",
+    "max_iter",
+    "features",
+    "preprocessing",
+    "training/evaluation split",
+    "target support",
+    "challenger epsilon",
+    "OPE estimators",
+    "clipping sensitivity",
+    "bootstrap",
+    "promotion threshold"
+  ]
+}

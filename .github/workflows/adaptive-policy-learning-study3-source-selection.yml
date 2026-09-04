@@ -44,6 +44,23 @@ jobs:
           --output open_bandit_dataset.zip
           https://research.zozo.com/data_release/open_bandit_dataset.zip
 
+      - name: Verify archive against frozen source lock
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          archive = Path("open_bandit_dataset.zip")
+          source_lock = json.loads(Path("protocol/obd_source_lock.json").read_text(encoding="utf-8"))
+          expected = str(source_lock["archive"]["sha256"])
+          with archive.open("rb") as handle:
+              actual = hashlib.file_digest(handle, "sha256").hexdigest()
+          if actual != expected:
+              raise SystemExit(f"archive SHA256 mismatch: expected {expected}, got {actual}")
+          print(f"verified archive SHA256 {actual}")
+          PY
+
       - name: Audit Men's campaign without parsing clicks
         run: >-
           python scripts/audit_obd_source.py
@@ -65,6 +82,8 @@ jobs:
           python scripts/select_study3_campaign.py
           --men artifacts/study3_source/men_source_audit.json
           --women artifacts/study3_source/women_source_audit.json
+          --source-lock protocol/obd_source_lock.json
+          --code-sha "${{ github.sha }}"
           --output artifacts/study3_source/study3_source_selection.json
 
       - name: Upload Study 3 source-selection evidence

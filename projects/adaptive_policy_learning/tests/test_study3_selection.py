@@ -24,7 +24,7 @@ def _report(
     *,
     random_rows: int,
     catalog: list[int] | None = None,
-    random_observed: list[int] | None = None,
+    random_observed: list[object] | None = None,
 ) -> dict[str, Any]:
     catalog_ids = catalog or [0, 1, 2, 3]
     observed_ids = random_observed or catalog_ids
@@ -114,6 +114,44 @@ def test_select_campaign_rejects_action_outside_catalog() -> None:
                 random_rows=200,
                 catalog=[0, 1, 2, 3],
                 random_observed=[0, 1, 99],
+            ),
+        },
+    )
+
+    assert result["selected_campaign"] == "men"
+
+
+def test_select_campaign_rejects_non_integral_action_id() -> None:
+    selector = _load_selector()
+
+    result = _select(
+        selector,
+        {
+            "men": _report("men", random_rows=100),
+            "women": _report(
+                "women",
+                random_rows=200,
+                catalog=[0, 1, 2, 3],
+                random_observed=[0, 1.9],
+            ),
+        },
+    )
+
+    assert result["selected_campaign"] == "men"
+
+
+def test_select_campaign_rejects_boolean_action_id() -> None:
+    selector = _load_selector()
+
+    result = _select(
+        selector,
+        {
+            "men": _report("men", random_rows=100),
+            "women": _report(
+                "women",
+                random_rows=200,
+                catalog=[0, 1, 2, 3],
+                random_observed=[0, True],
             ),
         },
     )

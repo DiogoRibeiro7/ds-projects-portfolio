@@ -20,13 +20,13 @@ def _write_csv(archive: ZipFile, member: str, rows: list[dict[str, object]]) -> 
     archive.writestr(member, buffer.getvalue())
 
 
-def _logged_rows(*, pscore: float = 0.5) -> list[dict[str, object]]:
+def _logged_rows(*, pscore: float = 0.5, click: object = 0) -> list[dict[str, object]]:
     return [
         {
             "timestamp": "2019-11-25 00:00:00",
             "item_id": 0,
             "position": 1,
-            "click": 0,
+            "click": click,
             "propensity_score": pscore,
             "user_feature_0": "A",
         },
@@ -56,11 +56,21 @@ def _item_rows() -> list[dict[str, object]]:
     ]
 
 
-def _build_archive(path: Path, *, pscore: float = 0.5) -> None:
+def _build_archive(
+    path: Path,
+    *,
+    campaign: str = "all",
+    pscore: float = 0.5,
+    click: object = 0,
+) -> None:
     with ZipFile(path, "w", compression=ZIP_DEFLATED) as archive:
         for policy in ("bts", "random"):
-            prefix = f"open_bandit_dataset/{policy}/all"
-            _write_csv(archive, f"{prefix}/all.csv", _logged_rows(pscore=pscore))
+            prefix = f"open_bandit_dataset/{policy}/{campaign}"
+            _write_csv(
+                archive,
+                f"{prefix}/{campaign}.csv",
+                _logged_rows(pscore=pscore, click=click),
+            )
             _write_csv(archive, f"{prefix}/item_context.csv", _item_rows())
 
 
@@ -83,6 +93,25 @@ def test_audit_archive_uses_archive_catalog_without_outcome_aggregates(tmp_path:
     assert report["logged_action_support"]["bts"]["missing_catalog_action_ids"] == []
     assert "ctr" not in report
     assert "reward_mean" not in report
+
+
+def test_audit_archive_can_select_campaign_without_parsing_clicks(tmp_path: Path) -> None:
+    path = tmp_path / "open_bandit_dataset.zip"
+    _build_archive(path, campaign="men", click="not-an-outcome")
+
+    report = audit_archive(path, campaign="men", validate_click_values=False)
+
+    assert report["campaign"] == "men"
+    assert report["click_value_validation_performed"] is False
+    assert report["logged_files"]["bts"]["member"].endswith("/bts/men/men.csv")
+
+
+def test_audit_archive_rejects_invalid_campaign_name(tmp_path: Path) -> None:
+    path = tmp_path / "open_bandit_dataset.zip"
+    _build_archive(path)
+
+    with pytest.raises(ValueError, match="campaign"):
+        audit_archive(path, campaign="../all")
 
 
 def test_audit_archive_rejects_logged_action_outside_context_catalog(tmp_path: Path) -> None:

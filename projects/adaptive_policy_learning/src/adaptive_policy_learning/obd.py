@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import re
 from dataclasses import asdict, dataclass
 from hashlib import sha256
 from io import TextIOWrapper
@@ -13,9 +14,14 @@ PRIMARY_PROPENSITY_FIELD = "propensity_score"
 LEGACY_PROPENSITY_FIELD = "action_prob"
 REQUIRED_BASE_FIELDS = frozenset({"timestamp", "item_id", "position", "click"})
 POLICIES = ("bts", "random")
-CAMPAIGN = "all"
-DOCUMENTED_ACTION_IDS = frozenset(range(81))
+DEFAULT_CAMPAIGN = "all"
+DOCUMENTED_ACTION_IDS_BY_CAMPAIGN = {
+    "all": frozenset(range(81)),
+    "men": frozenset(range(34)),
+    "women": frozenset(range(47)),
+}
 EXPECTED_RAW_POSITIONS = frozenset({"1", "2", "3"})
+_CAMPAIGN_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 @dataclass(frozen=True)
@@ -40,6 +46,8 @@ class LoggedFileAudit:
 
 @dataclass(frozen=True)
 class ItemContextAudit:
+    """Value-free metadata for one campaign's item catalog."""
+
     member: str
     compressed_size: int
     uncompressed_size: int
@@ -53,6 +61,7 @@ class ItemContextAudit:
 
 
 def sha256_file(path: Path, *, chunk_size: int = 1024 * 1024) -> str:
+    """Return the SHA-256 digest of a file without loading it into memory."""
     digest = sha256()
     with path.open("rb") as handle:
         while chunk := handle.read(chunk_size):
@@ -60,18 +69,45 @@ def sha256_file(path: Path, *, chunk_size: int = 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
-def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict[str, object]:
-    """Audit official OBD structure without emitting CTR or reward summaries."""
+def audit_archive(
+    path: Path,
+    *,
+    campaign: str = DEFAULT_CAMPAIGN,
+    enforce_official_contract: bool = True,
+    validate_click_values: bool = True,
+) -> dict[str, object]:
+    """Audit one OBD campaign without emitting CTR or reward summaries.
+
+    Args:
+        path: Path to the official OBD ZIP archive.
+        campaign: Campaign directory/name to audit, for example ``all``, ``men``, or ``women``.
+        enforce_official_contract: Whether to enforce shared schema/support invariants.
+        validate_click_values: Whether to parse click values solely to verify binary support. Set
+            this to ``False`` for source-selection audits that should not semantically inspect the
+            outcome field before a prospective study lock.
+
+    Returns:
+        JSON-serializable provenance, schema, support, and catalog metadata.
+
+    Raises:
+        FileNotFoundError: If ``path`` does not exist.
+        ValueError: If the campaign name or archive contract is invalid.
+    """
     if not path.is_file():
         raise FileNotFoundError(path)
+    campaign = _validate_campaign(campaign)
 
     with ZipFile(path) as archive:
         logged: dict[str, LoggedFileAudit] = {}
         contexts: dict[str, ItemContextAudit] = {}
         for policy in POLICIES:
-            logged_info = _find_unique_member(archive, f"/{policy}/{CAMPAIGN}/{CAMPAIGN}.csv")
-            context_info = _find_unique_member(archive, f"/{policy}/{CAMPAIGN}/item_context.csv")
-            logged[policy] = _audit_logged_csv(archive, logged_info)
+            logged_info = _find_unique_member(archive, f"/{policy}/{campaign}/{campaign}.csv")
+            context_info = _find_unique_member(archive, f"/{policy}/{campaign}/item_context.csv")
+            logged[policy] = _audit_logged_csv(
+                archive,
+                logged_info,
+                validate_click_values=validate_click_values,
+            )
             contexts[policy] = _audit_item_context(archive, context_info)
 
     if contexts["bts"].item_ids != contexts["random"].item_ids:
@@ -87,6 +123,7 @@ def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict
         _enforce_official_contract(logged, contexts)
 
     catalog_ids = frozenset(contexts["bts"].item_ids)
+    documented_ids = DOCUMENTED_ACTION_IDS_BY_CAMPAIGN.get(campaign)
     support = {
         policy: {
             "observed_action_count": logged[policy].action_count,
@@ -104,24 +141,36 @@ def audit_archive(path: Path, *, enforce_official_contract: bool = True) -> dict
             "size_bytes": path.stat().st_size,
             "sha256": sha256_file(path),
         },
-        "campaign": CAMPAIGN,
+        "campaign": campaign,
         "logged_files": {key: asdict(value) for key, value in logged.items()},
         "item_context": {key: asdict(value) for key, value in contexts.items()},
         "archive_catalog_action_count": len(catalog_ids),
         "archive_catalog_action_ids": sorted(catalog_ids),
-        "documented_action_count": len(DOCUMENTED_ACTION_IDS),
-        "documented_action_ids": sorted(DOCUMENTED_ACTION_IDS),
-        "documentation_matches_archive_catalog": catalog_ids == DOCUMENTED_ACTION_IDS,
+        "documented_action_count": len(documented_ids) if documented_ids is not None else None,
+        "documented_action_ids": sorted(documented_ids) if documented_ids is not None else None,
+        "documentation_matches_archive_catalog": (
+            catalog_ids == documented_ids if documented_ids is not None else None
+        ),
         "logged_action_support": support,
         "leftmost_raw_position": leftmost_raw_position,
         "normalized_leftmost_position": 0,
         "official_contract_enforced": enforce_official_contract,
+        "click_value_validation_performed": validate_click_values,
         "scientific_boundary": (
-            "This source audit contains provenance, schema, catalog, and observed action-support "
-            "metadata only. It intentionally omits click counts, CTRs, reward means, OPE estimates, "
-            "policy rankings, challenger values, and promotion decisions."
+            "This source audit contains provenance, schema, catalog, timestamp, propensity, and "
+            "observed action-support metadata only. It intentionally omits click counts, CTRs, "
+            "reward means, OPE estimates, policy rankings, challenger values, and promotion "
+            "decisions. When click_value_validation_performed is false, click values are not "
+            "parsed or validated by the audit logic."
         ),
     }
+
+
+def _validate_campaign(campaign: str) -> str:
+    value = campaign.strip()
+    if not value or _CAMPAIGN_PATTERN.fullmatch(value) is None:
+        raise ValueError("campaign must contain only letters, numbers, underscores, or hyphens")
+    return value
 
 
 def _enforce_official_contract(
@@ -134,7 +183,9 @@ def _enforce_official_contract(
         if not context_ids:
             raise ValueError(f"{policy} item-context catalog is empty.")
         if not observed or not observed.issubset(context_ids):
-            raise ValueError(f"{policy} logged actions are not a non-empty subset of its item-context catalog.")
+            raise ValueError(
+                f"{policy} logged actions are not a non-empty subset of its item-context catalog."
+            )
         if set(logged_row.raw_positions) != EXPECTED_RAW_POSITIONS:
             raise ValueError(f"{policy} raw positions are not exactly 1, 2, 3.")
         if logged_row.propensity_field != PRIMARY_PROPENSITY_FIELD:
@@ -145,7 +196,9 @@ def _find_unique_member(archive: ZipFile, suffix: str) -> ZipInfo:
     normalized = suffix.lstrip("/")
     matches = [info for info in archive.infolist() if info.filename.endswith(normalized)]
     if len(matches) != 1:
-        raise ValueError(f"expected exactly one archive member ending in {suffix!r}; found {len(matches)}")
+        raise ValueError(
+            f"expected exactly one archive member ending in {suffix!r}; found {len(matches)}"
+        )
     return matches[0]
 
 
@@ -157,7 +210,12 @@ def _member_sha256(archive: ZipFile, info: ZipInfo) -> str:
     return digest.hexdigest()
 
 
-def _audit_logged_csv(archive: ZipFile, info: ZipInfo) -> LoggedFileAudit:
+def _audit_logged_csv(
+    archive: ZipFile,
+    info: ZipInfo,
+    *,
+    validate_click_values: bool,
+) -> LoggedFileAudit:
     with archive.open(info) as raw:
         reader = csv.DictReader(TextIOWrapper(raw, encoding="utf-8-sig", newline=""))
         columns = tuple(reader.fieldnames or ())
@@ -187,9 +245,10 @@ def _audit_logged_csv(archive: ZipFile, info: ZipInfo) -> LoggedFileAudit:
             float(position)
             positions.add(position)
 
-            click = int(row["click"])
-            if click not in (0, 1):
-                raise ValueError(f"{info.filename} click must be binary.")
+            if validate_click_values:
+                click = int(row["click"])
+                if click not in (0, 1):
+                    raise ValueError(f"{info.filename} click must be binary.")
             pscore = float(row[propensity])
             if not 0.0 < pscore <= 1.0:
                 raise ValueError(f"{info.filename} propensity must lie in (0, 1].")
@@ -251,7 +310,9 @@ def _resolve_propensity_field(columns: tuple[str, ...]) -> str:
     primary = PRIMARY_PROPENSITY_FIELD in columns
     legacy = LEGACY_PROPENSITY_FIELD in columns
     if primary and legacy:
-        raise ValueError("both propensity_score and legacy action_prob are present; schema is ambiguous.")
+        raise ValueError(
+            "both propensity_score and legacy action_prob are present; schema is ambiguous."
+        )
     if primary:
         return PRIMARY_PROPENSITY_FIELD
     if legacy:

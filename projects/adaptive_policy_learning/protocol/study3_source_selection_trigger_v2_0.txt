@@ -1,0 +1,9 @@
+Adaptive Policy Learning Study 3 source-selection trigger v2.0
+
+Purpose: after merge to main, execute the prospectively frozen Study 3 source-selection audit on the official locked Open Bandit Dataset archive.
+
+Candidate campaigns: men, women.
+
+Scientific boundary: this workflow may inspect provenance, schema, row counts, timestamps, item IDs, position labels, propensity support, and item-context catalogs. It must not parse click values, compute click/reward summaries, fit reward models, run OPE estimators, compute bootstrap intervals, or make a Study 3 promotion decision.
+
+Selection rule is frozen in study3_source_selection_lock_v2_0.json. The selected campaign must be frozen before a separate Study 3 empirical design is specified and before any selected-campaign click outcome is parsed.

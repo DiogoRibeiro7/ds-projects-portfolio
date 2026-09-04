@@ -31,6 +31,9 @@
   "authorized_erratum": {
     "timestamp_conversion": "Convert parsed evaluation timestamps explicitly to datetime64[ns] before integer conversion.",
     "boundary_validation": "Validate evaluation row count and first/last timestamps using timestamp and position columns only before reading evaluation click outcomes.",
+    "shared_selection_helper": "Use one Study 2 evaluation-row slicing helper for both the outcome-free boundary pass and the scored evaluation pass to prevent split-selection drift.",
+    "runner_audit_artifact": "Precreate an incomplete Study 2 result record immediately after the exact qualified model is reproduced and before evaluation opens; overwrite it on terminal success or handled failure.",
+    "regression_test": "tests/test_study2_empirical.py::test_study2_timestamp_conversion_is_explicitly_nanoseconds",
     "shared_study1_evaluator_changed": false,
     "solver_changed": false,
     "regularization_changed": false,

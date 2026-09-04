@@ -34,6 +34,17 @@ def _positive_row_count(value: object) -> bool:
     return type(value) is int and value > 0
 
 
+def _integer_id_set(value: object, *, require_non_empty: bool) -> set[int] | None:
+    """Validate a JSON action-ID list without coercing floats, strings, or booleans."""
+    if not isinstance(value, list):
+        return None
+    if require_non_empty and not value:
+        return None
+    if any(type(item_id) is not int for item_id in value):
+        return None
+    return set(value)
+
+
 def _qualifies(
     report: dict[str, Any],
     *,
@@ -50,12 +61,11 @@ def _qualifies(
     if not isinstance(archive, dict) or archive.get("sha256") != expected_archive_sha256:
         return False
 
-    catalog_ids = report.get("archive_catalog_action_ids")
-    if not isinstance(catalog_ids, list) or not catalog_ids:
-        return False
-    try:
-        catalog = {int(item_id) for item_id in catalog_ids}
-    except (TypeError, ValueError):
+    catalog = _integer_id_set(
+        report.get("archive_catalog_action_ids"),
+        require_non_empty=True,
+    )
+    if catalog is None:
         return False
 
     logged = report.get("logged_files")
@@ -77,14 +87,11 @@ def _qualifies(
         if not _positive_row_count(policy_logged.get("row_count")):
             return False
 
-        observed_ids = policy_support.get("observed_action_ids")
-        if not isinstance(observed_ids, list) or not observed_ids:
-            return False
-        try:
-            observed = {int(item_id) for item_id in observed_ids}
-        except (TypeError, ValueError):
-            return False
-        if not observed.issubset(catalog):
+        observed = _integer_id_set(
+            policy_support.get("observed_action_ids"),
+            require_non_empty=True,
+        )
+        if observed is None or not observed.issubset(catalog):
             return False
 
         timestamp_min = policy_logged.get("timestamp_min")

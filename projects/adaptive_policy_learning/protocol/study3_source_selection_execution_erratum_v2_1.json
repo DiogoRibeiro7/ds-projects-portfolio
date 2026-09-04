@@ -1,0 +1,36 @@
+{
+  "version": "2.1-study3-source-selection-execution-erratum",
+  "created_at": "2026-09-04",
+  "study": "Adaptive Policy Learning Study 3",
+  "parent_lock": "study3_source_selection_lock_v2_0.json",
+  "affected_run": {
+    "workflow_run_id": 33917319459,
+    "head_sha": "301680ab66f39ba6a4ad57da9854cc0a3fb3f55d",
+    "status": "non_authoritative",
+    "reason": "The run was launched from the merged v2.0 source-selection implementation before unresolved review findings were corrected. Any source-selection decision emitted by this run is invalid for freezing Study 3."
+  },
+  "implementation_findings": [
+    "The v2.0 selector incorrectly required complete observed action coverage, contradicting the frozen rule that permits a non-empty subset of the campaign catalog.",
+    "The v2.0 selector did not verify that each audit report campaign matched the candidate key supplied to the selector.",
+    "The v2.0 workflow downloaded the archive from a mutable URL without verifying it against the already frozen archive SHA256 before source selection.",
+    "The v2.0 selection record did not include the exact executing code SHA.",
+    "The lexical tie-break was frozen but not directly covered by a regression test."
+  ],
+  "outcome_visibility": {
+    "study3_click_values_parsed_by_source_audit": false,
+    "click_counts_or_ctr_computed": false,
+    "reward_model_fit": false,
+    "ope_estimates_computed": false,
+    "bootstrap_computed": false,
+    "promotion_decision_computed": false
+  },
+  "corrective_rules": [
+    "Accept logged actions only when they form a non-empty subset of the campaign catalog.",
+    "Require report.campaign to equal the candidate campaign name.",
+    "Require each audit report archive SHA256 to equal the frozen SHA256 in obd_source_lock.json.",
+    "Require overlapping BTS and Random timestamp ranges and positive row counts.",
+    "Record the exact executing code SHA in the source-selection result.",
+    "Keep the largest Random-policy row_count rule and lexical tie-break unchanged."
+  ],
+  "authorization": "Exactly one corrected source-selection run is authorized after this erratum and its implementation fixes merge. No selected-campaign click outcome may be parsed before that corrected source is frozen and a separate Study 3 empirical design is prospectively locked."
+}

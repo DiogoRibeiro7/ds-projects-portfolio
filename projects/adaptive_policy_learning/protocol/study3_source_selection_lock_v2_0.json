@@ -1,0 +1,55 @@
+{
+  "version": "2.0-study3-source-selection-lock",
+  "created_at": "2026-09-04",
+  "study": "Adaptive Policy Learning Study 3",
+  "parent_study": {
+    "study": "Adaptive Policy Learning Study 2",
+    "terminal_record": "study2_primary_ope_terminal_status_v1_2.json",
+    "status": "success",
+    "promotion_decision": "do_not_promote",
+    "reason_for_new_study": "Study 2 observed a positive challenger DR-minus-BTS interval but failed the frozen overlap gate. Any redesign or new empirical test must therefore be prospectively specified as a new study."
+  },
+  "research_goal": "Test whether the conservative OPE workflow and promotion gate replicate on an OBD campaign not used for Study 2, without selecting the replication source using click outcomes or OPE results.",
+  "candidate_campaigns": ["men", "women"],
+  "excluded_campaigns": {
+    "all": "Used for Study 1 and Study 2 training/evaluation and therefore not an independent campaign-level replication source."
+  },
+  "source_selection_audit": {
+    "archive": "the exact official OBD archive locked by obd_source_lock.json",
+    "allowed_fields": [
+      "archive/member hashes and sizes",
+      "column names",
+      "row counts",
+      "timestamps",
+      "item IDs",
+      "raw position labels",
+      "propensity_score values only for support/range validation",
+      "item_context catalogs"
+    ],
+    "forbidden_fields_or_outputs": [
+      "parsed click values",
+      "click counts",
+      "CTR or reward means",
+      "reward-model fits",
+      "IPS/SNIPS/DM/DR estimates",
+      "challenger values or rankings",
+      "bootstrap intervals",
+      "promotion decisions"
+    ],
+    "click_validation": false
+  },
+  "qualification_rule": {
+    "requirements": [
+      "both BTS and Random campaign files exist uniquely in the locked archive",
+      "BTS and Random item-context catalogs are identical within the campaign",
+      "logged actions are non-empty subsets of the campaign catalog for both policies",
+      "raw positions are exactly 1, 2, 3 for both policies",
+      "propensity_score is present and lies in (0, 1]",
+      "BTS and Random timestamp ranges overlap"
+    ],
+    "selection": "Among qualifying candidate campaigns, choose the campaign with the largest Random-policy row_count. If tied, choose the lexicographically smaller campaign name.",
+    "failure": "If no candidate campaign qualifies, Study 3 stops before any click outcome is parsed."
+  },
+  "post_selection_rule": "After the selected campaign is frozen from value-free source metadata, a separate prospective Study 3 design must freeze its temporal split, reward model, target policies, OPE estimators, bootstrap, and promotion rule before any selected-campaign click outcome is parsed.",
+  "no_post_outcome_tuning": "Study 2 results may motivate independent replication, but may not be used to soften the Study 2 challenger, overlap threshold, estimator choice, or confidence rule within Study 3 after selected-campaign outcomes are observed."
+}

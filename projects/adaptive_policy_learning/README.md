@@ -2,23 +2,25 @@
 
 A reproducible contextual-bandit project for evaluating and selecting decision policies from logged recommendation data.
 
-## Final primary-study status
+## Current empirical status
 
-**Terminal status: `model_fit_failure`. The preregistered primary empirical study did not reach off-policy evaluation.**
+**Study 2 status: `success`. Promotion decision: `do_not_promote`.**
 
-The frozen L2 logistic reward model using scikit-learn `LogisticRegression(solver="saga", C=1.0, tol=0.0001)` failed to converge on the BTS training partition under the original `max_iter=200` budget. A single pre-evaluation numerical-optimization amendment increased only the iteration budget to `max_iter=1000`; the same training-only fit again failed to converge.
+Study 1 remains a valid historical negative result: its preregistered SAGA logistic reward model failed to converge under the allowed `max_iter=200` and `max_iter=1000` budgets, so Study 1 terminated before off-policy evaluation.
 
-The protocol therefore terminated before loading BTS evaluation-period outcomes or Random-reference outcomes. No IPS, SNIPS, direct-method, or doubly-robust estimate was computed, and no challenger promotion decision was made. Promotion is not authorized.
+Study 2 was then specified prospectively as a new study. It preserved the source, temporal split, features, target policies, OPE estimators, bootstrap, clipping sensitivities, and promotion rule, while changing only the reward-model solver to deterministic `newton-cholesky`. The training qualification reproduced the frozen 73-feature model in 6 iterations with zero warnings on all 2,882,936 BTS training rows.
 
-This is **not evidence that OPE is unreliable** and it is not evidence for or against the challenger policy. It is a negative result about the preregistered reward-model fitting specification under the allowed optimization budgets.
+The corrected Study 2 primary OPE completed successfully on 1,235,545 BTS evaluation rows. The challenger produced a doubly robust value estimate of `0.0086129872`, compared with observed BTS value `0.0048561566`, for a DR-minus-BTS point difference of `0.0037568306`. The preregistered 95% paired moving-block-bootstrap interval was `[0.0015186077, 0.0100335434]`.
 
-See [`RESULTS.md`](RESULTS.md) for the final study record and [`protocol/primary_empirical_terminal_status_v0_8.json`](protocol/primary_empirical_terminal_status_v0_8.json) for machine-readable provenance.
+The challenger was nevertheless **not promoted** because its unclipped importance-weight effective-sample-size fraction was only `0.0019786` (about 0.20%), far below the frozen minimum of `0.10` (10%). The result therefore demonstrates the intended safety property of the decision rule: a positive point estimate and positive confidence interval are not sufficient when overlap is inadequate.
+
+See [`RESULTS.md`](RESULTS.md) for the complete empirical record and [`protocol/study2_primary_ope_terminal_status_v1_2.json`](protocol/study2_primary_ope_terminal_status_v1_2.json) for machine-readable provenance.
 
 ## Research question
 
 > How reliable are off-policy estimators for real logged recommendation data, and can a transparent lower-confidence-bound rule prevent unsupported promotion of a learned challenger policy?
 
-The primary empirical study uses the ZOZO Research Open Bandit Dataset. Bernoulli Thompson Sampling feedback is the logging-policy dataset. The uniform Random policy provides an independently logged on-policy reference over the same evaluation window.
+The empirical studies use the ZOZO Research Open Bandit Dataset. Bernoulli Thompson Sampling feedback is the logging-policy dataset. The uniform Random policy provides an independently logged on-policy reference over the same evaluation window.
 
 The project deliberately focuses on **policy-value estimation and deployment decisions**, not on maximizing an opaque leaderboard score.
 
@@ -50,25 +52,32 @@ and
 \widehat V_{DR}=\frac{1}{n}\sum_i\left[\sum_a\pi_e(a\mid x_i)\hat q(x_i,a)+w_i(r_i-\hat q(x_i,a_i))\right].
 \]
 
-These estimators remain implemented and tested, but the preregistered primary study did not produce empirical values because the frozen reward-model fit did not converge.
+Study 2 produced empirical IPS, SNIPS, DM, and DR estimates for both the uniform-random benchmark and the challenger. The independently logged Random reference provides an external calibration check for the uniform-random target.
 
 ## Promotion rule
 
-Had the primary analysis reached evaluation, the challenger would have been promoted only when both conditions held:
+The challenger is promoted only when both frozen conditions hold:
 
-1. the lower endpoint of the preregistered 95% moving-block-bootstrap interval for
-   \(V_{DR}(\pi_{challenger})-V(\pi_{BTS})\) was strictly positive;
-2. the challenger importance-weight effective-sample-size fraction was at least 0.10.
+1. the lower endpoint of the 95% moving-block-bootstrap interval for
+   \(V_{DR}(\pi_{challenger})-V(\pi_{BTS})\) is strictly positive;
+2. the challenger importance-weight effective-sample-size fraction is at least `0.10`.
 
-Because the reward model did not converge, this gate was never evaluated. The terminal decision is therefore **no promotion authorization**, not an estimated `do_not_promote` result.
+For Study 2, condition 1 passed but condition 2 failed:
+
+- bootstrap lower endpoint: `0.0015186077 > 0`;
+- challenger ESS fraction: `0.0019786 < 0.10`.
+
+Therefore the frozen rule returns **`do_not_promote`**.
 
 ## Scientific boundaries
 
 - Clicks measure engagement, not revenue or long-term welfare.
-- The independently logged Random CTR would be an on-policy reference estimate with sampling uncertainty, not an exact population truth.
-- The primary task is one-step contextual policy evaluation and selection, not reinforcement learning.
-- The v0.8 optimizer amendment was made before any evaluation-period or Random-reference outcome was loaded.
-- No further optimizer-budget increase is authorized for the primary study.
-- Any future redesign must be treated as a new study with a new prospective protocol rather than a continuation of this primary result.
+- The independently logged Random CTR is an on-policy reference estimate with sampling uncertainty, not an exact population truth.
+- The task is one-step contextual policy evaluation and selection, not reinforcement learning.
+- Study 1's SAGA failures remain part of the record and were not rewritten after Study 2 succeeded.
+- Study 2 was prospectively specified before its evaluation outcomes were opened.
+- The timestamp-resolution erratum changed only implementation-level datetime normalization and boundary validation; it did not change any model, estimator, split, policy, bootstrap setting, or promotion threshold.
+- The challenger's very low unclipped ESS and extreme maximum importance weight mean its attractive unclipped point estimates must not be treated as deployment evidence.
+- Any post-result redesign must be treated as a new prospective study rather than tuning Study 2 after observing outcomes.
 
-The full prospective contract begins at [`protocol/design_lock.json`](protocol/design_lock.json), with the terminal outcome recorded in [`protocol/primary_empirical_terminal_status_v0_8.json`](protocol/primary_empirical_terminal_status_v0_8.json).
+The protocol chain begins at [`protocol/design_lock.json`](protocol/design_lock.json), continues through [`protocol/study2_design_lock_v1_0.json`](protocol/study2_design_lock_v1_0.json), and ends with the corrected Study 2 result record in [`protocol/study2_primary_ope_terminal_status_v1_2.json`](protocol/study2_primary_ope_terminal_status_v1_2.json).

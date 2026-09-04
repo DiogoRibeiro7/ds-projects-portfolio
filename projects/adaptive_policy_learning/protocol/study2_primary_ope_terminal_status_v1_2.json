@@ -1,0 +1,61 @@
+{
+  "study": "Adaptive Policy Learning Study 2",
+  "status": "success",
+  "protocol_version": "1.2-study2-primary-ope-execution-erratum",
+  "code_sha": "498d34b28266a8887e7259d975eda664e82784ac",
+  "workflow_run_id": 33876357702,
+  "workflow_run_number": 9,
+  "workflow_conclusion": "success",
+  "artifact": {
+    "name": "adaptive-policy-learning-study2-primary-ope",
+    "id": 9938429768,
+    "digest": "sha256:776da9a894690628e95db46920fa9af055f57c154df74e601b4dcb6c9359ad4e"
+  },
+  "source_archive_sha256": "e8ec18196582a5937381a1776382ca940689b90a18d2dcd1fb635be6df614d78",
+  "qualification": {
+    "reproduced": true,
+    "coefficient_sha256": "7438db24286013c628dc7f74e2dd7f4913cdd05297c717fff78a214c9afb5684",
+    "n_features": 73,
+    "n_iter": 6,
+    "warnings": []
+  },
+  "sample": {
+    "bts_training_rows": 2882936,
+    "bts_evaluation_rows": 1235545,
+    "random_reference_rows": 137634,
+    "action_count": 80,
+    "evaluation_start": "2019-11-28 16:55:17.867529+00:00",
+    "evaluation_end": "2019-11-30 23:59:59.920907+00:00"
+  },
+  "observed_values": {
+    "bts": 0.004856156594862996,
+    "random_reference": 0.003480244706976474
+  },
+  "uniform_random_benchmark": {
+    "ips": 0.0031984081120698072,
+    "snips": 0.0031968143005863055,
+    "direct_method": 0.004078982057581564,
+    "doubly_robust": 0.0032145520480315846,
+    "unclipped_ess_fraction": 0.02426073190448848
+  },
+  "challenger": {
+    "ips": 0.008574587521357094,
+    "snips": 0.008407177968279366,
+    "direct_method": 0.0063351038977926535,
+    "doubly_robust": 0.008612987202093246,
+    "dr_minus_bts_point_difference": 0.00375683060723025,
+    "bootstrap_95_lower": 0.0015186077075557663,
+    "bootstrap_95_upper": 0.010033543400489254,
+    "unclipped_ess": 2444.6908482986732,
+    "unclipped_ess_fraction": 0.0019786335975611356,
+    "maximum_importance_weight": 3835.1063829787236
+  },
+  "promotion_rule": {
+    "lower_95_ci_must_exceed_zero": true,
+    "minimum_ess_fraction": 0.1
+  },
+  "promotion_decision": "do_not_promote",
+  "decision_reason": "The lower 95% bootstrap bound is positive, but the challenger unclipped ESS fraction is far below the frozen 10% minimum.",
+  "study1_historical_status": "model_fit_failure",
+  "post_result_rule": "Any methodological redesign after this result must be treated as a new prospective study."
+}

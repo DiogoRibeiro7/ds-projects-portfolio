@@ -1,0 +1,50 @@
+{
+  "version": "1.2-study2-primary-ope-execution-erratum",
+  "recorded_at": "2026-09-03",
+  "study": "Adaptive Policy Learning Study 2",
+  "failed_run": {
+    "workflow_run_id": 33807198572,
+    "workflow_job_id": 100820388734,
+    "code_sha": "0f23f82ce269e2787f9e023ed5def146ba975cb7",
+    "artifact_id": 9913766226,
+    "artifact_digest": "sha256:ca647c54be2466774d09ffa67b5400a7274603e1950b5295da8e11add118dc2f",
+    "error": "evaluation first timestamp does not match frozen temporal lock"
+  },
+  "root_cause": {
+    "type": "implementation_compatibility_error",
+    "component": "pandas 3 datetime resolution",
+    "detail": "pd.to_datetime(..., utc=True).astype('int64') preserves the parsed datetime unit. Under pandas 3.0.5, the microsecond-precision OBD timestamp strings are represented at microsecond resolution, whereas pd.Timestamp(...).value is nanoseconds. The equality check therefore compared microseconds to nanoseconds without any source-data or temporal-split mismatch.",
+    "scientific_parameters_changed": false
+  },
+  "outcome_visibility": {
+    "bts_evaluation_rows_loaded": 1235545,
+    "bts_evaluation_click_vector_loaded_in_memory": true,
+    "random_reference_outcomes_loaded": false,
+    "reward_summary_emitted": false,
+    "ope_estimates_emitted": false,
+    "challenger_value_emitted": false,
+    "ess_or_overlap_summary_emitted": false,
+    "bootstrap_result_emitted": false,
+    "promotion_decision_emitted": false,
+    "preserved_failure_artifact_contains_only_exception_metadata": true
+  },
+  "authorized_erratum": {
+    "timestamp_conversion": "Convert parsed evaluation timestamps explicitly to datetime64[ns] before integer conversion.",
+    "boundary_validation": "Validate evaluation row count and first/last timestamps using timestamp and position columns only before reading evaluation click outcomes.",
+    "shared_selection_helper": "Use one Study 2 evaluation-row slicing helper for both the outcome-free boundary pass and the scored evaluation pass to prevent split-selection drift.",
+    "runner_audit_artifact": "Precreate an incomplete Study 2 result record immediately after the exact qualified model is reproduced and before evaluation opens; overwrite it on terminal success or handled failure.",
+    "regression_test": "tests/test_study2_empirical.py::test_study2_timestamp_conversion_is_explicitly_nanoseconds",
+    "shared_study1_evaluator_changed": false,
+    "solver_changed": false,
+    "regularization_changed": false,
+    "features_changed": false,
+    "preprocessing_changed": false,
+    "split_changed": false,
+    "target_policies_changed": false,
+    "ope_estimators_changed": false,
+    "clipping_changed": false,
+    "bootstrap_changed": false,
+    "promotion_rule_changed": false
+  },
+  "rerun_rule": "A single corrected Study 2 primary OPE rerun is authorized after this erratum and its regression tests pass review/CI. No outcome-derived tuning or secondary analysis is authorized before that rerun completes."
+}

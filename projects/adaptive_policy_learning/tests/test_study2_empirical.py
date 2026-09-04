@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pandas as pd
 import pytest
 
 from adaptive_policy_learning.study2_empirical import (
@@ -8,6 +9,7 @@ from adaptive_policy_learning.study2_empirical import (
     EXPECTED_QUALIFIED_N_ITER,
     _assert_qualification_reproduced,
 )
+from adaptive_policy_learning.study2_evaluation import _timestamps_to_ns
 
 
 def _qualification() -> dict[str, object]:
@@ -50,3 +52,12 @@ def test_study2_evaluation_authorization_rejects_coefficient_mismatch(
             n_iter=EXPECTED_QUALIFIED_N_ITER,
             warnings_captured=[],
         )
+
+
+def test_study2_timestamp_conversion_is_explicitly_nanoseconds() -> None:
+    timestamp = "2019-11-28 16:55:17.867529+00:00"
+    values = pd.Series([timestamp])
+
+    converted = _timestamps_to_ns(values)
+
+    assert converted.tolist() == [pd.Timestamp(timestamp).value]

@@ -15,6 +15,7 @@ import sklearn
 
 from adaptive_policy_learning import empirical as base
 from adaptive_policy_learning.ope import overlap_diagnostics, promotion_decision
+from adaptive_policy_learning.study2_evaluation import evaluate_bts_study2
 from adaptive_policy_learning.study2_training import _fit_study2_reward_model
 
 QUALIFICATION_LOCK_FILE = "study2_training_qualification_lock_v1_1.json"
@@ -38,8 +39,6 @@ def run_study2_primary_ope(
     qualification = _load_qualification_lock(protocol_dir)
     design_hash = protocol_hash_study2(protocol_dir)
 
-    # Training-only phase. Nothing below this point opens BTS evaluation or Random
-    # reference outcomes until the qualification lock has been reproduced exactly.
     with ZipFile(archive_path) as archive:
         item_context = base._load_item_context(archive)
         training = base._extract_training_arrays(archive, chunk_size=chunk_size)
@@ -58,10 +57,29 @@ def run_study2_primary_ope(
         warnings_captured=captured,
     )
 
-    # Evaluation authorization starts only after the exact qualified coefficient
-    # state and scientific runtime have been reproduced.
+    incomplete = {
+        "status": "incomplete",
+        "study": "Adaptive Policy Learning Study 2",
+        "protocol_version": "1.2-study2-primary-ope-execution-erratum",
+        "code_sha": code_sha,
+        "stage": "qualified_model_reproduced_before_evaluation",
+        "qualification": {
+            "coefficient_sha256": frozen_model.coefficient_sha256,
+            "n_features": layout.n_features,
+            "n_iter": frozen_model.n_iter,
+            "warnings": captured,
+        },
+        "note": (
+            "This record is overwritten by a terminal success or handled failure. "
+            "If preserved, evaluation was interrupted or timed out after the exact "
+            "qualified Study 2 model had been reproduced."
+        ),
+    }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(incomplete, indent=2, sort_keys=True), encoding="utf-8")
+
     with ZipFile(archive_path) as archive:
-        evaluation = base._evaluate_bts(
+        evaluation = evaluate_bts_study2(
             archive,
             frozen_model,
             item_context,
@@ -120,7 +138,7 @@ def run_study2_primary_ope(
     result: dict[str, object] = {
         "status": "success",
         "study": "Adaptive Policy Learning Study 2",
-        "protocol_version": "1.1-qualified-study2-primary-ope",
+        "protocol_version": "1.2-study2-primary-ope-execution-erratum",
         "code_sha": code_sha,
         "design_hash": design_hash,
         "source_archive_sha256": base.ARCHIVE_SHA256,
@@ -177,7 +195,6 @@ def run_study2_primary_ope(
             "minimum_ess_fraction": 0.10,
         },
     }
-    output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(result, indent=2, sort_keys=True), encoding="utf-8")
     return result
 
@@ -246,6 +263,7 @@ def protocol_hash_study2(protocol_dir: Path) -> str:
         "obd_source_lock.json",
         "study2_design_lock_v1_0.json",
         QUALIFICATION_LOCK_FILE,
+        "study2_primary_ope_execution_erratum_v1_2.json",
     )
     digest = hashlib.sha256()
     for name in names:

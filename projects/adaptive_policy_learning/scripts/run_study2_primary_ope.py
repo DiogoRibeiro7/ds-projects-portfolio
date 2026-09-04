@@ -9,6 +9,8 @@ from pathlib import Path
 
 from adaptive_policy_learning.study2_empirical import run_study2_primary_ope
 
+PROTOCOL_VERSION = "1.2-study2-primary-ope-execution-erratum"
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -31,7 +33,7 @@ def main() -> None:
         failure = {
             "status": "failure",
             "study": "Adaptive Policy Learning Study 2",
-            "protocol_version": "1.1-qualified-study2-primary-ope",
+            "protocol_version": PROTOCOL_VERSION,
             "code_sha": args.code_sha,
             "error_type": type(exc).__name__,
             "error": str(exc),

@@ -6,7 +6,7 @@ Candidate campaigns: men, women.
 
 Scientific boundary: this workflow may inspect provenance, schema, row counts, timestamps, item IDs, position labels, propensity support, and item-context catalogs. It must not parse click values, compute click/reward summaries, fit reward models, run OPE estimators, compute bootstrap intervals, or make a Study 3 promotion decision.
 
-Selection rule is frozen in study3_source_selection_lock_v2_0.json. The implementation must accept non-empty logged action subsets of the campaign catalog, verify campaign identity and the frozen archive SHA256, preserve overlapping BTS/Random timestamp support, record the executing code SHA, and apply the largest-Random-log rule with lexical tie-break.
+Selection rule is frozen in study3_source_selection_lock_v2_0.json. The implementation must accept non-empty logged action subsets of the campaign catalog, verify campaign identity and the frozen archive SHA256, preserve overlapping BTS/Random timestamp ranges and positive row counts, record the executing code SHA, and apply the largest-Random-log rule with lexical tie-break.
 
 Workflow run 33917319459 from the v2.0 implementation is non-authoritative because it was launched before unresolved review findings were corrected. Its source metadata may be retained as execution evidence, but any source-selection decision it emits must not be used to freeze Study 3.
 

@@ -7,7 +7,20 @@ import json
 import traceback
 from pathlib import Path
 
-from adaptive_policy_learning.study3_training import run_study3_training_qualification
+from adaptive_policy_learning.study3_training import (
+    ARCHIVE_SHA256,
+    CAMPAIGN,
+    protocol_hash,
+    run_study3_training_qualification,
+)
+
+
+def _protocol_hash_or_none(protocol_dir: Path) -> str | None:
+    """Return frozen protocol identity when available, without hiding the original failure."""
+    try:
+        return protocol_hash(protocol_dir)
+    except Exception:
+        return None
 
 
 def main() -> None:
@@ -31,6 +44,9 @@ def main() -> None:
             "study": "Adaptive Policy Learning Study 3",
             "protocol_version": "2.5-study3-training-only-qualification",
             "code_sha": args.code_sha,
+            "protocol_hash": _protocol_hash_or_none(args.protocol_dir),
+            "source_archive_sha256": ARCHIVE_SHA256,
+            "campaign": CAMPAIGN,
             "error_type": type(exc).__name__,
             "error": str(exc),
             "traceback": traceback.format_exc(),

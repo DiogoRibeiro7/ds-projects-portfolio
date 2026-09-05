@@ -17,8 +17,8 @@ from zipfile import ZipFile
 import numpy as np
 import pandas as pd
 import scipy
-from scipy import sparse
 import sklearn
+from scipy import sparse
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import LogisticRegression
 
@@ -83,7 +83,7 @@ def run_study3_training_qualification(
 ) -> dict[str, object]:
     """Fit the frozen Study 3 reward model using BTS training outcomes only."""
     _verify_archive(archive_path)
-    protocol_hash = _protocol_hash(protocol_dir)
+    design_hash = protocol_hash(protocol_dir)
 
     with ZipFile(archive_path) as archive:
         item_context = _load_item_context(archive)
@@ -99,7 +99,7 @@ def run_study3_training_qualification(
         "study": "Adaptive Policy Learning Study 3",
         "protocol_version": "2.5-study3-training-only-qualification",
         "code_sha": code_sha,
-        "protocol_hash": protocol_hash,
+        "protocol_hash": design_hash,
         "source_archive_sha256": ARCHIVE_SHA256,
         "campaign": CAMPAIGN,
         "runtime": {
@@ -169,7 +169,7 @@ def _extract_training_arrays(archive: ZipFile) -> TrainingArrays:
     item_ids = np.empty(TRAIN_ROWS, dtype=np.int16)
     affinity = np.empty(TRAIN_ROWS, dtype=float)
     reward = np.empty(TRAIN_ROWS, dtype=np.uint8)
-    level_maps: list[dict[str, int]] = [dict() for _ in USER_COLUMNS]
+    level_maps: list[dict[str, int]] = [{} for _ in USER_COLUMNS]
 
     filled = 0
     final_timestamp = ""
@@ -358,7 +358,8 @@ def _coefficient_sha256(model: LogisticRegression) -> str:
     return digest.hexdigest()
 
 
-def _protocol_hash(protocol_dir: Path) -> str:
+def protocol_hash(protocol_dir: Path) -> str:
+    """Hash the frozen Study 3 training protocol chain."""
     names = (
         "study3_selected_source_lock_v2_2.json",
         "study3_temporal_audit_lock_v2_3.json",

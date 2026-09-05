@@ -1,0 +1,64 @@
+{
+  "version": "2.5-study3-training-only-qualification",
+  "created_at": "2026-09-05",
+  "study": "Adaptive Policy Learning Study 3",
+  "parent_source_lock": "study3_selected_source_lock_v2_2.json",
+  "parent_temporal_lock": "study3_temporal_split_lock_v2_4.json",
+  "campaign": "women",
+  "authorized_outcome_scope": {
+    "allowed": "click values from the first 1,811,697 raw-position-1 BTS rows only",
+    "training_last_timestamp": "2019-11-28 15:23:48.607846+00:00",
+    "first_evaluation_timestamp": "2019-11-28 15:23:48.989271+00:00",
+    "forbidden": [
+      "BTS evaluation click values",
+      "Random-reference click values",
+      "evaluation reward summaries",
+      "OPE estimates",
+      "bootstrap intervals",
+      "promotion decisions"
+    ]
+  },
+  "reward_model": {
+    "family": "L2-penalized logistic regression",
+    "implementation": "scikit-learn LogisticRegression",
+    "solver": "newton-cholesky",
+    "l1_ratio": 0.0,
+    "C": 1.0,
+    "fit_intercept": true,
+    "max_iter": 100,
+    "tol": 0.0001,
+    "class_weight": null
+  },
+  "features": {
+    "inheritance": "same training-only feature and preprocessing semantics as Study 2",
+    "user_features": "all four raw user_feature_* fields, categorical one-hot levels learned from Study 3 BTS training only",
+    "item_context": "women BTS item_context.csv, exact frozen item IDs 0..45; item_feature_0 numeric and item_feature_1..3 categorical",
+    "candidate_affinity": "for logged training action a, use only user-item_affinity_a",
+    "numeric_scaling": "training-only median imputation, mean centering, and population-standard-deviation scaling; zero variance uses scale=1",
+    "interactions": "none"
+  },
+  "qualification_gate": {
+    "fail_on": [
+      "ConvergenceWarning",
+      "numerical fallback warning",
+      "ill-conditioned warning",
+      "singular or Hessian instability warning",
+      "model classes other than [0,1]",
+      "n_iter >= 100",
+      "non-finite coefficient or intercept"
+    ],
+    "record": [
+      "training row count",
+      "feature count",
+      "n_iter",
+      "captured warnings",
+      "coefficient SHA256",
+      "runtime versions",
+      "protocol hash",
+      "executing code SHA"
+    ]
+  },
+  "post_qualification_rule": "A successful training qualification must be packaged and merged as a separate frozen result before any Study 3 BTS evaluation or Random-reference click value may be accessed.",
+  "no_post_outcome_tuning": "Do not change solver, C, tolerance, max_iter, preprocessing, feature construction, target policy, estimators, bootstrap, clipping sensitivities, or ESS threshold based on this training result or any later Study 3 outcome.",
+  "outcome_visibility": "This lock was created before any Study 3 training click was read by the qualification workflow."
+}

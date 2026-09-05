@@ -1,0 +1,9 @@
+Adaptive Policy Learning Study 3 temporal-audit trigger v2.3
+
+Purpose: after merge to main, instantiate the prospectively frozen 70/30 temporal split for the selected women campaign using timestamps, positions, item IDs, and row counts only.
+
+Scientific boundary: the audit must not access or convert click values, fit a reward model, compute CTR/reward summaries, run OPE estimators, compute bootstrap intervals, rank policies, or make a promotion decision.
+
+The selected source is frozen by study3_selected_source_lock_v2_2.json. The split rule and identifiability gate are frozen by study3_temporal_audit_lock_v2_3.json.
+
+The workflow must verify the archive SHA256 before auditing. The Study 3 temporal stage succeeds only if the BTS evaluation window and matched Random reference window both contain the complete frozen 46-action catalog. Otherwise Study 3 stops before any click outcome is parsed.

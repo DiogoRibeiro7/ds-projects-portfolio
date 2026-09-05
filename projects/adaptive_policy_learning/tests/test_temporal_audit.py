@@ -17,14 +17,45 @@ def _write_csv(archive: ZipFile, member: str, rows: list[dict[str, object]]) -> 
     archive.writestr(member, buffer.getvalue())
 
 
-def _row(minute: int, item_id: int, *, position: int = 1) -> dict[str, object]:
+def _row(
+    minute: int,
+    item_id: int,
+    *,
+    position: int = 1,
+    click: object = 0,
+) -> dict[str, object]:
     return {
         "timestamp": f"2019-11-25 00:{minute:02d}:00+00:00",
         "item_id": item_id,
         "position": position,
-        "click": 0,
+        "click": click,
         "propensity_score": 0.5,
     }
+
+
+def _run_audit(
+    archive_path: Path,
+    output_path: Path,
+    *,
+    campaign: str | None = None,
+) -> dict[str, object]:
+    command = [
+        sys.executable,
+        "scripts/audit_obd_temporal_split.py",
+        "--archive",
+        str(archive_path),
+    ]
+    if campaign is not None:
+        command.extend(["--campaign", campaign])
+    command.extend(["--output", str(output_path)])
+    subprocess.run(
+        command,
+        check=True,
+        cwd=Path(__file__).parents[1],
+        capture_output=True,
+        text=True,
+    )
+    return json.loads(output_path.read_text(encoding="utf-8"))
 
 
 def test_temporal_audit_freezes_stable_70_30_split(tmp_path: Path) -> None:
@@ -36,22 +67,9 @@ def test_temporal_audit_freezes_stable_70_30_split(tmp_path: Path) -> None:
         _write_csv(archive, "open_bandit_dataset/bts/all/all.csv", bts_rows)
         _write_csv(archive, "open_bandit_dataset/random/all/all.csv", random_rows)
 
-    subprocess.run(
-        [
-            sys.executable,
-            "scripts/audit_obd_temporal_split.py",
-            "--archive",
-            str(archive_path),
-            "--output",
-            str(output_path),
-        ],
-        check=True,
-        cwd=Path(__file__).parents[1],
-        capture_output=True,
-        text=True,
-    )
-    report = json.loads(output_path.read_text(encoding="utf-8"))
+    report = _run_audit(archive_path, output_path)
 
+    assert report["campaign"] == "all"
     assert report["bts_position_1"]["row_count"] == 10
     assert report["bts_position_1"]["training_row_count"] == 7
     assert report["bts_position_1"]["evaluation_row_count"] == 3
@@ -59,3 +77,25 @@ def test_temporal_audit_freezes_stable_70_30_split(tmp_path: Path) -> None:
     assert report["bts_position_1"]["evaluation_first_timestamp"] == "2019-11-25 00:07:00+00:00"
     assert report["random_reference"]["row_count"] == 3
     assert report["random_reference"]["observed_action_ids"] == [0, 1]
+    assert report["outcome_values_parsed"] is False
+
+
+def test_temporal_audit_supports_selected_women_campaign_without_parsing_clicks(
+    tmp_path: Path,
+) -> None:
+    archive_path = tmp_path / "obd.zip"
+    output_path = tmp_path / "temporal.json"
+    bts_rows = [_row(i, i % 2, click="not-a-binary-outcome") for i in range(10)]
+    random_rows = [_row(i, i % 2, click={"never": "parse me"}) for i in range(10)]
+    with ZipFile(archive_path, "w", compression=ZIP_DEFLATED) as archive:
+        _write_csv(archive, "open_bandit_dataset/bts/women/women.csv", bts_rows)
+        _write_csv(archive, "open_bandit_dataset/random/women/women.csv", random_rows)
+
+    report = _run_audit(archive_path, output_path, campaign="women")
+
+    assert report["campaign"] == "women"
+    assert report["bts_position_1"]["training_row_count"] == 7
+    assert report["bts_position_1"]["evaluation_row_count"] == 3
+    assert report["bts_position_1"]["evaluation_action_ids"] == [0, 1]
+    assert report["random_reference"]["observed_action_ids"] == [0, 1]
+    assert report["outcome_values_parsed"] is False

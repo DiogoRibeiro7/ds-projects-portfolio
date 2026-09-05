@@ -1,0 +1,67 @@
+{
+  "version": "2.4-study3-temporal-split-lock",
+  "created_at": "2026-09-05",
+  "study": "Adaptive Policy Learning Study 3",
+  "parent_source_lock": "study3_selected_source_lock_v2_2.json",
+  "parent_temporal_audit_lock": "study3_temporal_audit_lock_v2_3.json",
+  "selected_campaign": "women",
+  "audit_provenance": {
+    "workflow_name": "Adaptive Policy Learning Study 3 Temporal Audit",
+    "workflow_run_id": 33959733029,
+    "workflow_run_number": 1,
+    "code_sha": "095b35ccbca4c712e1b980dd32e2dc0fae013469",
+    "artifact_id": 9967572456,
+    "artifact_name": "adaptive-policy-learning-study3-temporal-audit",
+    "artifact_digest": "sha256:4396dc39a12d0596958d195f6b8e12f94435d06f830e603ef8bfece54a67b33a",
+    "outcome_values_parsed": false
+  },
+  "source": {
+    "archive_sha256": "e8ec18196582a5937381a1776382ca940689b90a18d2dcd1fb635be6df614d78",
+    "bts_member": "open_bandit_dataset/bts/women/women.csv",
+    "bts_sha256": "01a8cc23bc1dd15870f1546215b53aec08b3e59943276f7ce2d70240060dd162",
+    "random_member": "open_bandit_dataset/random/women/women.csv",
+    "random_sha256": "d1a4eafa28376a752a9ce4b20bc90003e6a2cda2879b6b24467e42a295620383",
+    "action_catalog_count": 46,
+    "action_catalog_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45]
+  },
+  "temporal_split": {
+    "raw_position": 1,
+    "split_rule": "Stable source order after raw-position-1 filtering; train_n=floor(0.70*n).",
+    "boundary_tie_rule": "Hard fail if the last training and first evaluation timestamps are equal.",
+    "bts_position_1_row_count": 2588139,
+    "training_row_count": 1811697,
+    "evaluation_row_count": 776442,
+    "training_last_timestamp": "2019-11-28 15:23:48.607846+00:00",
+    "evaluation_first_timestamp": "2019-11-28 15:23:48.989271+00:00",
+    "evaluation_last_timestamp": "2019-11-30 23:59:59.862467+00:00"
+  },
+  "random_reference": {
+    "window_start": "2019-11-28 15:23:48.989271+00:00",
+    "window_end": "2019-11-30 23:59:59.862467+00:00",
+    "row_count": 85990
+  },
+  "identifiability_gate": {
+    "status": "passed",
+    "bts_evaluation_action_count": 46,
+    "bts_evaluation_action_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],
+    "random_reference_action_count": 46,
+    "random_reference_action_ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],
+    "primary_uniform_random_estimand_identifiable_at_observed_action_support_level": true
+  },
+  "training_only_qualification_after_merge": {
+    "authorization": "After this lock is merged, Study 3 may run a training-only reward-model qualification using only the 1,811,697 frozen BTS training rows and their clicks. BTS evaluation clicks, Random reference clicks, OPE estimates, challenger values, and promotion decisions remain forbidden until a successful qualification is separately frozen and execution is explicitly authorized.",
+    "reward_model": "Replicate Study 2: scikit-learn LogisticRegression with solver=newton-cholesky, pure L2 regularization, C=1, l1_ratio=0, fit_intercept=true, tol=1e-4, max_iter=100, class_weight=null.",
+    "features": "Replicate Study 2 training-only preprocessing and feature construction, adapted only to the frozen 46-action women catalog.",
+    "training_gate": [
+      "no ConvergenceWarning",
+      "no numerical fallback, Hessian instability, ill-conditioned, or singular warning",
+      "n_iter < 100",
+      "classes exactly [0, 1]",
+      "all coefficients and intercept finite"
+    ],
+    "failure_rule": "Any training-gate failure terminates this Study 3 qualification attempt before evaluation outcomes are loaded. No solver, tolerance, regularization, feature, or iteration-budget change is authorized within the attempt."
+  },
+  "methodology_reference": "study3_temporal_audit_lock_v2_3.json",
+  "scientific_boundary": "This lock records only the exact outcome-blind temporal boundary and action-support audit. No click value from BTS evaluation or Random reference has been parsed, and no reward mean, OPE estimate, challenger value, bootstrap interval, or promotion decision has been computed.",
+  "next_gate": "Merge this exact temporal lock, then execute Study 3 training-only qualification. Freeze a successful qualification before authorizing any evaluation-period or Random-reference outcome access."
+}

@@ -1,0 +1,11 @@
+Adaptive Policy Learning Study 3 training qualification trigger v2.5
+
+Purpose: after merge to main, execute the prospectively frozen training-only qualification on the exact `women` source and exact 1,811,697-row BTS position-1 training partition frozen by study3_temporal_split_lock_v2_4.json.
+
+Authorized outcome access: click values from the frozen BTS training rows only. The runner must stop at the exact final training timestamp 2019-11-28 15:23:48.607846+00:00 and may inspect only the first evaluation position-1 row's timestamp to verify the boundary. It must not access or convert that row's click value.
+
+Forbidden: BTS evaluation clicks, Random-reference clicks, evaluation reward summaries, IPS/SNIPS/DM/DR estimates, bootstrap intervals, challenger rankings, overlap-based promotion decisions, or any post-outcome tuning.
+
+Qualification model: scikit-learn LogisticRegression with solver=newton-cholesky, L2 regularization, C=1, l1_ratio=0, fit_intercept=true, tol=1e-4, max_iter=100, class_weight=null, using the same training-only feature/preprocessing semantics frozen for Study 2 and the exact 46-action women catalog.
+
+A successful qualification result must be packaged and merged in a separate provenance lock before any Study 3 evaluation or Random-reference outcome access is authorized.

@@ -19,7 +19,7 @@ def _protocol_hash_or_none(protocol_dir: Path) -> str | None:
     """Return frozen protocol identity when available, without hiding the original failure."""
     try:
         return protocol_hash(protocol_dir)
-    except Exception:
+    except OSError:
         return None
 
 

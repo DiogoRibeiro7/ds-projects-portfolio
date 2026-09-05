@@ -1,0 +1,98 @@
+name: Adaptive Policy Learning Study 3 Temporal Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "projects/adaptive_policy_learning/protocol/study3_temporal_audit_trigger_v2_3.txt"
+
+jobs:
+  audit-study3-temporal-split:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    defaults:
+      run:
+        working-directory: projects/adaptive_policy_learning
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+
+      - name: Run unit tests
+        run: pytest
+
+      - name: Run Ruff
+        run: ruff check .
+
+      - name: Run mypy
+        run: mypy src
+
+      - name: Download official ZOZO Open Bandit Dataset
+        run: >-
+          curl --fail --location --retry 3
+          --output open_bandit_dataset.zip
+          https://research.zozo.com/data_release/open_bandit_dataset.zip
+
+      - name: Verify archive against frozen source lock
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          archive = Path("open_bandit_dataset.zip")
+          source_lock = json.loads(Path("protocol/study3_selected_source_lock_v2_2.json").read_text(encoding="utf-8"))
+          expected = str(source_lock["archive"]["sha256"])
+          with archive.open("rb") as handle:
+              actual = hashlib.file_digest(handle, "sha256").hexdigest()
+          if actual != expected:
+              raise SystemExit(f"archive SHA256 mismatch: expected {expected}, got {actual}")
+          print(f"verified archive SHA256 {actual}")
+          PY
+
+      - name: Audit frozen women temporal split without parsing clicks
+        run: >-
+          python scripts/audit_obd_temporal_split.py
+          --archive open_bandit_dataset.zip
+          --campaign women
+          --output artifacts/study3_temporal/study3_temporal_audit.json
+
+      - name: Enforce frozen 46-action identifiability gate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("artifacts/study3_temporal/study3_temporal_audit.json").read_text(encoding="utf-8"))
+          source_lock = json.loads(Path("protocol/study3_selected_source_lock_v2_2.json").read_text(encoding="utf-8"))
+          expected = set(source_lock["action_catalog"]["ids"])
+          bts = set(report["bts_position_1"]["evaluation_action_ids"])
+          random = set(report["random_reference"]["observed_action_ids"])
+          if report.get("outcome_values_parsed") is not False:
+              raise SystemExit("temporal audit did not preserve the outcome-blind boundary")
+          if bts != expected:
+              raise SystemExit(f"BTS evaluation support mismatch: expected {len(expected)} actions, got {len(bts)}")
+          if random != expected:
+              raise SystemExit(f"Random reference support mismatch: expected {len(expected)} actions, got {len(random)}")
+          print("Study 3 temporal identifiability gate passed for all 46 actions")
+          PY
+
+      - name: Upload Study 3 temporal audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: adaptive-policy-learning-study3-temporal-audit
+          path: projects/adaptive_policy_learning/artifacts/study3_temporal/study3_temporal_audit.json
+          if-no-files-found: error
+          retention-days: 30

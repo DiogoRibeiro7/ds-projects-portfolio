@@ -1,0 +1,61 @@
+{
+  "version": "2.6-study3-qualified-model-lock",
+  "recorded_at": "2026-09-05",
+  "study": "Adaptive Policy Learning Study 3",
+  "parent_protocol": "study3_training_qualification_lock_v2_5.json",
+  "status": "training_gate_passed",
+  "campaign": "women",
+  "workflow_run_id": 33993918651,
+  "workflow_job_id": 101380878994,
+  "code_sha": "77234f04d55f90ffead9d22a5787c7c85f9343e2",
+  "artifact": {
+    "id": 9977485338,
+    "name": "adaptive-policy-learning-study3-training-qualification",
+    "digest": "sha256:d887242c37c6dc4c0536895bc9abe143a6fe39aa7853ef6435b7836d8e37c9e0"
+  },
+  "protocol_hash": "7919fb5f4cfffd0e884979ad2bf5750ac8bb56b1070bb2890d3aaddc1e54e414",
+  "source_archive_sha256": "e8ec18196582a5937381a1776382ca940689b90a18d2dcd1fb635be6df614d78",
+  "runtime": {
+    "python": "3.11.16",
+    "numpy": "2.4.6",
+    "pandas": "3.0.5",
+    "scipy": "1.17.1",
+    "scikit_learn": "1.9.0"
+  },
+  "training": {
+    "rows": 1811697,
+    "final_timestamp": "2019-11-28 15:23:48.607846+00:00",
+    "action_count": 46,
+    "n_features": 65,
+    "solver": "newton-cholesky",
+    "regularization": "l2",
+    "l1_ratio": 0.0,
+    "C": 1.0,
+    "tol": 0.0001,
+    "max_iter": 100,
+    "n_iter": 6,
+    "coefficient_sha256": "8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c",
+    "warnings": []
+  },
+  "evaluation_outcomes_loaded": false,
+  "random_reference_outcomes_loaded": false,
+  "ope_estimates_computed": false,
+  "qualification_interpretation": "The prospectively specified Study 3 Newton-Cholesky L2 logistic reward model passed all training-only gates on the complete frozen women BTS training partition. It converged in 6 iterations, produced finite coefficients, and emitted no warnings.",
+  "evaluation_authorization": "Study 3 primary OPE may be executed only by code that first refits the frozen 1,811,697-row women BTS training partition and reproduces coefficient SHA256 8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c before opening any BTS evaluation-period or Random-reference click outcome.",
+  "post_qualification_changes_forbidden": [
+    "solver",
+    "regularization",
+    "C",
+    "tol",
+    "max_iter",
+    "features",
+    "preprocessing",
+    "training/evaluation split",
+    "target support",
+    "challenger epsilon",
+    "OPE estimators",
+    "clipping sensitivity",
+    "bootstrap",
+    "promotion threshold"
+  ]
+}

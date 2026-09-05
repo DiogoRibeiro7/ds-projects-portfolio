@@ -1,0 +1,62 @@
+{
+  "version": "2.2-study3-selected-source-lock",
+  "created_at": "2026-09-05",
+  "study": "Adaptive Policy Learning Study 3",
+  "selection_provenance": {
+    "protocol_version": "2.1-study3-source-selection-execution-erratum",
+    "workflow_run_id": 33928247395,
+    "workflow_run_number": 2,
+    "workflow_name": "Adaptive Policy Learning Study 3 Source Selection",
+    "code_sha": "d1c9cf2c586c09a49dbeb001a515ddc4347d0380",
+    "artifact_id": 9957650432,
+    "artifact_name": "adaptive-policy-learning-study3-source-selection",
+    "artifact_digest": "sha256:6ea897a0880e00eabaf0f3aa215b6253c776c53708539e73e751492cf5ad3f33",
+    "selection_status": "selected",
+    "qualified_campaigns": ["women", "men"],
+    "selection_basis": "largest Random-policy row_count among qualifying campaigns; lexical tie-break",
+    "outcome_values_parsed": false
+  },
+  "selected_campaign": "women",
+  "selected_random_row_count": 864585,
+  "archive": {
+    "filename": "open_bandit_dataset.zip",
+    "size_bytes": 412931917,
+    "sha256": "e8ec18196582a5937381a1776382ca940689b90a18d2dcd1fb635be6df614d78"
+  },
+  "action_catalog": {
+    "count": 46,
+    "ids": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45]
+  },
+  "bts": {
+    "member": "open_bandit_dataset/bts/women/women.csv",
+    "sha256": "01a8cc23bc1dd15870f1546215b53aec08b3e59943276f7ce2d70240060dd162",
+    "row_count": 7765497,
+    "timestamp_min": "2019-11-24 00:00:00.110777+00:00",
+    "timestamp_max": "2019-11-30 23:59:59.862983+00:00",
+    "raw_positions": ["1", "2", "3"],
+    "observed_action_count": 46
+  },
+  "random": {
+    "member": "open_bandit_dataset/random/women/women.csv",
+    "sha256": "d1a4eafa28376a752a9ce4b20bc90003e6a2cda2879b6b24467e42a295620383",
+    "row_count": 864585,
+    "timestamp_min": "2019-11-24 00:00:00.686850+00:00",
+    "timestamp_max": "2019-11-30 23:59:57.920185+00:00",
+    "raw_positions": ["1", "2", "3"],
+    "observed_action_count": 46
+  },
+  "item_context": {
+    "bts": {
+      "member": "open_bandit_dataset/bts/women/item_context.csv",
+      "sha256": "d215dd348b25d02956536fef297580268db1228dff1d57039814fcd15ebe500f",
+      "row_count": 46
+    },
+    "random": {
+      "member": "open_bandit_dataset/random/women/item_context.csv",
+      "sha256": "d27716d633b9bb9a895aabe2d242d1d9aec96d7934f376323062325e62a4b8fe",
+      "row_count": 46
+    }
+  },
+  "scientific_boundary": "This lock freezes only the independently selected Study 3 source and provenance. No Study 3 click value, CTR, reward mean, reward-model fit, OPE estimate, bootstrap interval, challenger ranking, or promotion decision has been parsed or computed.",
+  "next_gate": "A separate prospective Study 3 empirical-design lock must be merged before any click value from the selected women campaign is parsed."
+}

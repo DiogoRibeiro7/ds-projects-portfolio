@@ -244,8 +244,8 @@ def _categorical_values(series: pd.Series) -> list[str]:
 
 def _finite_or_nan(value: object) -> float:
     try:
-        parsed = float(value)
-    except (TypeError, ValueError):
+        parsed = float(str(value))
+    except ValueError:
         return math.nan
     return parsed if math.isfinite(parsed) else math.nan
 

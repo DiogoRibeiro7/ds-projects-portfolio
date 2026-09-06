@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import platform
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import Any
 from zipfile import ZipFile
@@ -23,7 +24,6 @@ from adaptive_policy_learning.study3_training import (
     AFFINITY_COLUMNS,
     ARCHIVE_SHA256,
     CAMPAIGN,
-    ITEM_CATEGORICAL_COLUMNS,
     TRAIN_ROWS,
     USER_COLUMNS,
     _build_training_matrix,
@@ -331,14 +331,14 @@ def _freeze_linear_model(
 def _iter_evaluation_slices(
     archive: ZipFile,
     *,
-    usecols: list[str],
+    usecols: Sequence[str],
     chunk_size: int,
-):
+) -> Iterator[pd.DataFrame]:
     member = "open_bandit_dataset/bts/women/women.csv"
     position_one_seen = 0
     filled = 0
     with archive.open(member) as handle:
-        reader = pd.read_csv(handle, usecols=usecols, chunksize=chunk_size)
+        reader = pd.read_csv(handle, usecols=list(usecols), chunksize=chunk_size)
         for chunk in reader:
             selected = chunk.loc[chunk["position"] == 1]
             if selected.empty:
@@ -367,7 +367,7 @@ def _validate_evaluation_window_without_outcomes(archive: ZipFile, *, chunk_size
     last_timestamp: pd.Timestamp | None = None
     for selected in _iter_evaluation_slices(
         archive,
-        usecols=["timestamp", "position"],
+        usecols=("timestamp", "position"),
         chunk_size=chunk_size,
     ):
         parsed = pd.to_datetime(selected["timestamp"], utc=True)
@@ -386,7 +386,7 @@ def _evaluate_bts(
     *,
     chunk_size: int,
 ) -> base.EvaluationArrays:
-    usecols = [
+    usecols = (
         "timestamp",
         "position",
         "item_id",
@@ -394,7 +394,7 @@ def _evaluate_bts(
         "propensity_score",
         *USER_COLUMNS,
         *AFFINITY_COLUMNS,
-    ]
+    )
     timestamps = np.empty(EVALUATION_ROWS, dtype=np.int64)
     reward = np.empty(EVALUATION_ROWS, dtype=float)
     propensity = np.empty(EVALUATION_ROWS, dtype=float)

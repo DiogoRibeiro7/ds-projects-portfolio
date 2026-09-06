@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pandas as pd
 import pytest
 
 from adaptive_policy_learning.study3_empirical import (
@@ -8,6 +9,7 @@ from adaptive_policy_learning.study3_empirical import (
     EXPECTED_QUALIFIED_N_ITER,
     _assert_qualification_reproduced,
 )
+from adaptive_policy_learning.study3_empirical_erratum import _parse_mixed_utc
 
 
 def _qualification() -> dict[str, object]:
@@ -115,3 +117,17 @@ def test_study3_authorization_rejects_runtime_mismatch(
             n_iter=EXPECTED_QUALIFIED_N_ITER,
             warnings_captured=[],
         )
+
+
+def test_study3_mixed_iso_timestamp_erratum_preserves_instants() -> None:
+    values = pd.Series(
+        [
+            "2019-11-28 15:23:48.989271+00:00",
+            "2019-11-30 09:20:56+00:00",
+        ]
+    )
+
+    parsed = _parse_mixed_utc(values)
+
+    assert parsed.iloc[0] == pd.Timestamp("2019-11-28 15:23:48.989271+00:00")
+    assert parsed.iloc[1] == pd.Timestamp("2019-11-30 09:20:56+00:00")

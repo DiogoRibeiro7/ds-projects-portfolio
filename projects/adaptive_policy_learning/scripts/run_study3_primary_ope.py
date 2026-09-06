@@ -7,9 +7,10 @@ import json
 import traceback
 from pathlib import Path
 
-from adaptive_policy_learning.study3_empirical import run_study3_primary_ope
-
-PROTOCOL_VERSION = "2.7-study3-primary-ope-authorization"
+from adaptive_policy_learning.study3_empirical_erratum import (
+    PROTOCOL_VERSION,
+    run_study3_primary_ope_erratum,
+)
 
 
 def main() -> None:
@@ -22,7 +23,7 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        result = run_study3_primary_ope(
+        result = run_study3_primary_ope_erratum(
             args.archive,
             args.output,
             code_sha=args.code_sha,

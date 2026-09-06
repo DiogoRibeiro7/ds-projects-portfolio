@@ -1,0 +1,57 @@
+{
+  "study": "Adaptive Policy Learning Study 3",
+  "status": "success",
+  "protocol_version": "2.12-study3-deterministic-primary-ope-execution",
+  "code_sha": "c828fb0cc81b3d47dd2e9f3a0ceb67f42b201e65",
+  "workflow_run_id": 34058975285,
+  "workflow_run_number": 4,
+  "artifact": {
+    "name": "adaptive-policy-learning-study3-primary-ope",
+    "id": 9996901283,
+    "digest": "sha256:27fdfc20ef0b2f7cc8797282b07b2833dadd2ec726302e464615b473ecd23f3b"
+  },
+  "design_hash": "abca33cc2c237b3d8b0f030d6f7c8e1cdd372a003eb64a4386fba9caf3dd9887",
+  "source_archive_sha256": "e8ec18196582a5937381a1776382ca940689b90a18d2dcd1fb635be6df614d78",
+  "campaign": "women",
+  "sample": {
+    "bts_training_rows": 1811697,
+    "bts_evaluation_rows": 776442,
+    "random_reference_rows": 85990,
+    "action_count": 46,
+    "evaluation_start": "2019-11-28 15:23:48.989271+00:00",
+    "evaluation_end": "2019-11-30 23:59:59.862467+00:00"
+  },
+  "qualification": {
+    "coefficient_sha256": "8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c",
+    "reproduced": true,
+    "n_iter": 6,
+    "warnings": []
+  },
+  "random_reference_value": 0.0049424351668798695,
+  "observed_bts_value": 0.006240002472818317,
+  "uniform_random": {
+    "ips": 0.004288584015440226,
+    "snips": 0.004613523327448502,
+    "direct_method": 0.004958499469400993,
+    "doubly_robust": 0.004628957192837086,
+    "ess_fraction": 0.0354091107889491
+  },
+  "challenger": {
+    "ips": 0.004262744951988224,
+    "snips": 0.0038909502074965163,
+    "direct_method": 0.012617008181060521,
+    "doubly_robust": 0.004424740538269421,
+    "dr_minus_bts_point_difference": -0.0018152619345488947,
+    "bootstrap_95_ci": [-0.00499194086113194, -0.0009922200325191643],
+    "ess": 176.1061383683494,
+    "ess_fraction": 0.0002268117108146512,
+    "maximum_importance_weight": 25776.39751552795,
+    "weight_p99": 20.18286158933956,
+    "promotion_decision": "do_not_promote"
+  },
+  "promotion_rule": {
+    "lower_95_ci_must_exceed_zero": true,
+    "minimum_ess_fraction": 0.1
+  },
+  "interpretation": "The challenger fails both frozen promotion conditions: the paired DR-minus-BTS confidence interval is entirely below zero and unclipped ESS is far below 10%. No post-outcome redesign is authorized within Study 3."
+}

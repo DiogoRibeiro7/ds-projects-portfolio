@@ -1,0 +1,174 @@
+name: Adaptive Policy Learning Study 3 Coefficient Repro Diagnostic
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "projects/adaptive_policy_learning/protocol/study3_coefficient_repro_diagnostic_trigger_v2_11.txt"
+
+jobs:
+  diagnose-study3-coefficient-repro:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    defaults:
+      run:
+        working-directory: projects/adaptive_policy_learning
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+
+      - name: Run unit tests
+        run: pytest
+
+      - name: Run Ruff
+        run: ruff check .
+
+      - name: Run mypy
+        run: mypy src
+
+      - name: Download official ZOZO Open Bandit Dataset
+        run: >-
+          curl --fail --location --retry 3
+          --output open_bandit_dataset.zip
+          https://research.zozo.com/data_release/open_bandit_dataset.zip
+
+      - name: Verify archive against frozen Study 3 source lock
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          archive = Path("open_bandit_dataset.zip")
+          source_lock = json.loads(Path("protocol/study3_selected_source_lock_v2_2.json").read_text())
+          expected = str(source_lock["archive"]["sha256"])
+          with archive.open("rb") as handle:
+              actual = hashlib.file_digest(handle, "sha256").hexdigest()
+          if actual != expected:
+              raise SystemExit(f"archive SHA256 mismatch: expected {expected}, got {actual}")
+          print(f"verified archive SHA256 {actual}")
+          PY
+
+      - name: Capture runtime numerical provenance
+        run: |
+          mkdir -p artifacts/study3_coefficient_repro
+          python - <<'PY' > artifacts/study3_coefficient_repro/runtime.txt
+          import os
+          import platform
+          import sys
+
+          import numpy as np
+          import pandas as pd
+          import scipy
+          import sklearn
+          import threadpoolctl
+
+          print(f"python={platform.python_version()}")
+          print(f"numpy={np.__version__}")
+          print(f"pandas={pd.__version__}")
+          print(f"scipy={scipy.__version__}")
+          print(f"scikit_learn={sklearn.__version__}")
+          print(f"platform={platform.platform()}")
+          print(f"machine={platform.machine()}")
+          print(f"processor={platform.processor()}")
+          print(f"cpu_count={os.cpu_count()}")
+          print("threadpools=")
+          print(threadpoolctl.threadpool_info())
+          print("numpy_config=")
+          np.show_config()
+          print(f"byteorder={sys.byteorder}")
+          PY
+
+      - name: Default-thread fit 1
+        run: >-
+          python scripts/run_study3_training.py
+          --archive open_bandit_dataset.zip
+          --output artifacts/study3_coefficient_repro/default_1.json
+          --code-sha "${{ github.sha }}"
+
+      - name: Default-thread fit 2
+        run: >-
+          python scripts/run_study3_training.py
+          --archive open_bandit_dataset.zip
+          --output artifacts/study3_coefficient_repro/default_2.json
+          --code-sha "${{ github.sha }}"
+
+      - name: Single-thread fit 1
+        env:
+          OMP_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+          MKL_NUM_THREADS: "1"
+          NUMEXPR_NUM_THREADS: "1"
+        run: >-
+          python scripts/run_study3_training.py
+          --archive open_bandit_dataset.zip
+          --output artifacts/study3_coefficient_repro/single_1.json
+          --code-sha "${{ github.sha }}"
+
+      - name: Single-thread fit 2
+        env:
+          OMP_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+          MKL_NUM_THREADS: "1"
+          NUMEXPR_NUM_THREADS: "1"
+        run: >-
+          python scripts/run_study3_training.py
+          --archive open_bandit_dataset.zip
+          --output artifacts/study3_coefficient_repro/single_2.json
+          --code-sha "${{ github.sha }}"
+
+      - name: Summarize coefficient reproducibility
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("artifacts/study3_coefficient_repro")
+          names = ("default_1", "default_2", "single_1", "single_2")
+          fits = {}
+          for name in names:
+              payload = json.loads((root / f"{name}.json").read_text())
+              training = payload["training"]
+              fits[name] = {
+                  "coefficient_sha256": training["coefficient_sha256"],
+                  "n_iter": training["n_iter"],
+                  "warnings": training["warnings"],
+              }
+          expected = "8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c"
+          summary = {
+              "study": "Adaptive Policy Learning Study 3",
+              "protocol_version": "2.11-study3-coefficient-repro-diagnostic",
+              "code_sha": "${{ github.sha }}",
+              "expected_coefficient_sha256": expected,
+              "fits": fits,
+              "default_pair_equal": fits["default_1"]["coefficient_sha256"] == fits["default_2"]["coefficient_sha256"],
+              "single_pair_equal": fits["single_1"]["coefficient_sha256"] == fits["single_2"]["coefficient_sha256"],
+              "default_matches_frozen": [fits["default_1"]["coefficient_sha256"] == expected, fits["default_2"]["coefficient_sha256"] == expected],
+              "single_matches_frozen": [fits["single_1"]["coefficient_sha256"] == expected, fits["single_2"]["coefficient_sha256"] == expected],
+              "evaluation_outcomes_loaded": false,
+              "random_reference_outcomes_loaded": false,
+              "ope_estimates_computed": false
+          }
+          (root / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True))
+          print(json.dumps(summary, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload coefficient reproducibility evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: adaptive-policy-learning-study3-coefficient-repro
+          path: projects/adaptive_policy_learning/artifacts/study3_coefficient_repro/
+          if-no-files-found: error
+          retention-days: 30

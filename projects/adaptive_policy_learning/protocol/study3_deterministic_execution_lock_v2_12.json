@@ -1,0 +1,91 @@
+{
+  "study": "Adaptive Policy Learning Study 3",
+  "version": "2.12-study3-deterministic-primary-ope-execution",
+  "created_at": "2026-09-06",
+  "status": "authorized_after_training_only_reproducibility_diagnostic",
+  "scientific_design_changes": false,
+  "parent_execution_protocol": "study3_primary_ope_execution_retry_v2_10.json",
+  "failed_execution": {
+    "workflow_run_id": 34039299145,
+    "code_sha": "c6a69edbb8f123044f2712a79d48a1b472b8b4ab",
+    "artifact_id": 9991190545,
+    "artifact_digest": "sha256:576eab335842391a3ef14d5be44b2e89c5ac5bcf0e36b77526f037e61881e257",
+    "failure": "qualified coefficient SHA mismatch",
+    "evaluation_outcomes_loaded": false,
+    "random_reference_outcomes_loaded": false,
+    "ope_estimates_computed": false
+  },
+  "training_only_diagnostic": {
+    "workflow_run_id": 34054153351,
+    "code_sha": "a32864dcd6f2879b35a8bce43e11fda33f824034",
+    "artifact_id": 9995512975,
+    "artifact_digest": "sha256:ba64167970b89f7b212ac932917e5ec5e05591e4cbdf3971d763c3edbbf12bef",
+    "expected_coefficient_sha256": "8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c",
+    "default_thread_fits": [
+      "8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c",
+      "8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c"
+    ],
+    "single_thread_fits": [
+      "8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c",
+      "8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c"
+    ],
+    "n_iter": 6,
+    "warnings": [],
+    "observed_openblas_architecture": "Haswell",
+    "evaluation_outcomes_loaded": false,
+    "random_reference_outcomes_loaded": false,
+    "ope_estimates_computed": false
+  },
+  "deterministic_numerical_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "OPENBLAS_CORETYPE": "Haswell"
+  },
+  "mandatory_preflight": {
+    "scope": "frozen Study 3 training partition only",
+    "rows": 1811697,
+    "required_coefficient_sha256": "8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c",
+    "required_n_iter": 6,
+    "required_warnings": [],
+    "requirement": "The training-only preflight must pass under the deterministic numerical environment immediately before OPE. Any mismatch aborts before BTS evaluation or Random-reference click outcomes are opened."
+  },
+  "unchanged_scientific_design": {
+    "campaign": "women",
+    "raw_position": 1,
+    "action_count": 46,
+    "evaluation_rows": 776442,
+    "random_reference_rows": 85990,
+    "estimators": ["IPS", "SNIPS", "DM", "DR"],
+    "primary_estimator": "DR",
+    "clipping_sensitivity_caps": [5, 10, 20],
+    "bootstrap": {
+      "type": "paired moving-block",
+      "block_length_hours": 24,
+      "replications": 1999,
+      "seed": 20260831,
+      "confidence_level": 0.95
+    },
+    "minimum_ess_fraction": 0.1
+  },
+  "forbidden_changes": [
+    "reward-model family",
+    "solver",
+    "regularization",
+    "C",
+    "l1_ratio",
+    "fit_intercept",
+    "class_weight",
+    "tol",
+    "max_iter",
+    "features",
+    "preprocessing",
+    "temporal split",
+    "target policies",
+    "OPE estimators",
+    "clipping caps",
+    "bootstrap",
+    "promotion rule"
+  ]
+}

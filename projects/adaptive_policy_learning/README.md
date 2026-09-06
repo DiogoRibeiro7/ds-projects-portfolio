@@ -4,17 +4,19 @@ A reproducible contextual-bandit project for evaluating and selecting decision p
 
 ## Current empirical status
 
-**Study 2 status: `success`. Promotion decision: `do_not_promote`.**
+**Study 3 status: `success`. Promotion decision: `do_not_promote`.**
 
 Study 1 remains a valid historical negative result: its preregistered SAGA logistic reward model failed to converge under the allowed `max_iter=200` and `max_iter=1000` budgets, so Study 1 terminated before off-policy evaluation.
 
-Study 2 was then specified prospectively as a new study. It preserved the source, temporal split, features, target policies, OPE estimators, bootstrap, clipping sensitivities, and promotion rule, while changing only the reward-model solver to deterministic `newton-cholesky`. The training qualification reproduced the frozen 73-feature model in 6 iterations with zero warnings on all 2,882,936 BTS training rows.
+Study 2 then preserved the source, temporal split, features, target policies, OPE estimators, bootstrap, clipping sensitivities, and promotion rule while changing only the reward-model solver to deterministic `newton-cholesky`. Its challenger had a positive DR-minus-BTS interval but failed the frozen 10% ESS rule, so Study 2 correctly returned `do_not_promote` because overlap was inadequate.
 
-The corrected Study 2 primary OPE completed successfully on 1,235,545 BTS evaluation rows. The challenger produced a doubly robust value estimate of `0.0086129872`, compared with observed BTS value `0.0048561566`, for a DR-minus-BTS point difference of `0.0037568306`. The preregistered 95% paired moving-block-bootstrap interval was `[0.0015186077, 0.0100335434]`.
+Study 3 was prospectively specified on the distinct `women` campaign before outcomes were opened. The deterministic final execution reproduced the frozen 65-feature reward model (`n_iter=6`, zero warnings, coefficient SHA256 `8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c`) and then completed primary OPE on 776,442 BTS evaluation rows plus 85,990 independently logged Random-reference rows.
 
-The challenger was nevertheless **not promoted** because its unclipped importance-weight effective-sample-size fraction was only `0.0019786` (about 0.20%), far below the frozen minimum of `0.10` (10%). The result therefore demonstrates the intended safety property of the decision rule: a positive point estimate and positive confidence interval are not sufficient when overlap is inadequate.
+Observed BTS value was `0.0062400025`. The challenger DR value was `0.0044247405`, giving a DR-minus-BTS point difference of `-0.0018152619`. The frozen paired 24-hour moving-block bootstrap gave a 95% interval of `[-0.0049919409, -0.0009922200]`, entirely below zero. Challenger unclipped ESS fraction was only `0.0002268` (0.023%), versus the frozen minimum of 10%.
 
-See [`RESULTS.md`](RESULTS.md) for the complete empirical record and [`protocol/study2_primary_ope_terminal_status_v1_2.json`](protocol/study2_primary_ope_terminal_status_v1_2.json) for machine-readable provenance.
+Therefore Study 3 fails **both** frozen promotion conditions and the terminal decision is **`do_not_promote`**. The correct interpretation is not to tune the study after seeing outcomes; any redesigned challenger or estimator must be a new prospective study.
+
+See [`RESULTS.md`](RESULTS.md) for the full empirical record and [`protocol/study3_primary_ope_terminal_status_v2_12.json`](protocol/study3_primary_ope_terminal_status_v2_12.json) for machine-readable provenance.
 
 ## Research question
 
@@ -32,40 +34,19 @@ For logged observations \((x_i,a_i,r_i,p_i)\), target policy \(\pi_e\), and rewa
 w_i = \frac{\pi_e(a_i\mid x_i)}{p_i}.
 \]
 
-The implemented estimators are:
-
-\[
-\widehat V_{IPS}=\frac{1}{n}\sum_i w_i r_i,
-\]
-
-\[
-\widehat V_{SNIPS}=\frac{\sum_i w_i r_i}{\sum_i w_i},
-\]
-
-\[
-\widehat V_{DM}=\frac{1}{n}\sum_i\sum_a\pi_e(a\mid x_i)\hat q(x_i,a),
-\]
-
-and
-
-\[
-\widehat V_{DR}=\frac{1}{n}\sum_i\left[\sum_a\pi_e(a\mid x_i)\hat q(x_i,a)+w_i(r_i-\hat q(x_i,a_i))\right].
-\]
-
-Study 2 produced empirical IPS, SNIPS, DM, and DR estimates for both the uniform-random benchmark and the challenger. The independently logged Random reference provides an external calibration check for the uniform-random target.
+The implemented estimators are IPS, SNIPS, DM, and DR, with DR as the primary estimator for the challenger decision.
 
 ## Promotion rule
 
 The challenger is promoted only when both frozen conditions hold:
 
-1. the lower endpoint of the 95% moving-block-bootstrap interval for
-   \(V_{DR}(\pi_{challenger})-V(\pi_{BTS})\) is strictly positive;
+1. the lower endpoint of the 95% moving-block-bootstrap interval for \(V_{DR}(\pi_{challenger})-V(\pi_{BTS})\) is strictly positive;
 2. the challenger importance-weight effective-sample-size fraction is at least `0.10`.
 
-For Study 2, condition 1 passed but condition 2 failed:
+For Study 3 both conditions fail:
 
-- bootstrap lower endpoint: `0.0015186077 > 0`;
-- challenger ESS fraction: `0.0019786 < 0.10`.
+- bootstrap lower endpoint: `-0.0049919409 < 0`;
+- challenger ESS fraction: `0.0002268 < 0.10`.
 
 Therefore the frozen rule returns **`do_not_promote`**.
 
@@ -74,10 +55,8 @@ Therefore the frozen rule returns **`do_not_promote`**.
 - Clicks measure engagement, not revenue or long-term welfare.
 - The independently logged Random CTR is an on-policy reference estimate with sampling uncertainty, not an exact population truth.
 - The task is one-step contextual policy evaluation and selection, not reinforcement learning.
-- Study 1's SAGA failures remain part of the record and were not rewritten after Study 2 succeeded.
-- Study 2 was prospectively specified before its evaluation outcomes were opened.
-- The timestamp-resolution erratum changed only implementation-level datetime normalization and boundary validation; it did not change any model, estimator, split, policy, bootstrap setting, or promotion threshold.
-- The challenger's very low unclipped ESS and extreme maximum importance weight mean its attractive unclipped point estimates must not be treated as deployment evidence.
-- Any post-result redesign must be treated as a new prospective study rather than tuning Study 2 after observing outcomes.
-
-The protocol chain begins at [`protocol/design_lock.json`](protocol/design_lock.json), continues through [`protocol/study2_design_lock_v1_0.json`](protocol/study2_design_lock_v1_0.json), and ends with the corrected Study 2 result record in [`protocol/study2_primary_ope_terminal_status_v1_2.json`](protocol/study2_primary_ope_terminal_status_v1_2.json).
+- Study 1's SAGA failures remain part of the record and were not rewritten after later studies succeeded.
+- Study 2 and Study 3 were prospectively specified before their respective evaluation outcomes were opened.
+- Study 3's timestamp and numerical-execution corrections were implementation-level provenance fixes only; they did not alter the frozen scientific design.
+- Study 3 shows severe challenger overlap failure and a negative primary DR-minus-BTS interval; neither sensitivity clipping nor post-outcome tuning overrides the preregistered primary decision.
+- Any post-result redesign must be treated as a new prospective study rather than tuning Study 3 after observing outcomes.

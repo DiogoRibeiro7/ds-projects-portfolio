@@ -2,126 +2,111 @@
 
 ## Study 1: terminal model-fit failure
 
-The preregistered primary study (Study 1) terminated at reward-model fitting and did not reach off-policy evaluation. Its frozen SAGA L2 logistic reward model failed to converge under both prospectively allowed optimizer budgets:
-
-| Protocol | Maximum iterations | Outcome |
-|---|---:|---|
-| v0.7 | 200 | failed to converge |
-| v0.8 amendment | 1000 | failed to converge |
-
-No Study 1 evaluation-period outcome, Random-reference outcome, OPE estimate, or promotion decision was observed. That negative result remains part of the scientific record.
+The preregistered primary study (Study 1) terminated at reward-model fitting and did not reach off-policy evaluation. Its frozen SAGA L2 logistic reward model failed to converge under both prospectively allowed optimizer budgets (`max_iter=200` and `max_iter=1000`). No Study 1 evaluation-period outcome, Random-reference outcome, OPE estimate, or promotion decision was observed.
 
 ## Study 2: corrected primary OPE
 
-Study 2 was prospectively specified after Study 1 terminated. It preserved the official source, 70/30 temporal split, feature/preprocessing contract, target policies, OPE estimators, clipping sensitivities, moving-block bootstrap, and promotion rule. The only methodological redesign was the reward-model optimizer: deterministic `newton-cholesky` for the same L2 logistic objective.
+Study 2 prospectively changed only the reward-model solver to deterministic `newton-cholesky` while preserving the source, 70/30 temporal split, feature/preprocessing contract, target policies, OPE estimators, clipping sensitivities, moving-block bootstrap, and promotion rule.
 
-The training-only qualification succeeded on all 2,882,936 BTS training rows with 73 features, `n_iter=6`, zero optimizer warnings, and coefficient SHA256:
+The corrected Study 2 run completed successfully. Challenger DR was `0.0086129872` versus observed BTS `0.0048561566`; DR-minus-BTS was `0.0037568306` with paired 95% bootstrap interval `[0.0015186077, 0.0100335434]`. However, unclipped challenger ESS fraction was only `0.0019786`, far below the frozen 10% threshold. Study 2 therefore returned **`do_not_promote`** because overlap was inadequate despite a positive estimated effect.
 
-`7438db24286013c628dc7f74e2dd7f4913cdd05297c717fff78a214c9afb5684`
+## Study 3: terminal deterministic primary OPE
 
-The first Study 2 OPE execution then stopped on an implementation-only pandas datetime-resolution mismatch after the BTS evaluation clicks had been loaded in memory but before any empirical summary was emitted. The correction normalized timestamps explicitly to nanoseconds and moved the frozen boundary validation before outcome loading. No model, estimator, split, policy, clipping, bootstrap, or promotion rule changed.
+Study 3 was specified prospectively on the distinct `women` campaign. Source selection, exact temporal split, reward model, target policies, OPE estimators, clipping sensitivities, 24-hour moving-block bootstrap, and promotion rule were frozen before evaluation outcomes were opened.
 
-The single authorized corrected rerun completed successfully.
+After two implementation-only execution failures, a training-only reproducibility diagnostic fit the exact frozen model four times and reproduced the same coefficient SHA on every fit. The final v2.12 execution therefore pinned a single-thread numerical environment and required an immediate training-only preflight before OPE. That preflight reproduced:
 
-## Frozen sample
+- coefficient SHA256 `8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c`;
+- `65` features;
+- `n_iter=6`;
+- zero optimizer warnings.
 
-- BTS training rows: `2,882,936`
-- BTS evaluation rows: `1,235,545`
-- Random-reference rows: `137,634`
-- action count: `80`
-- uniform target probability: `1/80 = 0.0125`
-- evaluation window: `2019-11-28 16:55:17.867529+00:00` to `2019-11-30 23:59:59.920907+00:00`
+The terminal OPE then completed successfully.
 
-Observed BTS evaluation value:
+### Frozen sample
 
-`0.0048561566`
+- BTS training rows: `1,811,697`
+- BTS evaluation rows: `776,442`
+- Random-reference rows: `85,990`
+- action count: `46`
+- uniform target probability: `1/46 = 0.0217391304`
+- evaluation window: `2019-11-28 15:23:48.989271+00:00` to `2019-11-30 23:59:59.862467+00:00`
 
-Independently logged Random-reference value:
+Observed BTS evaluation value: `0.0062400025`.
 
-`0.0034802447`
+Independently logged Random-reference value: `0.0049424352`.
 
-## Uniform-random benchmark
-
-The uniform-random target gives a useful calibration check because an independently logged Random-policy reference exists for the same evaluation window.
+### Uniform-random benchmark
 
 | Estimator | OPE estimate | Absolute error vs Random reference | Relative error |
 |---|---:|---:|---:|
-| IPS | 0.0031984081 | 0.0002818366 | 8.10% |
-| SNIPS | 0.0031968143 | 0.0002834304 | 8.14% |
-| DM | 0.0040789821 | 0.0005987374 | 17.20% |
-| DR | 0.0032145520 | 0.0002656927 | 7.63% |
+| IPS | 0.0042885840 | 0.0006538512 | 13.23% |
+| SNIPS | 0.0046135233 | 0.0003289118 | 6.65% |
+| DM | 0.0049584995 | 0.0000160643 | 0.33% |
+| DR | 0.0046289572 | 0.0003134780 | 6.34% |
 
-For the unclipped uniform target, the importance-weight ESS fraction was `0.0242607` (2.43%). Clipping increased ESS materially, reaching 26.92% at cap 5, 19.54% at cap 10, and 13.93% at cap 20, while shifting the value estimates.
+The unclipped uniform-target ESS fraction was `0.0354091` (3.54%). Clipping increased ESS to 28.02% at cap 5, 20.17% at cap 10, and 14.62% at cap 20.
 
-## Challenger estimates
+### Challenger estimates
 
 | Estimator | Estimate |
 |---|---:|
-| IPS | 0.0085745875 |
-| SNIPS | 0.0084071780 |
-| DM | 0.0063351039 |
-| DR | 0.0086129872 |
+| IPS | 0.0042627450 |
+| SNIPS | 0.0038909502 |
+| DM | 0.0126170082 |
+| DR | 0.0044247405 |
 
 The primary DR-minus-BTS point difference was:
 
-`0.0037568306`
+`-0.0018152619`
 
 The frozen paired 24-hour moving-block bootstrap used 1,999 replications with seed `20260831`. Its 95% interval was:
 
-`[0.0015186077, 0.0100335434]`
+`[-0.0049919409, -0.0009922200]`
 
-The lower endpoint is strictly positive, so the first promotion condition passed.
+The entire interval is below zero, so the first promotion condition fails.
 
-## Overlap and promotion decision
+### Overlap and promotion decision
 
-The challenger overlap diagnostics were poor under the frozen unclipped primary analysis:
+The challenger overlap diagnostics are extremely poor under the frozen unclipped primary analysis:
 
-- ESS: `2,444.69` effective observations out of `1,235,545` evaluation rows;
-- ESS fraction: `0.0019786` (about 0.20%);
+- ESS: `176.11` effective observations out of `776,442` evaluation rows;
+- ESS fraction: `0.0002268` (about 0.023%);
 - frozen minimum ESS fraction: `0.10` (10%);
-- maximum importance weight: `3,835.11`;
-- 99th percentile importance weight: `22.51`.
+- maximum importance weight: `25,776.40`;
+- 99th percentile importance weight: `20.18`.
 
-The frozen promotion rule required both:
+The frozen promotion rule required both a strictly positive lower 95% bootstrap bound for challenger DR minus BTS and challenger ESS fraction of at least 10%.
 
-1. a strictly positive lower 95% bootstrap bound for DR challenger minus BTS;
-2. challenger ESS fraction at least 10%.
-
-Condition 1 passed. Condition 2 failed by a very large margin. Therefore:
+Study 3 fails both conditions. Therefore:
 
 **Promotion decision: `do_not_promote`.**
 
-This is the intended conservative behavior. The challenger has attractive point estimates and a positive bootstrap interval, but those estimates rely on extremely weak logging-policy overlap. The project therefore refuses deployment rather than treating extrapolation as evidence.
+The large gap between DM (`0.0126170`) and DR (`0.0044247`), together with the extreme unclipped weights, is consistent with severe support failure. Clipping changes the sensitivity estimates and increases ESS, but those analyses are secondary and do not replace the preregistered unclipped decision rule.
 
-Clipping illustrates the bias-variance/overlap trade-off but does not override the preregistered primary decision. Challenger ESS fraction rises to 6.36% at cap 5, 4.40% at cap 10, and 3.32% at cap 20, still below the 10% primary threshold.
+### Scientific interpretation
 
-## Scientific interpretation
+Study 3 provides a stronger negative deployment conclusion than Study 2. In Study 2 the challenger looked beneficial but could not be supported because overlap was too weak. In Study 3 the primary DR estimate is below observed BTS, its paired confidence interval is entirely negative, and overlap is even weaker.
 
-The corrected Study 2 result answers the project question more sharply than a simple leaderboard comparison would:
-
-- OPE estimators can be checked against an independently logged Random-policy reference, and IPS/SNIPS/DR were within roughly 7.6% to 8.1% relative error for that benchmark in this evaluation window;
-- the learned challenger appears better than observed BTS under all four reported point estimators;
-- however, the challenger policy is too far from the logging policy for the frozen support criterion to authorize deployment;
-- the conservative LCB-plus-ESS rule therefore prevents promotion despite a positive estimated effect.
-
-The correct conclusion is not that the challenger is bad. It is that the available logged data do not provide enough support for a deployment claim under the preregistered safety rule.
+The correct conclusion is therefore not merely “insufficient evidence to promote.” Under the frozen Study 3 design, the logged data provide evidence against promoting this challenger, while also showing that extrapolation risk is extreme. No post-outcome change to the challenger, model, clipping rule, ESS threshold, estimator, split, or bootstrap is authorized within Study 3.
 
 ## Reproducibility provenance
 
-Corrected Study 2 primary OPE:
+Terminal Study 3 primary OPE:
 
-- workflow run: `33876357702`;
-- workflow run number: `9`;
-- run head: `498d34b28266a8887e7259d975eda664e82784ac`;
+- workflow run: `34058975285`;
+- workflow run number: `4`;
+- run head: `c828fb0cc81b3d47dd2e9f3a0ceb67f42b201e65`;
 - workflow conclusion: `success`;
-- artifact: `adaptive-policy-learning-study2-primary-ope`;
-- artifact ID: `9938429768`;
-- artifact digest: `sha256:776da9a894690628e95db46920fa9af055f57c154df74e601b4dcb6c9359ad4e`;
-- result protocol version: `1.2-study2-primary-ope-execution-erratum`;
+- artifact: `adaptive-policy-learning-study3-primary-ope`;
+- artifact ID: `9996901283`;
+- artifact digest: `sha256:27fdfc20ef0b2f7cc8797282b07b2833dadd2ec726302e464615b473ecd23f3b`;
+- result protocol version: `2.12-study3-deterministic-primary-ope-execution`;
+- design hash: `abca33cc2c237b3d8b0f030d6f7c8e1cdd372a003eb64a4386fba9caf3dd9887`;
 - source archive SHA256: `e8ec18196582a5937381a1776382ca940689b90a18d2dcd1fb635be6df614d78`.
 
-The machine-readable terminal record is [`protocol/study2_primary_ope_terminal_status_v1_2.json`](protocol/study2_primary_ope_terminal_status_v1_2.json).
+The machine-readable terminal record is [`protocol/study3_primary_ope_terminal_status_v2_12.json`](protocol/study3_primary_ope_terminal_status_v2_12.json).
 
 ## Future work
 
-Any attempt to change the challenger policy, overlap threshold, clipping rule, reward model, features, split, or estimator after observing these outcomes must be treated as a new prospective study. Study 2 is complete and should not be tuned post hoc.
+Studies 1–3 are complete. Any attempt to alter the challenger, reward model, features, source, split, overlap threshold, clipping rule, estimator, bootstrap, or decision rule after observing Study 3 outcomes must be a genuinely new prospective study rather than a continuation or repair of Study 3.

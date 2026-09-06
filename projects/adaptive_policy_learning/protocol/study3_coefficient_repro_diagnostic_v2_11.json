@@ -1,0 +1,31 @@
+{
+  "version": "2.11-study3-coefficient-repro-diagnostic",
+  "recorded_at": "2026-09-06",
+  "study": "Adaptive Policy Learning Study 3",
+  "purpose": "Diagnose byte-level coefficient reproducibility using only the frozen women BTS training partition after the v2.10 OPE retry failed the coefficient SHA gate.",
+  "source_archive_sha256": "e8ec18196582a5937381a1776382ca940689b90a18d2dcd1fb635be6df614d78",
+  "frozen_training_rows": 1811697,
+  "expected_coefficient_sha256": "8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c",
+  "diagnostic_runs": [
+    "two independent fits under the hosted runner default thread configuration",
+    "two independent fits with OMP_NUM_THREADS=1, OPENBLAS_NUM_THREADS=1, MKL_NUM_THREADS=1, NUMEXPR_NUM_THREADS=1"
+  ],
+  "required_evidence": [
+    "coefficient SHA256 for all four fits",
+    "n_iter and warnings for all four fits",
+    "Python, NumPy, pandas, SciPy, and scikit-learn versions",
+    "NumPy configuration",
+    "threadpoolctl runtime information",
+    "runner architecture and processor metadata"
+  ],
+  "forbidden": [
+    "BTS evaluation-period click access",
+    "Random-reference click access",
+    "OPE estimates",
+    "challenger values",
+    "bootstrap intervals",
+    "promotion decision",
+    "any change to the frozen reward-model specification"
+  ],
+  "interpretation_rule": "This diagnostic does not authorize OPE and cannot replace the frozen coefficient gate. Any later change to the authorization rule requires a separate prospective provenance decision after this diagnostic is reviewed."
+}

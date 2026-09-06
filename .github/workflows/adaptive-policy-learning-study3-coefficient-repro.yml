@@ -156,9 +156,9 @@ jobs:
               "single_pair_equal": fits["single_1"]["coefficient_sha256"] == fits["single_2"]["coefficient_sha256"],
               "default_matches_frozen": [fits["default_1"]["coefficient_sha256"] == expected, fits["default_2"]["coefficient_sha256"] == expected],
               "single_matches_frozen": [fits["single_1"]["coefficient_sha256"] == expected, fits["single_2"]["coefficient_sha256"] == expected],
-              "evaluation_outcomes_loaded": false,
-              "random_reference_outcomes_loaded": false,
-              "ope_estimates_computed": false
+              "evaluation_outcomes_loaded": False,
+              "random_reference_outcomes_loaded": False,
+              "ope_estimates_computed": False,
           }
           (root / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True))
           print(json.dumps(summary, indent=2, sort_keys=True))

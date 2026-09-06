@@ -1,0 +1,1 @@
+Merge of this trigger onto main authorizes one Study 3 primary OPE execution under the deterministic numerical environment frozen by protocol v2.12. The workflow must reproduce the exact frozen training-only coefficient SHA immediately before OPE. No scientific-design changes are authorized.

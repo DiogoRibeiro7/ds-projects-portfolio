@@ -17,6 +17,7 @@ import sklearn
 from scipy.special import expit
 
 from adaptive_policy_learning import empirical as base
+from adaptive_policy_learning.obd import sha256_file
 from adaptive_policy_learning.ope import importance_weights, overlap_diagnostics, promotion_decision
 from adaptive_policy_learning.study3_training import (
     ACTION_COUNT,
@@ -227,7 +228,7 @@ def run_study3_primary_ope(
 def _verify_archive(path: Path) -> None:
     if not path.is_file():
         raise FileNotFoundError(path)
-    actual = base.sha256_file(path)
+    actual = sha256_file(path)
     if actual != ARCHIVE_SHA256:
         raise ValueError(f"archive SHA256 mismatch: expected {ARCHIVE_SHA256}, got {actual}")
 

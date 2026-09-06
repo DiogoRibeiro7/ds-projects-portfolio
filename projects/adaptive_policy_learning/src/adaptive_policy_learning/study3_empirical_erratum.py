@@ -1,11 +1,10 @@
-"""Execution erratum for Study 3 mixed-format ISO-8601 timestamps."""
+"""Execution errata and retry provenance for Study 3 primary OPE."""
 
 from __future__ import annotations
 
 import hashlib
 import json
 from pathlib import Path
-from typing import Any
 from zipfile import ZipFile
 
 import numpy as np
@@ -19,12 +18,12 @@ from adaptive_policy_learning.study3_training import (
     ACTION_COUNT,
     ACTION_IDS,
     AFFINITY_COLUMNS,
-    TRAIN_ROWS,
     USER_COLUMNS,
 )
 
-PROTOCOL_VERSION = "2.9-study3-primary-ope-execution-erratum"
+PROTOCOL_VERSION = "2.10-study3-primary-ope-execution-retry"
 ERRATUM_FILE = "study3_primary_ope_execution_erratum_v2_9.json"
+RETRY_FILE = "study3_primary_ope_execution_retry_v2_10.json"
 
 
 def _parse_mixed_utc(values: pd.Series) -> pd.Series:
@@ -192,7 +191,7 @@ def _random_reference(archive: ZipFile, *, chunk_size: int) -> dict[str, object]
 
 
 def protocol_hash_study3_erratum(protocol_dir: Path) -> str:
-    """Hash the frozen Study 3 chain including the execution erratum."""
+    """Hash the frozen Study 3 chain including execution erratum and retry provenance."""
     names = (
         "study3_selected_source_lock_v2_2.json",
         "study3_temporal_audit_lock_v2_3.json",
@@ -201,6 +200,7 @@ def protocol_hash_study3_erratum(protocol_dir: Path) -> str:
         original.QUALIFIED_MODEL_LOCK_FILE,
         original.AUTHORIZATION_FILE,
         ERRATUM_FILE,
+        RETRY_FILE,
     )
     digest = hashlib.sha256()
     for name in names:
@@ -220,7 +220,7 @@ def run_study3_primary_ope_erratum(
     protocol_dir: Path,
     chunk_size: int = 100_000,
 ) -> dict[str, object]:
-    """Run Study 3 with only the prospectively recorded timestamp-parser erratum."""
+    """Run Study 3 with the timestamp erratum and recorded execution retry only."""
     old_validate = original._validate_evaluation_window_without_outcomes
     old_evaluate = original._evaluate_bts
     old_random = original._random_reference
@@ -251,6 +251,12 @@ def run_study3_primary_ope_erratum(
         "failed_workflow_run_id": 34035420561,
         "scientific_design_changes": False,
         "timestamp_parser": "pandas format='mixed', utc=true",
+    }
+    result["execution_retry"] = {
+        "file": RETRY_FILE,
+        "failed_workflow_run_id": 34038554590,
+        "scientific_design_changes": False,
+        "reason": "static Ruff gate failed before dataset download or OPE execution",
     }
     output_path.write_text(json.dumps(result, indent=2, sort_keys=True), encoding="utf-8")
     return result

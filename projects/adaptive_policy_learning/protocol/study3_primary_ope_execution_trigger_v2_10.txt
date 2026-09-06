@@ -1,0 +1,1 @@
+Merge of this trigger onto main authorizes one corrected Study 3 primary OPE execution under execution retry v2.10. The retry retains the v2.9 mixed-format timestamp parser and all frozen scientific settings. Run 34038554590 failed at Ruff before dataset download or OPE execution; no evaluation or Random-reference outcomes were opened.

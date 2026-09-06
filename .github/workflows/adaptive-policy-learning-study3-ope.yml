@@ -5,13 +5,19 @@ on:
     branches:
       - main
     paths:
-      - "projects/adaptive_policy_learning/protocol/study3_primary_ope_execution_trigger_v2_10.txt"
+      - "projects/adaptive_policy_learning/protocol/study3_primary_ope_execution_trigger_v2_12.txt"
 
 jobs:
   execute-study3-primary-ope:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    env:
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      OPENBLAS_CORETYPE: "Haswell"
     defaults:
       run:
         working-directory: projects/adaptive_policy_learning
@@ -45,10 +51,10 @@ jobs:
           {
             "status": "incomplete",
             "study": "Adaptive Policy Learning Study 3",
-            "protocol_version": "2.10-study3-primary-ope-execution-retry",
+            "protocol_version": "2.12-study3-deterministic-primary-ope-execution",
             "code_sha": "${{ github.sha }}",
             "stage": "primary_ope_execution_not_completed",
-            "note": "This placeholder is overwritten by the Study 3 retry runner on success or handled failure. If preserved, a prerequisite failed, the OPE step was skipped, or execution was interrupted or timed out before a terminal result could be written."
+            "note": "This placeholder is overwritten by the deterministic Study 3 runner on success or handled failure. If preserved, a prerequisite failed, the OPE step was skipped, or execution was interrupted before a terminal result could be written."
           }
           EOF
 
@@ -75,7 +81,33 @@ jobs:
           print(f"verified archive SHA256 {actual}")
           PY
 
-      - name: Execute authorized Study 3 primary OPE retry
+      - name: Run deterministic training-only preflight
+        timeout-minutes: 100
+        run: >-
+          python scripts/run_study3_training.py
+          --archive open_bandit_dataset.zip
+          --output artifacts/study3_ope/study3_training_preflight.json
+          --code-sha "${{ github.sha }}"
+
+      - name: Verify deterministic training-only preflight
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("artifacts/study3_ope/study3_training_preflight.json").read_text())
+          training = payload["training"]
+          expected = "8e8ba7827c80c256e1c980007053fdcbb22d2ac8793673df3fe6669fafd3802c"
+          if training["coefficient_sha256"] != expected:
+              raise SystemExit("deterministic Study 3 training preflight coefficient mismatch")
+          if training["n_iter"] != 6:
+              raise SystemExit("deterministic Study 3 training preflight n_iter mismatch")
+          if training["warnings"] != []:
+              raise SystemExit("deterministic Study 3 training preflight warning state mismatch")
+          print("deterministic Study 3 training preflight reproduced frozen model")
+          PY
+
+      - name: Execute deterministic authorized Study 3 primary OPE
         timeout-minutes: 140
         run: >-
           python scripts/run_study3_primary_ope.py
@@ -84,11 +116,11 @@ jobs:
           --code-sha "${{ github.sha }}"
           --protocol-dir protocol
 
-      - name: Upload Study 3 primary OPE result
+      - name: Upload Study 3 primary OPE evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: adaptive-policy-learning-study3-primary-ope
-          path: projects/adaptive_policy_learning/artifacts/study3_ope/study3_primary_ope_result.json
+          path: projects/adaptive_policy_learning/artifacts/study3_ope/
           if-no-files-found: error
           retention-days: 30

@@ -1,0 +1,1 @@
+Merge of this trigger onto main authorizes one execution of the already-reviewed Study 3 primary OPE runner under protocol v2.7. The runner must reproduce the frozen qualified model before opening BTS evaluation or Random-reference click outcomes. No model, feature, split, policy, estimator, bootstrap, clipping, or promotion-rule changes are authorized by this trigger.

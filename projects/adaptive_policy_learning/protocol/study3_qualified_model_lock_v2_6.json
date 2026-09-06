@@ -31,6 +31,8 @@
     "regularization": "l2",
     "l1_ratio": 0.0,
     "C": 1.0,
+    "fit_intercept": true,
+    "class_weight": null,
     "tol": 0.0001,
     "max_iter": 100,
     "n_iter": 6,

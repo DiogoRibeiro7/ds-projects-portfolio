@@ -1,0 +1,22 @@
+{
+  "version": "2.10-study3-primary-ope-execution-retry",
+  "recorded_at": "2026-09-06",
+  "study": "Adaptive Policy Learning Study 3",
+  "parent_execution_erratum": "study3_primary_ope_execution_erratum_v2_9.json",
+  "failed_workflow_run": {
+    "id": 34038554590,
+    "head_sha": "186ea8e9d8994ca434d461ef87395c4ac176a53d",
+    "artifact_id": 9990947007,
+    "artifact_name": "adaptive-policy-learning-study3-primary-ope",
+    "artifact_digest": "sha256:7c71d58eed803bd91de146a35a67457c264e9bf4c72293ff82abaccf28512019"
+  },
+  "failure_stage": "static_quality_gate",
+  "failure_reason": "Ruff rejected two unused imports in study3_empirical_erratum.py before mypy, dataset download, archive verification, coefficient reproduction, evaluation access, Random-reference access, or OPE execution.",
+  "dataset_downloaded": false,
+  "evaluation_outcomes_loaded": false,
+  "random_reference_outcomes_loaded": false,
+  "ope_estimates_computed": false,
+  "scientific_design_changes": false,
+  "implementation_change": "Remove two unused imports only; retain the v2.9 mixed-format timestamp parser and all frozen Study 3 model, sample, policy, estimator, bootstrap, clipping, and promotion settings.",
+  "authorization": "After this retry record and its distinct trigger are merged, one corrected Study 3 primary OPE execution is authorized under the unchanged scientific design and the v2.9 timestamp-parsing erratum."
+}

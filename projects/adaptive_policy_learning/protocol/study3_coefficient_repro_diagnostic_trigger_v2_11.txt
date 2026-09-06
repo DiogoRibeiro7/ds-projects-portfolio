@@ -1,0 +1,1 @@
+Merge of this trigger onto main authorizes one training-only Study 3 coefficient reproducibility diagnostic under protocol v2.11. The diagnostic may use only the frozen 1,811,697-row women BTS training partition and must not read BTS evaluation-period or Random-reference click outcomes, compute OPE estimates, or change the frozen reward-model specification.

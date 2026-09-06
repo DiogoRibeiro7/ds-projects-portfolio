@@ -1,0 +1,35 @@
+{
+  "version": "2.9-study3-primary-ope-execution-erratum",
+  "created_at": "2026-09-06",
+  "study": "Adaptive Policy Learning Study 3",
+  "parent_authorization": "study3_primary_ope_authorization_v2_7.json",
+  "failed_execution": {
+    "workflow_run_id": 34035420561,
+    "workflow_run_number": 1,
+    "code_sha": "cdcef424ef2292bac02dcbdf009620265163ca17",
+    "artifact_id": 9990038868,
+    "artifact_name": "adaptive-policy-learning-study3-primary-ope",
+    "artifact_digest": "sha256:de956f4f6dd9fbada8985f9682ddc1e418ac2720b90e78a47fc28aaf1035321a",
+    "error_type": "ValueError",
+    "failure_stage": "outcome-free evaluation timestamp validation",
+    "frozen_model_reproduced_before_failure": true,
+    "evaluation_outcomes_loaded": false,
+    "random_reference_outcomes_loaded": false,
+    "ope_estimates_computed": false
+  },
+  "root_cause": "pandas 3 strict datetime parsing inferred a microsecond-bearing format from some ISO-8601 timestamp strings and then rejected valid rows whose timestamps omitted fractional seconds.",
+  "implementation_fix": "Parse Study 3 BTS evaluation and Random-reference timestamps with pandas format='mixed', utc=true. This accepts the two ISO-8601 timestamp representations already present in the frozen archive while preserving exact UTC instants and nanosecond conversion.",
+  "scientific_design_changes": false,
+  "unchanged": [
+    "source archive and campaign",
+    "training/evaluation split",
+    "reward model and coefficient gate",
+    "features and preprocessing",
+    "target policies",
+    "IPS/SNIPS/DM/DR estimators",
+    "unclipped primary weights and clipping sensitivities 5/10/20",
+    "paired 24-hour moving-block bootstrap with 1999 replications and seed 20260831",
+    "10 percent ESS promotion threshold"
+  ],
+  "rerun_authorization": "After this erratum is merged to main, one corrected Study 3 primary OPE execution is authorized. The runner must again reproduce the exact frozen qualified model before any BTS evaluation or Random-reference click outcome is opened."
+}

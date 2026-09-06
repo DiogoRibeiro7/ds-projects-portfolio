@@ -47,7 +47,10 @@
   "post_qualification_changes_forbidden": [
     "solver",
     "regularization",
+    "l1_ratio",
     "C",
+    "fit_intercept",
+    "class_weight",
     "tol",
     "max_iter",
     "features",

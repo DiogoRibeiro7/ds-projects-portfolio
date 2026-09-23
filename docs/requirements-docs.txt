@@ -16,4 +16,4 @@ jupyter==1.0.0
 ipykernel==6.29.5
 
 # For generating PDFs (optional)
-rst2pdf==0.101
+rst2pdf==0.105

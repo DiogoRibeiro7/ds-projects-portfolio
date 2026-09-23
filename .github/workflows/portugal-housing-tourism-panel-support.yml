@@ -37,7 +37,7 @@ jobs:
       - name: Build panel support audit
         run: python scripts/build_municipality_panel_support.py
       - name: Upload panel support evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: portugal-housing-tourism-panel-support
           path: |

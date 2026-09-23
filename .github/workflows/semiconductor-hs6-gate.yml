@@ -46,7 +46,7 @@ jobs:
           --output artifacts/semiconductor_hs6_gate/summary.json
       - name: Upload gate evidence
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: global-supply-chain-semiconductor-2022-hs6-gate
           path: projects/global_supply_chain_resilience/artifacts/semiconductor_hs6_gate/

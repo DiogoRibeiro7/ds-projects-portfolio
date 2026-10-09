@@ -1,0 +1,7 @@
+Tool: built-in image generation
+
+Use case: logo-brand.
+Asset type: square README project logo for ds-projects-portfolio.
+Project purpose: Collection of end-to-end data science projects showcasing real-world analysis, modeling, and MLOps practices
+Design direction: An open coral portfolio folder unfolds into three sculptural paper panels containing a point cluster, a branching line and a stepped bar silhouette. Modern editorial cut-paper still life, mint and lavender inserts on a pale peach background, substantial readable shapes and an inviting studio feel.
+Composition: create one finished square artwork with a strong silhouette, readable at 160 pixels, and comfortable margins. This is the logo itself, not a presentation or product mockup. No text, words, letters, numbers, captions or watermark anywhere in the image. Do not use a generic navy-and-gold metallic badge.

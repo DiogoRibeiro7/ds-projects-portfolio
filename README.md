@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/project-logo.png" alt="ds-projects-portfolio project logo" width="160" height="160">
+</p>
+
 # Data Science Projects Portfolio
 
 ![Fast CI](https://github.com/diogoribeiro7/ds-projects-portfolio/actions/workflows/ci.yml/badge.svg)

@@ -87,7 +87,7 @@ opentelemetry-instrumentation-requests>=0.44b0
 # Performance and Profiling
 memory-profiler>=0.61.0
 line-profiler>=4.1.1
-py-spy>=0.3.14
+py-spy>=0.4.2
 scalene>=1.5.31
 
 # API Development

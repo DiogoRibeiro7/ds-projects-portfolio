@@ -18,7 +18,7 @@ openpyxl>=3.0.0         # Excel file support
 xlsxwriter>=3.0.0       # Excel writing
 pyarrow>=24.0.0          # Parquet support
 fastparquet>=0.8.0      # Alternative Parquet engine
-feather-format>=0.4.0   # Feather format support
+feather-format>=0.4.1   # Feather format support
 
 # Configuration & Serialization (implemented TODOs)
 pyyaml>=6.0             # YAML configuration files

@@ -134,7 +134,7 @@ validators>=0.18.0     # Data validation
 # Development and Testing Extensions
 bandit>=1.7.0          # Security linting
 safety>=1.10.0         # Dependency vulnerability checking
-pytest-xdist>=2.5.0    # Parallel testing
+pytest-xdist>=3.8.0    # Parallel testing
 coverage>=6.0.0        # Code coverage
 
 # Documentation Generation

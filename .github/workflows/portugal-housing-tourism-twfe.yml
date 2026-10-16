@@ -37,7 +37,7 @@ jobs:
       - name: Run municipality TWFE
         run: python scripts/run_municipality_twfe.py
       - name: Upload TWFE evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: portugal-housing-tourism-twfe
           path: |

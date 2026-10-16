@@ -81,7 +81,7 @@ jobs:
 
       - name: Upload source audit evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: adaptive-policy-learning-obd-source-audit
           path: projects/adaptive_policy_learning/artifacts/source_audit/
@@ -90,7 +90,7 @@ jobs:
 
       - name: Upload Study 2 primary OPE result
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: adaptive-policy-learning-study2-primary-ope
           path: projects/adaptive_policy_learning/artifacts/study2/study2_primary_ope_result.json

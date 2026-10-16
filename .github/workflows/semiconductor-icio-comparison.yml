@@ -68,7 +68,7 @@ jobs:
           --summary-output artifacts/semiconductor_icio_comparison/summary.json
       - name: Upload
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: global-supply-chain-semiconductor-2022-icio-comparison
           path: projects/global_supply_chain_resilience/artifacts/semiconductor_icio_comparison/

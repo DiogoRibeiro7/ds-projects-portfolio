@@ -118,7 +118,7 @@ jobs:
       - name: Upload v2 confirmatory evidence
         id: upload_evidence
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.release_gate.outputs.open == 'true' && steps.june_source.outputs.available == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mobility-v2-primary
           if-no-files-found: error

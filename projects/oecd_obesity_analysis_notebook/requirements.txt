@@ -11,7 +11,7 @@ statsmodels==0.14.5
 scipy==1.15.3
 
 # Data acquisition
-requests==2.32.4
+requests==2.33.0
 
 # Notebook tooling
 jupyterlab>=4.5.9   # >=4.5.9 avoids known JupyterLab security advisories

@@ -31,7 +31,7 @@ jobs:
         run: pytest
       - name: Get importer evidence
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: global-supply-chain-semiconductor-2022-concentration
           path: projects/global_supply_chain_resilience/artifacts/importer_authoritative
@@ -40,7 +40,7 @@ jobs:
           github-token: ${{ github.token }}
       - name: Get exporter evidence
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: global-supply-chain-semiconductor-2022-exporters
           path: projects/global_supply_chain_resilience/artifacts/exporter_authoritative
@@ -49,7 +49,7 @@ jobs:
           github-token: ${{ github.token }}
       - name: Get ICIO evidence
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: global-supply-chain-icio-2022-evidence
           path: projects/global_supply_chain_resilience/artifacts/icio_authoritative

@@ -45,6 +45,103 @@ validate_inspections <- function(inspections, cohorts) {
   invisible(TRUE)
 }
 
+#' Robustly fit a two-parameter Weibull model to aggregated binomial counts.
+#'
+#' Start with bounded L-BFGS-B optimisation. If its line search terminates
+#' unsuccessfully (which can happen for almost-flat likelihoods), retry with
+#' independently bounded PORT optimisation, followed by alternate deterministic
+#' starting points. A finite objective alone is *not* considered convergence.
+#' This function does not impute or discard a difficult simulated lot.
+#'
+#' @param observations Valid subset of inspections for one or more groups.
+#' @param weights Optional positive likelihood weights for pooled M-estimation.
+#' @return Named list of Weibull shape, scale and minimised objective value.
+estimate_weibull_binomial <- function(observations, weights = NULL) {
+  fields <- c("day", "n_checked", "n_acceptable")
+  if (!is.data.frame(observations) || nrow(observations) < 1L ||
+      !all(fields %in% names(observations))) {
+    stop("observations need valid inspection count columns", call. = FALSE)
+  }
+  for (field in fields) {
+    values <- observations[[field]]
+    if (!is.numeric(values) || anyNA(values) ||
+        any(!is.finite(values)) || any(values != floor(values))) {
+      stop("inspection times and counts must be finite whole numbers",
+           call. = FALSE)
+    }
+  }
+  if (any(observations$day <= 0) ||
+      any(observations$n_checked <= 0) ||
+      any(observations$n_acceptable < 0) ||
+      any(observations$n_acceptable > observations$n_checked)) {
+    stop("inspection times and binomial counts are invalid", call. = FALSE)
+  }
+  if (is.null(weights)) {
+    weights <- rep(1, nrow(observations))
+  }
+  if (!is.numeric(weights) || length(weights) != nrow(observations) ||
+      anyNA(weights) || any(!is.finite(weights)) || any(weights <= 0)) {
+    stop("weights must be finite strictly positive per observation",
+         call. = FALSE)
+  }
+
+  objective <- function(log_parameters) {
+    probability <- weibull_survival(
+      observations$day, exp(log_parameters[1]), exp(log_parameters[2])
+    )
+    probability <- pmin(1 - 1e-12, pmax(1e-12, probability))
+    -sum(weights * stats::dbinom(
+      observations$n_acceptable, size = observations$n_checked,
+      prob = probability, log = TRUE
+    ))
+  }
+  lower <- log(c(0.25, min(observations$day) / 100))
+  upper <- log(c(10, max(observations$day) * 100))
+  starts <- list(
+    log(c(2, stats::median(observations$day))),
+    log(c(1, max(observations$day))),
+    log(c(3, max(observations$day) / 2))
+  )
+
+  for (initial in starts) {
+    attempt <- tryCatch(
+      stats::optim(
+        par = initial, fn = objective, method = "L-BFGS-B",
+        lower = lower, upper = upper,
+        control = list(maxit = 1000L)
+      ),
+      error = function(error) NULL
+    )
+    if (!is.null(attempt) && attempt$convergence == 0L &&
+        is.finite(attempt$value)) {
+      return(list(shape = exp(attempt$par[1]),
+                  scale = exp(attempt$par[2]), objective = attempt$value))
+    }
+
+    # PORT uses a different bounded search; retry near any finite L-BFGS-B
+    # solution, even if L-BFGS-B reported an unsuccessful line search.
+    fallback_start <- if (!is.null(attempt) &&
+                          all(is.finite(attempt$par))) attempt$par else initial
+    fallback <- tryCatch(
+      stats::nlminb(
+        start = fallback_start, objective = objective,
+        lower = lower, upper = upper,
+        control = list(iter.max = 1000L, eval.max = 3000L)
+      ),
+      error = function(error) NULL
+    )
+    if (!is.null(fallback) && fallback$convergence == 0L &&
+        is.finite(fallback$objective)) {
+      return(list(shape = exp(fallback$par[1]),
+                  scale = exp(fallback$par[2]),
+                  objective = fallback$objective))
+    }
+  }
+
+  stop("Weibull binomial objective did not converge after bounded retries",
+       call. = FALSE)
+}
+
 #' Maximum-likelihood Weibull fits from cross-sectional binomial counts.
 #'
 #' Each observation is Binomial(n_checked, S(day)). A cohort is assumed
@@ -60,30 +157,14 @@ fit_weibull_by_cohort <- function(inspections, cohorts) {
   groups <- cohorts$cohort[cohorts$initially_sellable]
   fits <- lapply(groups, function(group) {
     observations <- inspections[inspections$cohort == group, , drop = FALSE]
-    negative_log_likelihood <- function(log_parameters) {
-      probability <- weibull_survival(
-        observations$day, exp(log_parameters[1]), exp(log_parameters[2])
-      )
-      # Clip only for stable evaluation of extreme binomial log-likelihoods.
-      probability <- pmin(1 - 1e-12, pmax(1e-12, probability))
-      -sum(stats::dbinom(observations$n_acceptable,
-                         size = observations$n_checked,
-                         prob = probability, log = TRUE))
-    }
-    result <- stats::optim(
-      par = log(c(2, stats::median(observations$day))),
-      fn = negative_log_likelihood,
-      method = "L-BFGS-B",
-      lower = log(c(0.25, min(observations$day) / 100)),
-      upper = log(c(10, max(observations$day) * 100))
-    )
-    if (result$convergence != 0 || !is.finite(result$value)) {
-      stop(sprintf("Weibull likelihood did not converge for %s", group),
-           call. = FALSE)
-    }
-    data.frame(cohort = group, shape = exp(result$par[1]),
-               scale = exp(result$par[2]),
-               negative_log_likelihood = result$value)
+    result <- tryCatch(estimate_weibull_binomial(observations),
+                       error = function(error) {
+                         stop(sprintf("Weibull fit failed for %s: %s", group,
+                                      conditionMessage(error)), call. = FALSE)
+                       })
+    data.frame(cohort = group, shape = result$shape,
+               scale = result$scale,
+               negative_log_likelihood = result$objective)
   })
   do.call(rbind, fits)
 }

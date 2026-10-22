@@ -65,8 +65,11 @@ inspections; placeholder values in the demonstrator are not real estimates.
 
 - Primary prototype: stratum-specific Weibull survival with independent
   binomial inspections; fixed deterministic price path.
-- Survival sensitivity: alternative piecewise/discrete hazards and a pooled
-  Weibull model to test whether stratification genuinely helps.
+- First synthetic comparator implemented: mass-standardised pooled Weibull,
+  paired economic decisions, held-out inspections at future days and
+  harvest-lot bootstrap intervals. See [EVALUATION.md](EVALUATION.md).
+- Further survival sensitivity: alternative piecewise/discrete hazards and
+  misspecified-generating-process experiments.
 - Sampling sensitivity: misclassification, inspection-frequency changes and
   between-fruit/within-lot dependence.
 - Economic sensitivity: price-path errors, delivery delays, per-kg holding

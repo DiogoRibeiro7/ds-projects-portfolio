@@ -22,6 +22,9 @@ is determined by market acceptance criteria independently of the model.
   likelihood currently implemented.
 - Destructive sampling: record and subtract removed fruit from sellable
   inventory; the prototype assumes inspection removals are negligible.
+- Mass accounting: record fruit mass in inspection samples, because multiplying
+  acceptable-fruit proportions by inventory kilograms assumes no relationship
+  between fruit size and loss probability within a cohort.
 - Storage: daily temperature/humidity traces, handling, handling damage and
   any removal/disposal events. Record both sale date and actual delivery date.
 

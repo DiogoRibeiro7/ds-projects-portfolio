@@ -50,6 +50,10 @@ estimated separately by maximising the aggregated binomial likelihood.
 Inspections are never treated as individual time-to-event observations.
 This is a parametric assumption to validate empirically, not a claim that
 real fruit deterioration must be Weibull-distributed.
+Multiplying a fruit-count survival fraction by cohort mass additionally assumes
+that, within a stratum, the probability of deterioration is not systematically
+related to fruit mass. A real application must test this or use mass-weighted
+loss measurements.
 
 For a common sale day \(d\), delivery lag \(L\), deterministic expected price
 \(p_g(d)\), decision day \(d_0\), and per-initial-kilogram holding cost \(c\),

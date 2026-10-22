@@ -1,0 +1,30 @@
+name: Orange Storage Decision (R)
+
+on:
+  pull_request:
+    paths:
+      - "projects/orange_storage_decision/**"
+      - ".github/workflows/orange-storage-decision.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "projects/orange_storage_decision/**"
+      - ".github/workflows/orange-storage-decision.yml"
+  workflow_dispatch:
+
+jobs:
+  model-checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/orange_storage_decision
+    steps:
+      - uses: actions/checkout@v6
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "release"
+      - name: Run R model tests
+        run: Rscript tests/test_model.R
+      - name: Run synthetic demonstration
+        run: Rscript scripts/demo.R

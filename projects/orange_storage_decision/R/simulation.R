@@ -231,6 +231,11 @@ run_policy_experiment <- function(n_lots = 100L, seed = 20261022L) {
     stop("at least two independent lots are required", call. = FALSE)
   }
   set.seed(seed)
-  results <- lapply(seq_len(n_lots), simulate_one_lot)
+  results <- lapply(seq_len(n_lots), function(lot_id) {
+    tryCatch(simulate_one_lot(lot_id), error = function(error) {
+      stop(sprintf("synthetic lot %d failed: %s", lot_id,
+                   conditionMessage(error)), call. = FALSE)
+    })
+  })
   do.call(rbind, results)
 }

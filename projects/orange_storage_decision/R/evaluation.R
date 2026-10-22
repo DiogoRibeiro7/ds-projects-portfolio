@@ -48,27 +48,7 @@ inventory_sampling_weights <- function(observations, cohorts) {
 fit_pooled_weibull <- function(inspections, cohorts) {
   validate_inspections(inspections, cohorts)
   weights <- inventory_sampling_weights(inspections, cohorts)
-  objective <- function(log_parameters) {
-    probability <- weibull_survival(
-      inspections$day, exp(log_parameters[1]), exp(log_parameters[2])
-    )
-    probability <- pmin(1 - 1e-12, pmax(1e-12, probability))
-    -sum(weights * stats::dbinom(
-      inspections$n_acceptable, size = inspections$n_checked,
-      prob = probability, log = TRUE
-    ))
-  }
-  result <- stats::optim(
-    par = log(c(2, stats::median(inspections$day))),
-    fn = objective, method = "L-BFGS-B",
-    lower = log(c(0.25, min(inspections$day) / 100)),
-    upper = log(c(10, max(inspections$day) * 100))
-  )
-  if (result$convergence != 0 || !is.finite(result$value)) {
-    stop("pooled Weibull objective did not converge", call. = FALSE)
-  }
-  list(shape = exp(result$par[1]), scale = exp(result$par[2]),
-       objective = result$value)
+  estimate_weibull_binomial(inspections, weights)
 }
 
 #' Apply shared survival parameters to eligible inventory strata.

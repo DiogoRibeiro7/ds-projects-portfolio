@@ -100,6 +100,11 @@ The code imposes no requirement that the maturity-aware strategy wins.
 Differences may be negative, intervals may overlap zero, and tied optimal
 sale days count as no policy disagreement.
 
+Weibull fitting uses bounded L-BFGS-B with a bounded PORT fallback and
+deterministic alternative starts for rare numerical non-convergence. If these
+attempts all fail, the experiment stops and reports the affected lot; it does
+not discard difficult lots and thereby bias the policy comparison.
+
 ## Scope and threats to validity
 
 - The generator uses Weibull hazards, which gives the model family an

@@ -103,4 +103,10 @@ stopifnot(interval[["upper_95"]] >= interval[["mean"]])
 expect_error(paired_lot_interval(1))
 expect_error(paired_lot_interval(c(1, NA_real_)))
 
+# Likelihood helper refuses broken data and silently omitted counts.
+expect_error(estimate_weibull_binomial(train, rep(0, nrow(train))))
+broken <- train
+broken$n_acceptable[1] <- -1L
+expect_error(estimate_weibull_binomial(broken))
+
 cat("Orange storage out-of-time evaluation tests passed.\n")

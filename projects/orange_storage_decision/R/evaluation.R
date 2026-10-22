@@ -1,0 +1,151 @@
+#' Out-of-time predictive scoring and a population-weighted pooled baseline.
+#'
+#' Source R/model.R and R/sampling.R before loading this file. Base R only.
+
+#' Inventory-standardised weights for stratified inspection observations.
+#'
+#' Each inspection day receives its total observed sample size in weight, but
+#' within that day strata receive weights proportional to eligible inventory
+#' mass. This avoids bias towards an intentionally oversampled small stratum.
+#' This is an M-estimation weight, not a claim of independent extra subjects.
+#'
+#' @param observations Aggregated observations with cohort, day, n_checked.
+#' @param cohorts Initial inventory with initially_sellable and mass_kg.
+#' @return Numeric nonnegative observation weights.
+inventory_sampling_weights <- function(observations, cohorts) {
+  validate_cohorts(cohorts)
+  if (!is.data.frame(observations) ||
+      !all(c("cohort", "day", "n_checked") %in% names(observations)) ||
+      !is.character(observations$cohort) || anyNA(observations$cohort) ||
+      !is.numeric(observations$day) || anyNA(observations$day) ||
+      any(!is.finite(observations$day)) ||
+      !is.numeric(observations$n_checked) || anyNA(observations$n_checked) ||
+      any(!is.finite(observations$n_checked)) ||
+      any(observations$n_checked <= 0)) {
+    stop("observations need valid cohort/day and positive sample sizes",
+         call. = FALSE)
+  }
+  eligible <- cohorts[cohorts$initially_sellable, , drop = FALSE]
+  group_index <- match(observations$cohort, eligible$cohort)
+  if (anyNA(group_index)) {
+    stop("observations refer to an ineligible or unknown cohort",
+         call. = FALSE)
+  }
+  mass_share <- eligible$mass_kg / sum(eligible$mass_kg)
+  day_sizes <- ave(observations$n_checked, observations$day, FUN = sum)
+  mass_share[group_index] * day_sizes / observations$n_checked
+}
+
+#' Estimate a single pooled Weibull curve, ignoring group-specific hazards.
+#'
+#' The mass-standardised weighted binomial objective represents a deliberately
+#' restricted baseline: shape and scale are shared across all maturity groups.
+#' It is generally misspecified if a population is a mixture of Weibulls.
+#'
+#' @param inspections Independent cross-sectional counts observed so far.
+#' @param cohorts Initial mass/grade inventory.
+#' @return List containing positive shape and scale and objective value.
+fit_pooled_weibull <- function(inspections, cohorts) {
+  validate_inspections(inspections, cohorts)
+  weights <- inventory_sampling_weights(inspections, cohorts)
+  objective <- function(log_parameters) {
+    probability <- weibull_survival(
+      inspections$day, exp(log_parameters[1]), exp(log_parameters[2])
+    )
+    probability <- pmin(1 - 1e-12, pmax(1e-12, probability))
+    -sum(weights * stats::dbinom(
+      inspections$n_acceptable, size = inspections$n_checked,
+      prob = probability, log = TRUE
+    ))
+  }
+  result <- stats::optim(
+    par = log(c(2, stats::median(inspections$day))),
+    fn = objective, method = "L-BFGS-B",
+    lower = log(c(0.25, min(inspections$day) / 100)),
+    upper = log(c(10, max(inspections$day) * 100))
+  )
+  if (result$convergence != 0 || !is.finite(result$value)) {
+    stop("pooled Weibull objective did not converge", call. = FALSE)
+  }
+  list(shape = exp(result$par[1]), scale = exp(result$par[2]),
+       objective = result$value)
+}
+
+#' Apply shared survival parameters to eligible inventory strata.
+#' @param cohorts Initial inventory.
+#' @param pooled Fit from fit_pooled_weibull().
+#' @return Cohort inventory with identical survival parameters for eligible rows.
+with_pooled_survival <- function(cohorts, pooled) {
+  validate_cohorts(cohorts)
+  if (!is.list(pooled) ||
+      !all(c("shape", "scale") %in% names(pooled))) {
+    stop("pooled must provide shape and scale", call. = FALSE)
+  }
+  for (name in c("shape", "scale")) {
+    assert_nonnegative_scalar(pooled[[name]], name)
+    if (pooled[[name]] == 0) {
+      stop("pooled shape and scale must be strictly positive", call. = FALSE)
+    }
+  }
+  updated <- cohorts
+  selected <- updated$initially_sellable
+  updated$shape[selected] <- pooled$shape
+  updated$scale[selected] <- pooled$scale
+  validate_cohorts(updated)
+  updated
+}
+
+#' Score future inspections at the individual-fruit observation level.
+#'
+#' For aggregate Binomial(n, p), Brier score contributions are
+#' y*(1-p)^2 + (n-y)*p^2, not (y/n-p)^2. Inventory standardisation makes
+#' scores comparable when sampling fractions differ between maturity strata.
+#'
+#' @param holdout Future, independent counts from initially eligible strata.
+#' @param fitted_inventory Inventory with fitted survival parameters.
+#' @param decision_day Fit information cut-off; all holdout days must exceed it.
+#' @return Named list with Brier and log loss, both lower-is-better.
+score_future_inspections <- function(holdout, fitted_inventory, decision_day) {
+  validate_inspections(holdout, fitted_inventory)
+  assert_nonnegative_scalar(decision_day, "decision_day", integer = TRUE)
+  if (any(holdout$day <= decision_day)) {
+    stop("holdout inspections must occur strictly after decision_day",
+         call. = FALSE)
+  }
+  index <- match(holdout$cohort, fitted_inventory$cohort)
+  probability <- weibull_survival(
+    holdout$day, fitted_inventory$shape[index], fitted_inventory$scale[index]
+  )
+  probability <- pmin(1 - 1e-12, pmax(1e-12, probability))
+  weight <- inventory_sampling_weights(holdout, fitted_inventory)
+  positives <- holdout$n_acceptable
+  negatives <- holdout$n_checked - positives
+  weighted_n <- sum(weight * holdout$n_checked)
+
+  list(
+    brier = sum(weight * (positives * (1 - probability)^2 +
+                           negatives * probability^2)) / weighted_n,
+    log_loss = -sum(weight * (positives * log(probability) +
+                              negatives * log1p(-probability))) / weighted_n
+  )
+}
+
+#' Bootstrap the mean of independent, paired harvest-lot differences.
+#'
+#' @param differences Numeric vector of policy-A minus policy-B results.
+#' @param n_boot Positive number of paired lot resamples.
+#' @return Numeric vector of mean and percentile 95% interval endpoints.
+paired_lot_interval <- function(differences, n_boot = 1000L) {
+  if (!is.numeric(differences) || length(differences) < 2L ||
+      anyNA(differences) || any(!is.finite(differences))) {
+    stop("differences need two or more finite paired lot outcomes",
+         call. = FALSE)
+  }
+  assert_nonnegative_scalar(n_boot, "n_boot", integer = TRUE)
+  if (n_boot < 1L) {
+    stop("n_boot must be positive", call. = FALSE)
+  }
+  averages <- replicate(n_boot, mean(sample(differences, replace = TRUE)))
+  bounds <- stats::quantile(averages, c(0.025, 0.975), names = FALSE)
+  c(mean = mean(differences), lower_95 = bounds[1], upper_95 = bounds[2])
+}

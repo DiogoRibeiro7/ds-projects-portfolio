@@ -26,5 +26,9 @@ jobs:
           r-version: "release"
       - name: Run R model tests
         run: Rscript tests/test_model.R
+      - name: Run out-of-time comparison tests
+        run: Rscript tests/test_evaluation.R
       - name: Run synthetic demonstration
         run: Rscript scripts/demo.R
+      - name: Evaluate paired synthetic sale policies
+        run: Rscript scripts/run_policy_evaluation.R

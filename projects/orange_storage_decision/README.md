@@ -104,6 +104,23 @@ The demo prints:
 3. Optimal separately graded sale days and their hypothetical value difference.
 4. Bootstrap distribution of the whole-batch sale day and failed refit count.
 
+## Out-of-time policy evaluation
+
+The follow-up experiment compares maturity-stratified Weibull curves with a
+mass-standardised, pooled Weibull baseline. It makes decisions using only
+day-12 inspections, then scores independent days 16/20/24 and economic
+returns on identical simulated fruit outcomes and price paths. Paired
+whole-lot intervals measure variation across the simulated harvest lots.
+
+```bash
+Rscript tests/test_evaluation.R
+Rscript scripts/run_policy_evaluation.R
+```
+
+Read [EVALUATION.md](EVALUATION.md) for the estimands, leakage controls,
+reproducibility settings and interpretation limits. No positive effect is
+assumed or claimed in advance.
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical
@@ -114,5 +131,6 @@ Before application, the study needs representative observations across
 multiple harvest lots and storage environments, traceable maturity grading,
 predefined market acceptance standards, genuine historical price scenarios,
 loss accounting, out-of-lot validation, uncertainty calibration and comparison
-against operational baselines. See [PROTOCOL.md](PROTOCOL.md) for the proposed
-empirical design and anti-leakage rules.
+against operational baselines. The synthetic prospective simulation does not
+replace an empirical out-of-lot test. See [PROTOCOL.md](PROTOCOL.md) for the
+proposed empirical design and anti-leakage rules.

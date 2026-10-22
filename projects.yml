@@ -1,4 +1,18 @@
 projects:
+  - name: Orange Storage Decision
+    repository: ./projects/orange_storage_decision/
+    category: Decision Science & Survival Analysis
+    status: exploratory-prototype
+    summary: Synthetic R demonstration of maturity-stratified postharvest survival, inspection-based Weibull estimation, and optimal sale timing under transparent price and storage-cost assumptions.
+    methods:
+      - stratified survival analysis
+      - binomial maximum likelihood
+      - parametric bootstrap
+      - optimal stopping
+    technologies:
+      - R
+      - base R
+    featured: false
   - name: Global Supply Chain Resilience
     repository: ./projects/global_supply_chain_resilience/
     category: Decision Science & Network Analytics

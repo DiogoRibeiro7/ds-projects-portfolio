@@ -110,6 +110,7 @@ Use this map when you want to jump directly to a project area:
 
 - [Adaptive policy learning and off-policy evaluation](projects/adaptive_policy_learning/)
 - [Mobility demand and fleet optimization](projects/mobility_demand_optimization/)
+- [Orange storage: maturity-aware optimal sale](projects/orange_storage_decision/)
 - [Portugal housing, tourism and short-term accommodation](projects/portugal_housing_tourism/)
 - [churn prediction](projects/churn_prediction/)
 - [customer segmentation](projects/customer_segmentation/)

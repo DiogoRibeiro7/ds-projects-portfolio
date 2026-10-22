@@ -4,10 +4,10 @@
 #' cross-sectional samples from each initially eligible cohort, not repeated
 #' observations of a fixed panel of identified fruits.
 
-#' Validate inspections and require enough follow-up to identify a curve.
+#' Validate observed inspection counts without imposing fitting requirements.
 #' @param inspections Data frame: cohort, day, n_checked, n_acceptable.
 #' @param cohorts Initial inventory. Only initially saleable cohorts qualify.
-validate_inspections <- function(inspections, cohorts) {
+validate_inspection_counts <- function(inspections, cohorts) {
   validate_cohorts(cohorts)
   required <- c("cohort", "day", "n_checked", "n_acceptable")
   if (!is.data.frame(inspections) || !all(required %in% names(inspections)) ||
@@ -33,6 +33,15 @@ validate_inspections <- function(inspections, cohorts) {
   if (!setequal(unique(inspections$cohort), groups)) {
     stop("inspections must cover exactly the saleable cohorts", call. = FALSE)
   }
+  invisible(TRUE)
+}
+
+#' Validate training inspections and require enough follow-up to fit a curve.
+#' @param inspections Data frame: cohort, day, n_checked, n_acceptable.
+#' @param cohorts Initial inventory. Only initially saleable cohorts qualify.
+validate_inspections <- function(inspections, cohorts) {
+  validate_inspection_counts(inspections, cohorts)
+  groups <- cohorts$cohort[cohorts$initially_sellable]
   for (group in groups) {
     part <- inspections[inspections$cohort == group, , drop = FALSE]
     if (length(unique(part$day)) < 3L ||

@@ -112,6 +112,11 @@ day-12 inspections, then scores independent days 16/20/24 and economic
 returns on identical simulated fruit outcomes and price paths. Paired
 whole-lot intervals measure variation across the simulated harvest lots.
 
+Held-out scoring also supports a single future inspection day and all-pass or
+all-fail samples. These do not need to identify a new survival curve. Every
+scored day must cover all eligible strata for inventory standardisation;
+unequal sample sizes are allowed, but missing strata are rejected explicitly.
+
 ```bash
 Rscript tests/test_evaluation.R
 Rscript scripts/run_policy_evaluation.R

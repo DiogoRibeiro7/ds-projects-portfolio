@@ -8,6 +8,8 @@
 #' within that day strata receive weights proportional to eligible inventory
 #' mass. This avoids bias towards an intentionally oversampled small stratum.
 #' This is an M-estimation weight, not a claim of independent extra subjects.
+#' Every day must include exactly one observation for each eligible stratum;
+#' no missing-stratum outcomes or sample sizes are imputed by these weights.
 #'
 #' @param observations Aggregated observations with cohort, day, n_checked.
 #' @param cohorts Initial inventory with initially_sellable and mass_kg.
@@ -15,20 +17,31 @@
 inventory_sampling_weights <- function(observations, cohorts) {
   validate_cohorts(cohorts)
   if (!is.data.frame(observations) ||
+      nrow(observations) < 1L ||
       !all(c("cohort", "day", "n_checked") %in% names(observations)) ||
       !is.character(observations$cohort) || anyNA(observations$cohort) ||
       !is.numeric(observations$day) || anyNA(observations$day) ||
       any(!is.finite(observations$day)) ||
+      any(observations$day <= 0 | observations$day != floor(observations$day)) ||
       !is.numeric(observations$n_checked) || anyNA(observations$n_checked) ||
       any(!is.finite(observations$n_checked)) ||
-      any(observations$n_checked <= 0)) {
-    stop("observations need valid cohort/day and positive sample sizes",
+      any(observations$n_checked <= 0 |
+          observations$n_checked != floor(observations$n_checked))) {
+    stop("observations need valid cohorts, positive whole days and sample sizes",
+         call. = FALSE)
+  }
+  if (anyDuplicated(observations[c("cohort", "day")])) {
+    stop("each inspection cohort/day must occur exactly once",
          call. = FALSE)
   }
   eligible <- cohorts[cohorts$initially_sellable, , drop = FALSE]
   group_index <- match(observations$cohort, eligible$cohort)
   if (anyNA(group_index)) {
     stop("observations refer to an ineligible or unknown cohort",
+         call. = FALSE)
+  }
+  if (any(table(observations$day) != nrow(eligible))) {
+    stop("every inspection day must cover every eligible cohort",
          call. = FALSE)
   }
   mass_share <- eligible$mass_kg / sum(eligible$mass_kg)
@@ -80,13 +93,15 @@ with_pooled_survival <- function(cohorts, pooled) {
 #' For aggregate Binomial(n, p), Brier score contributions are
 #' y*(1-p)^2 + (n-y)*p^2, not (y/n-p)^2. Inventory standardisation makes
 #' scores comparable when sampling fractions differ between maturity strata.
+#' One future day and all-pass/all-fail observations are valid for scoring
+#' existing predictions; curve-identification requirements apply only to fits.
 #'
 #' @param holdout Future, independent counts from initially eligible strata.
 #' @param fitted_inventory Inventory with fitted survival parameters.
 #' @param decision_day Fit information cut-off; all holdout days must exceed it.
 #' @return Named list with Brier and log loss, both lower-is-better.
 score_future_inspections <- function(holdout, fitted_inventory, decision_day) {
-  validate_inspections(holdout, fitted_inventory)
+  validate_inspection_counts(holdout, fitted_inventory)
   assert_nonnegative_scalar(decision_day, "decision_day", integer = TRUE)
   if (any(holdout$day <= decision_day)) {
     stop("holdout inspections must occur strictly after decision_day",

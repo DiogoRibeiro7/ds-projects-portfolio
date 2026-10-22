@@ -67,6 +67,19 @@ group \(g\) is \(w_{g,t}=a_gN_t/n_{g,t}\), so each day's contribution is
 standardised to the original mass shares. The same weights define the
 pooled model's binomial pseudo-likelihood.
 
+Scoring existing predictions accepts a single future inspection day and
+all-pass or all-fail counts, including a stratum with no observed deterioration
+or no remaining acceptable fruit. These are valid evaluation outcomes, not
+grounds for dropping a lot. Fitting retains its separate requirements of at
+least three distinct inspection days and both outcomes per eligible stratum.
+
+Inventory standardisation requires exactly one row for every eligible stratum
+on each inspection day, with positive integer sample sizes. Unequal sample
+sizes are allowed. Missing strata are rejected explicitly: the implemented
+weights cannot reconstruct their unobserved outcomes, and silently omitting
+them would change the population represented by the score or pooled fit.
+All scoring days must remain strictly after the decision cut-off.
+
 Realised value of policy \(\pi\), choosing \(d_\pi\), is
 
 \[

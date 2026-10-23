@@ -154,15 +154,15 @@ realised_sale_value <- function(sale_day, truth, prices, lifetimes,
   gross - storage_cost
 }
 
-#' Run one prospective simulation with a hidden truth and common outcomes.
+#' Prepare one prospective lot, fixing decisions before future outcomes.
 #' @param lot_id Integer lot identifier.
 #' @param decision_day Training cutoff and first possible sale day.
 #' @param delivery_lag_days Lag until quality is assessed at delivery.
 #' @param storage_eur_per_kg_day Per-initial-kg daily storage cost.
-#' @return One-row data frame of future prediction and realised decision scores.
-simulate_one_lot <- function(lot_id, decision_day = 12L,
-                             delivery_lag_days = 2L,
-                             storage_eur_per_kg_day = 0.001) {
+#' @return List of fixed decisions, scores, inventory, prices and fruit outcomes.
+simulate_policy_lot <- function(lot_id, decision_day = 12L,
+                                delivery_lag_days = 2L,
+                                storage_eur_per_kg_day = 0.001) {
   assert_nonnegative_scalar(lot_id, "lot_id", integer = TRUE)
   assert_nonnegative_scalar(decision_day, "decision_day", integer = TRUE)
   if (decision_day < 4L) {
@@ -198,26 +198,53 @@ simulate_one_lot <- function(lot_id, decision_day = 12L,
   stratified_score <- score_future_inspections(holdout, fitted, decision_day)
   pooled_score <- score_future_inspections(holdout, pooled, decision_day)
   lifetimes <- simulate_fruit_lifetimes(truth)
+
+  list(lot_id = lot_id, truth = truth, prices = prices, lifetimes = lifetimes,
+       decision_day = decision_day, delivery_lag_days = delivery_lag_days,
+       storage_eur_per_kg_day = storage_eur_per_kg_day,
+       stratified_day = stratified_day, pooled_day = pooled_day,
+       oracle_day = oracle_day, stratified_score = stratified_score,
+       pooled_score = pooled_score)
+}
+
+#' Score fixed decisions on the same fruit under a supplied realised price path.
+#' @param lot Prepared output of simulate_policy_lot().
+#' @param realised_prices Prices used only for scoring, never to select a day.
+#' @return One-row data frame. The oracle date retains its original forecast.
+score_policy_lot <- function(lot, realised_prices = lot$prices) {
   evaluate_day <- function(day) {
-    realised_sale_value(day, truth, prices, lifetimes,
-                        storage_eur_per_kg_day, decision_day,
-                        delivery_lag_days)
+    realised_sale_value(day, lot$truth, realised_prices, lot$lifetimes,
+                        lot$storage_eur_per_kg_day, lot$decision_day,
+                        lot$delivery_lag_days)
   }
 
   data.frame(
-    lot_id = lot_id,
-    sale_day_stratified = stratified_day,
-    sale_day_pooled = pooled_day,
-    sale_day_oracle = oracle_day,
-    realised_stratified_eur = evaluate_day(stratified_day),
-    realised_pooled_eur = evaluate_day(pooled_day),
-    realised_immediate_eur = evaluate_day(decision_day),
-    realised_oracle_eur = evaluate_day(oracle_day),
-    brier_stratified = stratified_score$brier,
-    brier_pooled = pooled_score$brier,
-    log_loss_stratified = stratified_score$log_loss,
-    log_loss_pooled = pooled_score$log_loss
+    lot_id = lot$lot_id,
+    sale_day_stratified = lot$stratified_day,
+    sale_day_pooled = lot$pooled_day,
+    sale_day_oracle = lot$oracle_day,
+    realised_stratified_eur = evaluate_day(lot$stratified_day),
+    realised_pooled_eur = evaluate_day(lot$pooled_day),
+    realised_immediate_eur = evaluate_day(lot$decision_day),
+    realised_oracle_eur = evaluate_day(lot$oracle_day),
+    brier_stratified = lot$stratified_score$brier,
+    brier_pooled = lot$pooled_score$brier,
+    log_loss_stratified = lot$stratified_score$log_loss,
+    log_loss_pooled = lot$pooled_score$log_loss
   )
+}
+
+#' Run and score one lot with the original perfectly known price scenario.
+#' @param lot_id Integer lot identifier.
+#' @param decision_day Training cutoff and first possible sale day.
+#' @param delivery_lag_days Lag until quality is assessed at delivery.
+#' @param storage_eur_per_kg_day Per-initial-kg daily storage cost.
+#' @return One-row data frame of future prediction and realised decision scores.
+simulate_one_lot <- function(lot_id, decision_day = 12L,
+                             delivery_lag_days = 2L,
+                             storage_eur_per_kg_day = 0.001) {
+  score_policy_lot(simulate_policy_lot(lot_id, decision_day, delivery_lag_days,
+                                      storage_eur_per_kg_day))
 }
 
 #' Generate independent synthetic lots using an explicit reproducible seed.

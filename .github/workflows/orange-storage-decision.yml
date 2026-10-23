@@ -28,7 +28,11 @@ jobs:
         run: Rscript tests/test_model.R
       - name: Run out-of-time comparison tests
         run: Rscript tests/test_evaluation.R
+      - name: Test price forecast sensitivity
+        run: Rscript tests/test_price_sensitivity.R
       - name: Run synthetic demonstration
         run: Rscript scripts/demo.R
       - name: Evaluate paired synthetic sale policies
         run: Rscript scripts/run_policy_evaluation.R
+      - name: Exercise price sensitivity report generation
+        run: Rscript scripts/run_price_sensitivity.R 20 "${RUNNER_TEMP}/orange-price-sensitivity"

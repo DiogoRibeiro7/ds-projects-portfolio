@@ -159,6 +159,20 @@ Rscript scripts/run_robust_policy.R
 This rule trades potential upside for protection under its declared scenarios;
 it does not guarantee realised profits or beat immediate sale in every lot.
 
+## Survival extrapolation sensitivity
+
+The [deterioration stress study](SURVIVAL_STRESS.md) tests slower and faster
+failure hazards after the day-12 decision cutoff. It measures future quality
+prediction errors and paired returns while holding fitted policies fixed,
+including the price-minimax rule. Immediate sale remains exposed during
+delivery. [Saved synthetic results](results/survival_stress/RESULTS.md)
+include a reproducible calibration and return figure.
+
+```bash
+Rscript tests/test_survival_stress.R
+Rscript scripts/run_survival_stress.R
+```
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

@@ -32,6 +32,8 @@ jobs:
         run: Rscript tests/test_price_sensitivity.R
       - name: Test minimax-regret policy
         run: Rscript tests/test_robust_policy.R
+      - name: Test survival extrapolation stress
+        run: Rscript tests/test_survival_stress.R
       - name: Run synthetic demonstration
         run: Rscript scripts/demo.R
       - name: Evaluate paired synthetic sale policies
@@ -40,3 +42,5 @@ jobs:
         run: Rscript scripts/run_price_sensitivity.R 20 "${RUNNER_TEMP}/orange-price-sensitivity"
       - name: Exercise minimax-regret report generation
         run: Rscript scripts/run_robust_policy.R 20 "${RUNNER_TEMP}/orange-robust-policy"
+      - name: Exercise survival stress report generation
+        run: Rscript scripts/run_survival_stress.R 20 "${RUNNER_TEMP}/orange-survival-stress"

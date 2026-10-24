@@ -68,8 +68,10 @@ inspections; placeholder values in the demonstrator are not real estimates.
 - First synthetic comparator implemented: mass-standardised pooled Weibull,
   paired economic decisions, held-out inspections at future days and
   harvest-lot bootstrap intervals. See [EVALUATION.md](EVALUATION.md).
-- Further survival sensitivity: alternative piecewise/discrete hazards and
-  misspecified-generating-process experiments.
+- Survival extrapolation sensitivity implemented: a post-cutoff piecewise
+  hazard shift, coupled fruit outcomes, future quality scores and fixed-policy
+  returns. See [SURVIVAL_STRESS.md](SURVIVAL_STRESS.md). Alternative fitted
+  survival models and empirically observed storage-covariate shifts remain open.
 - Sampling sensitivity: misclassification, inspection-frequency changes and
   between-fruit/within-lot dependence.
 - Price-path sensitivity implemented: forecast-based dates evaluated on shared

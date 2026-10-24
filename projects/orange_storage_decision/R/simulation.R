@@ -221,7 +221,8 @@ simulate_policy_lot <- function(lot_id, decision_day = 12L,
        storage_eur_per_kg_day = storage_eur_per_kg_day,
        stratified_day = stratified_day, pooled_day = pooled_day,
        oracle_day = oracle_day, stratified_score = stratified_score,
-       pooled_score = pooled_score, additional_day = additional_day)
+       pooled_score = pooled_score, additional_day = additional_day,
+       fitted_inventory = fitted, pooled_inventory = pooled)
 }
 
 #' Score fixed decisions on the same fruit under a supplied realised price path.

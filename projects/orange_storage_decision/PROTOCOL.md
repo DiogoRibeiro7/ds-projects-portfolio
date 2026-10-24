@@ -76,6 +76,10 @@ inspections; placeholder values in the demonstrator are not real estimates.
   realised price errors, with biased/unbiased scenarios and paired downside
   summaries. See [PRICE_SENSITIVITY.md](PRICE_SENSITIVITY.md). The price-error
   process is assumed; it still needs empirical calibration.
+- Finite-scenario decision rule implemented: minimise worst fitted expected
+  regret across declared mean-price paths. Fresh simulated lots include means
+  outside the decision set and preserve upside/downside tradeoffs. See
+  [ROBUST_POLICY.md](ROBUST_POLICY.md); this is not a realised-loss guarantee.
 - Further economic sensitivity: delivery delays, per-kg holding cost,
   grade-specific errors, transaction costs and buyer capacities.
 - Decision uncertainty: bootstrap by *harvest lot* when empirical replicated

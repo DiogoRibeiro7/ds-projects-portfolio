@@ -95,6 +95,10 @@ paired summaries and invariance to scenario order, subsets and price seed.
 
 ## Limits
 
+The follow-up [minimax-regret study](ROBUST_POLICY.md) uses these findings to
+motivate a finite mean-price decision set, then evaluates a new policy on
+fresh simulated lots. This original study remains a fixed-policy comparison.
+
 There are no historical orange prices or empirical forecast residuals here.
 The model assumes one perfectly shared grade-price shock, independent lots,
 no price–spoilage dependence, fixed storage costs, negligible inspection

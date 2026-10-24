@@ -85,6 +85,11 @@ and price-study outputs remain reproducible with their original seeds.
 
 ## Limits
 
+The separate [survival stress study](SURVIVAL_STRESS.md) evaluates this fixed
+price-minimax rule when deterioration changes after day 12, while actual
+prices equal the original forecast. It tests an assumption the rule does not
+protect against.
+
 Robustness is conditional on the supplied survival fits, costs, available
 dates and finite mean-price set. Poor survival fits, miscalibrated scenario
 means, grade-specific shocks or dependence between price and spoilage can

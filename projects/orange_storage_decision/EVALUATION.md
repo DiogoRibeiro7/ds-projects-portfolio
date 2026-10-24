@@ -126,6 +126,8 @@ not discard difficult lots and thereby bias the policy comparison.
 - All price schedules are random hypothetical paths *known at decision time*;
   real price forecasts are uncertain. Transaction fees, split sales, buyer
   capacity and alternative processing outlets are omitted.
+  The separate [price-error study](PRICE_SENSITIVITY.md) holds these fitted
+  decisions fixed and scores shared biased/unbiased realised price paths.
 - Inspecting oranges removes no material quantity in this toy world, and
   inspection outcomes are independently drawn from a static synthetic
   population rather than a finite warehouse with withdrawals.

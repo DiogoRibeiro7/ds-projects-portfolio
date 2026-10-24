@@ -126,6 +126,23 @@ Read [EVALUATION.md](EVALUATION.md) for the estimands, leakage controls,
 reproducibility settings and interpretation limits. No positive effect is
 assumed or claimed in advance.
 
+## Price forecast sensitivity
+
+The [price-error study](PRICE_SENSITIVITY.md) fixes sale dates using the forecast,
+then scores the same lots and fruit outcomes under perfect forecasts, unbiased
+price noise, and gradually lower mean prices. It reports paired profit
+differences and downside against immediate sale, with no future-price leakage.
+
+```bash
+Rscript tests/test_price_sensitivity.R
+Rscript scripts/run_price_sensitivity.R
+```
+
+The [saved synthetic results](results/price_sensitivity/RESULTS.md) include 200
+independent lots, shared price errors across grades, paired records and a
+reproducible figure. These sensitivity assumptions are not empirical estimates
+of orange-market price risk.
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

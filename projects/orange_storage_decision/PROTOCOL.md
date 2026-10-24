@@ -72,8 +72,12 @@ inspections; placeholder values in the demonstrator are not real estimates.
   misspecified-generating-process experiments.
 - Sampling sensitivity: misclassification, inspection-frequency changes and
   between-fruit/within-lot dependence.
-- Economic sensitivity: price-path errors, delivery delays, per-kg holding
-  cost, grade-specific prices, transaction costs and buyer capacities.
+- Price-path sensitivity implemented: forecast-based dates evaluated on shared
+  realised price errors, with biased/unbiased scenarios and paired downside
+  summaries. See [PRICE_SENSITIVITY.md](PRICE_SENSITIVITY.md). The price-error
+  process is assumed; it still needs empirical calibration.
+- Further economic sensitivity: delivery delays, per-kg holding cost,
+  grade-specific errors, transaction costs and buyer capacities.
 - Decision uncertainty: bootstrap by *harvest lot* when empirical replicated
   lots exist, plus price/process scenario simulation. The prototype's
   parametric binomial bootstrap does not substitute for these tests.

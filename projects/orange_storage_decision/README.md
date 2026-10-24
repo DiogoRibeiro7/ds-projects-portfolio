@@ -143,6 +143,22 @@ independent lots, shared price errors across grades, paired records and a
 reproducible figure. These sensitivity assumptions are not empirical estimates
 of orange-market price risk.
 
+## Decisions across uncertain price scenarios
+
+The [minimax-regret policy](ROBUST_POLICY.md) chooses a date that minimises
+the largest fitted expected shortfall across a finite set of mean-price
+paths. Its [fresh synthetic evaluation](results/robust_policy/RESULTS.md)
+compares returns and downside with the forecast-only, pooled and immediate
+policies, including mean prices outside the assumed decision set.
+
+```bash
+Rscript tests/test_robust_policy.R
+Rscript scripts/run_robust_policy.R
+```
+
+This rule trades potential upside for protection under its declared scenarios;
+it does not guarantee realised profits or beat immediate sale in every lot.
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

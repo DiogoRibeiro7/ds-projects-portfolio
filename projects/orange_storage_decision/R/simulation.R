@@ -159,15 +159,22 @@ realised_sale_value <- function(sale_day, truth, prices, lifetimes,
 #' @param decision_day Training cutoff and first possible sale day.
 #' @param delivery_lag_days Lag until quality is assessed at delivery.
 #' @param storage_eur_per_kg_day Per-initial-kg daily storage cost.
+#' @param additional_policy Optional function with the same arguments as
+#'   optimal_batch_sale(), returning one sale day. Receives fitted inventory
+#'   and forecast prices only, before any held-out outcomes are generated.
 #' @return List of fixed decisions, scores, inventory, prices and fruit outcomes.
 simulate_policy_lot <- function(lot_id, decision_day = 12L,
                                 delivery_lag_days = 2L,
-                                storage_eur_per_kg_day = 0.001) {
+                                storage_eur_per_kg_day = 0.001,
+                                additional_policy = NULL) {
   assert_nonnegative_scalar(lot_id, "lot_id", integer = TRUE)
   assert_nonnegative_scalar(decision_day, "decision_day", integer = TRUE)
   if (decision_day < 4L) {
     stop("decision_day must allow at least three earlier inspection dates",
          call. = FALSE)
+  }
+  if (!is.null(additional_policy) && !is.function(additional_policy)) {
+    stop("additional_policy must be NULL or a function", call. = FALSE)
   }
   truth <- simulate_true_inventory()
   inspection_days <- unique(as.integer(round(seq(3, decision_day, length.out = 4L))))
@@ -190,9 +197,19 @@ simulate_policy_lot <- function(lot_id, decision_day = 12L,
   oracle_day <- optimal_batch_sale(
     truth, prices, storage_eur_per_kg_day, decision_day, delivery_lag_days
   )$sale_day
+  additional_day <- NULL
+  if (!is.null(additional_policy)) {
+    additional_day <- additional_policy(
+      fitted, prices, storage_eur_per_kg_day, decision_day, delivery_lag_days
+    )
+    assert_nonnegative_scalar(additional_day, "additional sale day", integer = TRUE)
+    if (additional_day < decision_day || !(additional_day %in% prices$day)) {
+      stop("additional policy must select an available future day", call. = FALSE)
+    }
+  }
 
   # Generate held-out assessments and common potential outcomes only AFTER
-  # all three selling dates have been determined.
+  # all selling dates have been determined.
   holdout <- simulate_inspections(truth,
                                   decision_day + c(4L, 8L, 12L), 250L)
   stratified_score <- score_future_inspections(holdout, fitted, decision_day)
@@ -204,7 +221,7 @@ simulate_policy_lot <- function(lot_id, decision_day = 12L,
        storage_eur_per_kg_day = storage_eur_per_kg_day,
        stratified_day = stratified_day, pooled_day = pooled_day,
        oracle_day = oracle_day, stratified_score = stratified_score,
-       pooled_score = pooled_score)
+       pooled_score = pooled_score, additional_day = additional_day)
 }
 
 #' Score fixed decisions on the same fruit under a supplied realised price path.

@@ -236,6 +236,19 @@ Rscript tests/test_inspection_budget.R
 Rscript scripts/run_inspection_budget.R
 ```
 
+## Fruit removed by inspections
+
+The [destructive-inspection extension](INSPECTION_REMOVALS.md) subtracts observed
+random removals before valuing sale dates and future holding costs. Its
+[paired study](results/inspection_removals/RESULTS.md) distinguishes the change
+in fitted inventory value from actual returns when the sale date changes,
+using the same remaining fruit for both decisions and immediate sale.
+
+```bash
+Rscript tests/test_inspection_removals.R
+Rscript scripts/run_inspection_removals.R
+```
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

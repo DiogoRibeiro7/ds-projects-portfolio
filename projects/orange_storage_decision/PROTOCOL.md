@@ -21,7 +21,10 @@ is determined by market acceptance criteria independently of the model.
   use a longitudinal survival model instead of the independent-binomial
   likelihood currently implemented.
 - Destructive sampling: record and subtract removed fruit from sellable
-  inventory; the prototype assumes inspection removals are negligible.
+  inventory. The [removal-ledger extension](INSPECTION_REMOVALS.md) implements
+  this for random samples within each initial stratum, regardless of quality.
+  Selective culling needs a different model; the original value functions
+  still assume negligible removals unless the extension is used.
 - Mass accounting: record fruit mass in inspection samples, because multiplying
   acceptable-fruit proportions by inventory kilograms assumes no relationship
   between fruit size and loss probability within a cohort.
@@ -101,8 +104,13 @@ inspections; placeholder values in the demonstrator are not real estimates.
 - Inspection-effort comparison implemented: three fixed per-stratum sample
   budgets share simulated lots and outcomes, with paired prediction/return
   contrasts, inspection-cost sensitivity and incremental break-even prices.
-  See [INSPECTION_BUDGET.md](INSPECTION_BUDGET.md). Destructive removals,
-  dependence, empirical costs and adaptive inspection plans remain open.
+  See [INSPECTION_BUDGET.md](INSPECTION_BUDGET.md). This comparison assumes
+  nondestructive checks; dependence, empirical costs and adaptive plans remain open.
+- Destructive inspection accounting implemented: a pre-cutoff removal ledger
+  updates eligible mass and future holding costs. A paired study after one
+  fixed plan distinguishes fitted value corrections from realised decision
+  gains. See [INSPECTION_REMOVALS.md](INSPECTION_REMOVALS.md). The value of
+  destructive inspection plans versus no inspection remains open.
 - Further economic sensitivity: delivery delays, per-kg holding cost,
   grade-specific errors, transaction costs and buyer capacities.
 - Decision uncertainty: bootstrap by *harvest lot* when empirical replicated

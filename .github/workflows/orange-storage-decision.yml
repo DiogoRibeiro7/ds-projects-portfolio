@@ -44,6 +44,8 @@ jobs:
         run: Rscript tests/test_shape_ensemble.R
       - name: Test inspection budget comparisons
         run: Rscript tests/test_inspection_budget.R
+      - name: Test destructive inspection accounting
+        run: Rscript tests/test_inspection_removals.R
       - name: Run synthetic demonstration
         run: Rscript scripts/demo.R
       - name: Evaluate paired synthetic sale policies
@@ -64,3 +66,5 @@ jobs:
         run: Rscript scripts/run_shape_ensemble.R 20 "${RUNNER_TEMP}/orange-shape-ensemble"
       - name: Exercise inspection budget report generation
         run: Rscript scripts/run_inspection_budget.R 20 "${RUNNER_TEMP}/orange-inspection-budget"
+      - name: Exercise destructive inspection report generation
+        run: Rscript scripts/run_inspection_removals.R 20 "${RUNNER_TEMP}/orange-inspection-removals"

@@ -114,8 +114,14 @@ inspections; placeholder values in the demonstrator are not real estimates.
   no-inspection sale benchmarks share one finite fruit population per lot.
   Returns include holding from harvest, actual removed fruit and labour;
   paired contrasts retain negative findings. See
-  [INSPECTION_PLAN_VALUE.md](INSPECTION_PLAN_VALUE.md). Optimal sampling designs,
-  historical-data baselines and empirical inspection economics remain open.
+  [INSPECTION_PLAN_VALUE.md](INSPECTION_PLAN_VALUE.md). Optimal sampling designs
+  and empirical inspection economics remain open.
+- Historical baseline implemented: a frozen stratum-specific marginal Weibull
+  fit uses completed historical lots, with calendar and lot-ID separation.
+  Fresh target lots compare deployment returns and future inventory forecasts;
+  archive-acquisition costs and variation across training archives are excluded.
+  See [HISTORICAL_BASELINE.md](HISTORICAL_BASELINE.md). Distribution shift,
+  historical-data economics and empirical validation remain open.
 - Further economic sensitivity: delivery delays, per-kg holding cost,
   grade-specific errors, transaction costs and buyer capacities.
 - Decision uncertainty: bootstrap by *harvest lot* when empirical replicated

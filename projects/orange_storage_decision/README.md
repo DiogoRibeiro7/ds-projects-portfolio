@@ -77,8 +77,9 @@ model, refits the curves and recomputes the optimal sale day. It describes
 uncertainty due to finite inspection samples *conditional on* the assumed
 Weibull specification and supplied price path. Bootstrap failed refits are
 counted and reported. Price forecast uncertainty, common storage shocks,
-cross-fruit dependence, grading error and model misspecification are not yet
-included in that uncertainty interval.
+cross-fruit dependence and model misspecification are not included in that
+uncertainty interval. The inspection-error extension below conditions on fixed
+grading sensitivity and specificity; uncertainty in their calibration is excluded.
 
 ## Run the demonstration
 
@@ -171,6 +172,19 @@ include a reproducible calibration and return figure.
 ```bash
 Rscript tests/test_survival_stress.R
 Rscript scripts/run_survival_stress.R
+```
+
+## Inspection error correction
+
+The [inspection-error model](INSPECTION_ERROR.md) fits true acceptance when
+reported labels contain false accepts or false rejects. It uses externally
+calibrated sensitivity/specificity in the binomial likelihood and bootstrap;
+perfect inspection remains the default. The [synthetic comparison](results/inspection_error/RESULTS.md)
+measures future prediction quality and sale returns against the naive fit.
+
+```bash
+Rscript tests/test_inspection_error.R
+Rscript scripts/run_inspection_error.R
 ```
 
 ## Scientific status and limitations

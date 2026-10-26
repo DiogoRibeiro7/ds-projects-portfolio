@@ -34,6 +34,8 @@ jobs:
         run: Rscript tests/test_robust_policy.R
       - name: Test survival extrapolation stress
         run: Rscript tests/test_survival_stress.R
+      - name: Test inspection error correction
+        run: Rscript tests/test_inspection_error.R
       - name: Run synthetic demonstration
         run: Rscript scripts/demo.R
       - name: Evaluate paired synthetic sale policies
@@ -44,3 +46,5 @@ jobs:
         run: Rscript scripts/run_robust_policy.R 20 "${RUNNER_TEMP}/orange-robust-policy"
       - name: Exercise survival stress report generation
         run: Rscript scripts/run_survival_stress.R 20 "${RUNNER_TEMP}/orange-survival-stress"
+      - name: Exercise inspection error report generation
+        run: Rscript scripts/run_inspection_error.R 20 "${RUNNER_TEMP}/orange-inspection-error"

@@ -70,8 +70,12 @@ inspections; placeholder values in the demonstrator are not real estimates.
   harvest-lot bootstrap intervals. See [EVALUATION.md](EVALUATION.md).
 - Survival extrapolation sensitivity implemented: a post-cutoff piecewise
   hazard shift, coupled fruit outcomes, future quality scores and fixed-policy
-  returns. See [SURVIVAL_STRESS.md](SURVIVAL_STRESS.md). Alternative fitted
-  survival models and empirically observed storage-covariate shifts remain open.
+  returns. See [SURVIVAL_STRESS.md](SURVIVAL_STRESS.md). Empirically observed
+  storage-covariate shifts remain open.
+- Alternative fitted model implemented: one common Weibull shape with separate
+  stratum scales. Paired prospective evaluation includes equal, nearby and
+  strongly different true shapes. See [SHARED_SHAPE.md](SHARED_SHAPE.md).
+  Empirical model selection and uncertainty coverage remain open.
 - Inspection-error correction implemented: a binomial measurement model with
   externally fixed sensitivity/specificity, compatible parameter bootstrap,
   and paired synthetic comparison against naive fitting. See

@@ -199,6 +199,18 @@ Rscript tests/test_calibration.R
 Rscript scripts/run_calibration_uncertainty.R
 ```
 
+## Shared shape across strata
+
+The [shared-shape model](SHARED_SHAPE.md) estimates one Weibull shape and
+separate stratum scales. Its [paired evaluation](results/shared_shape/RESULTS.md)
+compares future predictions and sale returns with separate fits under equal,
+nearby and strongly different generating shapes.
+
+```bash
+Rscript tests/test_shared_shape.R
+Rscript scripts/run_shared_shape.R
+```
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

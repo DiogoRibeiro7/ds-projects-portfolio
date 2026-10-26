@@ -47,7 +47,8 @@ fit_shape_policy <- function(inspections, inventory, prices, method,
                      stop("method must be separate or shared", call. = FALSE))
   fits <- fitter(inspections, inventory, sensitivity, specificity)
   fitted <- with_fitted_survival(inventory, fits)
-  list(inventory = fitted, sale_day = optimal_batch_sale(fitted, prices, 0.001, 12L, 2L)$sale_day)
+  list(inventory = fitted, fits = fits,
+       sale_day = optimal_batch_sale(fitted, prices, 0.001, 12L, 2L)$sale_day)
 }
 
 # Generate future uniforms only after every fit and decision has been fixed.
@@ -63,11 +64,22 @@ shape_study_outcome_uniforms <- function(inventory) {
 #' @param training_seed Seed for inventory, forecast and reported training uniforms.
 #' @param outcome_seed Separate seed for future gold-standard inspections and fruit.
 #' @param scenarios Generating shape centres and shared/independent log-scale jitter.
+#' @param additional_policy Optional builder receiving past inspections, public inventory,
+#'   prices and fitted policies. Returns sale_day, predict(cohort, day), and optional
+#'   named numeric diagnostics. It never receives generating truth or future outcomes.
+#' @param policy_fitter Component fitter using only past counts, public inventory,
+#'   prices and method. Defaults to the original separate/shared fits.
 #' @return One row per lot/scenario. Rates Se=Sp=0.9 are known to both fits.
 run_shared_shape_experiment <- function(n_lots = 200L, training_seed = 20261102L,
                                         outcome_seed = 20261103L,
-                                        scenarios = default_shape_scenarios()) {
+                                        scenarios = default_shape_scenarios(),
+                                        additional_policy = NULL,
+                                        policy_fitter = fit_shape_policy) {
   validate_shape_scenarios(scenarios)
+  if (!is.function(policy_fitter)) stop("policy_fitter must be a function", call. = FALSE)
+  if (!is.null(additional_policy) && !is.function(additional_policy)) {
+    stop("additional_policy must be NULL or a function", call. = FALSE)
+  }
   for (field in c("n_lots", "training_seed", "outcome_seed")) {
     assert_nonnegative_scalar(get(field), field, integer = TRUE)
   }
@@ -87,10 +99,25 @@ run_shared_shape_experiment <- function(n_lots = 200L, training_seed = 20261102L
         truth$shape[1:2] <- c(setting$advanced_shape, setting$intermediate_shape) * noise
         train <- shape_study_inspections(truth, c(3L, 6L, 9L, 12L), 180L, uniforms, 0.9, 0.9)
         policies <- lapply(c("separate", "shared"), function(method) {
-          fit_shape_policy(train, public_inventory, prices, method)
+          policy_fitter(train, public_inventory, prices, method)
         })
         names(policies) <- c("separate", "shared")
-        list(truth = truth, policies = policies)
+        additional <- NULL
+        if (!is.null(additional_policy)) {
+          additional <- additional_policy(train, public_inventory, prices, policies)
+          if (!is.list(additional) || !is.function(additional$predict)) {
+            stop("additional policy needs a sale day and prediction function", call. = FALSE)
+          }
+          assert_nonnegative_scalar(additional$sale_day, "additional sale day", integer = TRUE)
+          if (!(additional$sale_day %in% 12:28)) stop("additional sale day must be in 12:28", call. = FALSE)
+          diagnostics <- additional$diagnostics
+          if (!is.null(diagnostics) && (!is.numeric(diagnostics) || any(!is.finite(diagnostics)) ||
+              is.null(names(diagnostics)) || anyNA(names(diagnostics)) ||
+              any(!nzchar(names(diagnostics))) || anyDuplicated(names(diagnostics)))) {
+            stop("additional diagnostics must be finite with unique names", call. = FALSE)
+          }
+        }
+        list(truth = truth, policies = policies, additional = additional)
       }, error = function(error) {
         stop(sprintf("lot %d, %s: %s", id, scenarios$scenario[i], conditionMessage(error)), call. = FALSE)
       })
@@ -125,6 +152,16 @@ run_shared_shape_experiment <- function(n_lots = 200L, training_seed = 20261102L
           j <- match(group, policy$inventory$cohort)
           row[[paste0("shape_", method, "_", group)]] <- policy$inventory$shape[j]
         }
+      }
+      if (!is.null(case$additional)) {
+        policy <- case$additional
+        scores <- score_future_probabilities(holdout, lot$inventory,
+          policy$predict(holdout$cohort, holdout$day), 12L)
+        row$sale_day_additional <- policy$sale_day
+        row$realised_additional_eur <- evaluate(policy$sale_day)
+        row$brier_additional <- scores$brier
+        row$log_loss_additional <- scores$log_loss
+        for (name in names(policy$diagnostics)) row[[paste0("additional_", name)]] <- policy$diagnostics[[name]]
       }
       row
     }))

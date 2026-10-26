@@ -211,6 +211,19 @@ Rscript tests/test_shared_shape.R
 Rscript scripts/run_shared_shape.R
 ```
 
+## Averaging survival models
+
+The [shape ensemble](SHAPE_ENSEMBLE.md) weights separate and shared-shape
+survival predictions using only the pre-decision inspection likelihoods.
+It optimises the averaged value curve. A [fresh paired study](results/shape_ensemble/RESULTS.md)
+reports future prediction quality, returns and downside against both component
+models and immediate sale across the same three shape regimes.
+
+```bash
+Rscript tests/test_shape_ensemble.R
+Rscript scripts/run_shape_ensemble.R
+```
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

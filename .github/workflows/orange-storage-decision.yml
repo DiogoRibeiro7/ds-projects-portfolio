@@ -40,6 +40,8 @@ jobs:
         run: Rscript tests/test_calibration.R
       - name: Test shared-shape survival model
         run: Rscript tests/test_shared_shape.R
+      - name: Test survival model averaging
+        run: Rscript tests/test_shape_ensemble.R
       - name: Run synthetic demonstration
         run: Rscript scripts/demo.R
       - name: Evaluate paired synthetic sale policies
@@ -56,3 +58,5 @@ jobs:
         run: Rscript scripts/run_calibration_uncertainty.R 20 "${RUNNER_TEMP}/orange-calibration"
       - name: Exercise shared-shape report generation
         run: Rscript scripts/run_shared_shape.R 20 "${RUNNER_TEMP}/orange-shared-shape"
+      - name: Exercise ensemble report generation
+        run: Rscript scripts/run_shape_ensemble.R 20 "${RUNNER_TEMP}/orange-shape-ensemble"

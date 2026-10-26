@@ -224,6 +224,18 @@ Rscript tests/test_shape_ensemble.R
 Rscript scripts/run_shape_ensemble.R
 ```
 
+## Inspection effort and decision value
+
+The [inspection-budget study](INSPECTION_BUDGET.md) compares 30, 90 and 180
+checks per stratum/day on the same synthetic lots. Its [saved results](results/inspection_budget/RESULTS.md)
+measure prediction quality, sale returns, inspection-cost sensitivity and
+the break-even price of each extra check under fixed decision policies.
+
+```bash
+Rscript tests/test_inspection_budget.R
+Rscript scripts/run_inspection_budget.R
+```
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

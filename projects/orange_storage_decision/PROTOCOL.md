@@ -98,6 +98,11 @@ inspections; placeholder values in the demonstrator are not real estimates.
   regret across declared mean-price paths. Fresh simulated lots include means
   outside the decision set and preserve upside/downside tradeoffs. See
   [ROBUST_POLICY.md](ROBUST_POLICY.md); this is not a realised-loss guarantee.
+- Inspection-effort comparison implemented: three fixed per-stratum sample
+  budgets share simulated lots and outcomes, with paired prediction/return
+  contrasts, inspection-cost sensitivity and incremental break-even prices.
+  See [INSPECTION_BUDGET.md](INSPECTION_BUDGET.md). Destructive removals,
+  dependence, empirical costs and adaptive inspection plans remain open.
 - Further economic sensitivity: delivery delays, per-kg holding cost,
   grade-specific errors, transaction costs and buyer capacities.
 - Decision uncertainty: bootstrap by *harvest lot* when empirical replicated

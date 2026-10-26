@@ -69,21 +69,24 @@ shape_study_outcome_uniforms <- function(inventory) {
 #'   named numeric diagnostics. It never receives generating truth or future outcomes.
 #' @param policy_fitter Component fitter using only past counts, public inventory,
 #'   prices and method. Defaults to the original separate/shared fits.
+#' @param training_per_group Positive inspection count per stratum and training day.
 #' @return One row per lot/scenario. Rates Se=Sp=0.9 are known to both fits.
 run_shared_shape_experiment <- function(n_lots = 200L, training_seed = 20261102L,
                                         outcome_seed = 20261103L,
                                         scenarios = default_shape_scenarios(),
                                         additional_policy = NULL,
-                                        policy_fitter = fit_shape_policy) {
+                                        policy_fitter = fit_shape_policy,
+                                        training_per_group = 180L) {
   validate_shape_scenarios(scenarios)
   if (!is.function(policy_fitter)) stop("policy_fitter must be a function", call. = FALSE)
   if (!is.null(additional_policy) && !is.function(additional_policy)) {
     stop("additional_policy must be NULL or a function", call. = FALSE)
   }
-  for (field in c("n_lots", "training_seed", "outcome_seed")) {
+  for (field in c("n_lots", "training_seed", "outcome_seed", "training_per_group")) {
     assert_nonnegative_scalar(get(field), field, integer = TRUE)
   }
   if (n_lots < 2L) stop("at least two independent lots are required", call. = FALSE)
+  if (training_per_group < 1L) stop("training_per_group must be positive", call. = FALSE)
   set.seed(training_seed)
   lots <- lapply(seq_len(n_lots), function(id) {
     base <- simulate_true_inventory()
@@ -97,7 +100,8 @@ run_shared_shape_experiment <- function(n_lots = 200L, training_seed = 20261102L
         noise <- if (setting$common_jitter) rep(sqrt(prod(jitter)), 2) else jitter
         truth <- base
         truth$shape[1:2] <- c(setting$advanced_shape, setting$intermediate_shape) * noise
-        train <- shape_study_inspections(truth, c(3L, 6L, 9L, 12L), 180L, uniforms, 0.9, 0.9)
+        train <- shape_study_inspections(truth, c(3L, 6L, 9L, 12L), training_per_group,
+                                         uniforms, 0.9, 0.9)
         policies <- lapply(c("separate", "shared"), function(method) {
           policy_fitter(train, public_inventory, prices, method)
         })

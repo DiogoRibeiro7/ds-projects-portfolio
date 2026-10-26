@@ -180,12 +180,15 @@ fit_ensemble_shape_policy <- function(inspections, inventory, prices, method) {
 #' @param training_seed Seed for prospective inventory, prices and training counts.
 #' @param outcome_seed Separate seed for future inspections and fruit lifetimes.
 #' @param scenarios Prespecified shape regimes, not used to select model weights.
+#' @param training_per_group Positive inspection count per stratum and training day.
 #' @return Paired component/ensemble predictions, returns and training diagnostics.
 run_shape_ensemble_experiment <- function(n_lots = 200L, training_seed = 20261104L,
                                           outcome_seed = 20261105L,
-                                          scenarios = default_shape_scenarios()) {
+                                          scenarios = default_shape_scenarios(),
+                                          training_per_group = 180L) {
   records <- run_shared_shape_experiment(n_lots, training_seed, outcome_seed, scenarios,
-    additional_policy = shape_ensemble_policy, policy_fitter = fit_ensemble_shape_policy)
+    additional_policy = shape_ensemble_policy, policy_fitter = fit_ensemble_shape_policy,
+    training_per_group = training_per_group)
   names(records) <- sub("^additional_", "ensemble_", names(records))
   names(records) <- sub("_additional", "_ensemble", names(records))
   records

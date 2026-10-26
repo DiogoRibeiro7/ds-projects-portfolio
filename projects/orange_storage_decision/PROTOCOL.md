@@ -109,8 +109,13 @@ inspections; placeholder values in the demonstrator are not real estimates.
 - Destructive inspection accounting implemented: a pre-cutoff removal ledger
   updates eligible mass and future holding costs. A paired study after one
   fixed plan distinguishes fitted value corrections from realised decision
-  gains. See [INSPECTION_REMOVALS.md](INSPECTION_REMOVALS.md). The value of
-  destructive inspection plans versus no inspection remains open.
+  gains. See [INSPECTION_REMOVALS.md](INSPECTION_REMOVALS.md).
+- Destructive plan comparison implemented: three fixed sampling budgets and
+  no-inspection sale benchmarks share one finite fruit population per lot.
+  Returns include holding from harvest, actual removed fruit and labour;
+  paired contrasts retain negative findings. See
+  [INSPECTION_PLAN_VALUE.md](INSPECTION_PLAN_VALUE.md). Optimal sampling designs,
+  historical-data baselines and empirical inspection economics remain open.
 - Further economic sensitivity: delivery delays, per-kg holding cost,
   grade-specific errors, transaction costs and buyer capacities.
 - Decision uncertainty: bootstrap by *harvest lot* when empirical replicated

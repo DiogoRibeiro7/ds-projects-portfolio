@@ -46,6 +46,8 @@ jobs:
         run: Rscript tests/test_inspection_budget.R
       - name: Test destructive inspection accounting
         run: Rscript tests/test_inspection_removals.R
+      - name: Test destructive inspection plan value
+        run: Rscript tests/test_inspection_plan_value.R
       - name: Run synthetic demonstration
         run: Rscript scripts/demo.R
       - name: Evaluate paired synthetic sale policies
@@ -68,3 +70,5 @@ jobs:
         run: Rscript scripts/run_inspection_budget.R 20 "${RUNNER_TEMP}/orange-inspection-budget"
       - name: Exercise destructive inspection report generation
         run: Rscript scripts/run_inspection_removals.R 20 "${RUNNER_TEMP}/orange-inspection-removals"
+      - name: Exercise inspection plan value report generation
+        run: Rscript scripts/run_inspection_plan_value.R 20 "${RUNNER_TEMP}/orange-inspection-plan-value"

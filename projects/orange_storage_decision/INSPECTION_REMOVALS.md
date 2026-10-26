@@ -128,7 +128,9 @@ evidence of a mean return improvement from the changed dates.
 
 This is a conditional comparison after one completed inspection plan. There is
 no no-inspection comparator, and it does not establish the value of inspections
-or compare destructive and nondestructive sampling. Equal proportional removals
+or compare destructive and nondestructive sampling. A separate
+[plan-value study](INSPECTION_PLAN_VALUE.md) now compares fixed destructive
+budgets with no-inspection sale benchmarks. Equal proportional removals
 would simply scale the value curve; equal numbers removed from unequal strata
 can change its shape and optimal date. Handling damage, selective culling,
 disposal costs/revenue, dependence, calibration uncertainty and price errors are

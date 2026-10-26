@@ -249,6 +249,20 @@ Rscript tests/test_inspection_removals.R
 Rscript scripts/run_inspection_removals.R
 ```
 
+## Do destructive inspections pay for themselves?
+
+The [inspection-plan comparison](INSPECTION_PLAN_VALUE.md) evaluates three
+destructive sampling budgets against fixed no-inspection sales on days 12 and 16.
+It follows the same finite fruit population across alternatives, including
+holding costs from harvest, labour and forgone sales. The
+[saved results](results/inspection_plan_value/RESULTS.md) retain negative gains
+and separate timing benefits from removal and labour costs.
+
+```bash
+Rscript tests/test_inspection_plan_value.R
+Rscript scripts/run_inspection_plan_value.R
+```
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

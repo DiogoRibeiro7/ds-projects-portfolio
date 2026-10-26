@@ -57,11 +57,13 @@ inventory_sampling_weights <- function(observations, cohorts) {
 #'
 #' @param inspections Independent cross-sectional counts observed so far.
 #' @param cohorts Initial mass/grade inventory.
+#' @param sensitivity Known inspection sensitivity, shared across strata/days.
+#' @param specificity Known inspection specificity, shared across strata/days.
 #' @return List containing positive shape and scale and objective value.
-fit_pooled_weibull <- function(inspections, cohorts) {
+fit_pooled_weibull <- function(inspections, cohorts, sensitivity = 1, specificity = 1) {
   validate_inspections(inspections, cohorts)
   weights <- inventory_sampling_weights(inspections, cohorts)
-  estimate_weibull_binomial(inspections, weights)
+  estimate_weibull_binomial(inspections, weights, sensitivity, specificity)
 }
 
 #' Apply shared survival parameters to eligible inventory strata.

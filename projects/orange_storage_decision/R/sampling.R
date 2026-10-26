@@ -54,6 +54,29 @@ validate_inspections <- function(inspections, cohorts) {
   invisible(TRUE)
 }
 
+#' Probability an inspection labels a fruit acceptable, given its true state.
+#' @param acceptable_probability True acceptable-fruit probabilities in [0, 1].
+#' @param sensitivity P(label acceptable | truly acceptable), externally calibrated.
+#' @param specificity P(label unacceptable | truly unacceptable), externally calibrated.
+#' @return Observed-label probabilities. Rates are fixed, shared across observations,
+#'   and must be informative in the stated label orientation (sum greater than one).
+inspection_label_probability <- function(acceptable_probability, sensitivity = 1,
+                                         specificity = 1) {
+  for (name in c("sensitivity", "specificity")) {
+    value <- if (name == "sensitivity") sensitivity else specificity
+    assert_nonnegative_scalar(value, name)
+    if (value > 1) stop(sprintf("%s must not exceed one", name), call. = FALSE)
+  }
+  if (sensitivity + specificity <= 1) {
+    stop("sensitivity + specificity must exceed one", call. = FALSE)
+  }
+  p <- acceptable_probability
+  if (!is.numeric(p) || length(p) < 1L || any(!is.finite(p)) || any(p < 0 | p > 1)) {
+    stop("acceptable probabilities must be finite and in [0, 1]", call. = FALSE)
+  }
+  sensitivity * p + (1 - specificity) * (1 - p)
+}
+
 #' Robustly fit a two-parameter Weibull model to aggregated binomial counts.
 #'
 #' Start with bounded L-BFGS-B optimisation. If its line search terminates
@@ -64,8 +87,12 @@ validate_inspections <- function(inspections, cohorts) {
 #'
 #' @param observations Valid subset of inspections for one or more groups.
 #' @param weights Optional positive likelihood weights for pooled M-estimation.
+#' @param sensitivity Known inspection sensitivity, shared across observations.
+#' @param specificity Known inspection specificity, shared across observations.
 #' @return Named list of Weibull shape, scale and minimised objective value.
-estimate_weibull_binomial <- function(observations, weights = NULL) {
+estimate_weibull_binomial <- function(observations, weights = NULL,
+                                      sensitivity = 1, specificity = 1) {
+  invisible(inspection_label_probability(0.5, sensitivity, specificity))
   fields <- c("day", "n_checked", "n_acceptable")
   if (!is.data.frame(observations) || nrow(observations) < 1L ||
       !all(fields %in% names(observations))) {
@@ -98,6 +125,7 @@ estimate_weibull_binomial <- function(observations, weights = NULL) {
     probability <- weibull_survival(
       observations$day, exp(log_parameters[1]), exp(log_parameters[2])
     )
+    probability <- inspection_label_probability(probability, sensitivity, specificity)
     probability <- pmin(1 - 1e-12, pmax(1e-12, probability))
     -sum(weights * stats::dbinom(
       observations$n_acceptable, size = observations$n_checked,
@@ -153,20 +181,26 @@ estimate_weibull_binomial <- function(observations, weights = NULL) {
 
 #' Maximum-likelihood Weibull fits from cross-sectional binomial counts.
 #'
-#' Each observation is Binomial(n_checked, S(day)). A cohort is assumed
+#' Each observation is Binomial(n_checked, Se*S(day)+(1-Sp)*(1-S(day))).
+#' Default Se=Sp=1 recovers the original perfect-inspection likelihood. The
+#' fitted curves describe true commercial acceptance, not the noisy label.
+#' Rates must come from separate calibration, not these same counts. A cohort is assumed
 #' commercially acceptable at harvest; its membership cannot be inferred
 #' using future measurements. Missing-at-random sampling and independence
 #' within each inspection are modelling assumptions, not established facts.
 #'
 #' @param inspections Valid aggregated independent inspections.
 #' @param cohorts Initial inventory with maturity strata.
+#' @param sensitivity Known inspection sensitivity, common to all strata/days.
+#' @param specificity Known inspection specificity, common to all strata/days.
 #' @return Data frame of cohort, shape, scale, negative_log_likelihood.
-fit_weibull_by_cohort <- function(inspections, cohorts) {
+fit_weibull_by_cohort <- function(inspections, cohorts, sensitivity = 1, specificity = 1) {
   validate_inspections(inspections, cohorts)
   groups <- cohorts$cohort[cohorts$initially_sellable]
   fits <- lapply(groups, function(group) {
     observations <- inspections[inspections$cohort == group, , drop = FALSE]
-    result <- tryCatch(estimate_weibull_binomial(observations),
+    result <- tryCatch(estimate_weibull_binomial(observations, sensitivity = sensitivity,
+                                                specificity = specificity),
                        error = function(error) {
                          stop(sprintf("Weibull fit failed for %s: %s", group,
                                       conditionMessage(error)), call. = FALSE)
@@ -208,7 +242,8 @@ with_fitted_survival <- function(cohorts, fits) {
 #' Counts are resampled from the fitted binomial inspection model and both
 #' survival parameters and selling decisions are re-estimated. This measures
 #' inspection-parameter uncertainty conditional on the Weibull model and on
-#' the supplied price scenario; it does not model price or weather uncertainty.
+#' the supplied price scenario and fixed inspection error rates; it does not
+#' model uncertainty in external rate calibration, prices or weather.
 #'
 #' @param inspections Inspections observed no later than decision_day.
 #' @param cohorts Inventory from which inspections were sampled.
@@ -217,10 +252,13 @@ with_fitted_survival <- function(cohorts, fits) {
 #' @param decision_day Information cut-off and earliest sale day.
 #' @param delivery_lag_days Days until quality is assessed at delivery.
 #' @param n_boot Number of bootstrap attempts; caller controls the RNG seed.
+#' @param sensitivity Known inspection sensitivity, used for simulation and refitting.
+#' @param specificity Known inspection specificity, used for simulation and refitting.
 #' @return List with decisions data frame, attempted, and failed counts.
 bootstrap_sale_days <- function(inspections, cohorts, prices,
                                 storage_eur_per_kg_day, decision_day,
-                                delivery_lag_days = 0, n_boot = 100L) {
+                                delivery_lag_days = 0, n_boot = 100L,
+                                sensitivity = 1, specificity = 1) {
   assert_nonnegative_scalar(decision_day, "decision_day", integer = TRUE)
   assert_nonnegative_scalar(n_boot, "n_boot", integer = TRUE)
   if (n_boot < 1L || !is.numeric(inspections$day) ||
@@ -228,10 +266,11 @@ bootstrap_sale_days <- function(inspections, cohorts, prices,
     stop("bootstrap needs positive n_boot and no future inspections",
          call. = FALSE)
   }
-  fits <- fit_weibull_by_cohort(inspections, cohorts)
+  fits <- fit_weibull_by_cohort(inspections, cohorts, sensitivity, specificity)
   position <- match(inspections$cohort, fits$cohort)
   probability <- weibull_survival(inspections$day,
                                   fits$shape[position], fits$scale[position])
+  probability <- inspection_label_probability(probability, sensitivity, specificity)
 
   results <- vector("list", n_boot)
   for (iteration in seq_len(n_boot)) {
@@ -241,7 +280,7 @@ bootstrap_sale_days <- function(inspections, cohorts, prices,
     )
     # Report failed refits, rather than silently interpreting them as success.
     results[[iteration]] <- tryCatch({
-      refitted <- fit_weibull_by_cohort(simulated, cohorts)
+      refitted <- fit_weibull_by_cohort(simulated, cohorts, sensitivity, specificity)
       selected <- optimal_batch_sale(
         with_fitted_survival(cohorts, refitted), prices,
         storage_eur_per_kg_day, decision_day, delivery_lag_days

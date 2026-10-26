@@ -72,8 +72,11 @@ inspections; placeholder values in the demonstrator are not real estimates.
   hazard shift, coupled fruit outcomes, future quality scores and fixed-policy
   returns. See [SURVIVAL_STRESS.md](SURVIVAL_STRESS.md). Alternative fitted
   survival models and empirically observed storage-covariate shifts remain open.
-- Sampling sensitivity: misclassification, inspection-frequency changes and
-  between-fruit/within-lot dependence.
+- Inspection-error correction implemented: a binomial measurement model with
+  externally fixed sensitivity/specificity, compatible parameter bootstrap,
+  and paired synthetic comparison against naive fitting. See
+  [INSPECTION_ERROR.md](INSPECTION_ERROR.md). Calibration uncertainty and drift,
+  inspection-frequency changes and within-lot dependence remain open.
 - Price-path sensitivity implemented: forecast-based dates evaluated on shared
   realised price errors, with biased/unbiased scenarios and paired downside
   summaries. See [PRICE_SENSITIVITY.md](PRICE_SENSITIVITY.md). The price-error

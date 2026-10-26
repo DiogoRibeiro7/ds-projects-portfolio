@@ -263,6 +263,20 @@ Rscript tests/test_inspection_plan_value.R
 Rscript scripts/run_inspection_plan_value.R
 ```
 
+## Learning from historical lots
+
+The [historical baseline](HISTORICAL_BASELINE.md) fits stratum survival curves
+once on completed historical lots, then chooses sale dates without inspecting
+new lots. Its [held-out study](results/historical_baseline/RESULTS.md) compares
+returns with fixed-date sales and destructive inspection policies, and measures
+future inventory bias and proper prediction scores. Archive-acquisition costs
+are excluded explicitly; the model is frozen before target outcomes exist.
+
+```bash
+Rscript tests/test_historical_baseline.R
+Rscript scripts/run_historical_baseline.R
+```
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

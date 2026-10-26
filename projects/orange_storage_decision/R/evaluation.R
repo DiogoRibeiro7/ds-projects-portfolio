@@ -113,8 +113,27 @@ score_future_inspections <- function(holdout, fitted_inventory, decision_day) {
   probability <- weibull_survival(
     holdout$day, fitted_inventory$shape[index], fitted_inventory$scale[index]
   )
+  score_future_probabilities(holdout, fitted_inventory, probability, decision_day)
+}
+
+#' Score supplied true-acceptance probabilities aligned with future inspection rows.
+#' @param holdout Independent future counts; all days must follow decision_day.
+#' @param inventory Initial inventory used for mass-standardised scoring weights.
+#' @param probability One true-acceptance probability per holdout row, in row order.
+#' @param decision_day Information cutoff used to construct the predictions.
+#' @return Brier and log loss at the individual-fruit level, both lower-is-better.
+score_future_probabilities <- function(holdout, inventory, probability, decision_day) {
+  validate_inspection_counts(holdout, inventory)
+  assert_nonnegative_scalar(decision_day, "decision_day", integer = TRUE)
+  if (any(holdout$day <= decision_day)) {
+    stop("holdout inspections must occur strictly after decision_day", call. = FALSE)
+  }
+  if (!is.numeric(probability) || length(probability) != nrow(holdout) ||
+      any(!is.finite(probability)) || any(probability < 0 | probability > 1)) {
+    stop("probability needs one finite [0,1] value per holdout row", call. = FALSE)
+  }
   probability <- pmin(1 - 1e-12, pmax(1e-12, probability))
-  weight <- inventory_sampling_weights(holdout, fitted_inventory)
+  weight <- inventory_sampling_weights(holdout, inventory)
   positives <- holdout$n_acceptable
   negatives <- holdout$n_checked - positives
   weighted_n <- sum(weight * holdout$n_checked)

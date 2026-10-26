@@ -76,6 +76,11 @@ inspections; placeholder values in the demonstrator are not real estimates.
   stratum scales. Paired prospective evaluation includes equal, nearby and
   strongly different true shapes. See [SHARED_SHAPE.md](SHARED_SHAPE.md).
   Empirical model selection and uncertainty coverage remain open.
+- Model averaging implemented: training-only AIC weights combine separate and
+  shared-shape survival predictions before optimising sale value. Fresh paired
+  lots compare the mixture with both components and immediate sale, retaining
+  negative effects. See [SHAPE_ENSEMBLE.md](SHAPE_ENSEMBLE.md). Empirical weights,
+  calibration and joint model/calibration uncertainty remain open.
 - Inspection-error correction implemented: a binomial measurement model with
   externally fixed sensitivity/specificity, compatible parameter bootstrap,
   and paired synthetic comparison against naive fitting. See

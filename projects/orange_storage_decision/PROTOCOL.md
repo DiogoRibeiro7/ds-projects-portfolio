@@ -75,7 +75,11 @@ inspections; placeholder values in the demonstrator are not real estimates.
 - Inspection-error correction implemented: a binomial measurement model with
   externally fixed sensitivity/specificity, compatible parameter bootstrap,
   and paired synthetic comparison against naive fitting. See
-  [INSPECTION_ERROR.md](INSPECTION_ERROR.md). Calibration uncertainty and drift,
+  [INSPECTION_ERROR.md](INSPECTION_ERROR.md).
+- Finite calibration uncertainty implemented: independent reference confusion
+  counts and paired conditional/recalibrated parametric bootstraps, retaining
+  invalid calibration draws and failed refits. See [CALIBRATION.md](CALIBRATION.md).
+  Coverage across independent lots, calibration drift, reference-label errors,
   inspection-frequency changes and within-lot dependence remain open.
 - Price-path sensitivity implemented: forecast-based dates evaluated on shared
   realised price errors, with biased/unbiased scenarios and paired downside

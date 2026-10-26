@@ -36,6 +36,8 @@ jobs:
         run: Rscript tests/test_survival_stress.R
       - name: Test inspection error correction
         run: Rscript tests/test_inspection_error.R
+      - name: Test finite inspection calibration
+        run: Rscript tests/test_calibration.R
       - name: Run synthetic demonstration
         run: Rscript scripts/demo.R
       - name: Evaluate paired synthetic sale policies
@@ -48,3 +50,5 @@ jobs:
         run: Rscript scripts/run_survival_stress.R 20 "${RUNNER_TEMP}/orange-survival-stress"
       - name: Exercise inspection error report generation
         run: Rscript scripts/run_inspection_error.R 20 "${RUNNER_TEMP}/orange-inspection-error"
+      - name: Exercise calibration uncertainty report generation
+        run: Rscript scripts/run_calibration_uncertainty.R 20 "${RUNNER_TEMP}/orange-calibration"

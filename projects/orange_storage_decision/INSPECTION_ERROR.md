@@ -42,6 +42,8 @@ bootstrap <- bootstrap_sale_days(inspections, cohorts, prices,
 Bootstrap counts are sampled from fitted **reported-label** probabilities,
 and each refit uses the same fixed rates. This conditions on the external
 calibration; it does not propagate uncertainty in sensitivity or specificity.
+The separate [finite-calibration bootstrap](CALIBRATION.md) accepts reference
+confusion counts and resamples both independent sources of observations.
 The rates cannot simply be learned alongside survival from these same
 aggregated labels without additional identifying information or assumptions.
 

@@ -187,6 +187,18 @@ Rscript tests/test_inspection_error.R
 Rscript scripts/run_inspection_error.R
 ```
 
+## Finite calibration uncertainty
+
+The [finite-calibration extension](CALIBRATION.md) accepts independent reference
+confusion counts and propagates their sampling uncertainty alongside storage
+inspection uncertainty. Its [saved example](results/calibration_uncertainty/RESULTS.md)
+compares fixed-rate and recalibrated bootstraps, with every failed attempt retained.
+
+```bash
+Rscript tests/test_calibration.R
+Rscript scripts/run_calibration_uncertainty.R
+```
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

@@ -120,7 +120,7 @@ inspections; placeholder values in the demonstrator are not real estimates.
   fit uses completed historical lots, with calendar and lot-ID separation.
   Fresh target lots compare deployment returns and future inventory forecasts;
   archive-acquisition costs and variation across training archives are excluded.
-  See [HISTORICAL_BASELINE.md](HISTORICAL_BASELINE.md). Distribution shift,
+  See [HISTORICAL_BASELINE.md](HISTORICAL_BASELINE.md). Empirical distribution shift,
   historical-data economics and empirical validation remain open.
 - Training-archive variation implemented as a separate study: nested 10/100-lot
   archives are refitted across independent train/test repetitions, with shared
@@ -129,6 +129,13 @@ inspections; placeholder values in the demonstrator are not real estimates.
   generator. See [ARCHIVE_UNCERTAINTY.md](ARCHIVE_UNCERTAINTY.md). These intervals
   include archive and finite-test-panel variation; their separate variance
   components, acquisition economics and empirical learning curves remain open.
+- Historical-policy shift sensitivity implemented: target lifetimes are scaled
+  from harvest while historical data, fitted curves and sale dates stay fixed.
+  Paired outcomes across declared shorter/unchanged/longer scenarios quantify
+  returns, downside, forecast scores and inventory bias, with independent
+  train/test repetition intervals. See [HISTORICAL_SHIFT.md](HISTORICAL_SHIFT.md).
+  Empirical shift frequency, detection, adaptation, covariate-dependent shifts
+  and uncertainty in prices or grading remain open.
 - Further economic sensitivity: delivery delays, per-kg holding cost,
   grade-specific errors, transaction costs and buyer capacities.
 - Decision uncertainty: bootstrap by *harvest lot* when empirical replicated

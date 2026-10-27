@@ -291,6 +291,19 @@ Rscript tests/test_archive_uncertainty.R
 Rscript scripts/run_archive_uncertainty.R
 ```
 
+## Historical policies under shelf-life shift
+
+The [historical shift study](HISTORICAL_SHIFT.md) changes target fruit lifetimes
+by -25%/0%/+25% while historical fits and sale decisions stay fixed. Its
+[paired results](results/historical_shift/RESULTS.md) show how shorter shelf
+life can reverse the advantage over immediate sale and produce substantial
+inventory overprediction. Intervals include variation across training archives.
+
+```bash
+Rscript tests/test_historical_shift.R
+Rscript scripts/run_historical_shift.R
+```
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

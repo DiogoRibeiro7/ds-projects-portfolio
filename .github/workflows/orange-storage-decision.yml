@@ -50,6 +50,8 @@ jobs:
         run: Rscript tests/test_inspection_plan_value.R
       - name: Test frozen historical baseline
         run: Rscript tests/test_historical_baseline.R
+      - name: Test uncertainty across training archives
+        run: Rscript tests/test_archive_uncertainty.R
       - name: Run synthetic demonstration
         run: Rscript scripts/demo.R
       - name: Evaluate paired synthetic sale policies
@@ -76,3 +78,5 @@ jobs:
         run: Rscript scripts/run_inspection_plan_value.R 20 "${RUNNER_TEMP}/orange-inspection-plan-value"
       - name: Exercise historical baseline report generation
         run: Rscript scripts/run_historical_baseline.R 20 "${RUNNER_TEMP}/orange-historical-baseline"
+      - name: Exercise repeated archive report generation
+        run: Rscript scripts/run_archive_uncertainty.R 3 "${RUNNER_TEMP}/orange-archive-uncertainty" 10

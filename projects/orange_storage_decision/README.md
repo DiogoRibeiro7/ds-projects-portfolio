@@ -277,6 +277,20 @@ Rscript tests/test_historical_baseline.R
 Rscript scripts/run_historical_baseline.R
 ```
 
+## Uncertainty across historical archives
+
+The [repeated-archive study](ARCHIVE_UNCERTAINTY.md) compares 10 versus 100
+historical training lots across 30 independent train/test repetitions. Both
+models share fresh target lots within each repetition. Its
+[saved results](results/archive_uncertainty/RESULTS.md) report paired return
+and prediction differences with intervals that include training-archive
+variation, resampling whole repetitions rather than individual target rows.
+
+```bash
+Rscript tests/test_archive_uncertainty.R
+Rscript scripts/run_archive_uncertainty.R
+```
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

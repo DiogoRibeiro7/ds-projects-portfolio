@@ -122,6 +122,13 @@ inspections; placeholder values in the demonstrator are not real estimates.
   archive-acquisition costs and variation across training archives are excluded.
   See [HISTORICAL_BASELINE.md](HISTORICAL_BASELINE.md). Distribution shift,
   historical-data economics and empirical validation remain open.
+- Training-archive variation implemented as a separate study: nested 10/100-lot
+  archives are refitted across independent train/test repetitions, with shared
+  target outcomes within each repetition. Paired repetition-bootstrap intervals
+  cover expected deployment returns and future prediction scores under a fixed
+  generator. See [ARCHIVE_UNCERTAINTY.md](ARCHIVE_UNCERTAINTY.md). These intervals
+  include archive and finite-test-panel variation; their separate variance
+  components, acquisition economics and empirical learning curves remain open.
 - Further economic sensitivity: delivery delays, per-kg holding cost,
   grade-specific errors, transaction costs and buyer capacities.
 - Decision uncertainty: bootstrap by *harvest lot* when empirical replicated

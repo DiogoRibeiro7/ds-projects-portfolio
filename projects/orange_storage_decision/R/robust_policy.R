@@ -1,4 +1,36 @@
-# Finite-scenario minimax regret. Source model.R and price_sensitivity.R first.
+# Finite-scenario minimax regret. Source model.R first; price_mean_scenarios()
+# additionally needs price_sensitivity.R.
+
+# Shared criterion for expected-value grids from price or survival scenarios.
+minimax_regret_grids <- function(grids) {
+  labels <- names(grids)
+  if (!is.list(grids) || is.data.frame(grids) || !length(grids) || is.null(labels) ||
+      anyNA(labels) || any(!nzchar(trimws(labels))) || anyDuplicated(labels) ||
+      any(!vapply(grids, function(x) {
+        is.data.frame(x) && nrow(x) > 0L && all(c("sale_day", "expected_net_eur") %in% names(x)) &&
+          is.numeric(x$sale_day) && all(is.finite(x$sale_day)) && all(x$sale_day >= 0) &&
+          all(x$sale_day == floor(x$sale_day)) && !anyDuplicated(x$sale_day) &&
+          is.numeric(x$expected_net_eur) && all(is.finite(x$expected_net_eur))
+      }, logical(1)))) {
+    stop("grids need unique scenario names, distinct whole sale days and finite expected values", call. = FALSE)
+  }
+  grids <- lapply(grids, function(x) x[order(x$sale_day), ])
+  days <- grids[[1]]$sale_day
+  if (any(!vapply(grids, function(x) length(x$sale_day) == length(days) && all(x$sale_day == days), logical(1)))) {
+    stop("scenario grids must share candidate sale days", call. = FALSE)
+  }
+  values <- vapply(grids, function(x) x$expected_net_eur, numeric(length(days)))
+  # Keep matrix dimensions for a single date or a single scenario.
+  values <- matrix(values, nrow = length(days), ncol = length(grids))
+  regrets <- sweep(-values, 2, apply(values, 2, max), "+")
+  grid <- data.frame(sale_day = days, worst_regret_eur = apply(regrets, 1, max),
+    worst_expected_net_eur = apply(values, 1, min), best_expected_net_eur = apply(values, 1, max))
+  details <- do.call(rbind, lapply(seq_along(grids), function(i) {
+    data.frame(scenario = labels[i], sale_day = days, expected_net_eur = values[, i], regret_eur = regrets[, i])
+  }))
+  list(decision = grid[which.min(grid$worst_regret_eur), , drop = FALSE],
+    grid = grid, scenario_values = details)
+}
 
 #' Construct deterministic conditional-mean price paths for a decision rule.
 #' @param prices Forecast price grid, starting at decision_day.
@@ -65,18 +97,5 @@ minimax_regret_sale <- function(cohorts, price_scenarios,
   }, logical(1)))) {
     stop("scenarios must share the known decision-day quote", call. = FALSE)
   }
-  values <- vapply(grids, function(x) x$expected_net_eur, numeric(length(days)))
-  # vapply simplifies to a vector for a one-day grid; retain matrix dimensions.
-  values <- matrix(values, nrow = length(days), ncol = length(grids))
-  if (any(!is.finite(values))) stop("expected values must be finite", call. = FALSE)
-  regrets <- sweep(-values, 2, apply(values, 2, max), "+")
-  grid <- data.frame(sale_day = days, worst_regret_eur = apply(regrets, 1, max),
-                     worst_expected_net_eur = apply(values, 1, min),
-                     best_expected_net_eur = apply(values, 1, max))
-  details <- do.call(rbind, lapply(seq_along(grids), function(i) {
-    data.frame(scenario = labels[i], sale_day = days,
-               expected_net_eur = values[, i], regret_eur = regrets[, i])
-  }))
-  list(decision = grid[which.min(grid$worst_regret_eur), , drop = FALSE],
-       grid = grid, scenario_values = details)
+  minimax_regret_grids(grids)
 }

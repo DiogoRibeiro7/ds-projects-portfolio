@@ -147,5 +147,52 @@ for (name in names(rebuilt)) {
 # Reproduce one complete train/test repetition, including target prices/outcomes.
 one <- run_historical_shift_replication(1, settings$n_targets, settings$n_history,
   settings$lifetime_multipliers, seeds$history_seed[1], seeds$metadata_seed[1], seeds$fruit_seed[1])
-stopifnot(isTRUE(all.equal(one$records, saved[saved$repetition == 1, ], tolerance = 1e-10)))
+reference <- saved[saved$repetition == 1, ]
+# Refitting involves iterative optimisation: numerical-library/build differences
+# can perturb fitted probabilities while leaving the sampled fruit and decisions
+# unchanged. Bound each fitted output absolutely, below the report's precision;
+# retain strict checks for IDs, scenarios, sale dates, realised masses and EUR.
+forecast_mass <- c(paste0("predicted_day", c(16L, 20L, 24L), "_kg"),
+  paste0("bias_day", c(16L, 20L, 24L), "_kg"))
+forecast_scores <- c("brier", "log_loss")
+check_reconstruction <- function(actual, expected) {
+  stopifnot(identical(names(actual), names(expected)), nrow(actual) == nrow(expected))
+  differences <- setNames(numeric(ncol(expected)), names(expected))
+  exact <- c("lot_id", "repetition", "lifetime_multiplier", "sale_day", "below_day12")
+  for (field in names(expected)) {
+    if (field %in% exact) {
+      if (anyNA(actual[[field]]) || !all(actual[[field]] == expected[[field]])) {
+        stop(sprintf("reconstruction changed %s", field), call. = FALSE)
+      }
+      next
+    }
+    # 0.1 g for fitted masses and 1e-7 for proper scores, both well below the
+    # report's displayed resolution. Realised outcomes stay at 1e-10.
+    tolerance <- if (field %in% forecast_mass) 1e-4 else if (field %in% forecast_scores) 1e-7 else 1e-10
+    difference <- abs(actual[[field]] - expected[[field]])
+    if (any(!is.finite(difference)) || any(difference > tolerance)) {
+      stop(sprintf("reconstruction %s: max absolute difference %.12g exceeds %.12g",
+        field, max(difference), tolerance), call. = FALSE)
+    }
+    differences[field] <- max(difference)
+  }
+  differences
+}
+differences <- check_reconstruction(one$records, reference)
+cat(sprintf("Reconstruction maximum fitted-mass difference: %.12g kg; score difference: %.12g\n",
+  max(differences[forecast_mass]), max(differences[forecast_scores])))
+# Small numerical fitting variation is tolerated; changed decisions, sampled
+# fruit, money or materially different forecasts must still fail this check.
+rounded_fit <- reference
+rounded_fit[forecast_mass] <- rounded_fit[forecast_mass] + 1e-5
+rounded_fit[forecast_scores] <- rounded_fit[forecast_scores] + 1e-8
+invisible(check_reconstruction(rounded_fit, reference))
+for (field in c("sale_day", "return_eur", "accepted_day20_kg", "predicted_day20_kg", "brier")) {
+  changed <- reference
+  changed[[field]][1] <- changed[[field]][1] + if (field == "brier") 1e-5 else 0.2
+  expect_error(check_reconstruction(changed, reference))
+}
+changed <- reference
+changed$lot_id[1] <- "different-target"
+expect_error(check_reconstruction(changed, reference))
 cat("Orange historical shift tests passed.\n")

@@ -123,6 +123,10 @@ archives and target panels through `run_historical_shift_replication()`. Counts
 are sufficient for reconstructing the working fit; they are not individual
 historical-lot data. Tests reconstruct every saved fit and interval, audit
 coupled mass/return monotonicity, and regenerate one complete repetition.
+Reconstruction requires identical IDs, scenarios and sale dates, with absolute
+error at most 1e-10 in realised masses/returns. Fitted masses allow 0.0001 kg
+and proper scores 1e-7 for numerical variation between R builds; saved-summary
+reconstruction retains its existing tighter tolerance.
 
 ## Interpretation limits
 

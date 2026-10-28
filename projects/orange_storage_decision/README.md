@@ -304,6 +304,19 @@ Rscript tests/test_historical_shift.R
 Rscript scripts/run_historical_shift.R
 ```
 
+## Minimax regret over shelf-life scenarios
+
+The [survival-regret rule](SURVIVAL_REGRET.md) selects sale dates across a fixed
+set of shorter/unchanged/longer lifetime scenarios. Its
+[fresh paired study](results/survival_regret/RESULTS.md) includes shifts beyond
+that set and retains the tradeoff: lower worst fitted regret can still worsen
+returns under shorter shelf life. The criterion is not a realised-loss guarantee.
+
+```bash
+Rscript tests/test_survival_regret.R
+Rscript scripts/run_survival_regret.R
+```
+
 ## Scientific status and limitations
 
 Status: **methodological prototype, synthetic evidence only**. No empirical

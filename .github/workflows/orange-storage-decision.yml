@@ -54,6 +54,8 @@ jobs:
         run: Rscript tests/test_archive_uncertainty.R
       - name: Test historical policy under shelf-life shift
         run: Rscript tests/test_historical_shift.R
+      - name: Test minimax regret over survival scenarios
+        run: Rscript tests/test_survival_regret.R
       - name: Run synthetic demonstration
         run: Rscript scripts/demo.R
       - name: Evaluate paired synthetic sale policies
@@ -84,3 +86,5 @@ jobs:
         run: Rscript scripts/run_archive_uncertainty.R 3 "${RUNNER_TEMP}/orange-archive-uncertainty" 10
       - name: Exercise historical shift report generation
         run: Rscript scripts/run_historical_shift.R 3 "${RUNNER_TEMP}/orange-historical-shift" 10
+      - name: Exercise survival regret report generation
+        run: Rscript scripts/run_survival_regret.R 3 "${RUNNER_TEMP}/orange-survival-regret" 10

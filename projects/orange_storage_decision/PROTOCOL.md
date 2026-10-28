@@ -136,6 +136,13 @@ inspections; placeholder values in the demonstrator are not real estimates.
   train/test repetition intervals. See [HISTORICAL_SHIFT.md](HISTORICAL_SHIFT.md).
   Empirical shift frequency, detection, adaptation, covariate-dependent shifts
   and uncertainty in prices or grading remain open.
+- Survival-scenario decision rule implemented: minimise worst fitted regret
+  across a fixed set of historical-curve scale multipliers. Fresh independent
+  train/test repetitions compare returns and downside with the historical rule
+  and immediate sale, including shifts outside the decision set. See
+  [SURVIVAL_REGRET.md](SURVIVAL_REGRET.md). Lower fitted regret does not guarantee
+  lower realised loss; negative findings are retained. Empirical scenario sets,
+  continuous uncertainty sets and adaptive decisions remain open.
 - Further economic sensitivity: delivery delays, per-kg holding cost,
   grade-specific errors, transaction costs and buyer capacities.
 - Decision uncertainty: bootstrap by *harvest lot* when empirical replicated

@@ -48,6 +48,8 @@ jobs:
         run: Rscript tests/test_inspection_removals.R
       - name: Test destructive inspection plan value
         run: Rscript tests/test_inspection_plan_value.R
+      - name: Test adaptive inspection policy
+        run: Rscript tests/test_adaptive_policy.R
       - name: Test frozen historical baseline
         run: Rscript tests/test_historical_baseline.R
       - name: Test uncertainty across training archives
@@ -80,6 +82,8 @@ jobs:
         run: Rscript scripts/run_inspection_removals.R 20 "${RUNNER_TEMP}/orange-inspection-removals"
       - name: Exercise inspection plan value report generation
         run: Rscript scripts/run_inspection_plan_value.R 20 "${RUNNER_TEMP}/orange-inspection-plan-value"
+      - name: Exercise adaptive inspection report generation
+        run: Rscript scripts/run_adaptive_policy.R 20 "${RUNNER_TEMP}/orange-adaptive-policy"
       - name: Exercise historical baseline report generation
         run: Rscript scripts/run_historical_baseline.R 20 "${RUNNER_TEMP}/orange-historical-baseline"
       - name: Exercise repeated archive report generation

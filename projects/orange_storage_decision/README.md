@@ -263,6 +263,24 @@ Rscript tests/test_inspection_plan_value.R
 Rscript scripts/run_inspection_plan_value.R
 ```
 
+## Adaptive inspection before a contingent sale
+
+The [one-step sequential policy](ADAPTIVE_POLICY.md) asks whether to commit to
+a sale date on day 12 or pay for a nondestructive inspection on day 16 and
+revise the selling date from its new quality counts. It uses a prespecified
+three-scenario survival prior, exact finite-count value-of-information
+enumeration and paired synthetic lots. The comparison includes a no-inspection
+commitment, immediate sale and always-inspect benchmark; none receives future
+observations before its decision.
+
+```bash
+Rscript tests/test_adaptive_policy.R
+Rscript scripts/run_adaptive_policy.R
+```
+
+This idealised, correctly specified scenario model excludes destructive
+removals, noisy labels and price forecast errors; it makes no empirical claim.
+
 ## Learning from historical lots
 
 The [historical baseline](HISTORICAL_BASELINE.md) fits stratum survival curves

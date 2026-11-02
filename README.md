@@ -110,7 +110,7 @@ Use this map when you want to jump directly to a project area:
 
 - [Adaptive policy learning and off-policy evaluation](projects/adaptive_policy_learning/)
 - [Mobility demand and fleet optimization](projects/mobility_demand_optimization/)
-- [Orange storage: maturity-aware optimal sale](projects/orange_storage_decision/)
+- [Orange storage: maturity-aware optimal sale (standalone)](https://github.com/DiogoRibeiro7/perishable-inventory-decision-lab/tree/main/studies/orange_storage_decision)
 - [Portugal housing, tourism and short-term accommodation](projects/portugal_housing_tourism/)
 - [churn prediction](projects/churn_prediction/)
 - [customer segmentation](projects/customer_segmentation/)
@@ -139,6 +139,7 @@ Selected projects are also available as focused standalone repositories:
 - [city-wage-cost-global](https://github.com/DiogoRibeiro7/city-wage-cost-global)
 - [pt-salary-gamma-distribution](https://github.com/DiogoRibeiro7/pt-salary-gamma-distribution)
 - [customer-analytics](https://github.com/DiogoRibeiro7/customer-analytics)
+- [perishable-inventory-decision-lab: orange sale-timing study](https://github.com/DiogoRibeiro7/perishable-inventory-decision-lab/tree/main/studies/orange_storage_decision)
 
 ## End-to-end analytics examples
 

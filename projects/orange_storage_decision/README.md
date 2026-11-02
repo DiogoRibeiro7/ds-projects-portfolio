@@ -281,6 +281,24 @@ Rscript scripts/run_adaptive_policy.R
 This idealised, correctly specified scenario model excludes destructive
 removals, noisy labels and price forecast errors; it makes no empirical claim.
 
+## Adaptive inspection under shelf-life misspecification
+
+The [adaptive shelf-life stress study](ADAPTIVE_STRESS.md) evaluates the
+commit-or-inspect policy when the **true** survival scales are 25% shorter,
+unchanged, or 25% longer than its predeclared scenario library. It uses common
+inspection uniforms and fruit lifetimes across these paired worlds, and
+reports realised gains, downside and lot-level bootstrap contrasts against
+the unchanged model. The policy never sees the hidden shift or future samples
+before its decisions.
+
+```bash
+Rscript tests/test_adaptive_stress.R
+Rscript scripts/run_adaptive_stress.R
+```
+
+These are controlled synthetic perturbations, not calibrated bounds for real
+storage operations. Negative policy gains remain part of the evidence.
+
 ## Learning from historical lots
 
 The [historical baseline](HISTORICAL_BASELINE.md) fits stratum survival curves

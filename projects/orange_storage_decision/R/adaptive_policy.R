@@ -36,13 +36,17 @@ normalize_scenario_weights <- function(scenarios, weights) {
   stats::setNames(weights / sum(weights), names(scenarios))
 }
 
-#' Update a discrete survival-scenario posterior using NEW, observed counts.
+#' Update a discrete survival-scenario posterior using NEW, observed labels.
 #' All data must already exist by cutoff_day. Passing the same counts twice
 #' would double-count them; callers must maintain disjoint observation batches.
+#' Sensitivity and specificity must be externally calibrated; the likelihood
+#' describes reported labels while survival scenarios describe true quality.
 scenario_posterior <- function(scenarios, weights, observations = NULL,
-                               cutoff_day = 0L) {
+                               cutoff_day = 0L, sensitivity = 1,
+                               specificity = 1) {
   prior <- normalize_scenario_weights(scenarios, weights)
   assert_nonnegative_scalar(cutoff_day, "cutoff_day", integer = TRUE)
+  invisible(inspection_label_probability(0.5, sensitivity, specificity))
   if (is.null(observations)) return(prior)
   fields <- c("cohort", "day", "n_checked", "n_acceptable")
   if (!is.data.frame(observations) || !setequal(names(observations), fields)) {
@@ -58,8 +62,11 @@ scenario_posterior <- function(scenarios, weights, observations = NULL,
   for (i in seq_along(scenarios)) {
     inventory <- scenarios[[i]]
     index <- match(observations$cohort, inventory$cohort)
-    p <- weibull_survival(observations$day,
-                          inventory$shape[index], inventory$scale[index])
+    p <- inspection_label_probability(
+      weibull_survival(observations$day,
+                       inventory$shape[index], inventory$scale[index]),
+      sensitivity, specificity
+    )
     log_posterior[i] <- log_posterior[i] + sum(stats::dbinom(
       observations$n_acceptable, observations$n_checked, p, log = TRUE
     ))
@@ -82,14 +89,17 @@ scenario_posterior <- function(scenarios, weights, observations = NULL,
 #' if ordered. All candidate prices are exogenous, known assumed forecasts.
 #'
 #' Outcome enumeration is exact conditional on this *finite, correctly
-#' specified* survival-scenario library and independent binomial inspections.
+#' specified* survival-scenario library, externally calibrated label error
+#' rates and independent binomial inspections.
 #' It is not the value of arbitrary data collection or a general POMDP solver.
 plan_adaptive_inspection <- function(scenarios, posterior, prices,
                                      storage_eur_per_kg_day, decision_day,
                                      inspection_day, checks_per_cohort = 8L,
                                      eur_per_check = 0.02,
-                                     delivery_lag_days = 2L) {
+                                     delivery_lag_days = 2L,
+                                     sensitivity = 1, specificity = 1) {
   weights <- normalize_scenario_weights(scenarios, posterior)
+  invisible(inspection_label_probability(0.5, sensitivity, specificity))
   validate_prices(prices, scenarios[[1]])
   for (day in list(decision_day = decision_day, inspection_day = inspection_day,
                    delivery_lag_days = delivery_lag_days,
@@ -126,8 +136,11 @@ plan_adaptive_inspection <- function(scenarios, posterior, prices,
   for (i in seq_along(scenarios)) {
     inventory <- scenarios[[i]]
     index <- match(groups, inventory$cohort)
-    p <- weibull_survival(rep(inspection_day, n_groups),
-                          inventory$shape[index], inventory$scale[index])
+    p <- inspection_label_probability(
+      weibull_survival(rep(inspection_day, n_groups),
+                       inventory$shape[index], inventory$scale[index]),
+      sensitivity, specificity
+    )
     likelihood <- rep(1, nrow(counts))
     for (g in seq_along(groups)) {
       likelihood <- likelihood * stats::dbinom(counts[, g], checks_per_cohort, p[g])
@@ -153,6 +166,7 @@ plan_adaptive_inspection <- function(scenarios, posterior, prices,
        net_information_value_eur = inspected_value - fixed_value,
        inspection_labour_eur = labour, checks_per_cohort = checks_per_cohort,
        inspection_day = inspection_day, decision_day = decision_day,
+       sensitivity = sensitivity, specificity = specificity,
        days = days, values = values, posterior = weights, scenarios = scenarios)
 }
 
@@ -174,7 +188,8 @@ sale_after_inspection <- function(plan, observations) {
          call. = FALSE)
   }
   weights <- scenario_posterior(plan$scenarios, plan$posterior,
-                                observations, plan$inspection_day)
+                                observations, plan$inspection_day,
+                                plan$sensitivity, plan$specificity)
   available <- which(plan$days >= plan$inspection_day)
   expected <- as.numeric(weights %*% plan$values[, available, drop = FALSE])
   index <- which.max(expected)

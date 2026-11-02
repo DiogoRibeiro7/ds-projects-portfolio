@@ -278,8 +278,9 @@ Rscript tests/test_adaptive_policy.R
 Rscript scripts/run_adaptive_policy.R
 ```
 
-This idealised, correctly specified scenario model excludes destructive
-removals, noisy labels and price forecast errors; it makes no empirical claim.
+The baseline assumes perfect grading, nondestructive checks and known price
+forecasts. The noisy-label extension below changes the observation model;
+none of these synthetic comparisons establishes field effectiveness.
 
 ## Adaptive inspection under shelf-life misspecification
 
@@ -298,6 +299,25 @@ Rscript scripts/run_adaptive_stress.R
 
 These are controlled synthetic perturbations, not calibrated bounds for real
 storage operations. Negative policy gains remain part of the evidence.
+
+## Adaptive decisions with imperfect inspection labels
+
+The [adaptive grading-error study](ADAPTIVE_LABEL_ERROR.md) extends the
+finite-scenario commit-or-inspect rule to use externally calibrated sensitivity
+and specificity for both the historical posterior and possible day-16 labels.
+Economic values still use true commercial survival. It compares calibrated
+and naive policies on identical reported counts, fruit outcomes and prices
+under perfect, moderate and noisy grading, with paired lot-level intervals.
+
+```bash
+Rscript tests/test_adaptive_label_error.R
+Rscript scripts/run_adaptive_label_error.R
+```
+
+Grader accuracy is assumed known and independent across checks; calibration
+uncertainty, destructive checks and shelf-life misspecification are separate
+limitations. The report retains negative differences and avoids empirical
+profit claims.
 
 ## Learning from historical lots
 

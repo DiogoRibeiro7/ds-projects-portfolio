@@ -50,6 +50,8 @@ jobs:
         run: Rscript tests/test_inspection_plan_value.R
       - name: Test adaptive inspection policy
         run: Rscript tests/test_adaptive_policy.R
+      - name: Test adaptive policy under prior misspecification
+        run: Rscript tests/test_adaptive_stress.R
       - name: Test frozen historical baseline
         run: Rscript tests/test_historical_baseline.R
       - name: Test uncertainty across training archives
@@ -84,6 +86,8 @@ jobs:
         run: Rscript scripts/run_inspection_plan_value.R 20 "${RUNNER_TEMP}/orange-inspection-plan-value"
       - name: Exercise adaptive inspection report generation
         run: Rscript scripts/run_adaptive_policy.R 20 "${RUNNER_TEMP}/orange-adaptive-policy"
+      - name: Exercise adaptive prior-stress report generation
+        run: Rscript scripts/run_adaptive_stress.R 8 "${RUNNER_TEMP}/orange-adaptive-stress"
       - name: Exercise historical baseline report generation
         run: Rscript scripts/run_historical_baseline.R 20 "${RUNNER_TEMP}/orange-historical-baseline"
       - name: Exercise repeated archive report generation

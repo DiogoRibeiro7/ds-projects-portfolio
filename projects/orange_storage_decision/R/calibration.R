@@ -1,12 +1,10 @@
 # Source model.R and sampling.R first. Calibration uses independent reference labels.
 
-#' Estimate inspection accuracy from a reference-standard confusion table.
-#' @param calibration Rows with day, true_positive, false_negative, true_negative,
-#'   false_positive. Positive means commercially acceptable. Counts are independent
-#'   of the storage inspections and reference labels are assumed correct.
-#' @param decision_day Latest day on which reference observations may be available.
-#' @return Pooled binomial estimates and reference sample sizes for each true class.
-inspection_calibration_rates <- function(calibration, decision_day) {
+#' Validate and aggregate reference confusion counts before the decision cutoff.
+#' This validation does not assume the finite audit's point estimates are
+#' informative: weak audits still carry likelihood information about rates.
+#' @return Counts and denominators for the two known reference classes.
+inspection_calibration_counts <- function(calibration, decision_day) {
   assert_nonnegative_scalar(decision_day, "decision_day", integer = TRUE)
   fields <- c("day", "true_positive", "false_negative", "true_negative", "false_positive")
   if (!is.data.frame(calibration) || nrow(calibration) < 1L ||
@@ -19,17 +17,31 @@ inspection_calibration_rates <- function(calibration, decision_day) {
   if (any(calibration$day > decision_day)) {
     stop("calibration cannot use reference observations after decision_day", call. = FALSE)
   }
-  n_acceptable <- sum(calibration$true_positive + calibration$false_negative)
-  n_unacceptable <- sum(calibration$true_negative + calibration$false_positive)
-  if (!is.finite(n_acceptable) || !is.finite(n_unacceptable) ||
-      n_acceptable <= 0 || n_unacceptable <= 0) {
+  counts <- lapply(fields[-1L], function(field) sum(calibration[[field]]))
+  names(counts) <- fields[-1L]
+  counts$n_acceptable <- counts$true_positive + counts$false_negative
+  counts$n_unacceptable <- counts$true_negative + counts$false_positive
+  if (any(!is.finite(unlist(counts))) ||
+      counts$n_acceptable <= 0 || counts$n_unacceptable <= 0) {
     stop("calibration needs observations in both true reference classes", call. = FALSE)
   }
-  sensitivity <- sum(calibration$true_positive) / n_acceptable
-  specificity <- sum(calibration$true_negative) / n_unacceptable
+  counts
+}
+
+#' Estimate inspection accuracy from a reference-standard confusion table.
+#' @param calibration Rows with day, true_positive, false_negative, true_negative,
+#'   false_positive. Positive means commercially acceptable. Counts are independent
+#'   of the storage inspections and reference labels are assumed correct.
+#' @param decision_day Latest day on which reference observations may be available.
+#' @return Pooled binomial estimates and reference sample sizes for each true class.
+inspection_calibration_rates <- function(calibration, decision_day) {
+  counts <- inspection_calibration_counts(calibration, decision_day)
+  sensitivity <- counts$true_positive / counts$n_acceptable
+  specificity <- counts$true_negative / counts$n_unacceptable
   invisible(inspection_label_probability(0.5, sensitivity, specificity))
   list(sensitivity = sensitivity, specificity = specificity,
-       n_acceptable = n_acceptable, n_unacceptable = n_unacceptable)
+       n_acceptable = counts$n_acceptable,
+       n_unacceptable = counts$n_unacceptable)
 }
 
 #' Paired conditional and two-sample parametric bootstraps of the sale decision.

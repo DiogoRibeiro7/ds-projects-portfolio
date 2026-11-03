@@ -338,6 +338,25 @@ The grid is a deterministic approximation conditional on an informative
 grader, not a continuous exact posterior. Both policies use the same labels
 and fruit outcomes; negative gains remain part of the synthetic evidence.
 
+## Sensitivity to the calibration grid resolution
+
+The [adaptive grid-resolution study](ADAPTIVE_GRID_RESOLUTION.md) reruns the
+calibration-integrated commit-or-inspect rule with 3×3, 5×5, 7×7 and 9×9
+midpoint grids. Within each independent latent lot, all resolutions share
+the same reference audits, historical inspection labels, future samples,
+fruit outcomes and prices. It measures changes in actions, sale dates,
+planned inspection value and realised returns under scarce versus ample
+reference calibration.
+
+```bash
+Rscript tests/test_adaptive_grid_resolution.R
+Rscript scripts/run_adaptive_grid_resolution.R
+```
+
+The 9×9 grid is a finite comparison point, **not** the exact posterior.
+Agreement among tested grids is a sensitivity check, not a numerical
+convergence guarantee or evidence of commercial benefit.
+
 ## Learning from historical lots
 
 The [historical baseline](HISTORICAL_BASELINE.md) fits stratum survival curves

@@ -319,6 +319,25 @@ uncertainty, destructive checks and shelf-life misspecification are separate
 limitations. The report retains negative differences and avoids empirical
 profit claims.
 
+## Adaptive policy with finite grading calibration
+
+The [adaptive calibration-uncertainty study](ADAPTIVE_CALIBRATION_UNCERTAINTY.md)
+uses independent reference confusion counts to form a finite Beta posterior
+grid over grading sensitivity and specificity. Its joint survival-and-grader
+states carry that uncertainty through the day-12 update and optional day-16
+inspection. A paired simulation compares this integrated rule with replacing
+the grader posterior by its mean, using 8 versus 80 independently audited
+reference fruit per true quality class.
+
+```bash
+Rscript tests/test_adaptive_calibration_uncertainty.R
+Rscript scripts/run_adaptive_calibration_uncertainty.R
+```
+
+The grid is a deterministic approximation conditional on an informative
+grader, not a continuous exact posterior. Both policies use the same labels
+and fruit outcomes; negative gains remain part of the synthetic evidence.
+
 ## Learning from historical lots
 
 The [historical baseline](HISTORICAL_BASELINE.md) fits stratum survival curves

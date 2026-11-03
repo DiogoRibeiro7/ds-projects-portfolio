@@ -36,6 +36,38 @@ normalize_scenario_weights <- function(scenarios, weights) {
   stats::setNames(weights / sum(weights), names(scenarios))
 }
 
+#' Validate scalar grading rates or rates aligned with each joint hypothesis.
+#' A per-scenario vector must be fully named; scalar inputs retain the original
+#' common-grader behaviour. Each joint hypothesis has one fixed rate pair.
+adaptive_scenario_label_rates <- function(scenarios, sensitivity, specificity) {
+  groups <- names(scenarios)
+  if (!is.list(scenarios) || !length(scenarios) || is.null(groups) ||
+      anyNA(groups) || any(!nzchar(groups)) || anyDuplicated(groups)) {
+    stop("scenarios need unique names for label calibration", call. = FALSE)
+  }
+  expand_rate <- function(rate, name) {
+    if (!is.numeric(rate) || !length(rate) || anyNA(rate) ||
+        any(!is.finite(rate))) {
+      stop(sprintf("%s must contain finite numeric rates", name), call. = FALSE)
+    }
+    if (length(rate) == 1L && is.null(names(rate))) {
+      return(rep(unname(rate), length(groups)))
+    }
+    if (length(rate) != length(groups) ||
+        !identical(names(rate), groups)) {
+      stop(sprintf("%s vector must match named scenarios exactly", name),
+           call. = FALSE)
+    }
+    unname(rate)
+  }
+  se <- expand_rate(sensitivity, "sensitivity")
+  sp <- expand_rate(specificity, "specificity")
+  for (i in seq_along(groups)) {
+    invisible(inspection_label_probability(0.5, se[i], sp[i]))
+  }
+  list(sensitivity = se, specificity = sp)
+}
+
 #' Update a discrete survival-scenario posterior using NEW, observed labels.
 #' All data must already exist by cutoff_day. Passing the same counts twice
 #' would double-count them; callers must maintain disjoint observation batches.
@@ -46,7 +78,7 @@ scenario_posterior <- function(scenarios, weights, observations = NULL,
                                specificity = 1) {
   prior <- normalize_scenario_weights(scenarios, weights)
   assert_nonnegative_scalar(cutoff_day, "cutoff_day", integer = TRUE)
-  invisible(inspection_label_probability(0.5, sensitivity, specificity))
+  label_rates <- adaptive_scenario_label_rates(scenarios, sensitivity, specificity)
   if (is.null(observations)) return(prior)
   fields <- c("cohort", "day", "n_checked", "n_acceptable")
   if (!is.data.frame(observations) || !setequal(names(observations), fields)) {
@@ -65,7 +97,7 @@ scenario_posterior <- function(scenarios, weights, observations = NULL,
     p <- inspection_label_probability(
       weibull_survival(observations$day,
                        inventory$shape[index], inventory$scale[index]),
-      sensitivity, specificity
+      label_rates$sensitivity[i], label_rates$specificity[i]
     )
     log_posterior[i] <- log_posterior[i] + sum(stats::dbinom(
       observations$n_acceptable, observations$n_checked, p, log = TRUE
@@ -99,7 +131,7 @@ plan_adaptive_inspection <- function(scenarios, posterior, prices,
                                      delivery_lag_days = 2L,
                                      sensitivity = 1, specificity = 1) {
   weights <- normalize_scenario_weights(scenarios, posterior)
-  invisible(inspection_label_probability(0.5, sensitivity, specificity))
+  label_rates <- adaptive_scenario_label_rates(scenarios, sensitivity, specificity)
   validate_prices(prices, scenarios[[1]])
   for (day in list(decision_day = decision_day, inspection_day = inspection_day,
                    delivery_lag_days = delivery_lag_days,
@@ -139,7 +171,7 @@ plan_adaptive_inspection <- function(scenarios, posterior, prices,
     p <- inspection_label_probability(
       weibull_survival(rep(inspection_day, n_groups),
                        inventory$shape[index], inventory$scale[index]),
-      sensitivity, specificity
+      label_rates$sensitivity[i], label_rates$specificity[i]
     )
     likelihood <- rep(1, nrow(counts))
     for (g in seq_along(groups)) {

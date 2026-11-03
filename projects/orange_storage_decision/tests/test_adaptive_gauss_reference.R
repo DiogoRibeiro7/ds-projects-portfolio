@@ -48,15 +48,16 @@ fast <- data.frame(cohort = "a", mass_kg = 100,
                    initially_sellable = TRUE, shape = 1, scale = 3)
 prices <- data.frame(cohort = "a", day = 1:3,
                      price_eur_per_kg = c(0, 1, 1.3))
+early_audit <- transform(analytic_audit, day = 1L)
 single <- plan_adaptive_gauss_reference(
-  list(fast = fast), c(fast = 1), NULL, analytic_audit, prices,
+  list(fast = fast), c(fast = 1), NULL, early_audit, prices,
   0, 1L, 2L, order = 16L, checks_per_cohort = 4L, eur_per_check = 0
 )
 stopifnot(single$action == "commit", single$fixed_day == 2L,
           abs(single$net_information_value_eur) < 1e-9,
           abs(sum(single$outcomes$probability) - 1) < 1e-12)
 single_finite <- plan_adaptive_with_calibration_uncertainty(
-  list(fast = fast), c(fast = 1), NULL, analytic_audit, prices,
+  list(fast = fast), c(fast = 1), NULL, early_audit, prices,
   0, 1L, 2L, grid_size = 3L, checks_per_cohort = 4L,
   eur_per_check = 0
 )

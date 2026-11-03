@@ -56,6 +56,8 @@ jobs:
         run: Rscript tests/test_adaptive_label_error.R
       - name: Test adaptive policy with finite reference calibration
         run: Rscript tests/test_adaptive_calibration_uncertainty.R
+      - name: Test adaptive calibration grid-resolution sensitivity
+        run: Rscript tests/test_adaptive_grid_resolution.R
       - name: Test frozen historical baseline
         run: Rscript tests/test_historical_baseline.R
       - name: Test uncertainty across training archives
@@ -96,6 +98,8 @@ jobs:
         run: Rscript scripts/run_adaptive_label_error.R 8 "${RUNNER_TEMP}/orange-adaptive-label-error"
       - name: Exercise adaptive finite-calibration report generation
         run: Rscript scripts/run_adaptive_calibration_uncertainty.R 6 "${RUNNER_TEMP}/orange-adaptive-calibration"
+      - name: Exercise adaptive grid-resolution report generation
+        run: Rscript scripts/run_adaptive_grid_resolution.R 3 "${RUNNER_TEMP}/orange-adaptive-grid-resolution"
       - name: Exercise historical baseline report generation
         run: Rscript scripts/run_historical_baseline.R 20 "${RUNNER_TEMP}/orange-historical-baseline"
       - name: Exercise repeated archive report generation

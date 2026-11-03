@@ -357,6 +357,25 @@ The 9×9 grid is a finite comparison point, **not** the exact posterior.
 Agreement among tested grids is a sensitivity check, not a numerical
 convergence guarantee or evidence of commercial benefit.
 
+## Higher-order numerical reference for the adaptive decision
+
+The [Gaussian quadrature reference](ADAPTIVE_GAUSS_REFERENCE.md) integrates
+grader-rate uncertainty over the informative `Se + Sp > 1` triangle using
+an order-64 Gauss–Legendre rule, with an order-32 stability check. It values
+each small-grid policy's **complete contingent sale mapping** under the
+reference posterior, including optional inspection labour. The resulting
+expected numerical regret isolates the effect of the integration method;
+it is not realised fruit profit or an empirical performance guarantee.
+
+```bash
+Rscript tests/test_adaptive_gauss_reference.R
+Rscript scripts/run_adaptive_gauss_reference.R
+```
+
+The quadrature orders are still finite. Analytical tests and paired
+predecision snapshots check numerical consistency, not a certified bound
+for arbitrary calibration data.
+
 ## Learning from historical lots
 
 The [historical baseline](HISTORICAL_BASELINE.md) fits stratum survival curves

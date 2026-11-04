@@ -376,6 +376,16 @@ The quadrature orders are still finite. Analytical tests and paired
 predecision snapshots check numerical consistency, not a certified bound
 for arbitrary calibration data.
 
+## Scientific synthesis and decision implications
+
+The [scientific synthesis](SCIENTIFIC_SYNTHESIS.md) consolidates the committed
+synthetic evidence on price errors, deterioration shifts, grading quality,
+inspection economics, survival-model choices and historical data. It separates
+results from different experiments, preserves cases where models underperform
+an immediate sale, and sets out a conditional decision protocol rather than
+claiming one universally optimal selling date. Adaptive-calibration extensions
+without saved full-run numeric benchmarks are described as methods only.
+
 ## Learning from historical lots
 
 The [historical baseline](HISTORICAL_BASELINE.md) fits stratum survival curves

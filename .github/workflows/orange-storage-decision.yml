@@ -60,6 +60,8 @@ jobs:
         run: Rscript tests/test_adaptive_grid_resolution.R
       - name: Test Gaussian reference for adaptive calibration
         run: Rscript tests/test_adaptive_gauss_reference.R
+      - name: Audit archived study evidence and documentation links
+        run: Rscript tests/test_release_audit.R
       - name: Test frozen historical baseline
         run: Rscript tests/test_historical_baseline.R
       - name: Test uncertainty across training archives

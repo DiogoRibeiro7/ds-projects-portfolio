@@ -4,6 +4,12 @@ An exploratory, reproducible R case study in postharvest survival analysis and
 optimal stopping. The same harvest date does **not** imply the same maturity at
 harvest or the same remaining commercial life for every orange.
 
+**Project status:** the synthetic-methods study is complete. See the
+[scientific synthesis](SCIENTIFIC_SYNTHESIS.md) for conclusions and negative
+results, and the [reproducibility audit](REPRODUCIBILITY.md) for archived
+evidence, exact replay instructions and validation boundaries. No empirical
+profitability or operational sale recommendation is claimed.
+
 ## Research question
 
 > Can repeated, representative inspections of a small sample of fruit support
@@ -445,6 +451,10 @@ Rscript scripts/run_survival_regret.R
 Status: **methodological prototype, synthetic evidence only**. No empirical
 profit improvement or predictive accuracy is claimed. This is deliberately
 `featured: false` in the portfolio catalogue.
+
+The methodological scope is closed; the [release audit](REPRODUCIBILITY.md)
+defines how to verify the 14 archived studies and the report's principal
+numbers using base R, without altering the committed evidence.
 
 Before application, the study needs representative observations across
 multiple harvest lots and storage environments, traceable maturity grading,

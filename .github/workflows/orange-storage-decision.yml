@@ -39,6 +39,20 @@ jobs:
           Rscript scripts/ingest_sima_orange_prices.R \
             data/raw/sima_oranges_wholesale_2025-01-01_2026-10-31.csv.gz \
             "${RUNNER_TEMP}/sima-orange-normalized.csv" wholesale
+      - name: Test rolling-origin SIMA forecast evaluation
+        run: Rscript tests/test_sima_rolling_backtest.R
+      - name: Generate out-of-time real-price evidence
+        run: |
+          Rscript scripts/run_sima_rolling_backtest.R \
+            data/raw/sima_oranges_wholesale_2025-01-01_2026-10-31.csv.gz \
+            "${RUNNER_TEMP}/sima-orange-rolling-report"
+      - name: Preserve real-price backtest evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: orange-sima-rolling-backtest
+          path: ${{ runner.temp }}/sima-orange-rolling-report/
+          if-no-files-found: error
+          retention-days: 30
       - name: Test price forecast sensitivity
         run: Rscript tests/test_price_sensitivity.R
       - name: Test minimax-regret policy

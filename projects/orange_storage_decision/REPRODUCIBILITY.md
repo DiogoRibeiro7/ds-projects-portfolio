@@ -118,6 +118,10 @@ independent validation study.
 - Evidence integrity: `R/release_audit.R` and `tests/test_release_audit.R`.
 
 The release is scoped to **transparent, reproducible synthetic analysis**.
+The subsequently archived [real SIMA price source](MARKET_PRICES.md) and
+[out-of-time quotation-forecast extension](ROLLING_PRICE_BACKTEST.md) are
+separate exercises; neither modifies or retrospectively validates this
+completed postharvest decision-study release.
 Before any operational recommendation, acquire representative fruit-level
 and lot-level data, record real prices and costs, validate on later harvest
 lots, and report calibration, realised returns and downside against a

@@ -123,7 +123,8 @@ They **cannot yet** validate the original sale-or-hold policy:
    performs ingestion and validation only; it does not estimate an orange
    price-risk distribution from future data.
 
-The next empirical PR can define a like-for-like product/market panel and
-blocked rolling-origin price forecasts, with honest missing-data coverage and
-transaction-stage limitations. Biological shelf-life validation requires a
-separate observational or prospective dataset.
+The [rolling-origin forecast follow-up](ROLLING_PRICE_BACKTEST.md) defines
+like-for-like product/market panels and compares two fixed historical price
+baselines, with honest missing-data coverage and transaction-stage limits.
+Biological shelf-life validation still requires a separate observational or
+prospective dataset.

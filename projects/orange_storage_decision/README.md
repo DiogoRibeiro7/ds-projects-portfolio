@@ -14,6 +14,9 @@ profitability or operational sale recommendation is claimed.
 archives 3,412 official Portuguese wholesale-market quotations from 2025–2026,
 with R-only parsing and validity checks. This is observed *price-quotation*
 evidence, **not** a field validation or replacement for any synthetic result.
+The [rolling-origin price forecast study](ROLLING_PRICE_BACKTEST.md) uses
+like-for-like, seasonal market/product panels and records missing-week coverage
+alongside out-of-time errors. It does not estimate sale-policy returns.
 
 ## Research question
 

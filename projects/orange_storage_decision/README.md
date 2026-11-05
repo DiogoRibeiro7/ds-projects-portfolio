@@ -10,6 +10,11 @@ results, and the [reproducibility audit](REPRODUCIBILITY.md) for archived
 evidence, exact replay instructions and validation boundaries. No empirical
 profitability or operational sale recommendation is claimed.
 
+**Real-data follow-up:** a separate [GPP SIMA orange-price ingestion](MARKET_PRICES.md)
+archives 3,412 official Portuguese wholesale-market quotations from 2025–2026,
+with R-only parsing and validity checks. This is observed *price-quotation*
+evidence, **not** a field validation or replacement for any synthetic result.
+
 ## Research question
 
 > Can repeated, representative inspections of a small sample of fruit support

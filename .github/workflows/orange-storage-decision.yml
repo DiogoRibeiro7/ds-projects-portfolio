@@ -28,6 +28,17 @@ jobs:
         run: Rscript tests/test_model.R
       - name: Run out-of-time comparison tests
         run: Rscript tests/test_evaluation.R
+      - name: Verify original GPP SIMA CSV checksum
+        run: |
+          actual="$(gzip -dc data/raw/sima_oranges_wholesale_2025-01-01_2026-10-31.csv.gz | sha256sum | cut -d ' ' -f 1)"
+          test "$actual" = "b039f254b4fb18a41b7997208a43ceae46ee9f48db978934ab9fad6de9e24da0"
+      - name: Test actual GPP SIMA orange price ingestion
+        run: Rscript tests/test_sima_market_prices.R
+      - name: Smoke test real SIMA CSV normalization
+        run: |
+          Rscript scripts/ingest_sima_orange_prices.R \
+            data/raw/sima_oranges_wholesale_2025-01-01_2026-10-31.csv.gz \
+            "${RUNNER_TEMP}/sima-orange-normalized.csv" wholesale
       - name: Test price forecast sensitivity
         run: Rscript tests/test_price_sensitivity.R
       - name: Test minimax-regret policy

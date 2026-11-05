@@ -137,6 +137,11 @@ data/raw/
 data/processed/
 data/external/
 **/data/
+# Permit only the frozen official SIMA snapshot in the otherwise ignored
+# project data directories. New exports require explicit provenance review.
+!projects/orange_storage_decision/data/
+!projects/orange_storage_decision/data/raw/
+!projects/orange_storage_decision/data/raw/sima_oranges_wholesale_2025-01-01_2026-10-31.csv.gz
 
 # Temporary files
 temp/

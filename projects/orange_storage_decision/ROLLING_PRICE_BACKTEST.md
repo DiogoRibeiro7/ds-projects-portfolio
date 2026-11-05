@@ -129,7 +129,10 @@ a disposable end-to-end report generation, uploading the evidence as the
 `orange-sima-rolling-backtest` artifact for inspection. The original synthetic
 results and source snapshot are never overwritten by the backtest runner.
 
-Future work can compare a 52-week seasonal benchmark once enough matched
-years are observed, test publication lags, and study product-level changes
-in origin mix and missingness. Any decision-value comparison still requires
-real lot-level observations and sales outcomes.
+A subsequent [hypothetical release-delay stress test](AVAILABILITY_STRESS.md)
+examines how information-availability assumptions affect these fixed models,
+including fallback to earlier quotes within the same previous week. It still
+cannot reconstruct actual GPP publication times. Further work can compare a
+52-week seasonal benchmark once enough matched years are observed and study
+product-level changes in origin mix and missingness. Decision-value
+comparisons still require real lot-level observations and sales outcomes.

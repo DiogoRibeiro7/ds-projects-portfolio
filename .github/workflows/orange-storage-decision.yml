@@ -53,6 +53,20 @@ jobs:
           path: ${{ runner.temp }}/sima-orange-rolling-report/
           if-no-files-found: error
           retention-days: 30
+      - name: Test hypothetical SIMA quotation availability
+        run: Rscript tests/test_sima_availability_stress.R
+      - name: Generate hypothetical publication-delay evidence
+        run: |
+          Rscript scripts/run_sima_availability_stress.R \
+            data/raw/sima_oranges_wholesale_2025-01-01_2026-10-31.csv.gz \
+            "${RUNNER_TEMP}/sima-orange-availability-report"
+      - name: Preserve availability-sensitivity evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: orange-sima-availability-stress
+          path: ${{ runner.temp }}/sima-orange-availability-report/
+          if-no-files-found: error
+          retention-days: 30
       - name: Test price forecast sensitivity
         run: Rscript tests/test_price_sensitivity.R
       - name: Test minimax-regret policy

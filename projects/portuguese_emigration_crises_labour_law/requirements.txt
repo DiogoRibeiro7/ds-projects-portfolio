@@ -4,7 +4,7 @@ pandas==2.3.3
 numpy==2.3.5
 matplotlib==3.10.8
 seaborn==0.13.2
-requests==2.32.4
+requests==2.33.0
 beautifulsoup4==4.13.4
 
 # Modelling extensions (interrupted time-series, change-point, structural, synthetic control)

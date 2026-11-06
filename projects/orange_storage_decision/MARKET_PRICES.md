@@ -132,5 +132,8 @@ publication timestamps; it cannot establish a real-time availability history.
 The [product-mix audit](COMPOSITION_AUDIT.md) additionally reports comparable
 2025/2026 month-by-month panels, unmatched entries/exits and unquoted-week
 coverage so pooled product mixes are not mistaken for a national price index.
+An [exact prior-year seasonal forecast audit](SEASONAL_52_BENCHMARK.md)
+separately assesses how much of the 2026 target sample has a quoted
+same-product, same-market week 52 weeks earlier, without filling gaps.
 Biological shelf-life validation still requires a separate observational or
 prospective dataset.

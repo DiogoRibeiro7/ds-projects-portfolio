@@ -111,3 +111,7 @@ model and its original results are unchanged.
 For a real hold-or-sell evaluation, obtain lot-level grades, mass loss,
 inspection histories, logistics and realised prices and costs under the
 independent [prospective protocol](PROTOCOL.md).
+
+An [exact 52-week historical-price benchmark](SEASONAL_52_BENCHMARK.md)
+uses the same panel identities to evaluate the predictability of quoted
+prior-year levels, still without imputation or profit claims.

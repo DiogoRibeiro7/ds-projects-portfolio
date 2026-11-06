@@ -23,6 +23,9 @@ A further [product-mix and seasonal-coverage audit](COMPOSITION_AUDIT.md)
 compares pooled price changes with genuinely matched product/market changes
 over corresponding 2025–2026 months. None of these empirical exercises
 estimates sale-policy returns.
+An [exact 52-week seasonal price benchmark](SEASONAL_52_BENCHMARK.md) further
+tests prior-year quotation reuse against the two rolling-origin baselines
+on identical 2026 target observations, disclosing sparse historical overlap.
 
 ## Research question
 

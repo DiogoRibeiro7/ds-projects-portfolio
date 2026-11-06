@@ -122,3 +122,7 @@ and frozen source regression counts. It uploads an
 
 To evaluate *net* sell-or-hold decisions with actual fruit, follow the
 [prospective observation and validation protocol](PROTOCOL.md).
+
+The separate [illustrative break-even scenario grid](QUOTE_BREAK_EVEN_SCENARIOS.md)
+applies explicitly hypothetical saleable-retention and weekly-cost assumptions
+to these observed quote pairs. It must not be read as observed storage profit.

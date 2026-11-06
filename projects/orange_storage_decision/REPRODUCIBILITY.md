@@ -123,7 +123,8 @@ The subsequently archived [real SIMA price source](MARKET_PRICES.md) and
 with its [hypothetical publication-lag stress test](AVAILABILITY_STRESS.md),
 the [matched product-mix audit](COMPOSITION_AUDIT.md) and the
 [exact 52-week historical benchmark](SEASONAL_52_BENCHMARK.md) and its
-[signed level-drift audit](LEVEL_DRIFT_AUDIT.md) are
+[signed level-drift audit](LEVEL_DRIFT_AUDIT.md), plus the
+[observed forward-window audit](FORWARD_PRICE_WINDOWS.md), are
 separate exercises; none modifies or retrospectively validates this
 completed postharvest decision-study release.
 Before any operational recommendation, acquire representative fruit-level

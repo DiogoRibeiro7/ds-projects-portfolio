@@ -133,6 +133,7 @@ A subsequent [hypothetical release-delay stress test](AVAILABILITY_STRESS.md)
 examines how information-availability assumptions affect these fixed models,
 including fallback to earlier quotes within the same previous week. It still
 cannot reconstruct actual GPP publication times. Further work can compare a
-52-week seasonal benchmark once enough matched years are observed and study
-product-level changes in origin mix and missingness. Decision-value
+52-week seasonal benchmark once enough matched years are observed. A separate
+[product-mix/coverage audit](COMPOSITION_AUDIT.md) now examines how the
+sampled mix and quotation gaps affect month-by-month comparisons. Decision-value
 comparisons still require real lot-level observations and sales outcomes.

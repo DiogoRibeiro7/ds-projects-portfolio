@@ -67,6 +67,20 @@ jobs:
           path: ${{ runner.temp }}/sima-orange-availability-report/
           if-no-files-found: error
           retention-days: 30
+      - name: Test SIMA product-mix and quotation coverage
+        run: Rscript tests/test_sima_composition_audit.R
+      - name: Generate real-price composition evidence
+        run: |
+          Rscript scripts/run_sima_composition_audit.R \
+            data/raw/sima_oranges_wholesale_2025-01-01_2026-10-31.csv.gz \
+            "${RUNNER_TEMP}/sima-orange-composition-report"
+      - name: Preserve product-mix audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: orange-sima-composition-audit
+          path: ${{ runner.temp }}/sima-orange-composition-report/
+          if-no-files-found: error
+          retention-days: 30
       - name: Test price forecast sensitivity
         run: Rscript tests/test_price_sensitivity.R
       - name: Test minimax-regret policy

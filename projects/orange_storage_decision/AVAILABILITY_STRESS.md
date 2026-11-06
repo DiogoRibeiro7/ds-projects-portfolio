@@ -115,3 +115,7 @@ record a grower's realised sale prices, contractual opportunities,
 transport and market fees, quality losses, lot-level deterioration or
 inspection histories. Those require [prospective lot-level data collection
 and independent validation](PROTOCOL.md).
+
+The [monthly product-mix audit](COMPOSITION_AUDIT.md) addresses another
+distinct source of misinterpretation: a change in the composition of quoted
+products is not necessarily a within-product wholesale price change.

@@ -128,6 +128,9 @@ the [matched product-mix audit](COMPOSITION_AUDIT.md) and the
 [illustrative break-even sensitivity](QUOTE_BREAK_EVEN_SCENARIOS.md) are
 separate exercises; none modifies or retrospectively validates this
 completed postharvest decision-study release.
+The [continuous quotation feasibility frontiers](QUOTE_FEASIBILITY_FRONTIER.md)
+also report only hypothetical cost/loss boundaries inferred algebraically
+from observed wholesale quotes, without estimating actual storage outcomes.
 Before any operational recommendation, acquire representative fruit-level
 and lot-level data, record real prices and costs, validate on later harvest
 lots, and report calibration, realised returns and downside against a

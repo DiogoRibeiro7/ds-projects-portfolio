@@ -38,6 +38,11 @@ The [illustrative quote break-even stress](QUOTE_BREAK_EVEN_SCENARIOS.md)
 shows how assumed saleable-mass retention and per-week costs change the
 price increase needed merely to break even. Those assumptions are not
 measured storage outcomes and cannot establish an optimal selling policy.
+Its [continuous quote feasibility frontiers](QUOTE_FEASIBILITY_FRONTIER.md)
+invert the inequality to show the largest hypothetical per-week cost or
+saleable-mass loss supported by each observed quotation pair. Negative
+cost ceilings and loss allowances remain visible, signalling pairs that
+cannot break even under otherwise ideal assumptions.
 
 ## Research question
 

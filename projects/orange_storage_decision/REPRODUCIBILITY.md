@@ -131,6 +131,10 @@ completed postharvest decision-study release.
 The [continuous quotation feasibility frontiers](QUOTE_FEASIBILITY_FRONTIER.md)
 also report only hypothetical cost/loss boundaries inferred algebraically
 from observed wholesale quotes, without estimating actual storage outcomes.
+The [missing-endpoint audit](QUOTE_MISSING_ENDPOINT_BOUNDS.md) subsequently
+provides no-assumption binary identification bounds for elapsed future
+weeks lacking exact quotations, keeping a common matured cohort distinct
+from the 343 fully observed, retrospectively selected anchor panel-weeks.
 Before any operational recommendation, acquire representative fruit-level
 and lot-level data, record real prices and costs, validate on later harvest
 lots, and report calibration, realised returns and downside against a

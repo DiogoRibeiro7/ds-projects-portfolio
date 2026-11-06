@@ -43,6 +43,11 @@ invert the inequality to show the largest hypothetical per-week cost or
 saleable-mass loss supported by each observed quotation pair. Negative
 cost ceilings and loss allowances remain visible, signalling pairs that
 cannot break even under otherwise ideal assumptions.
+A [missing-endpoint identification audit](QUOTE_MISSING_ENDPOINT_BOUNDS.md)
+then bounds each hypothetical break-even frequency when an elapsed future
+week has no matching wholesale quote. It distinguishes horizon maturity
+from later quote availability and adds a common matured cohort without
+inventing prices for missing windows.
 
 ## Research question
 

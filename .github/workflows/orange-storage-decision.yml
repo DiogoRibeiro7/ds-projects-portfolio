@@ -151,6 +151,20 @@ jobs:
           path: ${{ runner.temp }}/sima-orange-quote-frontier-report/
           if-no-files-found: error
           retention-days: 30
+      - name: Test bounds for absent but elapsed future quotations
+        run: Rscript tests/test_sima_missing_quote_bounds.R
+      - name: Generate missing-quote identification bound report
+        run: |
+          Rscript scripts/run_sima_missing_quote_bounds.R \
+            data/raw/sima_oranges_wholesale_2025-01-01_2026-10-31.csv.gz \
+            "${RUNNER_TEMP}/sima-orange-missing-quote-report"
+      - name: Preserve missing-quote identification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: orange-sima-missing-quote-bounds
+          path: ${{ runner.temp }}/sima-orange-missing-quote-report/
+          if-no-files-found: error
+          retention-days: 30
       - name: Test price forecast sensitivity
         run: Rscript tests/test_price_sensitivity.R
       - name: Test minimax-regret policy

@@ -129,3 +129,6 @@ to these observed quote pairs. It must not be read as observed storage profit.
 The [continuous feasibility frontier](QUOTE_FEASIBILITY_FRONTIER.md) additionally
 computes the limiting hypothetical cost and saleable loss for those same
 observations, leaving economically infeasible thresholds untruncated.
+The [missing-endpoint bounds](QUOTE_MISSING_ENDPOINT_BOUNDS.md) retain
+elapsed but unquoted future targets as unknown binary outcomes, reporting
+best- and worst-case feasibility without filling any missing prices.

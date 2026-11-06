@@ -19,7 +19,10 @@ like-for-like, seasonal market/product panels and records missing-week coverage
 alongside out-of-time errors. An additional [quotation-availability stress
 test](AVAILABILITY_STRESS.md) replays those fixed benchmarks under clearly
 hypothetical publication delays and uses matched targets to assess sensitivity.
-Neither empirical exercise estimates sale-policy returns.
+A further [product-mix and seasonal-coverage audit](COMPOSITION_AUDIT.md)
+compares pooled price changes with genuinely matched product/market changes
+over corresponding 2025–2026 months. None of these empirical exercises
+estimates sale-policy returns.
 
 ## Research question
 

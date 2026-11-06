@@ -121,7 +121,8 @@ The release is scoped to **transparent, reproducible synthetic analysis**.
 The subsequently archived [real SIMA price source](MARKET_PRICES.md) and
 [out-of-time quotation-forecast extension](ROLLING_PRICE_BACKTEST.md), together
 with its [hypothetical publication-lag stress test](AVAILABILITY_STRESS.md),
-are separate exercises; none modifies or retrospectively validates this
+and the [matched product-mix audit](COMPOSITION_AUDIT.md), are separate
+exercises; none modifies or retrospectively validates this
 completed postharvest decision-study release.
 Before any operational recommendation, acquire representative fruit-level
 and lot-level data, record real prices and costs, validate on later harvest

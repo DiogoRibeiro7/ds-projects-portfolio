@@ -129,5 +129,8 @@ baselines, with honest missing-data coverage and transaction-stage limits.
 The [release-delay sensitivity extension](AVAILABILITY_STRESS.md) further
 tests hypothetical delays using the original dated rows, **not** observed GPP
 publication timestamps; it cannot establish a real-time availability history.
+The [product-mix audit](COMPOSITION_AUDIT.md) additionally reports comparable
+2025/2026 month-by-month panels, unmatched entries/exits and unquoted-week
+coverage so pooled product mixes are not mistaken for a national price index.
 Biological shelf-life validation still requires a separate observational or
 prospective dataset.

@@ -126,3 +126,6 @@ To evaluate *net* sell-or-hold decisions with actual fruit, follow the
 The separate [illustrative break-even scenario grid](QUOTE_BREAK_EVEN_SCENARIOS.md)
 applies explicitly hypothetical saleable-retention and weekly-cost assumptions
 to these observed quote pairs. It must not be read as observed storage profit.
+The [continuous feasibility frontier](QUOTE_FEASIBILITY_FRONTIER.md) additionally
+computes the limiting hypothetical cost and saleable loss for those same
+observations, leaving economically infeasible thresholds untruncated.

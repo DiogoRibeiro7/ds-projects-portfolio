@@ -144,5 +144,8 @@ balanced same-anchor comparison. It does not impute a missing future price.
 The [quote-level break-even sensitivity](QUOTE_BREAK_EVEN_SCENARIOS.md)
 then layers only explicitly assumed saleable-mass retention and weekly costs
 over those observations; no observed cost or fruit-deterioration data exist.
+The [continuous feasibility frontier](QUOTE_FEASIBILITY_FRONTIER.md) inverts
+these illustrative inequalities for each quote pair while preserving the
+same market/product identity and future-availability restrictions.
 Biological shelf-life validation still requires a separate observational or
 prospective dataset.

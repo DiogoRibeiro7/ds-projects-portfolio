@@ -118,6 +118,12 @@ missing-endpoint handling, frictionless identity, monotonicity in cost and
 saleable fraction, and invalid parameters; it uploads a separate
 `orange-sima-quote-break-even` artifact.
 
+The subsequent [continuous feasibility frontier](QUOTE_FEASIBILITY_FRONTIER.md)
+solves the same inequality for maximum hypothetical weekly storage cost
+or minimum retained-saleable fraction **per observed quote pair**. The
+frontier checks all sixteen grid scenarios against this direct calculation;
+negative raw cost ceilings and loss allowances are never clipped.
+
 ## Evidence boundaries
 
 Wholesale quoted prices are neither what a grower receives nor proof that

@@ -111,3 +111,7 @@ capture. There is no farm-gate conversion, transport, commissions, fruit
 quality, recorded storage period, postharvest loss or realised sale amount.
 An operational decision would require the separate
 [prospective observation protocol](PROTOCOL.md).
+
+The [observed forward-price window study](FORWARD_PRICE_WINDOWS.md) separately
+quantifies exact same-panel wholesale quotation changes across one to four
+weeks. Those differences remain ex-post prices, not storage-policy returns.

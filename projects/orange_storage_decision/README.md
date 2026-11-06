@@ -30,6 +30,10 @@ The [signed level-drift audit](LEVEL_DRIFT_AUDIT.md) decomposes that
 benchmark's error into the pre-existing gap from last year's quote and the
 later change relative to the most recent historical quote, while making no
 causal or storage-profitability claim.
+The [observed forward-quote window audit](FORWARD_PRICE_WINDOWS.md) then
+compares 1–4 calendar-week price movements for the same exact wholesale
+product and market, keeping a fixed common-anchor cohort and explicit
+right-censoring. These are ex-post quote changes, not holding-period profits.
 
 ## Research question
 

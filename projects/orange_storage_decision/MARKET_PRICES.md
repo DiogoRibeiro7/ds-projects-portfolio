@@ -138,5 +138,8 @@ same-product, same-market week 52 weeks earlier, without filling gaps.
 The follow-on [level-drift audit](LEVEL_DRIFT_AUDIT.md) separates the
 pre-existing prior-year-to-recent quote gap from the subsequently observed
 price innovation, reporting all availability denominators explicitly.
+The [forward quote-window follow-up](FORWARD_PRICE_WINDOWS.md) also reports
+observed 1–4 week price movements, with exact endpoint coverage and a
+balanced same-anchor comparison. It does not impute a missing future price.
 Biological shelf-life validation still requires a separate observational or
 prospective dataset.

@@ -141,5 +141,8 @@ price innovation, reporting all availability denominators explicitly.
 The [forward quote-window follow-up](FORWARD_PRICE_WINDOWS.md) also reports
 observed 1–4 week price movements, with exact endpoint coverage and a
 balanced same-anchor comparison. It does not impute a missing future price.
+The [quote-level break-even sensitivity](QUOTE_BREAK_EVEN_SCENARIOS.md)
+then layers only explicitly assumed saleable-mass retention and weekly costs
+over those observations; no observed cost or fruit-deterioration data exist.
 Biological shelf-life validation still requires a separate observational or
 prospective dataset.

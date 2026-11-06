@@ -34,6 +34,10 @@ The [observed forward-quote window audit](FORWARD_PRICE_WINDOWS.md) then
 compares 1–4 calendar-week price movements for the same exact wholesale
 product and market, keeping a fixed common-anchor cohort and explicit
 right-censoring. These are ex-post quote changes, not holding-period profits.
+The [illustrative quote break-even stress](QUOTE_BREAK_EVEN_SCENARIOS.md)
+shows how assumed saleable-mass retention and per-week costs change the
+price increase needed merely to break even. Those assumptions are not
+measured storage outcomes and cannot establish an optimal selling policy.
 
 ## Research question
 

@@ -95,6 +95,20 @@ jobs:
           path: ${{ runner.temp }}/sima-orange-seasonal-report/
           if-no-files-found: error
           retention-days: 30
+      - name: Test SIMA year-on-year level-gap accounting
+        run: Rscript tests/test_sima_level_drift_audit.R
+      - name: Generate exact-panel SIMA level-drift evidence
+        run: |
+          Rscript scripts/run_sima_level_drift_audit.R \
+            data/raw/sima_oranges_wholesale_2025-01-01_2026-10-31.csv.gz \
+            "${RUNNER_TEMP}/sima-orange-level-drift-report"
+      - name: Preserve level-drift audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: orange-sima-level-drift-audit
+          path: ${{ runner.temp }}/sima-orange-level-drift-report/
+          if-no-files-found: error
+          retention-days: 30
       - name: Test price forecast sensitivity
         run: Rscript tests/test_price_sensitivity.R
       - name: Test minimax-regret policy

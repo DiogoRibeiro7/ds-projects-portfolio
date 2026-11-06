@@ -104,3 +104,7 @@ price bridge or producer revenues. Therefore this price forecast exercise
 cannot validate any real sale-or-hold policy. Such a policy requires the
 [prospective collection protocol](PROTOCOL.md), and a credible
 full seasonal model would need more independently observed years.
+
+The separate [level-drift audit](LEVEL_DRIFT_AUDIT.md) investigates the
+signed price-gap identity behind the weak prior-year forecast, using exactly
+the same common target observations without fitting a seasonal model.

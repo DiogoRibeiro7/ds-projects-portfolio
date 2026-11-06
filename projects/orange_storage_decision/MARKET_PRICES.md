@@ -126,5 +126,8 @@ They **cannot yet** validate the original sale-or-hold policy:
 The [rolling-origin forecast follow-up](ROLLING_PRICE_BACKTEST.md) defines
 like-for-like product/market panels and compares two fixed historical price
 baselines, with honest missing-data coverage and transaction-stage limits.
+The [release-delay sensitivity extension](AVAILABILITY_STRESS.md) further
+tests hypothetical delays using the original dated rows, **not** observed GPP
+publication timestamps; it cannot establish a real-time availability history.
 Biological shelf-life validation still requires a separate observational or
 prospective dataset.

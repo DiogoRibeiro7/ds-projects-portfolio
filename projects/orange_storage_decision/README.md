@@ -16,7 +16,10 @@ with R-only parsing and validity checks. This is observed *price-quotation*
 evidence, **not** a field validation or replacement for any synthetic result.
 The [rolling-origin price forecast study](ROLLING_PRICE_BACKTEST.md) uses
 like-for-like, seasonal market/product panels and records missing-week coverage
-alongside out-of-time errors. It does not estimate sale-policy returns.
+alongside out-of-time errors. An additional [quotation-availability stress
+test](AVAILABILITY_STRESS.md) replays those fixed benchmarks under clearly
+hypothetical publication delays and uses matched targets to assess sensitivity.
+Neither empirical exercise estimates sale-policy returns.
 
 ## Research question
 

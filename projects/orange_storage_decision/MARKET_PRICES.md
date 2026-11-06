@@ -135,5 +135,8 @@ coverage so pooled product mixes are not mistaken for a national price index.
 An [exact prior-year seasonal forecast audit](SEASONAL_52_BENCHMARK.md)
 separately assesses how much of the 2026 target sample has a quoted
 same-product, same-market week 52 weeks earlier, without filling gaps.
+The follow-on [level-drift audit](LEVEL_DRIFT_AUDIT.md) separates the
+pre-existing prior-year-to-recent quote gap from the subsequently observed
+price innovation, reporting all availability denominators explicitly.
 Biological shelf-life validation still requires a separate observational or
 prospective dataset.

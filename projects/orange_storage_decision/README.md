@@ -26,6 +26,10 @@ estimates sale-policy returns.
 An [exact 52-week seasonal price benchmark](SEASONAL_52_BENCHMARK.md) further
 tests prior-year quotation reuse against the two rolling-origin baselines
 on identical 2026 target observations, disclosing sparse historical overlap.
+The [signed level-drift audit](LEVEL_DRIFT_AUDIT.md) decomposes that
+benchmark's error into the pre-existing gap from last year's quote and the
+later change relative to the most recent historical quote, while making no
+causal or storage-profitability claim.
 
 ## Research question
 

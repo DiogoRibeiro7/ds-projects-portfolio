@@ -92,7 +92,7 @@ jobs:
 
       - name: Upload empirical ICIO evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: global-supply-chain-icio-2022-evidence
           path: |

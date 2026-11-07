@@ -41,7 +41,7 @@ jobs:
 
       - name: Upload Comtrade probe evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: global-supply-chain-comtrade-2022-probe
           path: |

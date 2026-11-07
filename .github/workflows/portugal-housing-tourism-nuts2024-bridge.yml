@@ -38,7 +38,7 @@ jobs:
       - name: Verify committed audit evidence
         run: git diff --exit-code -- results/processed/lisbon_nuts2024_overlap.csv results/processed/lisbon_nuts2024_bridge_summary.csv
       - name: Upload bridge audit
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: portugal-housing-tourism-nuts2024-bridge
           path: |

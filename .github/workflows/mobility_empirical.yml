@@ -78,7 +78,7 @@ jobs:
           cat data/results/duration_aware_allocation/summary.json
 
       - name: Upload processed evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mobility-empirical-backtest
           if-no-files-found: error

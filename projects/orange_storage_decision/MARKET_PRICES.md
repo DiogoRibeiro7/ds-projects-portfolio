@@ -147,5 +147,8 @@ over those observations; no observed cost or fruit-deterioration data exist.
 The [continuous feasibility frontier](QUOTE_FEASIBILITY_FRONTIER.md) inverts
 these illustrative inequalities for each quote pair while preserving the
 same market/product identity and future-availability restrictions.
+The [quote-availability identification bounds](QUOTE_MISSING_ENDPOINT_BOUNDS.md)
+add elapsed but unquoted endpoints to both conservative and optimistic
+feasibility fractions, explicitly without assigning fictional quote values.
 Biological shelf-life validation still requires a separate observational or
 prospective dataset.

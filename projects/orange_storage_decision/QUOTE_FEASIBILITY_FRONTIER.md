@@ -14,6 +14,10 @@ questions:
 These are **algebraic quotation thresholds**. They are not empirical storage
 losses, cost estimates, financial returns, observed farm decisions, or
 evidence that the original lot could be sold at either quoted price.
+The complementary [missing-future-quote bounds](QUOTE_MISSING_ENDPOINT_BOUNDS.md)
+show what remains logically possible when an elapsed target week lacks
+its corresponding quotation, without imputing a price or selecting only
+fully observed future panels.
 
 ## Equations and interpretation
 

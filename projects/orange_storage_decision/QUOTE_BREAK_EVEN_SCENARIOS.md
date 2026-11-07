@@ -123,6 +123,10 @@ solves the same inequality for maximum hypothetical weekly storage cost
 or minimum retained-saleable fraction **per observed quote pair**. The
 frontier checks all sixteen grid scenarios against this direct calculation;
 negative raw cost ceilings and loss allowances are never clipped.
+The [missing-future-quotation audit](QUOTE_MISSING_ENDPOINT_BOUNDS.md)
+separately bounds what these scenario frequencies could have been among
+eligible anchors whose later quote was absent, without assuming that
+missing prices follow the observed distribution.
 
 ## Evidence boundaries
 

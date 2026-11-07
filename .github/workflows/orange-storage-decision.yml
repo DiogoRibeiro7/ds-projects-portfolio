@@ -158,6 +158,8 @@ jobs:
           retention-days: 30
       - name: Test bounds for absent but elapsed future quotations
         run: Rscript tests/test_sima_missing_quote_bounds.R
+      - name: Audit empirical quotation synthesis and research closure
+        run: Rscript tests/test_sima_empirical_closure.R
       - name: Generate missing-quote identification bound report
         run: |
           Rscript scripts/run_sima_missing_quote_bounds.R \

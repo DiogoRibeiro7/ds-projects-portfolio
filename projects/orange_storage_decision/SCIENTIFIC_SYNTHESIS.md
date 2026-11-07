@@ -141,8 +141,11 @@ the example's seeded Weibull parameters and fictional price paths alone.
 
 ## 5. What remains unknown
 
-1. **External validity:** no independently collected orchard/warehouse data,
-   measured commercial loss curve or historical market price forecast errors.
+1. **External validity:** no independently collected orchard/warehouse
+   deterioration or realised producer-sale data. A later GPP SIMA wholesale
+   quotation study measures historical quote patterns and forecast errors,
+   but cannot validate saleable fruit survival or an implementable farm price
+   forecast without verified information-release timestamps.
 2. **Observation validity:** possible correlated grading errors, imperfect
    “gold-standard” labels, nonrandom fruit sampling, selection into grades
    and mass-dependent deterioration.
@@ -163,7 +166,49 @@ operational benchmarks, an auditable cost ledger, calibrated held-out quality
 predictions and transparently reported negative effects. Until then, this
 project remains **unfeatured** in the portfolio.
 
-## 6. Reproduction and evidence map
+## 6. Separate empirical quotation extension: a narrower conclusion
+
+The methodological study above is synthetic. The later
+[empirical quotation synthesis](EMPIRICAL_SYNTHESIS.md) uses a separately
+archived **3,412-row GPP SIMA** wholesale orange quotation extract from
+2025–2026. These are genuine observed *quotations*, not orange-lot storage
+histories, farm-gate prices or sale executions. No synthetic parameter is
+validated or fitted to the wholesale data.
+
+Among **485** observed 2026 starting product/market/week quotations,
+the time-eligible and exactly matched later quotations are:
+
+| Horizon | Eligible starts | Exact future quotes | Missing despite maturity |
+| ---: | ---: | ---: | ---: |
+| 1 calendar week | 453 | 433 | 20 |
+| 2 calendar weeks | 442 | 403 | 39 |
+| 3 calendar weeks | 431 | 373 | 58 |
+| 4 calendar weeks | 420 | 343 | 77 |
+
+On the *retrospectively selected* 343 starts with all four future quotes,
+37.3% of four-week quotations are higher and 22.2% lower than the initial
+quotation; the **median signed difference is zero**. This is not an
+executable holding strategy. In the frictionless hypothetical scenario,
+77.8% meet the nonnegative four-week quote break-even inequality, but only
+37.3% strictly improve it. Under *assumed* 99% weekly retained-saleable
+mass and EUR 0.005 weekly storage cost per original kilogram, 29.7% have
+a positive **quote-arithmetic** difference. Neither loss nor cost was
+measured, and quoted wholesale prices need not equal realised proceeds.
+
+Importantly, **77 of 420** time-eligible four-week future quotations are
+missing. Without assumptions about their sign, the hypothetical 99%-mass,
+EUR 0.005 cost scenario is bounded between **24.3% and 42.6%** of eligible
+starts. These are sharp missing-quote *identification bounds*, not
+sampling confidence intervals or profit bounds. The distinct, fixed
+**420-anchor common-maturity cohort** is not the 343 complete-case panel.
+
+The empirical results clarify price-quote opportunity, the economic
+friction required to exploit it, and missing observation bias. They do
+not establish positive value from storing fruit. Only a separately
+planned [prospective field study](PROTOCOL.md) could connect pricing,
+fruit retention, real costs and realised sale outcomes.
+
+## 7. Reproduction and evidence map
 
 This synthesis is a reading guide to **committed R outputs**, not a new
 experiment. Each linked `RESULTS.md` reports its own sample size, random
@@ -181,10 +226,19 @@ Rscript scripts/run_historical_shift.R 30 results/historical_shift 50
 The full project CI tests the survival models, deterministic synthetic
 experiments and all documented adaptive extensions; report smoke tests do
 not imply a large Monte Carlo study has been archived for every extension.
+The empirical closure test independently checks the observed-quote headline
+counts, the fixed four-horizon cohort, hypothetical scenario arithmetic and
+the missing-outcome bounds against the frozen source archive:
+
+```sh
+Rscript tests/test_sima_empirical_closure.R
+```
+
 For model-specific methods and other saved results, use the
 [project README](README.md). The next step for this portfolio artifact is a
-final documentation/reproducibility audit, **not** another optimisation
-method. A real-data field study would be a distinct research phase.
+prospective field-validation design, **not** another optimisation method.
+The current research release has separate synthetic-methods and
+wholesale-quotation evidence, neither of which is a field trial.
 
 ## Conclusion
 

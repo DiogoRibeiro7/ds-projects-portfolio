@@ -19,7 +19,8 @@ jobs:
     # The study uses base R only. Run it with an R image rather than installing R
     # through apt, which can hang on the hosted runner's Ubuntu package mirror.
     container:
-      image: rocker/r-ver:4.4.3
+      # Historical evidence was generated under R 4.5.1 (see results/*/settings.R).
+      image: rocker/r-ver:4.5.1
     timeout-minutes: 60
     defaults:
       run:

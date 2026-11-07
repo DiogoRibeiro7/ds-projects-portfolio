@@ -2,17 +2,20 @@
 
 ## Scope and release status
 
-The orange-selling project is **complete as a reproducible synthetic R case
-study**. It is not a calibrated commercial decision system, a safety
-certification or a claim that a particular sale policy improves real harvest
-returns. Further work with real data would be a separate empirical study,
+The orange-selling project has **two completed, separate research tracks**:
+the reproducible synthetic R selling-decision case study and a retrospective
+study of observed wholesale orange quotations. The latter is consolidated in
+the [empirical quotation synthesis](EMPIRICAL_SYNTHESIS.md); neither track
+estimates realised producer returns or validates a commercial storage policy.
+A prospective fruit-lot and actual-sale validation study is still required,
 subject to the predeclared requirements in [PROTOCOL.md](PROTOCOL.md).
 
 The [scientific synthesis](SCIENTIFIC_SYNTHESIS.md) is the consolidated
 interpretation of the saved comparisons. There is no universal optimal sale
 day: prices, deterioration rates, grade labels, logistics and the cost of
-information change the decision. No further synthetic-model extensions are
-required to close this methodological portfolio case study.
+information change the decision. No further synthetic-model or retrospective
+wholesale-quotation extensions are required to close the documented
+**research phase**.
 
 ## Environment and checks
 
@@ -23,8 +26,9 @@ required to close this methodological portfolio case study.
   root. All R `source()` calls and result paths are relative to that folder.
 - The GitHub Actions workflow [Orange Storage Decision (R)](../../.github/workflows/orange-storage-decision.yml)
   runs all model tests, the seeded demonstration, reporting smoke tests and
-  the final evidence audit. Smoke tests run **smaller** panels than the saved
-  research reports; passing CI is not a byte-for-byte full-study replay.
+  both evidence audits. Smoke tests run **smaller** panels than the saved
+  synthetic research reports; passing CI is not a byte-for-byte full-study
+  replay.
 - Each archived report has a `settings.R` snapshot with generator inputs and
   the R version used when it was produced. Exact CSV equality can vary with
   numerical-library or R-version changes, so compare declared estimands,
@@ -35,6 +39,7 @@ Run from the project directory:
 
 ```sh
 Rscript tests/test_release_audit.R
+Rscript tests/test_sima_empirical_closure.R
 Rscript tests/test_model.R
 Rscript scripts/demo.R
 
@@ -51,8 +56,13 @@ The release audit checks:
    appropriate rows and columns of the **committed** CSV summaries to two
    decimal places. The audit rejects missing or ambiguous source rows.
 
-These checks protect the integrity of the repository evidence, not the
-statistical assumptions behind it or its applicability outside simulation.
+The empirical closure audit independently recomputes the declared data-source
+size, 2026 starts, four-horizon maturity/match/missing denominators, complete-
+case quotation movements, illustrative cost/retention scenarios, feasibility
+thresholds and no-assumption identification bounds. It cross-checks the
+linked methods from the same frozen wholesale source. These checks protect
+the published evidence and calculations, **not** the statistical assumptions
+behind a model or its applicability to real storage decisions.
 
 ## Archived numerical studies
 
@@ -113,30 +123,51 @@ independent validation study.
 ## Project handoff
 
 - Study question, algorithms and assumptions: [README.md](README.md).
-- Quantitative conclusions, including negative cases: [SCIENTIFIC_SYNTHESIS.md](SCIENTIFIC_SYNTHESIS.md).
-- Data collection and prospective validation requirements: [PROTOCOL.md](PROTOCOL.md).
-- Evidence integrity: `R/release_audit.R` and `tests/test_release_audit.R`.
+- Synthetic quantitative conclusions, including negative results:
+  [SCIENTIFIC_SYNTHESIS.md](SCIENTIFIC_SYNTHESIS.md).
+- Recorded wholesale quotation evidence and its limitations:
+  [EMPIRICAL_SYNTHESIS.md](EMPIRICAL_SYNTHESIS.md).
+- Prospective data and validation requirements: [PROTOCOL.md](PROTOCOL.md).
+- Evidence integrity: `R/release_audit.R`,
+  `tests/test_release_audit.R` and `tests/test_sima_empirical_closure.R`.
 
-The release is scoped to **transparent, reproducible synthetic analysis**.
-The subsequently archived [real SIMA price source](MARKET_PRICES.md) and
-[out-of-time quotation-forecast extension](ROLLING_PRICE_BACKTEST.md), together
-with its [hypothetical publication-lag stress test](AVAILABILITY_STRESS.md),
-the [matched product-mix audit](COMPOSITION_AUDIT.md) and the
-[exact 52-week historical benchmark](SEASONAL_52_BENCHMARK.md) and its
-[signed level-drift audit](LEVEL_DRIFT_AUDIT.md), plus the
-[observed forward-window audit](FORWARD_PRICE_WINDOWS.md) and
-[illustrative break-even sensitivity](QUOTE_BREAK_EVEN_SCENARIOS.md) are
-separate exercises; none modifies or retrospectively validates this
-completed postharvest decision-study release.
-The [continuous quotation feasibility frontiers](QUOTE_FEASIBILITY_FRONTIER.md)
-also report only hypothetical cost/loss boundaries inferred algebraically
-from observed wholesale quotes, without estimating actual storage outcomes.
-The [missing-endpoint audit](QUOTE_MISSING_ENDPOINT_BOUNDS.md) subsequently
-provides no-assumption binary identification bounds for elapsed future
-weeks lacking exact quotations, keeping a common matured cohort distinct
-from the 343 fully observed, retrospectively selected anchor panel-weeks.
-Before any operational recommendation, acquire representative fruit-level
-and lot-level data, record real prices and costs, validate on later harvest
-lots, and report calibration, realised returns and downside against a
-prespecified operational baseline. If those criteria are not met, the case
-study must remain labelled as synthetic and unfeatured.
+### Distinct empirical-quotation evidence
+
+The frozen [GPP SIMA source](MARKET_PRICES.md) covers **3,412** official
+wholesale orange quotation rows (2025-01-02 through 2026-10-30); the
+uncompressed CSV SHA-256 is
+`b039f254b4fb18a41b7997208a43ceae46ee9f48db978934ab9fad6de9e24da0`.
+Its [rolling-origin quotation backtest](ROLLING_PRICE_BACKTEST.md),
+[hypothetical availability stress](AVAILABILITY_STRESS.md),
+[composition audit](COMPOSITION_AUDIT.md),
+[exact 52-week seasonal benchmark](SEASONAL_52_BENCHMARK.md) and
+[level-drift audit](LEVEL_DRIFT_AUDIT.md) are price-only exercises.
+The [exact 1–4-week forward quotation windows](FORWARD_PRICE_WINDOWS.md),
+[assumed break-even arithmetic](QUOTE_BREAK_EVEN_SCENARIOS.md),
+[continuous feasibility thresholds](QUOTE_FEASIBILITY_FRONTIER.md) and
+[missing-endpoint identification bounds](QUOTE_MISSING_ENDPOINT_BOUNDS.md)
+complete the narrower retrospective quotation analysis.
+
+Among **485** observed 2026 starting panel-weeks, the horizon-eligible
+denominators are **453, 442, 431 and 420**, with **20, 39, 58 and 77**
+respectively missing exact later quotations. **343** starts have all four
+future quotations, a *retrospectively selected* subset. A separate fixed
+common-maturity denominator of **420** does not rely on future quote matches.
+The empirical closure audit checks these numbers, corresponding quote changes,
+hypothetical storage-friction arithmetic and worst/best-case missing bounds
+without imputing a future price.
+
+The GitHub Actions workflow recreates empirical CSVs, charts and reports as
+named, **30-day artifacts**; those transient files are not a permanent
+archived public dataset. The source snapshot and versioned R methods/tests
+remain reproducible independently of artifact expiry. The original 14
+synthetic archived studies and their baselines were not overwritten.
+
+**Completion is limited to the reproducible research release.** Recorded
+wholesale quotations are neither lot-level observations nor executed sales.
+No storage-loss fraction, real storage cost or grower profit is estimated.
+An operational application requires representative lot-level sampling, real
+physical losses, dated information availability, an auditable cost ledger,
+realised net returns and a prespecified prospective comparison on later
+harvest lots. Until then the portfolio entry stays **unfeatured** and the
+results must never be presented as a field-validated sale recommendation.

@@ -4,11 +4,14 @@ An exploratory, reproducible R case study in postharvest survival analysis and
 optimal stopping. The same harvest date does **not** imply the same maturity at
 harvest or the same remaining commercial life for every orange.
 
-**Project status:** the synthetic-methods study is complete. See the
-[scientific synthesis](SCIENTIFIC_SYNTHESIS.md) for conclusions and negative
-results, and the [reproducibility audit](REPRODUCIBILITY.md) for archived
-evidence, exact replay instructions and validation boundaries. No empirical
-profitability or operational sale recommendation is claimed.
+**Project status:** the synthetic-methods study and separate empirical
+wholesale-quotation study are complete **as research**. See the
+[scientific synthesis](SCIENTIFIC_SYNTHESIS.md) for synthetic conclusions
+and negative results, the [empirical quotation synthesis](EMPIRICAL_SYNTHESIS.md)
+for recorded market-price movements and missing-quote bounds, and the
+[reproducibility audit](REPRODUCIBILITY.md) for evidence and replay
+instructions. No measured storage profitability or operational sale
+recommendation is claimed.
 
 **Real-data follow-up:** a separate [GPP SIMA orange-price ingestion](MARKET_PRICES.md)
 archives 3,412 official Portuguese wholesale-market quotations from 2025–2026,
@@ -431,6 +434,17 @@ an immediate sale, and sets out a conditional decision protocol rather than
 claiming one universally optimal selling date. Adaptive-calibration extensions
 without saved full-run numeric benchmarks are described as methods only.
 
+The separate [empirical quotation synthesis](EMPIRICAL_SYNTHESIS.md)
+consolidates the observed GPP SIMA source, four exact forward-week cohorts,
+quote-price differences, fixed hypothetical break-even scenarios, continuous
+feasibility boundaries and no-imputation bounds for missing eligible
+future quotations. An integrated regression test reproduces its headline
+figures and checks consistency across the earlier R modules:
+
+```bash
+Rscript tests/test_sima_empirical_closure.R
+```
+
 ## Learning from historical lots
 
 The [historical baseline](HISTORICAL_BASELINE.md) fits stratum survival curves
@@ -487,13 +501,15 @@ Rscript scripts/run_survival_regret.R
 
 ## Scientific status and limitations
 
-Status: **methodological prototype, synthetic evidence only**. No empirical
-profit improvement or predictive accuracy is claimed. This is deliberately
-`featured: false` in the portfolio catalogue.
+Status: **methodological prototype with synthetic decision outcomes and
+separate observed wholesale-price quotation evidence**. No field-validated
+profit improvement or deployed-sale predictive accuracy is claimed. This is
+deliberately `featured: false` in the portfolio catalogue.
 
-The methodological scope is closed; the [release audit](REPRODUCIBILITY.md)
-defines how to verify the 14 archived studies and the report's principal
-numbers using base R, without altering the committed evidence.
+The methodological and quotation-research scope is closed; the
+[release audit](REPRODUCIBILITY.md) defines how to verify the 14 archived
+synthetic studies, the empirical quotation conclusions and the published
+headline numbers using base R, without altering committed evidence.
 
 Before application, the study needs representative observations across
 multiple harvest lots and storage environments, traceable maturity grading,

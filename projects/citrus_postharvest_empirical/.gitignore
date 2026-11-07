@@ -1,0 +1,11 @@
+# Override portfolio-wide data and CSV exclusions only for the three
+# tiny, CC-BY-4.0 upstream files and their provenance statement.
+!data/
+!data/raw/
+!data/raw/PROVENANCE.md
+!data/raw/README.txt
+!data/raw/Quality Data.csv
+!data/raw/in vivo data.csv
+
+# Reproduce generated summaries and figures from source; do not commit them.
+results/generated/

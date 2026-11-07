@@ -1,0 +1,38 @@
+name: Empirical Citrus Postharvest (R)
+
+on:
+  pull_request:
+    paths:
+      - "projects/citrus_postharvest_empirical/**"
+      - ".github/workflows/citrus-postharvest-empirical.yml"
+  push:
+    branches: [main]
+    paths:
+      - "projects/citrus_postharvest_empirical/**"
+      - ".github/workflows/citrus-postharvest-empirical.yml"
+  workflow_dispatch:
+
+jobs:
+  empirical-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: rocker/r-ver:4.5.1
+    defaults:
+      run:
+        working-directory: projects/citrus_postharvest_empirical
+    steps:
+      - uses: actions/checkout@v6
+      - name: Print pinned base R version
+        run: Rscript --version
+      - name: Verify published file hashes and independent orange outcome panels
+        run: Rscript tests/test_empirical_sources.R
+      - name: Reproduce source-derived tables and figures
+        run: Rscript scripts/run.R data/raw results/generated
+      - name: Upload manuscript-ready evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: citrus-postharvest-orange-empirical-evidence
+          path: projects/citrus_postharvest_empirical/results/generated/
+          if-no-files-found: error
+          retention-days: 30
